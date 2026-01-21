@@ -649,7 +649,6 @@ def start_server() -> NoReturn:
         physical_cores = psutil.cpu_count(logical=False) or 4
         logical_cores = psutil.cpu_count(logical=True) or 4
     except ImportError:
-        import os
         logical_cores = os.cpu_count() or 4
         physical_cores = logical_cores // 2 # Rough heuristic for Hyperthreading
     
