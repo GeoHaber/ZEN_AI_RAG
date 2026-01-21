@@ -149,9 +149,11 @@ class LocalRAG:
         # 2. Batched Embedding
         total_chunks = len(new_chunks_accumulated)
         embed_start = time.time()
+        BATCH_SIZE = 64 # Increased for throughput
         
         # Process in batches
         for i in range(0, total_chunks, BATCH_SIZE):
+            batch_start = time.time()
             batch = new_chunks_accumulated[i : i + BATCH_SIZE]
             texts = [c['text'] for c in batch]
             
@@ -162,14 +164,15 @@ class LocalRAG:
             for j, vec in enumerate(embeddings):
                 batch[j]['vector'] = vec
             
-            # Insert into DB (Grouped by doc_id to be cleaner, or just loop)
-            # Since chunks can belong to different docs in a batch (if batch spans doc boundary),
-            # we loop insert. SQLite is fast enough.
-            for c in batch:
-                self.db.add_chunks(c['doc_id'], [c])
+            # Bulk Insert into DB (One transaction per batch)
+            self.db.add_chunks(batch)
             
             # Add to memory cache
             self.chunks.extend(batch)
+            
+            batch_dur = time.time() - batch_start
+            if total_chunks > BATCH_SIZE:
+                logger.debug(f"[RAG] Batch {i//BATCH_SIZE + 1} ({len(batch)} chunks) took {batch_dur:.2f}s")
             
         embed_time = time.time() - embed_start
         logger.info(f"[RAG] Embedded & Stored {total_chunks} chunks in {embed_time:.2f}s")

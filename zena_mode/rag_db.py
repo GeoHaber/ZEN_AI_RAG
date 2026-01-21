@@ -84,22 +84,29 @@ class RAGDatabase:
             )
             return cursor.lastrowid
 
-    def add_chunks(self, doc_id: int, chunks: List[Dict]):
+    def add_chunks(self, chunks: List[Dict]):
         """
-        Batch insert chunks.
-        chunks structure: [{'text': str, 'vector': np.ndarray, 'index': int, 'metadata': dict}]
+        Batch insert chunks efficiently.
+        chunks structure: [{'doc_id': int, 'text': str, 'vector': np.ndarray, 'chunk_index': int, 'metadata': dict}, ...]
         """
+        if not chunks:
+            return
+            
         data = []
         for c in chunks:
             vector_blob = c['vector'].tobytes() if c.get('vector') is not None else None
             meta_json = json.dumps(c.get('metadata', {}))
-            data.append((doc_id, c.get('chunk_index', 0), c['text'], vector_blob, meta_json))
+            data.append((c['doc_id'], c.get('chunk_index', 0), c['text'], vector_blob, meta_json))
         
-        with self.conn:
-            self.conn.executemany(
-                "INSERT INTO chunks (doc_id, chunk_index, text, vector, metadata) VALUES (?, ?, ?, ?, ?)",
-                data
-            )
+        try:
+            with self.conn:
+                self.conn.executemany(
+                    "INSERT INTO chunks (doc_id, chunk_index, text, vector, metadata) VALUES (?, ?, ?, ?, ?)",
+                    data
+                )
+        except sqlite3.Error as e:
+            logger.error(f"[DB] Bulk insert failed: {e}")
+            raise
 
     def get_all_chunks(self) -> List[Dict]:
         """Retrieve all chunks for building FAISS index."""
