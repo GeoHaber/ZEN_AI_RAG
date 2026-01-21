@@ -340,7 +340,14 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                 if model_dialog:
                      ui.button('Download New Model', icon='cloud_download', on_click=lambda: model_dialog.open()).props('flat dense').classes('bg-blue-600 text-white w-full mt-1')
 
-        # 2. System Section
+        # 2. AI Engine Mode Section
+        ui.label('AI ENGINE MODE').classes('text-sm font-bold mt-4 mb-2 text-primary')
+        with ui.column().classes('w-full gap-1'):
+             use_cot = ui.switch('CoT Swarm (Experts)', value=False).classes('text-sm')
+             ui.label('Parallel Consensus Arbitrage').classes('text-[10px] text-gray-500 italic ml-10 -mt-2 mb-2')
+             app_state['use_cot_swarm'] = use_cot
+
+        # 3. System Section
         ui.label('SYSTEM').classes('text-xs font-bold text-gray-800 mb-2')
         with ui.column().classes('w-full gap-2'):
             # llama.cpp Version with Download Option

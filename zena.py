@@ -71,8 +71,9 @@ logger = logging.getLogger("NebulaUI")
 
 API_URL = "http://127.0.0.1:8001/v1/chat/completions"
 
-# Import async backend
+# Import async backend and arbitrator
 from async_backend import AsyncNebulaBackend
+from zena_mode.arbitrage import get_arbitrator
 
 # Backend Implementation (Async HTTP with httpx)
 class NebulaBackend:
@@ -98,6 +99,7 @@ class NebulaBackend:
 # Global backend instances
 backend = NebulaBackend()
 async_backend = AsyncNebulaBackend()
+arbitrator = get_arbitrator()
 
 # Load Zena Mode Configuration
 ZENA_MODE = False
@@ -602,13 +604,21 @@ ANSWER:"""
             except Exception as e:
                 logger.error(f"[RAG] Query failed: {e}")
         
-        # Use async backend for streaming
-        async with async_backend:
-            async for chunk in async_backend.send_message_async(final_prompt):
+        # Use CoT Swarm Arbitrator if enabled
+        if app_state.get('use_cot_swarm') and app_state['use_cot_swarm'].value:
+            async for chunk in arbitrator.get_cot_response(final_prompt, "You are Zena, working within an Expert Swarm."):
                 full_text += chunk
                 msg_ui.content = full_text
                 msg_ui.classes(remove='animate-pulse')
                 msg_ui.update()
+        else:
+            # Standard single-model streaming
+            async with async_backend:
+                async for chunk in async_backend.send_message_async(final_prompt):
+                    full_text += chunk
+                    msg_ui.content = full_text
+                    msg_ui.classes(remove='animate-pulse')
+                    msg_ui.update()
         
         # Append Sources Footer if RAG was used
         if rag_enabled['value'] and 'relevant_chunks' in locals() and relevant_chunks:

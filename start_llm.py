@@ -789,6 +789,71 @@ if __name__ == "__main__":
                 time.sleep(1)
         except KeyboardInterrupt:
             sys.exit(0)
+
+    # --- SWARM MODE (v2.0) ---
+    if "--swarm" in sys.argv:
+        idx = sys.argv.index("--swarm")
+        try:
+            swarm_count = int(sys.argv[idx+1])
+        except:
+            swarm_count = 3 # Default to 3 experts
+            
+        print(f"\n[SWARM] Launching EXPERT SWARM ({swarm_count} instances)...")
+        
+        # Start Hub once
+        start_hub()
+        
+        base_port = env_int("LLM_PORT", 8001)
+        instances = []
+        
+        # Calculate threads per instance
+        try:
+            import psutil
+            total_cores = psutil.cpu_count(logical=False) or 4
+        except:
+            total_cores = os.cpu_count() or 4
+            
+        threads_per = max(1, total_cores // swarm_count)
+        print(f"[SWARM] Thread Allocation: {threads_per} threads per instance")
+
+        for i in range(swarm_count):
+            port = base_port + i
+            if i > 0: # 8001 is standard, others are expert ports
+                port = 8001 + 3 + i # Skip 8002 (Hub), 8003 (Voice) -> 8005, 8006...
+            
+            print(f"[SWARM] Spawning Expert {i+1} on Port {port}...")
+            
+            # Use environment to pass port/threads
+            env = os.environ.copy()
+            env["LLM_PORT"] = str(port)
+            env["LLM_THREADS"] = str(threads_per)
+            env["LLM_THREADS_BATCH"] = str(threads_per)
+            
+            # Launch self with guard bypass
+            cmd = [sys.executable, __file__, "--guard-bypass"]
+            # Pass model if we have it
+            if "--model" in sys.argv:
+                m_idx = sys.argv.index("--model")
+                cmd.extend(["--model", sys.argv[m_idx+1]])
+                
+            p = subprocess.Popen(cmd, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE)
+            instances.append(p)
+            time.sleep(2) # Stagger boot to reduce IO spike
+
+        print(f"\n[SWARM] Expert Swarm online. Listening on ports {base_port} and up.")
+        print("[SWARM] Chain of Thought (CoT) Arbitrage ready.")
+        
+        try:
+            while True:
+                # Monitor health?
+                time.sleep(5)
+                # Check if UI is running, if not maybe exit?
+        except KeyboardInterrupt:
+            print("[SWARM] Shutting down experts...")
+            for p in instances:
+                p.terminate()
+            sys.exit(0)
+
     if "--model" in sys.argv:
         idx = sys.argv.index("--model")
         passed_model = sys.argv[idx+1]
