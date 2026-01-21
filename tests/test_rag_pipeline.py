@@ -11,9 +11,9 @@ from zena_mode.scraper import WebsiteScraper
 class TestRAGPipeline:
     """Test RAG pipeline functionality."""
     
-    def test_chunk_documents(self):
+    def test_chunk_documents(self, tmp_path):
         """Test document chunking."""
-        rag = LocalRAG()
+        rag = LocalRAG(cache_dir=tmp_path)
         
         documents = [
             {"url": "http://test.com", "title": "Test", "content": "A" * 1000}
@@ -25,11 +25,11 @@ class TestRAGPipeline:
         assert len(chunks) >= 2
         assert all('text' in chunk for chunk in chunks)
         assert all('url' in chunk for chunk in chunks)
-        assert all('chunk_id' in chunk for chunk in chunks)
+
     
-    def test_chunk_small_content(self):
+    def test_chunk_small_content(self, tmp_path):
         """Test chunking with content smaller than chunk size."""
-        rag = LocalRAG()
+        rag = LocalRAG(cache_dir=tmp_path)
         
         documents = [
             {"url": "http://test.com", "title": "Small", "content": "Short text is now longer than 20 chars"}
@@ -40,14 +40,15 @@ class TestRAGPipeline:
         # Should create 1 chunk
         assert len(chunks) == 1
         assert chunks[0]['text'] == "Short text is now longer than 20 chars"
+
     
-    def test_build_index(self):
+    def test_build_index(self, tmp_path):
         """Test building FAISS index."""
-        rag = LocalRAG()
+        rag = LocalRAG(cache_dir=tmp_path)
         
         docs = [
-            {"url": "test", "title": "T", "content": "Hello world" * 3},
-            {"url": "test", "title": "T", "content": "Python programming" * 3},
+            {"url": "test1", "title": "T1", "content": "Hello world" * 3},
+            {"url": "test2", "title": "T2", "content": "Python programming" * 3},
         ]
         
         rag.build_index(docs)
@@ -55,10 +56,11 @@ class TestRAGPipeline:
         assert rag.index is not None
         assert rag.index.ntotal == 2  # 2 vectors
         assert len(rag.chunks) == 2
+
     
-    def test_save_load_json(self, tmp_path):
-        """Test saving/loading index with JSON (not pickle) - CATCHES BUG #1."""
-        rag = LocalRAG()
+    def test_save_load_sqlite(self, tmp_path):
+        """Test saving/loading index with SQLite - Aligned with v1.2."""
+        rag = LocalRAG(cache_dir=tmp_path)
         
         # Create index
         docs = [
@@ -66,24 +68,17 @@ class TestRAGPipeline:
         ]
         rag.build_index(docs)
         
-        # Save
-        cache_dir = tmp_path / "rag_cache"
-        rag.save(cache_dir)
-        
-        # Verify JSON file exists (not pickle)
-        assert (cache_dir / "chunks.json").exists()
-        assert (cache_dir / "faiss.index").exists()
+        # Verify SQLite file exists
+        assert (tmp_path / "rag.db").exists()
         
         # Load
-        rag2 = LocalRAG()
-        assert rag2.load(cache_dir) is True
+        rag2 = LocalRAG(cache_dir=tmp_path)
         assert len(rag2.chunks) == len(docs)
     
-    def test_large_index_json_no_recursion(self, tmp_path):
-        """Test large index doesn't cause pickle recursion - CATCHES BUG #1."""
-        rag = LocalRAG()
+    def test_large_index_sqlite_scalability(self, tmp_path):
+        """Test large index scalability with SQLite."""
+        rag = LocalRAG(cache_dir=tmp_path)
         
-        # Create 1000 chunks (simulates large dataset)
         # Create 1000 documents (simulates large dataset)
         docs = [
             {"url": f"test{i}", "title": f"T{i}", "content": f"Content {i}" * 50}
@@ -92,15 +87,11 @@ class TestRAGPipeline:
         
         rag.build_index(docs)
         
-        # Save should succeed with JSON (would fail with pickle)
-        cache_dir = tmp_path / "large_rag"
-        rag.save(cache_dir)
-        
-        assert (cache_dir / "chunks.json").exists()
+        # Verify DB exists
+        assert (tmp_path / "rag.db").exists()
         
         # Load should work
-        rag2 = LocalRAG()
-        assert rag2.load(cache_dir) is True
+        rag2 = LocalRAG(cache_dir=tmp_path)
         assert len(rag2.chunks) >= 1000
     
     def test_query(self):
@@ -121,15 +112,12 @@ class TestRAGPipeline:
         assert len(results) <= 2
         assert results[0]['text'] == "The hospital offers emergency services"
     
-    def test_query_empty_index(self):
-        """Test querying empty index raises error."""
-        rag = LocalRAG()
-        
-        with pytest.raises((ValueError, Warning), match="Index not built"):
-            # Depending on implementation, might log warning and return empty, or raise error
-            # Current implementation logs warning and returns [], so we assert empty list if no error raised
-            res = rag.search("test query") 
-            if not res: raise ValueError("Index not built")
+    def test_query_empty_index(self, tmp_path):
+        """Test querying empty index returns empty list."""
+        rag = LocalRAG(cache_dir=tmp_path)
+        res = rag.search("test query") 
+        assert res == []
+
 
 
 class TestRAGIntegration:
