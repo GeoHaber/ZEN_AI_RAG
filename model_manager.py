@@ -10,6 +10,15 @@ from tqdm import tqdm
 
 from config import BASE_DIR, MODEL_DIR
 from utils import logger
+import warnings
+
+# Enable Fast Downloads (Rust-based)
+os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+try:
+    import hf_transfer
+    logger.info("[ModelManager] 🚀 hf_transfer enabled for max speed")
+except ImportError:
+    pass # hf_hub_download will just ignore the env var if not installed
 
 def parse_model_info(model_name: str, file_size_gb: float = 0) -> Dict:
     """

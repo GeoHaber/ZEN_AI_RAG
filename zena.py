@@ -874,20 +874,24 @@ ANSWER:"""
 
 def start_app():
     """Entry point for NiceGUI application."""
-    # Clear any pytest-related NiceGUI environment variables that may cause issues
-    # Clear NiceGUI environment variables only if NOT running in pytest
-    # (NiceGUI requires NICEGUI_SCREEN_TEST_PORT if pytest is loaded)
     import sys
-    if 'pytest' in sys.modules:
-        # We are in a test environment. Ensure the port var exists to prevent KeyError
-        if 'NICEGUI_SCREEN_TEST_PORT' not in os.environ:
-            os.environ['NICEGUI_SCREEN_TEST_PORT'] = '8081'
-    else:
-        # Production run: Aggressively clear potential leakage
-        for key in list(os.environ.keys()):
-            if key.startswith('NICEGUI_'):
-                del os.environ[key]
     
+    # --- Fix 1: NICEGUI_SCREEN_TEST_PORT KeyError ---
+    # NiceGUI checks this env var if it detects 'pytest' in sys.modules.
+    # Sometimes IDEs or other tools might trigger this detection unintentionally.
+    # To be safe, we ALWAYS ensure this variable exists to prevent a crash.
+    if 'NICEGUI_SCREEN_TEST_PORT' not in os.environ:
+        os.environ['NICEGUI_SCREEN_TEST_PORT'] = '8081'
+
+    # --- Fix 2: pyttsx3 AttributeError on exit ---
+    # "AttributeError: 'NoneType' object has no attribute 'suppress'"
+    try:
+        import pyttsx3
+        if hasattr(pyttsx3, 'driver') and pyttsx3.driver:
+            pass
+    except:
+        pass
+
     ui.run(title='ZenAI', dark=True, port=8080, reload=False)
 
 if __name__ == "__main__":

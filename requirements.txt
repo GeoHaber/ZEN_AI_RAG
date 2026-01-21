@@ -29,3 +29,5 @@ markdown
 bleach
 
 psutil
+
+hf_transfer

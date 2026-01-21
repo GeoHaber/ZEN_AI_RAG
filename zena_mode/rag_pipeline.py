@@ -1,12 +1,11 @@
 """
-rag_pipeline.py - RAG implementation with FAISS vector store + BM25 hybrid search
+rag_pipeline.py - RAG implementation with FAISS + SQLite + Parallel Batching
 """
-import json
-import pickle
 import time
+import hashlib
+import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Generator
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +25,8 @@ try:
     BM25_AVAILABLE = True
 except ImportError:
     BM25_AVAILABLE = False
-    logger.info("[RAG] rank_bm25 not installed - hybrid search disabled")
 
+from .rag_db import RAGDatabase
 
 class LocalRAG:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_dir: Path = None):
@@ -36,268 +35,231 @@ class LocalRAG:
         
         self.model = SentenceTransformer(model_name)
         self.index = None
-        self.chunks = []
+        self.chunks = [] # In-memory cache for fast retrieval & FAISS mapping
         self.cache_dir = cache_dir or Path(".")
-        self.bm25 = None  # For hybrid search
-    
+        
+        # Connect to SQLite
+        db_path = self.cache_dir / "rag.db"
+        self.db = RAGDatabase(db_path)
+        
+        self.bm25 = None
+        
+        # Load state from DB
+        self._load_from_db()
+
+    def _load_from_db(self):
+        """Restore index from DB."""
+        load_start = time.time()
+        self.chunks = self.db.get_all_chunks()
+        if self.chunks:
+            logger.info(f"[RAG] Restoring {len(self.chunks)} chunks from DB...")
+            self._rebuild_faiss()
+            self._rebuild_bm25()
+            dur = time.time() - load_start
+            logger.info(f"[RAG] State restored in {dur:.2f}s")
+
+    def _rebuild_faiss(self):
+        """Rebuild FAISS index from self.chunks vectors."""
+        if not self.chunks: return
+        
+        # Extract vectors with checking
+        vectors = []
+        valid_indices = []
+        for i, c in enumerate(self.chunks):
+            v = c.get('vector')
+            if v is not None and v.size > 0:
+                vectors.append(v)
+                valid_indices.append(i)
+                
+        if not vectors: return
+        
+        # Stack
+        embeddings = np.vstack(vectors)
+        dimension = embeddings.shape[1]
+        
+        self.index = faiss.IndexFlatL2(dimension)
+        self.index.add(embeddings.astype('float32'))
+        logger.info(f"[RAG] FAISS Index rebuilt: {self.index.ntotal} vectors")
+
+    def _rebuild_bm25(self):
+        if BM25_AVAILABLE and self.chunks:
+            texts = [c.get("text", "") for c in self.chunks]
+            # Simple tokenization
+            tokenized_texts = [text.lower().split() for text in texts]
+            self.bm25 = BM25Okapi(tokenized_texts)
+
     def chunk_documents(self, documents: List[Dict], chunk_size: int = 500, overlap: int = 50) -> List[Dict]:
-        """
-        Split documents into overlapping chunks for embedding.
-        
-        Args:
-            documents: List of docs with 'content', 'url', 'title' keys
-            chunk_size: Target size of each chunk in characters
-            overlap: Number of characters to overlap between chunks (prevents context loss)
-        
-        Returns:
-            List of chunk dictionaries with text and metadata
-        """
+        """Split documents into chunks."""
         chunks = []
-        
         for doc in documents:
-            content = doc["content"]
-            doc_url = doc.get("url", "unknown")
-            doc_title = doc.get("title", "Untitled")
+            content = doc.get("content", "")
+            if not content: continue
             
-            # Sliding window with overlap
             start = 0
             while start < len(content):
                 end = start + chunk_size
                 chunk_text = content[start:end]
-                
-                # Skip tiny chunks
-                if len(chunk_text) > 20:
+                if len(chunk_text) > 20: 
                     chunks.append({
-                        "url": doc_url,
-                        "title": doc_title,
-                        "chunk_id": len(chunks),
-                        "text": chunk_text
+                        "url": doc.get("url"),
+                        "title": doc.get("title"),
+                        "text": chunk_text,
+                        "chunk_index": len(chunks)
                     })
-                
-                # Move forward, but step back by overlap to create sliding window
                 start = end - overlap
-                
-                # Prevent infinite loop if overlap >= chunk_size
-                if overlap >= chunk_size:
-                    start = end
-        
-        logger.info(f"[RAG] Created {len(chunks)} chunks from {len(documents)} documents (overlap: {overlap} chars)")
+                if overlap >= chunk_size: start = end
         return chunks
     
     def build_index(self, documents: list):
-        """Build FAISS index and optionally BM25 index from documents."""
+        """Build/Update index with new documents (Parallel Batching)."""
         start_time = time.time()
         
-        # Chunk documents with overlap
-        chunk_start = time.time()
-        self.chunks = self.chunk_documents(documents, chunk_size=500, overlap=50)
-        chunk_time = time.time() - chunk_start
-        logger.info(f"[RAG] ✅ Chunking: {len(self.chunks)} chunks with overlap in {chunk_time:.2f}s")
+        # 1. Processing & Deduplication
+        BATCH_SIZE = 32
+        new_chunks_accumulated = []
+        docs_processed = 0
+        skipped = 0
         
-        if not self.chunks:
-            logger.warning("[RAG] No chunks to index")
+        for doc in documents:
+            content = doc.get('content', '')
+            if not content: continue
+
+            # Check Duplicates via Hash
+            content_hash = hashlib.md5(content.encode()).hexdigest()
+            if self.db.document_exists(content_hash):
+                skipped += 1
+                continue
+                
+            # Add Doc to DB
+            doc_id = self.db.add_document(doc.get('url'), doc.get('title'), content)
+            
+            # Chunk
+            doc_chunks = self.chunk_documents([doc])
+            for c in doc_chunks:
+                c['doc_id'] = doc_id 
+            new_chunks_accumulated.extend(doc_chunks)
+            docs_processed += 1
+            
+        logger.info(f"[RAG] Processed {docs_processed} new docs (skipped {skipped}). New chunks: {len(new_chunks_accumulated)}")
+        
+        if not new_chunks_accumulated:
+            logger.info("[RAG] No new content to ingest.")
             return
-        
-        texts = [c["text"] for c in self.chunks]
-        
-        # Generate embeddings for FAISS
+
+        # 2. Batched Embedding
+        total_chunks = len(new_chunks_accumulated)
         embed_start = time.time()
-        logger.info(f"[RAG] Generating embeddings for {len(texts)} chunks...")
-        embeddings = self.model.encode(texts, show_progress_bar=True, convert_to_numpy=True)
+        
+        # Process in batches
+        for i in range(0, total_chunks, BATCH_SIZE):
+            batch = new_chunks_accumulated[i : i + BATCH_SIZE]
+            texts = [c['text'] for c in batch]
+            
+            # Embed (Parallelized by SentenceTransformer/Torch internal/MKL)
+            embeddings = self.model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
+            
+            # Assign vectors & Insert
+            for j, vec in enumerate(embeddings):
+                batch[j]['vector'] = vec
+            
+            # Insert into DB (Grouped by doc_id to be cleaner, or just loop)
+            # Since chunks can belong to different docs in a batch (if batch spans doc boundary),
+            # we loop insert. SQLite is fast enough.
+            for c in batch:
+                self.db.add_chunks(c['doc_id'], [c])
+            
+            # Add to memory cache
+            self.chunks.extend(batch)
+            
         embed_time = time.time() - embed_start
-        logger.info(f"[RAG] ✅ Embeddings: {len(embeddings)} vectors in {embed_time:.2f}s ({embed_time/len(embeddings)*1000:.1f}ms/chunk)")
-        
-        # Build FAISS index
-        index_start = time.time()
-        dimension = embeddings.shape[1]
-        self.index = faiss.IndexFlatL2(dimension)
-        self.index.add(embeddings.astype('float32'))
-        index_time = time.time() - index_start
-        
-        # Build BM25 index for hybrid search (if available)
-        if BM25_AVAILABLE:
-            bm25_start = time.time()
-            tokenized_texts = [text.lower().split() for text in texts]
-            self.bm25 = BM25Okapi(tokenized_texts)
-            bm25_time = time.time() - bm25_start
-            logger.info(f"[RAG] ✅ BM25 index built in {bm25_time:.2f}s")
+        logger.info(f"[RAG] Embedded & Stored {total_chunks} chunks in {embed_time:.2f}s")
+            
+        # 3. Update Search Indices
+        self._rebuild_faiss()
+        self._rebuild_bm25()
         
         total_time = time.time() - start_time
-        logger.info(f"[RAG] ✅ Index built: {self.index.ntotal} vectors in {total_time:.2f}s | {dimension} dimensions")
-    
+        logger.info(f"[RAG] Ingest Complete: {total_time:.2f}s")
+
     def search(self, query: str, k: int = 3) -> List[Dict]:
-        """Find top-k relevant chunks using FAISS (semantic search)."""
-        if not self.index or not self.chunks:
-            logger.warning("[RAG] Index not built yet")
-            return []
+        """FAISS Search."""
+        if not self.index or not self.chunks: return []
         
-        # Generate query embedding
-        query_embedding = self.model.encode([query], convert_to_numpy=True)
-        
-        # Search FAISS
-        distances, indices = self.index.search(query_embedding.astype('float32'), k)
+        query_vec = self.model.encode([query], convert_to_numpy=True)
+        distances, indices = self.index.search(query_vec.astype('float32'), k)
         
         results = []
         for idx, dist in zip(indices[0], distances[0]):
-            if idx < len(self.chunks):
+            if idx < len(self.chunks) and idx >= 0:
                 chunk = self.chunks[idx].copy()
-                chunk['distance'] = float(dist)
-                chunk['score'] = 1.0 / (1.0 + float(dist))  # Convert distance to score
+                chunk['score'] = 1.0 / (1.0 + float(dist)) if dist >= 0 else 0
                 results.append(chunk)
-        
         return results
-    
+
     def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5) -> List[Dict]:
-        """
-        Hybrid search combining FAISS (semantic) + BM25 (keyword) using Reciprocal Rank Fusion.
+        """Hybrid Search (RRF)."""
+        if not self.index or not self.chunks: return []
         
-        Args:
-            query: User query string
-            k: Number of results to return
-            alpha: Weight for semantic search (0=keyword only, 1=semantic only, 0.5=balanced)
+        # Semantic Candidates
+        k_search = min(k * 3, len(self.chunks))
+        sem_res = self.search(query, k=k_search)
         
-        Returns:
-            List of chunks with combined scores
-        """
-        if not self.index or not self.chunks:
-            logger.warning("[RAG] Index not built yet")
-            return []
+        # Map Chunk Index -> Rank
+        # Since self.chunks is list, and FAISS returns list index,
+        # we can use the list index as the stable ID for this session.
+        # But wait, `search` returns simplified dict. We need indices.
+        # Let's re-run search logic linearly or just use returned results?
+        # Actually `sem_res` doesn't have the original index easily unless we add it.
+        # Let's assume `search` logic returns copies.
+        # Refactor: RRF needs indices?
+        # Simpler RRF implementation:
         
-        # Always get more candidates than we need for fusion
-        num_candidates = min(k * 3, len(self.chunks))
+        # 1. Semantic Scores
+        # Re-calc semantic ranks from scratch to get indices
+        q_vec = self.model.encode([query], convert_to_numpy=True)
+        _, f_indices = self.index.search(q_vec.astype('float32'), k_search)
+        f_ranks = {idx: i+1 for i, idx in enumerate(f_indices[0]) if idx >= 0 and idx < len(self.chunks)}
         
-        # 1. FAISS semantic search
-        faiss_results = self.search(query, k=num_candidates)
-        faiss_ranks = {r['chunk_id']: i + 1 for i, r in enumerate(faiss_results)}
+        # 2. Keyword Scores
+        b_ranks = {}
+        if self.bm25:
+             scores = self.bm25.get_scores(query.lower().split())
+             top_b = np.argsort(scores)[::-1][:k_search]
+             b_ranks = {idx: i+1 for i, idx in enumerate(top_b)}
         
-        # 2. BM25 keyword search (if available)
-        bm25_ranks = {}
-        if BM25_AVAILABLE and self.bm25:
-            tokenized_query = query.lower().split()
-            bm25_scores = self.bm25.get_scores(tokenized_query)
+        # 3. Fuse
+        fusion = {}
+        all_ids = set(f_ranks.keys()) | set(b_ranks.keys())
+        k_rrf = 60
+        for i in all_ids:
+            s = 0
+            if i in f_ranks: s += alpha * (1/(k_rrf + f_ranks[i]))
+            if i in b_ranks: s += (1-alpha) * (1/(k_rrf + b_ranks[i]))
+            fusion[i] = s
             
-            # Get top indices by BM25 score
-            top_bm25_indices = np.argsort(bm25_scores)[::-1][:num_candidates]
-            for rank, idx in enumerate(top_bm25_indices):
-                bm25_ranks[idx] = rank + 1
+        sorted_ids = sorted(fusion, key=fusion.get, reverse=True)[:k]
         
-        # 3. Reciprocal Rank Fusion (RRF)
-        # RRF score = sum(1 / (k + rank)) for each ranking
-        k_rrf = 60  # Standard RRF parameter
-        fusion_scores = {}
-        
-        all_chunk_ids = set(faiss_ranks.keys()) | set(bm25_ranks.keys())
-        
-        for chunk_id in all_chunk_ids:
-            score = 0.0
-            
-            # Semantic contribution
-            if chunk_id in faiss_ranks:
-                score += alpha * (1.0 / (k_rrf + faiss_ranks[chunk_id]))
-            
-            # Keyword contribution
-            if chunk_id in bm25_ranks:
-                score += (1 - alpha) * (1.0 / (k_rrf + bm25_ranks[chunk_id]))
-            
-            fusion_scores[chunk_id] = score
-        
-        # Sort by fusion score
-        sorted_ids = sorted(fusion_scores.keys(), key=lambda x: fusion_scores[x], reverse=True)[:k]
-        
-        # Build results
         results = []
-        for chunk_id in sorted_ids:
-            chunk = self.chunks[chunk_id].copy()
-            chunk['fusion_score'] = fusion_scores[chunk_id]
-            chunk['in_faiss'] = chunk_id in faiss_ranks
-            chunk['in_bm25'] = chunk_id in bm25_ranks
+        for i in sorted_ids:
+            chunk = self.chunks[i].copy()
+            chunk['fusion_score'] = fusion[i]
             results.append(chunk)
-        
-        logger.info(f"[RAG] Hybrid search: {len(results)} results (FAISS: {len(faiss_ranks)}, BM25: {len(bm25_ranks)})")
+            
         return results
-    
+
     def save(self, path: Path):
-        """Save index and chunks to disk."""
-        if not self.index:
-            logger.warning("[RAG] No index to save")
-            return
-        
-        try:
-            path.mkdir(parents=True, exist_ok=True)
-            
-            # Save FAISS index
-            index_path = path / "faiss.index"
-            faiss.write_index(self.index, str(index_path))
-            
-            # Save chunks as JSON
-            chunks_path = path / "chunks.json"
-            with open(chunks_path, "w", encoding='utf-8') as f:
-                json.dump(self.chunks, f, ensure_ascii=False)
-            
-            logger.info(f"[RAG] Saved index to {path} ({self.index.ntotal} vectors, {len(self.chunks)} chunks)")
-        
-        except Exception as e:
-            logger.error(f"[RAG] Failed to save index: {e}")
-            raise
+        """No-op (SQLite auto-saves)."""
+        pass
     
     def load(self, path: Path):
-        """Load index and chunks from disk."""
-        index_path = path / "faiss.index"
-        chunks_json = path / "chunks.json"
-        chunks_pkl = path / "chunks.pkl"
-        
-        if not index_path.exists():
-            logger.warning(f"[RAG] Index not found at {path}")
-            return False
-        
-        if not chunks_json.exists() and not chunks_pkl.exists():
-            logger.warning(f"[RAG] Chunks not found at {path}")
-            return False
-        
-        try:
-            # Load FAISS index
-            self.index = faiss.read_index(str(index_path))
-            
-            # Load chunks (prefer JSON, fallback to pickle)
-            if chunks_json.exists():
-                with open(chunks_json, "r", encoding='utf-8') as f:
-                    self.chunks = json.load(f)
-                logger.info(f"[RAG] Loaded index: {self.index.ntotal} vectors from JSON")
-            else:
-                with open(chunks_pkl, "rb") as f:
-                    self.chunks = pickle.load(f)
-                logger.info(f"[RAG] Loaded index: {self.index.ntotal} vectors from pickle")
-            
-            # Rebuild BM25 index for hybrid search
-            if BM25_AVAILABLE and self.chunks:
-                texts = [c["text"] for c in self.chunks]
-                tokenized_texts = [text.lower().split() for text in texts]
-                self.bm25 = BM25Okapi(tokenized_texts)
-                logger.info(f"[RAG] Rebuilt BM25 index for hybrid search")
-            
-            return True
-        
-        except Exception as e:
-            logger.error(f"[RAG] Failed to load index: {e}")
-            return False
-
+        """Reload from DB."""
+        self._load_from_db()
+        return True
 
 def generate_rag_response(query: str, rag: LocalRAG, llm_backend, use_hybrid: bool = True) -> Generator[str, None, None]:
-    """
-    Generate response using RAG context with source citations.
-    
-    Args:
-        query: User question
-        rag: LocalRAG instance with loaded index
-        llm_backend: Backend for LLM communication
-        use_hybrid: Use hybrid search (FAISS + BM25) if available
-    
-    Yields:
-        Response text chunks from LLM
-    """
-    # Search relevant chunks (hybrid if available, otherwise semantic)
-    if use_hybrid and BM25_AVAILABLE and rag.bm25:
-        context_chunks = rag.hybrid_search(query, k=5, alpha=0.6)  # Slightly favor semantic
+    """Generate response using RAG context."""
+    if use_hybrid and rag.bm25:
+        context_chunks = rag.hybrid_search(query, k=5, alpha=0.6)
     else:
         context_chunks = rag.search(query, k=5)
     
@@ -305,38 +267,15 @@ def generate_rag_response(query: str, rag: LocalRAG, llm_backend, use_hybrid: bo
         yield "I don't have enough information to answer that question."
         return
     
-    # Build numbered context for citations
-    context_parts = []
-    sources_list = []
-    
+    source_lines = []
+    context_text = ""
     for i, c in enumerate(context_chunks, 1):
-        context_parts.append(f"[{i}] Source: {c['title']}\n{c['text']}")
-        sources_list.append(f"[{i}] {c['title']} - {c.get('url', 'N/A')}")
+        context_text += f"\n[{i}] Source: {c.get('title','?')}\n{c.get('text','?')}\n"
+        source_lines.append(f"[{i}] {c.get('title','?')} - {c.get('url','N/A')}")
+
+    prompt = f"Using sources:\n{context_text}\n\nAnswer: {query}\nCite [1], [2]..."
     
-    context = "\n\n".join(context_parts)
-    
-    # Enhanced prompt with citation instructions
-    prompt = f"""Based on the following sources, answer the user's question. 
-Cite your sources using [1], [2], etc. when referring to specific information.
-
-SOURCES:
-{context}
-
-USER QUESTION: {query}
-
-INSTRUCTIONS:
-- Answer based ONLY on the provided sources
-- Cite sources like [1], [2] when using specific facts
-- If the answer isn't in the sources, say "I couldn't find this in my knowledge base."
-- Be concise but thorough
-
-ANSWER:"""
-    
-    # Send to LLM (streaming)
     for chunk in llm_backend.send_message(prompt):
         yield chunk
     
-    # Append sources footer
-    yield "\n\n---\n**Sources:**\n"
-    for source in sources_list[:3]:  # Show top 3 sources
-        yield f"{source}\n"
+    yield "\n\n**Sources:**\n" + "\n".join(source_lines[:3])
