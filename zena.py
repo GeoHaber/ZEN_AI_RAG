@@ -136,6 +136,21 @@ if ZENA_MODE:
     except Exception as e:
         logger.error(f"[RAG] Failed to initialize: {e}")
 
+# Initialize Conversation Memory (separate from knowledge RAG)
+conversation_memory = None
+try:
+    from zena_mode import ConversationMemory
+    from pathlib import Path
+    
+    ROOT_DIR = Path(__file__).parent.resolve()
+    conv_cache = ROOT_DIR / "conversation_cache"
+    conv_cache.mkdir(exist_ok=True)
+    
+    conversation_memory = ConversationMemory(cache_dir=conv_cache)
+    logger.info("[Memory] Conversation memory initialized")
+except Exception as e:
+    logger.error(f"[Memory] Failed to initialize conversation memory: {e}")
+
 # Import state management
 from state_management import attachment_state, chat_history, handle_error
 
@@ -157,6 +172,7 @@ class UIState:
         self.attachment_preview = None
         self.user_input = None
         self.is_valid = True  # Track if client is still connected
+        self.session_id = None  # Unique session ID for conversation memory
     
     def safe_update(self, element):
         """Safely update a UI element, handling disconnected clients."""
@@ -190,6 +206,11 @@ class UIState:
 async def nebula_page():
     # Create per-client UI state (NOT global!)
     ui_state = UIState()
+    
+    # Generate unique session ID for conversation memory
+    import uuid
+    ui_state.session_id = str(uuid.uuid4())[:8]  # Short session ID
+    logger.info(f"[Session] New client session: {ui_state.session_id}")
     
     # Theme & Layout
     setup_app_theme()
@@ -627,7 +648,7 @@ async def nebula_page():
     handlers = {'send': None}  # Will hold reference to handle_send after footer creates it
     
     async def stream_response(prompt: str):
-        """Stream LLM response to chat UI."""
+        """Stream LLM response to chat UI with conversation memory."""
         # Check if client is still valid
         if not ui_state.is_valid:
             logger.warning("[UI] Client disconnected, skipping stream")
@@ -635,6 +656,18 @@ async def nebula_page():
             
         prompt = sanitize_prompt(prompt)
         add_message('user', prompt)
+        
+        # Save user message to conversation memory
+        if conversation_memory:
+            try:
+                conversation_memory.add_message(
+                    role='user',
+                    content=prompt,
+                    session_id=ui_state.session_id
+                )
+                logger.debug(f"[Memory] Saved user message to session {ui_state.session_id}")
+            except Exception as e:
+                logger.warning(f"[Memory] Failed to save user message: {e}")
         
         try:
             ui_state.status_text.text = locale.CHAT_THINKING
@@ -667,8 +700,25 @@ async def nebula_page():
         
         full_text = ""
         
-        # Build prompt with RAG context if enabled
+        # Build prompt with conversation context from memory
         final_prompt = prompt
+        
+        # First, inject conversation history context if available
+        if conversation_memory:
+            try:
+                # Get contextual prompt with relevant conversation history
+                final_prompt = conversation_memory.build_contextual_prompt(
+                    prompt,
+                    session_id=ui_state.session_id,
+                    max_context_messages=6  # Last 3 exchanges
+                )
+                if final_prompt != prompt:
+                    logger.info(f"[Memory] Injected conversation context for session {ui_state.session_id}")
+            except Exception as e:
+                logger.warning(f"[Memory] Failed to build contextual prompt: {e}")
+                final_prompt = prompt
+        
+        # Then add RAG context if enabled
         if rag_enabled['value'] and rag_system and rag_system.index:
             try:
                 # Query RAG for relevant context
@@ -767,6 +817,19 @@ ANSWER:"""
             try:
                 msg_ui.content = full_text
                 ui_state.safe_update(msg_ui)
+                
+                # Save assistant response to conversation memory
+                if conversation_memory:
+                    try:
+                        conversation_memory.add_message(
+                            role='assistant',
+                            content=full_text,
+                            session_id=ui_state.session_id
+                        )
+                        logger.debug(f"[Memory] Saved assistant response to session {ui_state.session_id}")
+                    except Exception as e:
+                        logger.warning(f"[Memory] Failed to save assistant response: {e}")
+                        
             except RuntimeError:
                 logger.debug("[UI] Client disconnected during final update")
         
