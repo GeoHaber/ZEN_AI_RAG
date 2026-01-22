@@ -102,5 +102,6 @@ class WebsiteScraper:
                 logger.error(f"[Scraper] Error scraping {url}: {e}")
         
         total_time = time.time() - start_time
-        logger.info(f"[Scraper] ✅ Completed: {len(self.documents)} pages in {total_time:.2f}s ({total_time/len(self.documents):.2f}s/page)")
+        avg_time = total_time / len(self.documents) if self.documents else 0
+        logger.info(f"[Scraper] ✅ Completed: {len(self.documents)} pages in {total_time:.2f}s ({avg_time:.2f}s/page)")
         return self.documents

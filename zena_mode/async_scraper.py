@@ -199,6 +199,7 @@ class SafeAsyncScraper:
         
         logger.info(f"[SafeScraper] 🔍 Discovered {len(discovered)} URLs")
         return list(discovered)
+        return list(discovered)
     
     async def scrape_website(self, max_pages: int = 50, progress_callback=None) -> list:
         """

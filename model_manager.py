@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from config import BASE_DIR, MODEL_DIR
 from utils import logger
-import warnings
 
 # Enable Fast Downloads (Rust-based)
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
@@ -121,6 +120,7 @@ def parse_model_info(model_name: str, file_size_gb: float = 0) -> Dict:
 # Popular GGUF model repositories with enhanced info
 POPULAR_MODELS = [
     {
+        **parse_model_info("qwen2.5-coder-7b-instruct-q4_k_m", 4.4),
         "name": "Qwen 2.5 Coder 7B",
         "repo": "Qwen/Qwen2.5-Coder-7B-Instruct-GGUF",
         "file": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
@@ -136,9 +136,9 @@ POPULAR_MODELS = [
         "license": "Apache 2.0 (Commercial OK)",
         "languages": "90+ programming languages, English",
         "benchmark": "HumanEval: 88% (top tier)",
-        **parse_model_info("qwen2.5-coder-7b-instruct-q4_k_m", 4.4)
     },
     {
+        **parse_model_info("Llama-3.2-3B-Instruct-Q4_K_M", 2.0),
         "name": "Llama 3.2 3B",
         "repo": "bartowski/Llama-3.2-3B-Instruct-GGUF",
         "file": "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
@@ -154,9 +154,9 @@ POPULAR_MODELS = [
         "license": "Llama 3.2 License (Commercial OK with limits)",
         "languages": "English primary, 70+ languages supported",
         "benchmark": "MMLU: 72% (excellent for size)",
-        **parse_model_info("Llama-3.2-3B-Instruct-Q4_K_M", 2.0)
     },
     {
+        **parse_model_info("Mistral-7B-Instruct-v0.3.Q4_K_M", 4.1),
         "name": "Mistral 7B v0.3",
         "repo": "MaziyarPanahi/Mistral-7B-Instruct-v0.3-GGUF",
         "file": "Mistral-7B-Instruct-v0.3.Q4_K_M.gguf",
@@ -172,9 +172,9 @@ POPULAR_MODELS = [
         "license": "Apache 2.0 (Commercial OK)",
         "languages": "English, French, German, Spanish, Italian",
         "benchmark": "MMLU: 62% (solid all-around)",
-        **parse_model_info("Mistral-7B-Instruct-v0.3.Q4_K_M", 4.1)
     },
     {
+        **parse_model_info("Phi-3-mini-4k-instruct-q4", 2.4),
         "name": "Phi-3 Mini 4K",
         "repo": "microsoft/Phi-3-mini-4k-instruct-gguf",
         "file": "Phi-3-mini-4k-instruct-q4.gguf",
@@ -190,9 +190,9 @@ POPULAR_MODELS = [
         "license": "MIT (Commercial OK)",
         "languages": "English only",
         "benchmark": "MMLU: 69% (amazing for 3.8B params!)",
-        **parse_model_info("Phi-3-mini-4k-instruct-q4", 2.4)
     },
     {
+        **parse_model_info("deepseek-coder-6.7b-instruct.Q4_K_M", 4.0),
         "name": "DeepSeek Coder 6.7B",
         "repo": "bartowski/deepseek-coder-6.7b-instruct-GGUF",
         "file": "deepseek-coder-6.7b-instruct-Q4_K_M.gguf",
@@ -208,9 +208,9 @@ POPULAR_MODELS = [
         "license": "DeepSeek License (Research + Commercial)",
         "languages": "86 programming languages",
         "benchmark": "HumanEval: 78% (excellent)",
-        **parse_model_info("deepseek-coder-6.7b-instruct.Q4_K_M", 4.0)
     },
     {
+        **parse_model_info("gemma-2-9b-it-Q4_K_M", 5.5),
         "name": "Gemma 2 9B",
         "repo": "bartowski/gemma-2-9b-it-GGUF",
         "file": "gemma-2-9b-it-Q4_K_M.gguf",
@@ -226,9 +226,9 @@ POPULAR_MODELS = [
         "license": "Gemma License (Commercial OK)",
         "languages": "English, some multilingual",
         "benchmark": "MMLU: 71% (very capable)",
-        **parse_model_info("gemma-2-9b-it-Q4_K_M", 5.5)
     },
     {
+        **parse_model_info("Meta-Llama-3.1-8B-Instruct-Q4_K_M", 4.9),
         "name": "Llama 3.1 8B",
         "repo": "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
         "file": "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
@@ -244,9 +244,9 @@ POPULAR_MODELS = [
         "license": "Llama 3.1 License (Commercial OK)",
         "languages": "8 languages (EN, DE, FR, IT, PT, HI, ES, TH)",
         "benchmark": "MMLU: 69% (well-rounded)",
-        **parse_model_info("Meta-Llama-3.1-8B-Instruct-Q4_K_M", 4.9)
     },
     {
+        **parse_model_info("Qwen2.5-14B-Instruct-Q4_K_M", 8.5),
         "name": "Qwen 2.5 14B",
         "repo": "bartowski/Qwen2.5-14B-Instruct-GGUF",
         "file": "Qwen2.5-14B-Instruct-Q4_K_M.gguf",
@@ -262,7 +262,6 @@ POPULAR_MODELS = [
         "license": "Apache 2.0 (Commercial OK)",
         "languages": "29 languages",
         "benchmark": "MMLU: 79% (flagship tier)",
-        **parse_model_info("Qwen2.5-14B-Instruct-Q4_K_M", 8.5)
     }
 ]
 

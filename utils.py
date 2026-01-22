@@ -83,15 +83,28 @@ def wait_for_port(port: int, timeout: int = 60, host: str = HOST) -> bool:
 # --- Process Management ---
 
 def is_pid_alive(pid: int) -> bool:
-    """Checks if a process ID is actually running on Windows."""
+    """Checks if a process ID is actually running (cross-platform)."""
     try:
-        process = ctypes.windll.kernel32.OpenProcess(1, False, pid)
-        if process:
-            ctypes.windll.kernel32.CloseHandle(process)
-            return True
-        return False
-    except Exception:
-        return False
+        import psutil
+        return psutil.pid_exists(pid)
+    except ImportError:
+        # Fallback for Windows without psutil
+        if sys.platform == "win32":
+            try:
+                process = ctypes.windll.kernel32.OpenProcess(1, False, pid)
+                if process:
+                    ctypes.windll.kernel32.CloseHandle(process)
+                    return True
+                return False
+            except Exception:
+                return False
+        else:
+            # Unix fallback
+            try:
+                os.kill(pid, 0)
+                return True
+            except OSError:
+                return False
 
 
 # --- Hardware Profiling ---
@@ -179,7 +192,7 @@ def kill_process_tree(pid: int):
         _, alive = psutil.wait_procs(children, timeout=3)
         for p in alive:
             try: p.kill() 
-            except: pass
+            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
             
         parent.terminate()
         parent.wait(3)
@@ -187,7 +200,7 @@ def kill_process_tree(pid: int):
         logger.error(f"Failed to kill tree {pid}: {e}")
         # Fallback for extreme cases
         try: os.kill(pid, signal.SIGTERM)
-        except: pass
+        except OSError: pass
 
 def kill_process_by_name(image_name: str):
     """Safely kills processes by image name using psutil."""
@@ -199,7 +212,7 @@ def kill_process_by_name(image_name: str):
                     proc.terminate()
                     # We don't wait here to avoid blocking large iterations, 
                     # but real implementations might want to collect and wait.
-                except: pass
+                except (psutil.NoSuchProcess, psutil.AccessDenied): pass
     except ImportError:
         # Fallback only if psutil is somehow missing (bootstrap edge case)
         subprocess.run(["taskkill", "/F", "/IM", image_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -47,6 +47,10 @@ from security import FileValidator
 from utils import format_message_with_attachment, normalize_input, sanitize_prompt
 from ui_components import setup_app_theme, setup_common_dialogs, setup_drawer
 
+# Import localization and UI modules
+from locales import get_locale, L
+from ui import Styles, Icons, Formatters
+
 # Optional deps
 try:
     import sounddevice as sd
@@ -143,15 +147,49 @@ if pyttsx3:
     except:
         pass
 
-# UI state
-chat_log = None 
-status_text = None
-attachment_preview = None
-user_input = None
+# UI State Container - holds per-client UI references
+class UIState:
+    """Container for per-client UI element references."""
+    def __init__(self):
+        self.chat_log = None
+        self.scroll_container = None
+        self.status_text = None
+        self.attachment_preview = None
+        self.user_input = None
+        self.is_valid = True  # Track if client is still connected
+    
+    def safe_update(self, element):
+        """Safely update a UI element, handling disconnected clients."""
+        if not self.is_valid:
+            return
+        try:
+            if element is not None:
+                element.update()
+        except RuntimeError as e:
+            if 'client' in str(e).lower() and 'deleted' in str(e).lower():
+                logger.debug("[UI] Client disconnected, marking invalid")
+                self.is_valid = False
+            else:
+                raise
+    
+    def safe_scroll(self):
+        """Safely scroll to bottom, handling disconnected clients."""
+        if not self.is_valid:
+            return
+        try:
+            if self.scroll_container is not None:
+                self.scroll_container.scroll_to(percent=1.0)
+        except RuntimeError as e:
+            if 'client' in str(e).lower() and 'deleted' in str(e).lower():
+                logger.debug("[UI] Client disconnected, marking invalid")
+                self.is_valid = False
+            else:
+                raise
 
 @ui.page('/')
 async def nebula_page():
-    global chat_log, status_text, attachment_preview, user_input
+    # Create per-client UI state (NOT global!)
+    ui_state = UIState()
     
     # Theme & Layout
     setup_app_theme()
@@ -168,13 +206,36 @@ async def nebula_page():
     # --- LEFT SIDEBAR (Drawer) ---
     drawer = setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state)
 
+    def scan_swarm():
+        """Refresh the arbitrator's knowledge of live experts."""
+        try:
+            arbitrator.discover_swarm()
+            count = len(arbitrator.ports)
+            status = app_state.get('swarm_status')
+            if status:
+                if count > 1:
+                    status.text = f"{count} Experts Online"
+                    status.classes(remove='text-red-500', add='text-blue-600')
+                else:
+                    status.text = "Standalone Mode"
+                    status.classes(remove='text-blue-600', add='text-gray-500')
+        except Exception as e:
+            logger.error(f"[Swarm] Scan failed: {e}")
+
+    app_state['scan_swarm'] = scan_swarm
+    
+    # Run initial scan after UI is ready
+    ui.timer(2.0, scan_swarm, once=True)
+
             
 
             
     # --- MAIN CONTENT ---
     # --- THEME MANAGEMENT ---
-    # Initialize Dark Mode (default to system preference or False)
-    dark_mode = ui.dark_mode()
+    # Initialize Dark Mode from saved settings
+    from settings import is_dark_mode, set_dark_mode
+    saved_dark_mode = is_dark_mode()
+    dark_mode = ui.dark_mode(value=saved_dark_mode)
     
     # Create reactive theme colors
     
@@ -191,8 +252,11 @@ async def nebula_page():
             if drawer: drawer.props('dark')
             if footer: footer.props('dark')
             
-            # Update specific Quasar classes if needed
+            # Update body classes - removes light, adds dark
             ui.query('body').classes(remove='bg-gray-50 text-gray-900', add='bg-slate-900 text-white')
+            
+            # Force JavaScript sync (handles timing issues)
+            ui.run_javascript('if(typeof syncDarkMode === "function") syncDarkMode();')
         else:
             if header: header.props(remove='dark')
             if drawer: drawer.props(remove='dark')
@@ -200,46 +264,59 @@ async def nebula_page():
             
             ui.query('body').classes(remove='bg-slate-900 text-white', add='bg-gray-50 text-gray-900')
             
+            # Force JavaScript sync
+            ui.run_javascript('if(typeof syncDarkMode === "function") syncDarkMode();')
+            
         # Update chart colors or other non-reactive elements here if present
         pass
 
+    # Get locale for UI strings
+    locale = get_locale()
+
     # --- LAYOUT ---
-    # Header (Light theme with blue accent)
-    with ui.header().classes('bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 p-4 shadow-sm text-gray-800 dark:text-gray-100') as header:
+    # Header
+    with ui.header().classes(Styles.HEADER) as header:
         # Toggle sidebar
-        ui.button(on_click=lambda: drawer.toggle(), icon='menu').props('flat').classes('text-gray-700 dark:text-white')
+        ui.button(on_click=lambda: drawer.toggle(), icon=Icons.MENU).props('flat').classes(Styles.TEXT_PRIMARY)
         
-        # Theme Toggle - Rewritten to use direct prop application
+        # Theme Toggle - Shows sun/moon based on current state
+        theme_btn = ui.button(icon='light_mode' if not saved_dark_mode else 'dark_mode').props('flat').classes(Styles.TEXT_PRIMARY).tooltip(locale.TOOLTIP_DARK_MODE)
+        
         def toggle_dark_mode():
             if dark_mode.value is True:
                 dark_mode.disable()
                 update_theme(False)
+                set_dark_mode(False)
+                theme_btn._props['icon'] = 'light_mode'  # Sun icon for light mode
             else:
                 dark_mode.enable()
                 update_theme(True)
+                set_dark_mode(True)
+                theme_btn._props['icon'] = 'dark_mode'  # Moon icon for dark mode
+            theme_btn.update()
         
-        ui.button(on_click=toggle_dark_mode, icon='dark_mode').props('flat').classes('text-gray-700 dark:text-white').tooltip('Toggle Dark Mode')
+        theme_btn.on('click', toggle_dark_mode)
         
         # Scan & Read Button (Enhanced for Zena mode)
         # Create dialog ONCE - Opaque background for visibility
-        with ui.dialog() as rag_dialog, ui.card().classes('p-6 w-96 bg-white dark:bg-slate-800 shadow-2xl'):
+        with ui.dialog() as rag_dialog, ui.card().classes(Styles.DIALOG_CARD + ' w-96'):
             if ZENA_MODE:
-                ui.label('Scan & Read').classes('text-xl font-bold mb-4 text-gray-900 dark:text-white')
+                ui.label(locale.RAG_SCAN_READ).classes(Styles.DIALOG_TITLE)
                 
                 # Mode selector
-                mode_select = ui.select(['Website', 'Local Directory'], value='Website', label='Source Type').props('outlined').classes('w-full mb-3')
+                mode_select = ui.select([locale.RAG_WEBSITE, locale.RAG_LOCAL_DIRECTORY], value=locale.RAG_WEBSITE, label=locale.RAG_SOURCE_TYPE).props('outlined').classes('w-full mb-3')
                 
                 # Website inputs
-                website_input = ui.input('Website URL', value=ZENA_CONFIG.get('website_url', '')).props('outlined input-class="text-black dark:text-white"').classes('w-full mb-2')
-                pages_input = ui.input('Max Pages', value='50').props('outlined input-class="text-black dark:text-white"').classes('w-full mb-2')
+                website_input = ui.input(locale.RAG_WEBSITE_URL, value=ZENA_CONFIG.get('website_url', '')).props('outlined').classes('w-full mb-2')
+                pages_input = ui.input(locale.RAG_MAX_PAGES, value='50').props('outlined').classes('w-full mb-2')
                 
                 # Directory inputs (hidden by default)
-                dir_input = ui.input('Directory Path', placeholder='C:/Users/YourName/Documents').props('outlined input-class="text-black dark:text-white" visible=false').classes('w-full mb-2')
-                files_input = ui.input('Max Files', value='1000').props('outlined input-class="text-black dark:text-white" visible=false').classes('w-full mb-2')
+                dir_input = ui.input(locale.RAG_DIRECTORY_PATH, placeholder='C:/Users/YourName/Documents').props('outlined visible=false').classes('w-full mb-2')
+                files_input = ui.input(locale.RAG_MAX_FILES, value='1000').props('outlined visible=false').classes('w-full mb-2')
                 
                 # Toggle visibility based on mode
                 def on_mode_change():
-                    is_website = mode_select.value == 'Website'
+                    is_website = mode_select.value == locale.RAG_WEBSITE
                     website_input.props(f'visible={is_website}')
                     pages_input.props(f'visible={is_website}')
                     dir_input.props(f'visible={not is_website}')
@@ -247,15 +324,14 @@ async def nebula_page():
                 
                 mode_select.on('update:model-value', on_mode_change)
                 
-                # Progress indicators
                 # Progress indicators - Enhanced Visibility
-                progress_label = ui.label('').classes('text-md font-bold text-blue-600 dark:text-blue-400 mb-2')
-                progress_bar = ui.linear_progress(value=0, show_value=False).classes('mb-4 h-4 rounded').props('visible=false color=primary track-color=grey-3')
+                progress_label = ui.label('').classes('text-md font-bold ' + Styles.TEXT_ACCENT + ' mb-2')
+                progress_bar = ui.linear_progress(value=0, show_value=False).classes(Styles.PROGRESS).props('visible=false color=primary track-color=grey-3')
                 
                 async def start_website_scan():
                     url = normalize_input(website_input.value, 'url')
                     if not url:
-                        ui.notify("Please enter a website URL", color='warning')
+                        ui.notify(locale.NOTIFY_RAG_ENTER_URL, color='warning')
                         return
                     
                     # Health Check
@@ -268,7 +344,7 @@ async def nebula_page():
                         )
                     except Exception as e:
                         logger.error(f"[RAG] Website check failed: {e}")
-                        ui.notify(f"Cannot access website: {e}", color='negative')
+                        ui.notify(locale.format('ERROR_WEBSITE_UNREACHABLE', error=str(e)), color='negative')
                         return
 
                     try:
@@ -279,7 +355,7 @@ async def nebula_page():
                     # Show progress (Safe update)
                     try:
                         progress_bar.props('visible=true')
-                        progress_label.text = f"🔍 Scanning {url}..."
+                        progress_label.text = locale.format('NOTIFY_RAG_SCANNING', url=url)
                         progress_bar.value = 0.1
                         ui.notify(f"Starting RAG scan of {url}...", color='info')
                     except RuntimeError:
@@ -471,18 +547,18 @@ async def nebula_page():
         def toggle_rag(e):
             rag_enabled['value'] = e.value
             scan_button.visible = e.value # Toggle visibility
-            status = "enabled" if e.value else "disabled"
+            status = locale.NOTIFY_RAG_ENABLED if e.value else locale.NOTIFY_RAG_DISABLED
             color = "positive" if e.value else "info"
-            ui.notify(f"RAG mode {status}", color=color)
-            logger.info(f"[RAG] Mode {status}")
+            ui.notify(status, color=color)
+            logger.info(f"[RAG] Mode {'enabled' if e.value else 'disabled'}")
         
         # Scan & Read Toggle Switch (renamed)
-        rag_switch = ui.switch('Enable Scan & Learn (RAG)', value=False, on_change=toggle_rag).props('color=cyan keep-color').classes('ml-2 text-gray-700 dark:text-white font-medium')
+        rag_switch = ui.switch(locale.RAG_ENABLE, value=False, on_change=toggle_rag).props('color=cyan keep-color').classes('ml-2 ' + Styles.TEXT_PRIMARY + ' font-medium')
         
         # TTS Button
         async def speak_last_response():
             if not tts_engine:
-                ui.notify("TTS not available (pyttsx3 missing)", color='warning')
+                ui.notify(locale.VOICE_NOT_AVAILABLE, color='warning')
                 return
             try:
                 # Get last AI message from chat log
@@ -492,56 +568,58 @@ async def nebula_page():
                 await asyncio.to_thread(tts_engine.runAndWait)
             except Exception as e:
                 logger.error(f"[TTS] Error: {e}")
-                ui.notify(f"TTS error: {e}", color='negative')
+                ui.notify(locale.format('VOICE_ERROR', error=str(e)), color='negative')
         
-        ui.button('TTS', icon='volume_up', on_click=speak_last_response).props('flat').classes('text-blue-600 dark:text-blue-400')
-        status_text = ui.label('Ready').classes('text-gray-600 dark:text-gray-400 text-sm ml-auto')
+        ui.button('TTS', icon=Icons.VOLUME, on_click=speak_last_response).props('flat').classes(Styles.TEXT_ACCENT)
+        ui_state.status_text = ui.label(locale.CHAT_READY).classes(Styles.TEXT_SECONDARY + ' text-sm ml-auto')
 
-    # Chat Area (Light background)
-    with ui.column().classes('w-full max-w-4xl mx-auto flex-1 overflow-auto p-4 space-y-4 pb-24 bg-gray-50 dark:bg-slate-950') as chat_log_container:
-        chat_log = chat_log_container
+    # Chat Area - Use scroll_area for proper scrolling
+    # IMPORTANT: Set explicit height to fill space between header and footer
+    # The calc accounts for header (~64px) and footer (~120px)
+    ui_state.scroll_container = ui.scroll_area().classes('w-full').style('height: calc(100vh - 200px); min-height: 300px;')
+    with ui_state.scroll_container:
+        with ui.column().classes('w-full max-w-4xl mx-auto p-4 space-y-4 ' + Styles.CHAT_CONTAINER_LIGHT + ' ' + Styles.CHAT_CONTAINER_DARK) as chat_log_container:
+            ui_state.chat_log = chat_log_container
 
-    # Add message to chat (Zena Style - Light theme with circular avatar)
+    # Add message to chat
     def add_message(role: str, content: str):
-        with chat_log:
-            with ui.row().classes('w-full justify-end' if role == 'user' else 'w-full justify-start'):
-                # Zena-style colors (light theme)
+        with ui_state.chat_log:
+            with ui.row().classes(Styles.CHAT_ROW_USER if role == 'user' else Styles.CHAT_ROW_AI):
+                # Zena-style colors
                 if role == 'user':
-                    color = 'bg-blue-500 text-white'
+                    color = Styles.CHAT_BUBBLE_USER
                 else:
-                    color = 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100'
+                    color = Styles.CHAT_BUBBLE_AI
                 
                 align = 'items-end' if role == 'user' else 'items-start'
                 
-                # Add circular avatar for AI messages (Zena-style)
+                # Add circular avatar for AI messages
                 if role != 'user':
                     ai_initial = 'Z' if ZENA_MODE else 'N'
-                    ui.avatar(ai_initial, color='primary', text_color='white').classes('w-10 h-10 mr-2')
+                    ui.avatar(ai_initial, color='primary', text_color='white').classes(Styles.AVATAR + ' mr-2')
                 
                 with ui.column().classes(align):
-                    ai_name = 'Zena' if ZENA_MODE else 'ZenAI'
-                    ui.label('You' if role == 'user' else ai_name).classes('text-xs text-gray-500 dark:text-gray-400 mb-1 ml-1 mr-1')
-                    ui.markdown(content).classes(f'{color} px-5 py-3 rounded-3xl max-w-3xl shadow-sm text-md leading-relaxed')
-        # Auto-scroll handled by scroll_to_bottom if needed, but NiceGUI/Vue does it often auto
-        # We can force scroll:
-        ui.run_javascript('window.scrollTo(0, document.body.scrollHeight)')
+                    ai_name = 'Zena' if ZENA_MODE else locale.APP_NAME
+                    ui.label(locale.CHAT_YOU if role == 'user' else ai_name).classes(Styles.CHAT_NAME)
+                    ui.markdown(content).classes(f'{color} {Styles.CHAT_BUBBLE_BASE}')
+        # Auto-scroll to bottom
+        ui_state.safe_scroll()
     
-    # Guided Task Chips (Zena-style - Pill-shaped)
+    # Guided Task Chips (Pill-shaped)
     def add_guided_chips():
-        with chat_log:
-            ui.label('Quick Actions').classes('text-xs text-gray-600 mb-2 mt-4')
+        with ui_state.chat_log:
+            ui.label(locale.CHAT_QUICK_ACTIONS).classes(Styles.LABEL_XS + ' mb-2 mt-4')
             with ui.row().classes('gap-2 flex-wrap mb-4'):
                 async def chip_action(text):
-                    user_input.value = text
+                    ui_state.user_input.value = text
                     if handlers['send']:
                         await handlers['send']()
                 
                 # Pill-shaped buttons (fully rounded)
-                chip_classes = 'rounded-full border-2 border-blue-500 text-blue-600 dark:text-blue-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors'
-                ui.button('Check Model Status', on_click=lambda: chip_action('What models are available?')).classes(chip_classes).props('outline size=sm')
-                ui.button('Latest llama.cpp', on_click=lambda: chip_action('Check llama.cpp version')).classes(chip_classes).props('outline size=sm')
-                ui.button('Run Benchmark', on_click=lambda: chip_action('Run a performance benchmark')).classes(chip_classes).props('outline size=sm')
-                ui.button('Help', on_click=lambda: chip_action('What can you help me with?')).classes(chip_classes).props('outline size=sm')
+                ui.button(locale.CHAT_CHECK_MODEL, on_click=lambda: chip_action('What models are available?')).classes(Styles.CHIP).props('outline size=sm')
+                ui.button(locale.CHAT_LATEST_LLAMA, on_click=lambda: chip_action('Check llama.cpp version')).classes(Styles.CHIP).props('outline size=sm')
+                ui.button(locale.CHAT_RUN_BENCHMARK, on_click=lambda: chip_action('Run a performance benchmark')).classes(Styles.CHIP).props('outline size=sm')
+                ui.button(locale.CHAT_HELP, on_click=lambda: chip_action('What can you help me with?')).classes(Styles.CHIP).props('outline size=sm')
 
     # Streaming response
     # RAG toggle state and handler references (mutable containers for closure access)
@@ -549,16 +627,43 @@ async def nebula_page():
     handlers = {'send': None}  # Will hold reference to handle_send after footer creates it
     
     async def stream_response(prompt: str):
+        """Stream LLM response to chat UI."""
+        # Check if client is still valid
+        if not ui_state.is_valid:
+            logger.warning("[UI] Client disconnected, skipping stream")
+            return
+            
         prompt = sanitize_prompt(prompt)
         add_message('user', prompt)
-        status_text.text = 'Thinking...'
         
-        # Create empty bot message (light theme)
-        with chat_log:
-            with ui.row().classes('w-full justify-start'):
-                with ui.column().classes('w-full max-w-3xl'):
-                    msg_ui = ui.markdown("").classes('bg-gray-100 text-gray-900 p-4 rounded-3xl shadow-sm animate-pulse w-full')
-                    sources_ui = ui.column().classes('w-full')
+        try:
+            ui_state.status_text.text = locale.CHAT_THINKING
+        except:
+            pass
+        
+        # Yield to let UI render user message
+        await asyncio.sleep(0.05)
+        
+        # Scroll to show user message (safely)
+        ui_state.safe_scroll()
+        
+        # Create empty bot message - use move() for reliable DOM attachment
+        msg_row = ui.row().classes(Styles.CHAT_ROW_AI)
+        msg_row.move(ui_state.chat_log)
+        logger.info(f"[UI] Created msg_row and moved to chat_log")
+        
+        with msg_row:
+            with ui.column().classes('w-full max-w-3xl'):
+                msg_ui = ui.markdown("⏳").classes(Styles.CHAT_BUBBLE_AI + ' p-4 rounded-3xl shadow-sm ' + Styles.LOADING_PULSE + ' w-full')
+                sources_ui = ui.column().classes('w-full')
+        
+        logger.info(f"[UI] msg_ui created with initial content '⏳'")
+        
+        # Force UI update and scroll
+        ui_state.safe_update(ui_state.chat_log)
+        ui_state.safe_update(ui_state.scroll_container)
+        await asyncio.sleep(0.05)
+        ui_state.safe_scroll()
         
         full_text = ""
         
@@ -571,10 +676,10 @@ async def nebula_page():
                 
                 if relevant_chunks:
                     # Spec Requirement: RAG Transparency (Subtle Blue Tint)
-                    msg_ui.classes(remove='bg-gray-100', add='bg-blue-50 dark:bg-slate-800 border-l-4 border-blue-500 shadow-md')
+                    msg_ui.classes(remove=Styles.CHAT_BUBBLE_AI.split()[0], add=Styles.CHAT_BUBBLE_RAG)
                     
                     # Prepend RAG Indicator
-                    full_text = "**🔍 Answered from Data Source**\n\n"
+                    full_text = locale.RAG_ANSWERED_FROM_SOURCE + "\n\n"
                     msg_ui.content = full_text
                     
                     # Build formatted context with [1] Source style
@@ -606,41 +711,77 @@ ANSWER:"""
         
         # Use CoT Swarm Arbitrator if enabled
         if app_state.get('use_cot_swarm') and app_state['use_cot_swarm'].value:
-            async for chunk in arbitrator.get_cot_response(final_prompt, "You are Zena, working within an Expert Swarm."):
+            is_quiet = app_state.get('quiet_cot') and app_state['quiet_cot'].value
+            async for chunk in arbitrator.get_cot_response(final_prompt, "You are Zena, working within an Expert Swarm.", verbose=not is_quiet):
+                if not ui_state.is_valid:
+                    break
                 full_text += chunk
                 msg_ui.content = full_text
-                msg_ui.classes(remove='animate-pulse')
-                msg_ui.update()
+                msg_ui.classes(remove=Styles.LOADING_PULSE)
+                ui_state.safe_update(msg_ui)
+                await asyncio.sleep(0.02)
         else:
             # Standard single-model streaming
-            async with async_backend:
-                async for chunk in async_backend.send_message_async(final_prompt):
-                    full_text += chunk
-                    msg_ui.content = full_text
-                    msg_ui.classes(remove='animate-pulse')
-                    msg_ui.update()
+            try:
+                chunk_count = 0
+                async with async_backend:
+                    async for chunk in async_backend.send_message_async(final_prompt):
+                        if not ui_state.is_valid:
+                            logger.info("[UI] Client disconnected mid-stream, stopping")
+                            break
+                        chunk_count += 1
+                        full_text += chunk
+                        msg_ui.content = full_text
+                        msg_ui.classes(remove=Styles.LOADING_PULSE)
+                        ui_state.safe_update(msg_ui)
+                        if chunk_count <= 3 or chunk_count % 10 == 0:
+                            logger.info(f"[UI] Chunk {chunk_count}: total_len={len(full_text)}")
+                        await asyncio.sleep(0.02)  # Yield to allow UI refresh
+                logger.info(f"[UI] Streaming complete: {chunk_count} chunks, {len(full_text)} chars")
+            except Exception as e:
+                logger.error(f"[UI] Stream error: {e}")
+                if not full_text:
+                    full_text = f"⚠️ Error: {str(e)}"
         
         # Append Sources Footer if RAG was used
         if rag_enabled['value'] and 'relevant_chunks' in locals() and relevant_chunks:
              with sources_ui:
-                 with ui.expansion('📂 View Source Data', icon='source').classes('w-full bg-blue-50 dark:bg-slate-900 rounded-xl mt-2'):
+                 with ui.expansion(locale.RAG_VIEW_SOURCES, icon=Icons.SOURCE).classes('w-full ' + Styles.CARD_INFO + ' rounded-xl mt-2'):
                      with ui.column().classes('gap-1 p-2'):
                          for i, c in enumerate(relevant_chunks, 1):
                              title = c.get('title', 'Untitled')
                              url = c.get('url', 'N/A')
                              # Handle Link vs Path
-                             # Handle Link vs Path
                              if url.startswith('http'):
-                                 ui.link(f"[{i}] {title}", url).classes('text-blue-600 underline text-sm block')
+                                 ui.link(f"[{i}] {title}", url).classes(Styles.TEXT_ACCENT + ' underline text-sm block')
                              else:
-                                 ui.label(f"[{i}] {title}").classes('font-bold text-sm text-gray-700 dark:text-gray-300 block')
-                                 ui.label(f"📍 {url}").classes('text-xs text-gray-500 ml-4 break-all block')
+                                 ui.label(f"[{i}] {title}").classes('font-bold text-sm ' + Styles.TEXT_PRIMARY + ' block')
+                                 ui.label(f"📍 {url}").classes(Styles.LABEL_XS + ' ml-4 break-all block')
                              
-                             # DEBUG: Show text preview to verify what LLM sees
-                             text_preview = c.get('text', '').strip()[:300].replace('\n', ' ')
-                             ui.label(f"📝 \"{text_preview}...\"").classes('text-xs text-gray-500 dark:text-gray-400 italic ml-4 mb-2 border-l-2 border-gray-300 pl-2 block')
+                             # Show text preview
+                             text_preview = Formatters.preview(c.get('text', ''), 300)
+                             ui.label(f'📝 "{text_preview}"').classes(Styles.LABEL_XS + ' italic ml-4 mb-2 border-l-2 border-gray-300 pl-2 block')
 
-        status_text.text = 'Ready'
+        # Final update - ensure response is visible
+        if full_text and ui_state.is_valid:
+            try:
+                msg_ui.content = full_text
+                ui_state.safe_update(msg_ui)
+            except RuntimeError:
+                logger.debug("[UI] Client disconnected during final update")
+        
+        try:
+            ui_state.status_text.text = locale.CHAT_READY
+        except RuntimeError:
+            pass
+        
+        # Force final UI refresh
+        ui_state.safe_update(ui_state.chat_log)
+        ui_state.safe_update(ui_state.scroll_container)
+        await asyncio.sleep(0.05)
+        
+        # Auto-scroll to bottom after response complete
+        ui_state.safe_scroll()
 
     # Helper for robust content extraction
     def extract_text(raw_data, filename):
@@ -750,22 +891,22 @@ ANSWER:"""
             # Use attachment_state instead of global dict
             attachment_state.set(name, content, content[:100])
             
-            attachment_preview.text = f"📎 {name} ({len(content)} chars)"
-            attachment_preview.visible = True
-            ui.notify(f"Attached {name}", color='positive')
+            ui_state.attachment_preview.text = f"📎 {name} ({len(content)} chars)"
+            ui_state.attachment_preview.visible = True
+            ui.notify(locale.format('NOTIFY_ATTACHED', name=name), color='positive')
             logger.info(f"[Upload] Successfully attached {name}")
         except Exception as ex:
             logger.error(f"[Upload] Error: {ex}")
-            ui.notify(f"Upload failed: {ex}", color='negative')
+            ui.notify(locale.format('NOTIFY_UPLOAD_FAILED', error=str(ex)), color='negative')
 
     # Voice Handler
     async def on_voice_click():
         if not sd:
-            ui.notify("Error: SoundDevice not found (Headless?)", color='red')
+            ui.notify(locale.NOTIFY_SOUNDDEVICE_MISSING, color='red')
             return
             
-        status_text.text = '🔴 Recording (5s)...'
-        status_text.classes('text-red-500 animate-pulse')
+        ui_state.status_text.text = locale.CHAT_RECORDING
+        ui_state.status_text.classes(Styles.TEXT_ERROR + ' ' + Styles.LOADING_PULSE)
         
         # Audio Config
         fs = 16000
@@ -781,8 +922,8 @@ ANSWER:"""
             audio_data = await asyncio.to_thread(record)
             
             # Convert to WAV in memory
-            status_text.text = 'Transcribing...'
-            status_text.classes('text-yellow-400')
+            ui_state.status_text.text = locale.CHAT_TRANSCRIBING
+            ui_state.status_text.classes(Styles.TEXT_WARNING)
             
             wav_buffer = io.BytesIO()
             wav.write(wav_buffer, fs, audio_data)
@@ -795,49 +936,60 @@ ANSWER:"""
             if response.status_code == 200:
                 transcription = response.json().get('text', '')
                 if transcription:
-                    user_input.value += transcription + " "
-                    ui.notify("Transcribed!", color='green')
+                    ui_state.user_input.value += transcription + " "
+                    ui.notify(locale.NOTIFY_TRANSCRIBED, color='green')
                 else:
-                    ui.notify("No speech detected", color='orange')
+                    ui.notify(locale.NOTIFY_NO_SPEECH, color='orange')
             else:
-                ui.notify(f"Transcription Failed: {response.text}", color='red')
+                ui.notify(locale.format('NOTIFY_TRANSCRIPTION_FAILED', error=response.text), color='red')
                 
         except Exception as e:
-            ui.notify(f"Voice Error: {e}", color='red')
+            ui.notify(locale.format('NOTIFY_VOICE_ERROR', error=str(e)), color='red')
         finally:
-            status_text.text = 'Ready'
-            status_text.classes(remove='text-red-500 animate-pulse text-yellow-400')
-            status_text.classes('text-gray-400')
+            ui_state.status_text.text = locale.CHAT_READY
+            ui_state.status_text.classes(remove=Styles.TEXT_ERROR + ' ' + Styles.LOADING_PULSE + ' ' + Styles.TEXT_WARNING)
+            ui_state.status_text.classes(Styles.LABEL_XS)
 
-    # Footer (Standard Polish)
-    with ui.footer().classes('bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 p-4 w-full flex justify-center') as footer:
-        with ui.column().classes('w-full max-w-4xl'):
+    # Footer (Compact input bar like LM Studio / Ollama)
+    # Message state tracker (outside UI blocks for persistence)
+    msg_state = {'current': ''}
+    
+    with ui.footer().classes(Styles.FOOTER) as footer:
+        with ui.column().classes('w-full max-w-4xl mx-auto gap-1'):
             # Attachment Preview
-            attachment_preview = ui.label('').classes('text-blue-600 dark:text-blue-400 text-sm mb-2 bg-blue-50 dark:bg-gray-800 px-3 py-1 rounded-full shadow-sm self-start').props('visible=false')
+            ui_state.attachment_preview = ui.label('').classes(Styles.TEXT_ACCENT + ' text-sm mb-2 bg-blue-50 dark:bg-gray-800 px-3 py-1 rounded-full shadow-sm self-start').props('visible=false')
             
-            # Input Bar Container
-            with ui.row().classes('w-full gap-2 items-center p-2 pr-2 px-4 rounded-3xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all'):
+            # Input Bar Container (Compact rounded bar)
+            with ui.row().classes(Styles.INPUT_BAR):
                 
                 # --- File Upload (Hidden Pattern) ---
                 # 1. The actual uploader is hidden
                 uploader = ui.upload(on_upload=on_upload, auto_upload=True).classes('hidden')
                 
                 # 2. A clean button triggers it
-                ui.button(on_click=lambda: uploader.run_method('pickFiles'), icon='attach_file') \
+                ui.button(on_click=lambda: uploader.run_method('pickFiles'), icon=Icons.ATTACH) \
                     .props('flat round dense') \
-                    .classes('text-gray-500 dark:text-gray-400 hover:text-blue-600')
+                    .classes(Styles.LABEL_MUTED + ' hover:text-blue-600')
                 
-                # Input Field
-                placeholder_text = 'Message ZenAI...' if not ZENA_MODE else 'Ask me anything...'
-                user_input = ui.input(placeholder=placeholder_text).props('borderless dense input-style="min-height: 24px"').classes('flex-1 text-gray-900 dark:text-white text-base')
+                # Input Field - simple approach with on_change
+                placeholder_text = locale.CHAT_PLACEHOLDER_ZENA if ZENA_MODE else locale.CHAT_PLACEHOLDER
                 
-                # Define send handler AFTER user_input exists (closure fix)
+                def track_input(e):
+                    msg_state['current'] = e.value
+                
+                ui_state.user_input = ui.input(placeholder=placeholder_text, on_change=track_input).props('outlined dense').classes('flex-1')
+                
+                # Define send handler
                 async def handle_send(e=None):
                     """Handle send button click or Enter key press."""
                     logger.info("[UI] handle_send triggered")
-                    text = user_input.value.strip() if user_input.value else ""
+                    
+                    # Get value from state tracker
+                    text = msg_state['current'].strip() if msg_state['current'] else ""
+                    logger.info(f"[UI] Message: '{text[:50] if text else '(empty)'}...'")
                     
                     if not text:
+                        logger.warning("[UI] Empty message, skipping")
                         return
                     
                     # Add attachment if present
@@ -845,24 +997,26 @@ ANSWER:"""
                         name, content, _ = attachment_state.get()
                         text = format_message_with_attachment(text, name, content)
                         attachment_state.clear()
-                        attachment_preview.visible = False
-                        attachment_preview.text = ""
+                        ui_state.attachment_preview.visible = False
+                        ui_state.attachment_preview.text = ""
                     
-                    user_input.value = ""
+                    ui_state.user_input.value = ""
+                    msg_state['current'] = ""  # Clear state
+                    logger.info(f"[UI] Calling stream_response...")
                     await stream_response(text)
                 
                 # Store handler reference for chip_action to use
                 handlers['send'] = handle_send
                 
-                user_input.on('keydown.enter.prevent', handle_send)
+                ui_state.user_input.on('keydown.enter.prevent', handle_send)
                 
                 # Actions
-                ui.button(icon='mic', on_click=on_voice_click).props('flat round dense icon-size=24px').classes('text-gray-400 dark:text-gray-500 hover:text-blue-600')
-                ui.button(icon='arrow_upward', on_click=handle_send).props('round dense unelevated').classes('bg-blue-600 text-white w-10 h-10 hover:bg-blue-700')
+                ui.button(icon=Icons.RECORD, on_click=on_voice_click).props('flat round dense icon-size=24px').classes(Styles.LABEL_MUTED + ' hover:text-blue-600')
+                ui.button(icon=Icons.SEND, on_click=handle_send).props('round dense unelevated').classes(Styles.BTN_PRIMARY + ' w-10 h-10')
 
-    # Apply Dark Mode on Initial Load (since ui.run has dark=True)
+    # Apply Dark Mode on Initial Load based on saved settings
     # This must be called AFTER all UI elements are created
-    update_theme(True)
+    update_theme(saved_dark_mode)
 
     # Initial Welcome (Dynamic based on mode)
     if ZENA_MODE:
@@ -870,21 +1024,22 @@ ANSWER:"""
         
         if rag_source == 'website':
              source_val = ZENA_CONFIG.get('website_url', 'configured website')
-             source_msg = f"I scanned the website: **{source_val}**"
+             source_msg = locale.format('WELCOME_SOURCE_WEBSITE', url=source_val)
         elif rag_source == 'filesystem':
              source_val = ZENA_CONFIG.get('directory_path', 'local directory')
-             source_msg = f"I scanned the local directory: **{source_val}**"
+             source_msg = locale.format('WELCOME_SOURCE_FILESYSTEM', path=source_val)
         else:
-             source_msg = "I have access to your configured **Knowledge Base**"
+             source_msg = locale.WELCOME_SOURCE_KB
 
-        add_message("system", f"👋 **Welcome to ZenAI!**\n\n{source_msg}. I can help you with:\n- Answering questions about the content\n- Finding information quickly\n- Providing guidance\n\n*Ask me about it if you want!*")
+        add_message("system", locale.format('WELCOME_ZENA', source_msg=source_msg))
     else:
-        add_message("system", "👋 **Welcome to ZenAI!**\n\nI'm your AI assistant powered by NiceGUI. I can help you with:\n- Managing AI models\n- Analyzing code files\n- Running benchmarks\n- Voice transcription\n\n*Remember, I'm still learning and improving!*")
+        add_message("system", locale.WELCOME_DEFAULT)
     add_guided_chips()
 
 def start_app():
     """Entry point for NiceGUI application."""
     import sys
+    from settings import is_dark_mode
     
     # --- Fix 1: NICEGUI_SCREEN_TEST_PORT KeyError ---
     # NiceGUI checks this env var if it detects 'pytest' in sys.modules.
@@ -902,7 +1057,8 @@ def start_app():
     except:
         pass
 
-    ui.run(title='ZenAI', dark=True, port=8080, reload=False)
+    # Use saved dark mode preference
+    ui.run(title='ZenAI', dark=is_dark_mode(), port=8080, reload=False)
 
 if __name__ == "__main__":
     start_app()

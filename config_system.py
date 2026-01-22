@@ -21,6 +21,10 @@ class AppConfig:
     VOICE_API_URL: str = "http://127.0.0.1:8003"
     UI_PORT: int = 8080
     
+    # Swarm Settings
+    SWARM_SIZE: int = 3
+    SWARM_ENABLED: bool = False
+    
     # File Upload Security
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10 MB
     ALLOWED_EXTENSIONS: Set[str] = field(default_factory=lambda: {
@@ -105,8 +109,10 @@ EMOJI = {
     'robot': '🤖',
     'sparkles': '✨',
     'check': '✓',
-    'info': 'ℹ️',  # Added for diagnostics
-    'timer': '⏱️',  # Added for performance
+    'info': 'ℹ️',
+    'timer': '⏱️',
+    'loading': '💡',
+    'expert': '🤖',
 }
 
 

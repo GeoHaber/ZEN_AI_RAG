@@ -136,8 +136,12 @@ def log_errors(default_return: Any = None, notify: bool = True):
                 logger.error(f"{EMOJI['error']} [{func.__name__}] Error: {e}", exc_info=True)
                 
                 if notify:
-                    from state_management import handle_error
-                    handle_error(e, func.__name__, notify_user=True)
+                    # Lazy import to avoid circular dependency
+                    try:
+                        from state_management import handle_error
+                        handle_error(e, func.__name__, notify_user=True)
+                    except ImportError:
+                        pass  # state_management not available
                 
                 return default_return
         
@@ -149,8 +153,12 @@ def log_errors(default_return: Any = None, notify: bool = True):
                 logger.error(f"{EMOJI['error']} [{func.__name__}] Error: {e}", exc_info=True)
                 
                 if notify:
-                    from state_management import handle_error
-                    handle_error(e, func.__name__, notify_user=True)
+                    # Lazy import to avoid circular dependency
+                    try:
+                        from state_management import handle_error
+                        handle_error(e, func.__name__, notify_user=True)
+                    except ImportError:
+                        pass  # state_management not available
                 
                 return default_return
         

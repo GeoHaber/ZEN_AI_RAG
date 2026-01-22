@@ -14,6 +14,44 @@ class FileValidator:
     """Validate uploaded files for security."""
     
     @staticmethod
+    def is_path_traversal(filename: str) -> bool:
+        """
+        Check if filename contains path traversal attempts.
+        
+        Args:
+            filename: Name of the uploaded file
+            
+        Returns:
+            True if path traversal detected, False otherwise
+        """
+        if not filename:
+            return False
+        
+        # Normalize path separators for cross-platform check
+        normalized = filename.replace('\\', '/')
+        
+        # Check for directory traversal patterns (.. as path component)
+        # Split by / and check each component
+        parts = normalized.split('/')
+        for part in parts:
+            # ".." as a standalone path component is traversal
+            if part == '..':
+                return True
+            # Home directory reference
+            if part.startswith('~'):
+                return True
+        
+        # Check for environment variable injection
+        if '$' in filename or '%' in filename:
+            return True
+        
+        # Check if starts with root
+        if normalized.startswith('/'):
+            return True
+            
+        return False
+    
+    @staticmethod
     def validate_file(
         filename: str, 
         content: bytes
@@ -31,6 +69,12 @@ class FileValidator:
             - error_message: Error description if validation fails, None otherwise
             - decoded_content: UTF-8 decoded string if valid, None otherwise
         """
+        # Path traversal check
+        if FileValidator.is_path_traversal(filename):
+            error = "Invalid filename (path traversal detected)"
+            logger.warning(f"[Security] {error}: {filename}")
+            return (False, error, None)
+        
         # Size check
         if len(content) > config.MAX_FILE_SIZE:
             size_mb = len(content) / (1024 * 1024)

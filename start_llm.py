@@ -25,6 +25,24 @@ os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 # Ensure dependencies (psutil)
 ensure_package("psutil")
 
+def instance_guard():
+    """Prevent multiple instances of start_llm.py from running."""
+    import psutil
+    current_pid = os.getpid()
+    script_name = "start_llm.py"
+    
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if proc.info['pid'] == current_pid:
+                continue
+            cmdline = proc.info.get('cmdline') or []
+            if any(script_name in str(arg) for arg in cmdline):
+                print(f"[!] Another instance of {script_name} is already running (PID: {proc.info['pid']})")
+                print("[*] Use --guard-bypass to skip this check")
+                sys.exit(1)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
 """
 start_llm.py - Nebula Management API (Ver 3.2 - Refactored)
 Orchestrates model lifecycle and hot-swapping.
@@ -35,6 +53,8 @@ Orchestrates model lifecycle and hot-swapping.
 MODEL_PATH: Path = MODEL_DIR / "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
 SERVER_EXE: Path = BIN_DIR / "llama-server.exe"
 SERVER_PROCESS = None
+EXPERT_PROCESSES = {}  # {port: subprocess.Popen}
+EXPERT_LOCK = threading.Lock()
 
 class NebulaOrchestrator(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -272,6 +292,19 @@ class NebulaOrchestrator(BaseHTTPRequestHandler):
             except Exception as e:
                 logger.error(f"Search Error: {e}")
                 self.send_json_response(500, {"error": str(e)})
+        
+        elif self.path == '/swarm/scale':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            params = json.loads(post_data)
+            count = params.get('count', 3)
+            
+            logger.info(f"[HUB] Swarm Scale requested: {count}")
+            
+            # Run scaling in background thread
+            threading.Thread(target=scale_swarm, args=(count,)).start()
+            
+            self.send_json_response(200, {"status": "scaling", "target": count})
 
 
 
@@ -452,10 +485,110 @@ def restart_with_model(name):
     subprocess.Popen(cmd, creationflags=subprocess.CREATE_NEW_CONSOLE)
     os._exit(0)
 
-def instance_guard():
-    """Ensure no other LLM servers or launchers are running."""
-    logger.info("[*] Instance Guard: Cleaning environment...")
-    kill_process_by_name("llama-server.exe")
+def launch_expert_process(port: int, threads: int, model_path: Path = None):
+    """Cleanly launch an expert LLM instance."""
+    env = os.environ.copy()
+    env["LLM_PORT"] = str(port)
+    env["LLM_THREADS"] = str(threads)
+    env["LLM_THREADS_BATCH"] = str(threads)
+    
+    script_path = os.path.abspath(__file__)
+    cmd = [sys.executable, script_path, "--guard-bypass"]
+    
+    # Ensure we use a valid file path for the model
+    if model_path and model_path.exists() and model_path.is_file():
+        cmd.extend(["--model", str(model_path)])
+    elif MODEL_PATH.exists() and MODEL_PATH.is_file():
+        cmd.extend(["--model", str(MODEL_PATH)])
+        
+    logger.info(f"[SWARM] Launching Expert on Port {port}: {' '.join(cmd)}")
+    
+    # Capture logs to file for each expert
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    log_file = open(log_dir / f"expert_{port}.log", "w")
+    
+    p = subprocess.Popen(
+        cmd, 
+        env=env, 
+        stdout=log_file, 
+        stderr=log_file,
+        cwd=os.path.dirname(script_path),
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+    )
+    return p
+
+def scale_swarm(target_count: int):
+    """Dynamically adjust the number of running experts."""
+    global EXPERT_PROCESSES
+    try:
+        print(f"[DEBUG] scale_swarm({target_count}) starting...")
+        with EXPERT_LOCK:
+            current_ports = sorted(EXPERT_PROCESSES.keys())
+            current_count = len(current_ports)
+            print(f"[DEBUG] Current ports: {current_ports} (Count: {current_count})")
+            
+            if target_count == current_count:
+                print("[DEBUG] Target count matches current count. No action.")
+                return
+                
+            if target_count > current_count:
+                # Launch more
+                needed = target_count - current_count
+                logger.info(f"[SWARM] Scaling UP: Adding {needed} experts...")
+                
+                # Determine starting port
+                base_port = env_int("LLM_PORT", 8001)
+                
+                # Find next available port in our sequence
+                potential_ports = []
+                for i in range(1, 10): # Max 10 agents for now
+                    p = 8001 + 3 + i
+                    if p not in current_ports:
+                        potential_ports.append(p)
+                
+                print(f"[DEBUG] Potential ports: {potential_ports}")
+                
+                for i in range(min(needed, len(potential_ports))):
+                    new_port = potential_ports[i]
+                    p = launch_expert_process(new_port, 2)
+                    EXPERT_PROCESSES[new_port] = p
+                    print(f"[DEBUG] Launched expert on port {new_port}")
+                    
+            elif target_count < current_count:
+                # Terminate some
+                to_remove = current_count - target_count
+                logger.info(f"[SWARM] Scaling DOWN: Removing {to_remove} experts...")
+                
+                # Remove from highest ports down
+                ports_to_kill = current_ports[-to_remove:]
+                for port in ports_to_kill:
+                    proc = EXPERT_PROCESSES.pop(port)
+                    logger.info(f"[SWARM] Terminating expert on Port {port}...")
+                    try:
+                        kill_process_tree(proc.pid)
+                    except:
+                        pass
+                    print(f"[DEBUG] Terminated expert on port {port}")
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] scale_swarm failed: {e}")
+        traceback.print_exc()
+
+def kill_process_tree(pid):
+    """Kill a process and all its children."""
+    try:
+        import psutil
+        parent = psutil.Process(pid)
+        for child in parent.children(recursive=True):
+            child.kill()
+        parent.kill()
+    except:
+        # Fallback to taskkill if psutil fails/missing
+        if os.name == 'nt':
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True)
+        else:
+            os.kill(pid, 9)
 
 # --- Voice Streaming Server ---
 class VoiceStreamHandler:
@@ -702,54 +835,48 @@ def start_server() -> NoReturn:
     ]
 
     try:
-        # Start Hub API on MGMT_API (Moved to top for instant responsiveness)
-        start_hub()
-        
-        # Start Voice Stream Server
-        start_voice_stream_server()
+        # Start background services ONLY in Master Mode
+        if "--guard-bypass" not in sys.argv:
+            start_hub()
+            start_voice_stream_server()
 
         print(f"\n[*] Launching optimized llama.cpp (v0.5.4-REV3)")
-        print(f"    Layers: {gpu_layers} | Threads: {threads} | Ubatch: {ubatch}")
+        print(f"    Layers: {gpu_layers} | Threads: {threads} | Ubatch: {ubatch} | Port: {port}")
         
         # --- PATH Injection Fix ---
-        # Ensure binaries can find sibling DLLs (ggml.dll, etc.)
         current_path = os.environ.get("PATH", "")
         if str(BIN_DIR) not in current_path:
              os.environ["PATH"] = str(BIN_DIR) + os.pathsep + current_path
-             logger.info(f"[Init] Added {BIN_DIR} to PATH")
 
         global SERVER_PROCESS
         SERVER_PROCESS = subprocess.Popen(cmd, env=os.environ, cwd=BIN_DIR) # Run inside BIN_DIR for safety
         print(f"[*] Engine Active (PID: {SERVER_PROCESS.pid})")
         
-        # --- UI Launch (Early) ---
-        print("[*] Launching Nebula UI...")
-        print("[*] Launching Zena AI (NiceGUI)...")
-        # Fix: Ensure we CD into the directory first so imports and file lookups work
-        subprocess.Popen(f'start cmd /k "cd /d "{BASE_DIR}" && {sys.executable} zena.py"', shell=True)
+        # --- UI Launch (Master Only) ---
+        if "--guard-bypass" not in sys.argv:
+            print("[*] Launching Nebula UI...")
+            print("[*] Launching Zena AI (NiceGUI)...")
+            subprocess.Popen(f'start cmd /k "cd /d "{BASE_DIR}" && {sys.executable} zena.py"', shell=True)
+            
+            # --- BENCHMARK (Master Only) ---
+            print("\n[*] Waiting for engine readiness & running benchmark...")
+            try:
+                import benchmark
+                stats = benchmark.measure_tps(api_url=f"http://127.0.0.1:{port}")
+                
+                print("\n" + "="*60)
+                print("       ✨ WELCOME TO NEBULA LOCAL AI ✨")
+                print("="*60)
+                if stats["success"]:
+                    print(f"  Model:      {MODEL_PATH.name}")
+                    print(f"  Speed:      {stats['tps']:.2f} tokens/sec")
+                    print(f"  Rating:     {stats['rating']}")
+                print("="*60 + "\n")
+            except Exception as e:
+                print(f"[!] Startup benchmark skipped or failed: {e}")
         
-        # --- BENCHMARK & WELCOME ---
-        print("\n[*] Waiting for engine readiness & running benchmark...")
-        try:
-            import benchmark
-            stats = benchmark.measure_tps(api_url="http://127.0.0.1:8001")
-            
-            print("\n" + "="*60)
-            print("       ✨ WELCOME TO NEBULA LOCAL AI ✨")
-            print("="*60)
-            if stats["success"]:
-                print(f"  Model:      {MODEL_PATH.name}")
-                print(f"  Speed:      {stats['tps']:.2f} tokens/sec")
-                print(f"  Rating:     {stats['rating']}")
-                print(f"  Latency:    {stats['gen_time']:.2f}s")
-            else:
-                print(f"  Benchmark:  FAILED ({stats.get('error')})")
-            print("="*60 + "\n")
-            
-        except ImportError:
-            print("[!] Benchmark module not found.")
-        except Exception as e:
-            print(f"[!] Startup benchmark failed: {e}")
+    except Exception as e:
+        print(f"[!] Critical Launch Failure: {e}")
 
 
         
@@ -813,8 +940,12 @@ if __name__ == "__main__":
         except:
             total_cores = os.cpu_count() or 4
             
-        threads_per = max(1, total_cores // swarm_count)
-        print(f"[SWARM] Thread Allocation: {threads_per} threads per instance")
+        if swarm_count > 0:
+            threads_per = max(1, total_cores // swarm_count)
+            print(f"[SWARM] Thread Allocation: {threads_per} threads per instance")
+        else:
+            threads_per = 2 # Default for dynamic scale
+            print("[SWARM] Starting with 0 experts (Manager Mode)")
 
         for i in range(swarm_count):
             port = base_port + i
@@ -822,23 +953,36 @@ if __name__ == "__main__":
                 port = 8001 + 3 + i # Skip 8002 (Hub), 8003 (Voice) -> 8005, 8006...
             
             print(f"[SWARM] Spawning Expert {i+1} on Port {port}...")
-            
-            # Use environment to pass port/threads
-            env = os.environ.copy()
-            env["LLM_PORT"] = str(port)
-            env["LLM_THREADS"] = str(threads_per)
-            env["LLM_THREADS_BATCH"] = str(threads_per)
-            
-            # Launch self with guard bypass
-            cmd = [sys.executable, __file__, "--guard-bypass"]
-            # Pass model if we have it
-            if "--model" in sys.argv:
-                m_idx = sys.argv.index("--model")
-                cmd.extend(["--model", sys.argv[m_idx+1]])
-                
-            p = subprocess.Popen(cmd, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE)
+            p = launch_expert_process(port, threads_per)
+            with EXPERT_LOCK:
+                EXPERT_PROCESSES[port] = p
             instances.append(p)
-            time.sleep(2) # Stagger boot to reduce IO spike
+            time.sleep(4) # Stagger boot to reduce IO spike
+
+        # --- AUTO-TUNE (v2.5) ---
+        if "--auto-swarm" in sys.argv:
+            print("\n[SWARM] ENTERING AUTO-TUNE MODE...")
+            print("[SWARM] Waiting for experts to initialize (45s) before benchmarking...")
+            time.sleep(45) # Give experts even more time to boot
+            
+            try:
+                from zena_mode.arbitrage import SwarmArbitrator
+                from zena_mode.tuner import run_auto_tune
+                
+                # Discover what we just launched
+                arb = SwarmArbitrator()
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                optimal_n = loop.run_until_complete(run_auto_tune(arb))
+                print(f"\n[SWARM] AUTO-TUNE SUCCESS: Optimal Swarm Size is {optimal_n}")
+                print("[SWARM] Please restart WITHOUT --auto-swarm to use optimized settings.")
+            except Exception as e:
+                print(f"[SWARM] AUTO-TUNE FAILED: {e}")
+            
+            print("[SWARM] Shutting down benchmark instances...")
+            for p in instances:
+                p.terminate()
+            sys.exit(0)
 
         print(f"\n[SWARM] Expert Swarm online. Listening on ports {base_port} and up.")
         print("[SWARM] Chain of Thought (CoT) Arbitrage ready.")

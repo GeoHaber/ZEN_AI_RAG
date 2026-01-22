@@ -89,5 +89,38 @@ class TestFileValidator:
         assert is_valid is False
         assert "too large" in error.lower()
 
+
+class TestPathTraversal:
+    """Test path traversal detection."""
+    
+    def test_path_traversal_dotdot(self):
+        """Test detection of .. path traversal."""
+        assert FileValidator.is_path_traversal("../etc/passwd") is True
+        assert FileValidator.is_path_traversal("..\\windows\\system32") is True
+        assert FileValidator.is_path_traversal("foo/../bar") is True
+    
+    def test_path_traversal_tilde(self):
+        """Test detection of ~ home directory traversal."""
+        assert FileValidator.is_path_traversal("~/secret") is True
+        assert FileValidator.is_path_traversal("~user/.ssh") is True
+    
+    def test_path_traversal_env_vars(self):
+        """Test detection of environment variable injection."""
+        assert FileValidator.is_path_traversal("$HOME/secret") is True
+        assert FileValidator.is_path_traversal("%USERPROFILE%\\secret") is True
+    
+    def test_safe_paths(self):
+        """Test that safe paths are allowed."""
+        assert FileValidator.is_path_traversal("myfile.txt") is False
+        assert FileValidator.is_path_traversal("subdir/file.txt") is False
+        assert FileValidator.is_path_traversal("path/to/document.pdf") is False
+    
+    def test_edge_cases(self):
+        """Test edge cases in path traversal detection."""
+        assert FileValidator.is_path_traversal("") is False
+        assert FileValidator.is_path_traversal("file..txt") is False  # .. not as path separator
+        assert FileValidator.is_path_traversal("my-file_name.txt") is False
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

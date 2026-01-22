@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 import logging
+import pytest
 
 # Setup mocking/paths
 sys.path.append(os.getcwd())
@@ -10,6 +11,10 @@ sys.path.append(os.getcwd())
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Test_RAGED")
 
+@pytest.mark.skipif(
+    not Path("rag_cache/rag.db").exists(), 
+    reason="Requires existing RAG cache with data"
+)
 def test_rag_retrieval_content():
     """
     Diagnose RAG Quality:
@@ -22,20 +27,19 @@ def test_rag_retrieval_content():
     try:
         from zena_mode import LocalRAG
     except ImportError:
-        print("FAILED: Could not import zena_mode. Are you in the project root?")
-        return
+        pytest.skip("Could not import zena_mode")
 
     rag_cache = Path("rag_cache")
     if not rag_cache.exists():
-        print(f"FAILED: No rag_cache found at {rag_cache.absolute()}")
-        return
+        pytest.skip(f"No rag_cache found at {rag_cache.absolute()}")
 
     rag = LocalRAG(cache_dir=rag_cache)
-    if rag.load(rag_cache):
-        print(f"SUCCESS: Loaded RAG Index. Total vectors: {rag.index.ntotal}")
-    else:
-        print("FAILED: Could not load index.")
-        return
+    rag.load(rag_cache)
+    
+    if rag.index is None or rag.index.ntotal == 0:
+        pytest.skip("RAG index is empty - no data to test")
+    
+    print(f"SUCCESS: Loaded RAG Index. Total vectors: {rag.index.ntotal}")
 
     # Simulate User Query
     query = "what are the news on thet site"

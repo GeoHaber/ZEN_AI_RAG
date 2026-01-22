@@ -43,19 +43,22 @@ class AsyncNebulaBackend:
     async def download_model(self, repo_id: str, filename: str) -> bool:
         """Trigger background model download."""
         try:
-            client = self.client or httpx.AsyncClient()
-            should_close = self.client is None
-            
-            response = await client.post(
-                f"{self.hub_api_url}/models/download",
-                json={"repo_id": repo_id, "filename": filename},
-                timeout=5.0
-            )
-            
-            if should_close:
-                await client.aclose()
-                
-            return response.status_code == 200
+            # Use existing client or create temporary one with proper cleanup
+            if self.client:
+                response = await self.client.post(
+                    f"{self.hub_api_url}/models/download",
+                    json={"repo_id": repo_id, "filename": filename},
+                    timeout=5.0
+                )
+                return response.status_code == 200
+            else:
+                async with httpx.AsyncClient() as temp_client:
+                    response = await temp_client.post(
+                        f"{self.hub_api_url}/models/download",
+                        json={"repo_id": repo_id, "filename": filename},
+                        timeout=5.0
+                    )
+                    return response.status_code == 200
         except Exception as e:
             logger.error(f"[AsyncHub] Download failed: {e}")
             return False
@@ -63,26 +66,30 @@ class AsyncNebulaBackend:
     async def set_active_model(self, model_name: str) -> bool:
         """Switch the active model."""
         try:
-             client = self.client or httpx.AsyncClient()
-             should_close = self.client is None
-             
-             response = await client.post(
-                 f"{self.hub_api_url}/models/load",
-                 json={"model": model_name},
-                 timeout=30.0
-             )
-             
-             if should_close:
-                await client.aclose()
-                
-             return response.status_code == 200
+            # Use existing client or create temporary one with proper cleanup
+            if self.client:
+                response = await self.client.post(
+                    f"{self.hub_api_url}/models/load",
+                    json={"model": model_name},
+                    timeout=30.0
+                )
+                return response.status_code == 200
+            else:
+                async with httpx.AsyncClient() as temp_client:
+                    response = await temp_client.post(
+                        f"{self.hub_api_url}/models/load",
+                        json={"model": model_name},
+                        timeout=30.0
+                    )
+                    return response.status_code == 200
         except Exception as e:
-             logger.error(f"[AsyncHub] Model switch failed: {e}")
-             return False
+            logger.error(f"[AsyncHub] Model switch failed: {e}")
+            return False
     
     async def __aenter__(self):
         """Async context manager entry - creates HTTP client."""
-        self.client = httpx.AsyncClient(timeout=60.0)
+        # Increased timeout for large prompts/long responses (5 minutes)
+        self.client = httpx.AsyncClient(timeout=300.0)
         logger.debug("[AsyncBackend] HTTP client created")
         return self
     
@@ -95,7 +102,10 @@ class AsyncNebulaBackend:
     async def send_message_async(
         self, 
         text: str, 
-        system_prompt: str = "You are Zena, a helpful AI assistant.",
+        system_prompt: str = """You are Zena, a helpful AI assistant powered by Qwen2.5-Coder.
+You are NOT ChatGPT, NOT GPT-4, and NOT made by OpenAI.
+You were created by Alibaba Cloud (Qwen team) and integrated into the ZenAI application.
+Be helpful, concise, and accurate. If asked about your identity, say you are Zena powered by Qwen.""",
         attachment_content: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """

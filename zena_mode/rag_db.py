@@ -7,7 +7,7 @@ import sqlite3
 import hashlib
 import json
 import logging
-import pickle
+import threading
 import numpy as np
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
@@ -18,6 +18,7 @@ class RAGDatabase:
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.conn = None
+        self._lock = threading.RLock()  # Thread-safe access
         self._init_db()
 
     def _init_db(self):
@@ -60,29 +61,31 @@ class RAGDatabase:
             self.conn.close()
 
     def document_exists(self, content_hash: str) -> bool:
-        cursor = self.conn.execute("SELECT 1 FROM documents WHERE content_hash = ?", (content_hash,))
-        return cursor.fetchone() is not None
+        with self._lock:
+            cursor = self.conn.execute("SELECT 1 FROM documents WHERE content_hash = ?", (content_hash,))
+            return cursor.fetchone() is not None
 
     def add_document(self, url: str, title: str, content: str) -> int:
         """Insert document and return ID. Returns existing ID if duplicate URL."""
-        # Check URL collision first
-        cursor = self.conn.execute("SELECT id FROM documents WHERE url = ?", (url,))
-        row = cursor.fetchone()
-        if row:
-            return row['id']
+        with self._lock:
+            # Check URL collision first
+            cursor = self.conn.execute("SELECT id FROM documents WHERE url = ?", (url,))
+            row = cursor.fetchone()
+            if row:
+                return row['id']
+                
+            content_hash = hashlib.sha256(content.encode()).hexdigest()
             
-        content_hash = hashlib.md5(content.encode()).hexdigest()
-        
-        # Check Content Hash collision (same content, different URL?)
-        # For strict deduplication, we might want to skip. 
-        # But RAG usually indexes everything. Let's just store.
-        
-        with self.conn:
-            cursor = self.conn.execute(
-                "INSERT INTO documents (url, title, content_hash) VALUES (?, ?, ?)",
-                (url, title, content_hash)
-            )
-            return cursor.lastrowid
+            # Check Content Hash collision (same content, different URL?)
+            # For strict deduplication, we might want to skip. 
+            # But RAG usually indexes everything. Let's just store.
+            
+            with self.conn:
+                cursor = self.conn.execute(
+                    "INSERT INTO documents (url, title, content_hash) VALUES (?, ?, ?)",
+                    (url, title, content_hash)
+                )
+                return cursor.lastrowid
 
     def add_chunks(self, chunks: List[Dict]):
         """
@@ -91,30 +94,32 @@ class RAGDatabase:
         """
         if not chunks:
             return
-            
-        data = []
-        for c in chunks:
-            vector_blob = c['vector'].tobytes() if c.get('vector') is not None else None
-            meta_json = json.dumps(c.get('metadata', {}))
-            data.append((c['doc_id'], c.get('chunk_index', 0), c['text'], vector_blob, meta_json))
         
-        try:
-            with self.conn:
-                self.conn.executemany(
-                    "INSERT INTO chunks (doc_id, chunk_index, text, vector, metadata) VALUES (?, ?, ?, ?, ?)",
-                    data
-                )
-        except sqlite3.Error as e:
-            logger.error(f"[DB] Bulk insert failed: {e}")
-            raise
+        with self._lock:
+            data = []
+            for c in chunks:
+                vector_blob = c['vector'].tobytes() if c.get('vector') is not None else None
+                meta_json = json.dumps(c.get('metadata', {}))
+                data.append((c.get('doc_id', 0), c.get('chunk_index', 0), c['text'], vector_blob, meta_json))
+            
+            try:
+                with self.conn:
+                    self.conn.executemany(
+                        "INSERT INTO chunks (doc_id, chunk_index, text, vector, metadata) VALUES (?, ?, ?, ?, ?)",
+                        data
+                    )
+            except sqlite3.Error as e:
+                logger.error(f"[DB] Bulk insert failed: {e}")
+                raise
 
     def get_all_chunks(self) -> List[Dict]:
         """Retrieve all chunks for building FAISS index."""
-        cursor = self.conn.execute("""
-            SELECT c.id, c.text, c.vector, c.metadata, d.url, d.title 
-            FROM chunks c
-            JOIN documents d ON c.doc_id = d.id
-        """)
+        with self._lock:
+            cursor = self.conn.execute("""
+                SELECT c.id, c.text, c.vector, c.metadata, d.url, d.title 
+                FROM chunks c
+                JOIN documents d ON c.doc_id = d.id
+            """)
         
         results = []
         for row in cursor:
