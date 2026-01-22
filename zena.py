@@ -709,8 +709,7 @@ async def nebula_page():
                 # Get contextual prompt with relevant conversation history
                 final_prompt = conversation_memory.build_contextual_prompt(
                     prompt,
-                    session_id=ui_state.session_id,
-                    max_context_messages=6  # Last 3 exchanges
+                    session_id=ui_state.session_id
                 )
                 if final_prompt != prompt:
                     logger.info(f"[Memory] Injected conversation context for session {ui_state.session_id}")
