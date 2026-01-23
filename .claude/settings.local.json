@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile:*)",
+      "Bash(timeout 30 python start_llm.py:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(python start_llm.py:*)",
+      "Bash(taskkill:*)",
+      "Bash(python:*)",
+      "Bash(tee:*)",
+      "Bash(\".\\\\_bin\\\\llama-server.exe\" --help)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(pkill:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

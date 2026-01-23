@@ -2,6 +2,7 @@
 Automated test for chat UI functionality.
 Tests that messages are sent and responses are displayed.
 """
+import pytest
 import asyncio
 import httpx
 import sys
@@ -10,6 +11,7 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+@pytest.mark.asyncio
 async def test_llm_backend():
     """Test that LLM backend is responding."""
     print("=" * 60)
@@ -50,6 +52,7 @@ async def test_llm_backend():
         return False
 
 
+@pytest.mark.asyncio
 async def test_streaming_response():
     """Test streaming response from LLM."""
     print("\n" + "=" * 60)
@@ -105,6 +108,7 @@ async def test_streaming_response():
         return False
 
 
+@pytest.mark.asyncio
 async def test_ui_endpoint():
     """Test that NiceGUI is responding."""
     print("\n" + "=" * 60)
@@ -138,6 +142,7 @@ async def test_ui_endpoint():
         return False
 
 
+@pytest.mark.asyncio
 async def test_multiple_messages():
     """Test sending multiple messages in sequence."""
     print("\n" + "=" * 60)

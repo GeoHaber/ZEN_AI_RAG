@@ -112,11 +112,18 @@ class RAGDatabase:
                 logger.error(f"[DB] Bulk insert failed: {e}")
                 raise
 
+    def count_chunks(self) -> int:
+        """Get total number of chunks in database."""
+        with self._lock:
+            cursor = self.conn.execute("SELECT COUNT(*) as count FROM chunks")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+
     def get_all_chunks(self) -> List[Dict]:
         """Retrieve all chunks for building FAISS index."""
         with self._lock:
             cursor = self.conn.execute("""
-                SELECT c.id, c.text, c.vector, c.metadata, d.url, d.title 
+                SELECT c.id, c.text, c.vector, c.metadata, d.url, d.title
                 FROM chunks c
                 JOIN documents d ON c.doc_id = d.id
             """)

@@ -1,0 +1,28 @@
+[1m============================= test session starts =============================[0m
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dvdze\.claude-worktrees\ZEN_AI_RAG\naughty-antonelli
+plugins: anyio-4.12.1, asyncio-1.3.0, base-url-2.1.0, mock-3.15.1, playwright-0.7.2, respx-0.22.0, typeguard-4.4.4
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+[1mcollecting ... [0mcollected 42 items
+
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_valid_env_var [32mPASSED[0m[32m [  2%][0m
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_missing_env_var [32mPASSED[0m[32m [  4%][0m
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_invalid_value [32mPASSED[0m[32m [  7%][0m
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_negative_values [32mPASSED[0m[32m [  9%][0m
+tests/test_start_llm.py::TestOutputUtilities::test_safe_print_forces_flush [32mPASSED[0m[32m [ 11%][0m
+tests/test_start_llm.py::TestOutputUtilities::test_safe_print_with_multiple_args [32mPASSED[0m[32m [ 14%][0m
+tests/test_start_llm.py::TestOutputUtilities::test_safe_print_with_sep_kwarg [32mPASSED[0m[32m [ 16%][0m
+tests/test_start_llm.py::TestOutputUtilities::test_safe_exit_calls_sys_exit [32mPASSED[0m[32m [ 19%][0m
+tests/test_start_llm.py::TestOutputUtilities::test_safe_exit_flushes_buffers [32mPASSED[0m[32m [ 21%][0m
+tests/test_start_llm.py::TestProcessManagement::test_register_process_adds_to_global_dict [32mPASSED[0m[32m [ 23%][0m
+tests/test_start_llm.py::TestProcessManagement::test_register_process_sets_defaults [31mFAILED[0m[31m [ 26%][0m
+tests/test_start_llm.py::TestProcessManagement::test_register_process_critical_has_more_restarts [31mFAILED[0m[31m [ 28%][0m
+tests/test_start_llm.py::TestProcessManagement::test_check_processes_detects_crashes [32mPASSED[0m[31m [ 30%][0m
+tests/test_start_llm.py::TestProcessManagement::test_check_processes_ignores_running_processes [32mPASSED[0m[31m [ 33%][0m
+tests/test_start_llm.py::TestProcessManagement::test_check_processes_removes_crashed_from_monitoring [32mPASSED[0m[31m [ 35%][0m
+tests/test_start_llm.py::TestLazyLoading::test_get_model_manager_caches_import [31mFAILED[0m[31m [ 38%][0m
+tests/test_start_llm.py::TestLazyLoading::test_get_model_manager_raises_on_missing_module [31mFAILED[0m[31m [ 40%][0m
+tests/test_start_llm.py::TestLazyLoading::test_get_cached_voice_service_caches_import [31mFAILED[0m[31m [ 42%][0m
+tests/test_start_llm.py::TestConfiguration::test_restart_with_model_updates_global_path [31mFAILED[0m[31m [ 45%][0m
+tests/test_start_llm.py::TestConfiguration::test_restart_with_model_returns_error_on_missing_file 

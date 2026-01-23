@@ -24,14 +24,24 @@ class WebsiteScraper:
     
     def clean_html(self, soup: BeautifulSoup) -> str:
         """Remove scripts, styles, navigation, and extract clean text."""
-        # Remove unwanted tags
-        for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe']):
+        # 1. Try to find main content container first
+        content_container = None
+        for selector in ['article', 'main', '[role="main"]', '.article-body', '.entry-content', '.post-content']:
+            content_container = soup.select_one(selector)
+            if content_container:
+                # Use this sub-tree instead of the whole body
+                soup = content_container
+                break
+        
+        # 2. Remove unwanted tags
+        for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe', 'form', 'button']):
             tag.decompose()
         
-        # Get text
-        text = soup.get_text(separator='\n')
+        # 3. Get text
+        # Use a more sophisticated text extraction if possible
+        text = soup.get_text(separator=' ')
         
-        # Clean whitespace
+        # 4. Clean whitespace
         lines = [line.strip() for line in text.splitlines()]
         text = '\n'.join(line for line in lines if line)
         
@@ -66,6 +76,7 @@ class WebsiteScraper:
                 fetch_time = time.time() - page_start
                 
                 if response.status_code != 200:
+                    logger.warning(f"[Scraper] ❌ Failed to fetch {url}: Status {response.status_code}")
                     continue
                 
                 parse_start = time.time()
@@ -84,6 +95,8 @@ class WebsiteScraper:
                         "content": text
                     })
                     logger.info(f"[Scraper] ✅ Saved: {url} ({len(text)} chars) | Fetch: {fetch_time:.2f}s, Parse: {parse_time:.2f}s, Clean: {clean_time:.2f}s")
+                else:
+                    logger.warning(f"[Scraper] ⚠️ Content too short for {url} ({len(text)} chars). Skipped.")
                 
                 # Find links
                 for link in soup.find_all('a', href=True):
