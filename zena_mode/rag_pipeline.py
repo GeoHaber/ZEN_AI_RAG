@@ -45,7 +45,7 @@ from .rag_db import RAGDatabase
 class DedupeConfig:
     """Deduplication configuration - adjust per use case."""
     SIMILARITY_THRESHOLD: float = 0.95  # Cosine similarity for near-duplicates
-    MIN_CHUNK_LENGTH: int = 50          # Skip chunks shorter than this
+    MIN_CHUNK_LENGTH: int = 20          # Skip chunks shorter than this (was 50, too aggressive)
     MIN_ENTROPY: float = 1.5            # Skip low-entropy (repetitive) text
     MAX_ENTROPY: float = 6.0            # Skip high-entropy (garbage/encoded) text
     BLACKLIST_KEYWORDS: FrozenSet[str] = frozenset({
