@@ -39,3 +39,13 @@ diagnostic_rag.txt
 rag_cache/
 temp/
 _archive/
+
+# Archived old documentation
+old/
+
+# Database files (runtime generated)
+*.db
+
+# Log files
+*_log.txt
+results_log.txt
