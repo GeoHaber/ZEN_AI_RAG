@@ -180,6 +180,79 @@ class AgentPerformanceTracker:
         }
 
 # ============================================================================
+# COST TRACKING
+# ============================================================================
+
+class CostTracker:
+    """Track API costs for budgeting (Improvement #12 companion)."""
+    COSTS = {
+        "local": 0.0,
+        "gpt-4": 0.01,
+        "claude-3": 0.015,
+        "gemini": 0.00025,
+    }
+
+    def __init__(self):
+        self.total_cost = 0.0
+        self.cost_breakdown = {}  # Track per provider
+
+    def record_query(self, model: str, content: str, tokens: int = None):
+        """Record a query cost.
+
+        Args:
+            model: Model name (e.g., "claude-3", "gpt-4")
+            content: Response content (for token estimation if tokens not provided)
+            tokens: Explicit token count (optional)
+
+        Returns:
+            Cost of this query in dollars
+        """
+        if tokens is None:
+            tokens = len(content.split()) * 1.3  # Rough estimate
+
+        cost_per_1k = 0.0
+        for m, c in self.COSTS.items():
+            if m in model.lower():
+                cost_per_1k = c
+                break
+
+        cost = (tokens / 1000.0) * cost_per_1k
+        self.total_cost += cost
+
+        # Track breakdown by provider
+        if model not in self.cost_breakdown:
+            self.cost_breakdown[model] = 0.0
+        self.cost_breakdown[model] += cost
+
+        return cost
+
+    def get_total_cost(self) -> float:
+        """Get total cost across all queries."""
+        return self.total_cost
+
+    def get_cost_breakdown(self) -> Dict[str, float]:
+        """Get cost breakdown by provider."""
+        return self.cost_breakdown.copy()
+
+    def estimate_cost(self, model: str, tokens: int) -> float:
+        """Estimate cost for a query without recording it.
+
+        Args:
+            model: Model name
+            tokens: Token count
+
+        Returns:
+            Estimated cost in dollars
+        """
+        cost_per_1k = 0.0
+        for m, c in self.COSTS.items():
+            if m in model.lower():
+                cost_per_1k = c
+                break
+
+        return (tokens / 1000.0) * cost_per_1k
+
+# ============================================================================
 # ENHANCED SWARM ARBITRATOR
 # ============================================================================
 
@@ -401,6 +474,85 @@ class SwarmArbitrator:
 
         # Default neutral confidence
         return 0.7
+
+    # ========================================================================
+    # EXTERNAL AGENT BRIDGE (IMPROVEMENT #12)
+    # ========================================================================
+
+    async def _query_external_agent(self, model: str, messages: List[Dict]) -> Dict:
+        """Functional Bridge for External Agents (Improvement 12).
+
+        Queries external LLM APIs (Anthropic Claude, Google Gemini, Grok) using
+        httpx for async API calls.
+
+        Args:
+            model: Model name (e.g., "claude-3-5-sonnet", "gemini-pro", "grok-beta")
+            messages: List of message dicts with "role" and "content" keys
+
+        Returns:
+            Dict with keys:
+                - content: Response text or error message
+                - model: Model name
+                - time: Response time in seconds
+                - confidence: Extracted confidence score (0.0-1.0)
+        """
+        import os
+
+        # Check for API keys (try multiple env vars)
+        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("XAI_API_KEY")
+
+        if not api_key:
+            return {
+                "content": "[ERROR: No API Key found for external agent]",
+                "model": model,
+                "time": 0.0,
+                "confidence": 0.0
+            }
+
+        start = time.time()
+        try:
+            # We use httpx directly to maintain our lightweight, async-first approach
+            # while remaining compatible with OpenAI/LiteLLM-style providers.
+            async with httpx.AsyncClient() as client:
+                payload = {
+                    "model": model,
+                    "messages": messages,
+                    "temperature": 0.7,
+                }
+
+                # Defaulting to OpenAI compatible endpoint
+                # Can be extended for Anthropic, Google, Grok specific endpoints
+                url = "https://api.openai.com/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {api_key}"}
+
+                response = await client.post(url, json=payload, headers=headers, timeout=60.0)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    content = data['choices'][0]['message']['content'].strip()
+                    return {
+                        "content": content,
+                        "time": time.time() - start,
+                        "model": model,
+                        "confidence": self._extract_confidence(content)
+                    }
+
+                # Non-200 status codes
+                return {
+                    "content": f"[API Error: {response.status_code}]",
+                    "model": model,
+                    "time": time.time() - start,
+                    "confidence": 0.0
+                }
+
+        except Exception as e:
+            # Network errors, timeouts, etc.
+            return {
+                "content": f"[Bridge Error: {str(e)}]",
+                "model": model,
+                "time": time.time() - start,
+                "confidence": 0.0
+            }
 
     # ========================================================================
     # CONSENSUS CALCULATION (IMPROVEMENT #4)

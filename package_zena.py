@@ -12,6 +12,7 @@ def create_zena_zip():
         # Main application
         "zena.py",
         "start_llm.py",
+        "zena_modern.py",     # NEW: Modern UI application
 
         # Backend & LLM
         "async_backend.py",
@@ -39,8 +40,11 @@ def create_zena_zip():
         "cleanup_policy.py",
         "benchmark.py",
 
+        # RAG Tools
+        "rag_inspector.py",   # NEW: RAG index viewer/manager
+
         # Setup & deployment
-        "setup.py",           # NEW: One-time setup wizard
+        "setup.py",
         "requirements.txt",
         "download_deps.py",
         "package_zena.py",
@@ -54,7 +58,11 @@ def create_zena_zip():
         "README.md",
         "zena_master_spec.md",
         "QUICK_START.md",
-        "HOW_TO_RUN.md"
+        "HOW_TO_RUN.md",
+        "DOCUMENTATION_STANDARD.md",     # NEW: Coding standards
+        "UI_MODERNIZATION_PHASE1_COMPLETE.md",  # NEW: UI phase 1
+        "VISUAL_CONTRAST_FIXES_COMPLETE.md",    # NEW: Accessibility fixes
+        "RAG_QUALITY_FIXES_COMPLETE.md"         # NEW: RAG improvements
     ]
 
     # Directories to include recursively

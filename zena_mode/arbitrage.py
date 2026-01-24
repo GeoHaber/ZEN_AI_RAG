@@ -12,11 +12,11 @@ import time
 from typing import List, AsyncGenerator, Dict
 from config_system import config, EMOJI
 
-# Import enhanced SwarmArbitrator
+# Import enhanced SwarmArbitrator and CostTracker
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from swarm_arbitrator import SwarmArbitrator as EnhancedSwarmArbitrator
+from swarm_arbitrator import SwarmArbitrator as EnhancedSwarmArbitrator, CostTracker
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +110,10 @@ class SwarmArbitrator:
         from swarm_arbitrator import ConsensusMethod
         # Use hybrid method for best results (IMPROVEMENT #4)
         return self._enhanced._calculate_consensus(responses, method=ConsensusMethod.HYBRID)
+
+    async def _query_external_agent(self, model: str, messages: List[Dict]) -> Dict:
+        """Bridge to external LLM APIs (delegated to enhanced arbitrator)."""
+        return await self._enhanced._query_external_agent(model, messages)
 
     async def get_cot_response(self, text: str, system_prompt: str, verbose: bool = False) -> AsyncGenerator[str, None]:
         """
