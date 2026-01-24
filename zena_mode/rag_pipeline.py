@@ -45,7 +45,7 @@ from .rag_db import RAGDatabase
 class DedupeConfig:
     """Deduplication configuration - adjust per use case."""
     SIMILARITY_THRESHOLD: float = 0.95  # Cosine similarity for near-duplicates
-    MIN_CHUNK_LENGTH: int = 50          # Skip chunks shorter than this
+    MIN_CHUNK_LENGTH: int = 20          # Skip chunks shorter than this (was 50, too aggressive)
     MIN_ENTROPY: float = 1.5            # Skip low-entropy (repetitive) text
     MAX_ENTROPY: float = 6.0            # Skip high-entropy (garbage/encoded) text
     BLACKLIST_KEYWORDS: FrozenSet[str] = frozenset({
@@ -60,47 +60,70 @@ class LocalRAG:
     and advanced deduplication.
     """
     
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_dir: Optional[Path] = None):
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_dir: Optional[Path] = None, lazy_load: bool = True):
         if not DEPS_AVAILABLE:
             raise ImportError("Install: pip install sentence-transformers faiss-cpu")
-        
+
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
-        
+
         self.index: Optional[faiss.IndexFlatIP] = None  # Inner product for cosine sim
         self.chunks: List[Dict] = []  # In-memory cache for fast retrieval
         self.chunk_hashes: Set[str] = set()  # Fast hash lookup
-        
+
         self.cache_dir = cache_dir or Path(".")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Connect to SQLite
         db_path = self.cache_dir / "rag.db"
         self.db = RAGDatabase(db_path)
-        
+
         self.bm25 = None
-        
+
         # Thread safety
         self._lock = threading.RLock()
-        
-        # Load state from DB
-        self._load_from_db()
+
+        # Lazy loading flag
+        self._lazy_load = lazy_load
+        self._index_loaded = False
+
+        # Load state from DB (lazy if enabled)
+        if not lazy_load:
+            self._load_from_db()
+        else:
+            # Just load metadata, not full chunks/index
+            with self._lock:
+                chunk_count = self.db.count_chunks()
+                if chunk_count > 0:
+                    logger.info(f"[RAG] Lazy mode: {chunk_count} chunks available, will load on first search")
+                    self._index_loaded = False
+                else:
+                    logger.info("[RAG] No cached index found, will build on first use")
+                    self._index_loaded = True  # Nothing to load
 
     # =========================================================================
     # State Management
     # =========================================================================
     
+    def _ensure_index_loaded(self):
+        """Ensure index is loaded (lazy loading support)."""
+        with self._lock:
+            if not self._index_loaded:
+                logger.info("[RAG] Lazy loading index on first use...")
+                self._load_from_db()
+                self._index_loaded = True
+
     def _load_from_db(self):
         """Restore index from DB."""
         with self._lock:
             load_start = time.time()
             self.chunks = self.db.get_all_chunks()
             self.chunk_hashes = {
-                hashlib.sha256(c.get('text', '').encode()).hexdigest() 
+                hashlib.sha256(c.get('text', '').encode()).hexdigest()
                 for c in self.chunks
             }
-            
+
             if self.chunks:
                 logger.info(f"[RAG] Restoring {len(self.chunks)} chunks from DB...")
                 self._rebuild_faiss()
@@ -459,48 +482,95 @@ class LocalRAG:
     # Search
     # =========================================================================
     
-    def search(self, query: str, k: int = 5) -> List[Dict]:
+    def search(self, query: str, k: int = 5, min_score: float = 0.5) -> List[Dict]:
         """
-        Semantic search using FAISS.
-        
-        Returns chunks with 'score' field (cosine similarity, 0-1).
+        Semantic search using FAISS with relevance filtering.
+
+        Args:
+            query: Search query string
+            k: Number of results to return (before filtering)
+            min_score: Minimum relevance score (0-1). Results below this are rejected.
+                      Default: 0.5 (moderate relevance)
+                      Recommended: 0.7 for strict matching
+
+        Returns:
+            List of chunks with 'score' field (cosine similarity, 0-1).
+            Only returns results with score >= min_score.
+
+        WHAT:
+            - Purpose: Find relevant chunks AND filter out irrelevant ones
+            - Returns: Chunks with scores, filtered by threshold
+            - Side effects: None (read-only)
+
+        WHY:
+            - Problem: Low-score results cause hallucinations (Fritz Haber vs George Haber)
+            - Solution: Reject results with score < 0.5 (or custom threshold)
+            - Benefit: Higher quality RAG responses
+
+        HOW:
+            1. Encode query to vector
+            2. Search FAISS for top-k
+            3. Calculate cosine similarity scores
+            4. FILTER: Only return results with score >= min_score
+            - Algorithm: FAISS k-NN + threshold filter
         """
+        # Ensure index is loaded (lazy loading)
+        self._ensure_index_loaded()
+
         if not self.index or not self.chunks:
+            logger.warning("[RAG] Index is empty, returning no results")
             return []
-        
+
         # Encode and normalize query
         query_vec = self.model.encode(
-            [query], 
+            [query],
             convert_to_numpy=True,
             normalize_embeddings=True
         ).astype('float32')
-        
+
         # Search (inner product on normalized vectors = cosine similarity)
         k = min(k, len(self.chunks))
         similarities, indices = self.index.search(query_vec, k)
-        
+
         results = []
+        rejected = 0
         for sim, idx in zip(similarities[0], indices[0]):
             if 0 <= idx < len(self.chunks):
                 chunk = self.chunks[idx].copy()
                 # Similarity is already in [0, 1] range for normalized vectors
-                chunk['score'] = float(max(0, min(1, sim)))
+                score = float(max(0, min(1, sim)))
+
+                # FILTER: Reject low-relevance results
+                if score < min_score:
+                    rejected += 1
+                    continue
+
+                chunk['score'] = score
                 results.append(chunk)
-        
+
+        if rejected > 0:
+            logger.info(f"[RAG] Rejected {rejected}/{k} results below threshold {min_score:.2f}")
+
+        if not results:
+            logger.warning(f"[RAG] No results met threshold {min_score:.2f} for query: '{query[:50]}...'")
+
         return results
 
     def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5) -> List[Dict]:
         """
         Hybrid search combining semantic (FAISS) and keyword (BM25) with RRF fusion.
-        
+
         Args:
             query: Search query
             k: Number of results to return
             alpha: Weight for semantic vs keyword (0=keyword only, 1=semantic only)
-            
+
         Returns:
             List of chunks with 'fusion_score' field
         """
+        # Ensure index is loaded (lazy loading)
+        self._ensure_index_loaded()
+
         if not self.index or not self.chunks:
             return []
         

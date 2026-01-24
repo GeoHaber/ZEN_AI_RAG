@@ -59,13 +59,13 @@ class TestBackendCompatibility:
     """Test backend compatibility with old code."""
     
     def test_old_backend_removed_send_message(self):
-        """Test old NebulaBackend doesn't have send_message (CATCHES BUG #3)."""
-        # This test catches the AttributeError we encountered
-        from zena import backend
-        
-        # Old backend should NOT have send_message anymore
-        assert not hasattr(backend, 'send_message'), \
-            "backend.send_message() was removed in Phase 2, use async_backend.send_message_async()"
+        """Test old NebulaBackend was completely removed."""
+        # Legacy sync backend should be completely removed
+        import zena
+
+        # Old backend should NOT exist anymore
+        assert not hasattr(zena, 'backend') or not hasattr(zena, 'NebulaBackend'), \
+            "Legacy sync backend was removed, use async_backend only"
     
     def test_async_backend_available(self):
         """Test async_backend is available in zena module."""

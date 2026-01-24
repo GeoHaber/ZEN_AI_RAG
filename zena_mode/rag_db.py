@@ -112,11 +112,18 @@ class RAGDatabase:
                 logger.error(f"[DB] Bulk insert failed: {e}")
                 raise
 
+    def count_chunks(self) -> int:
+        """Get total number of chunks in database."""
+        with self._lock:
+            cursor = self.conn.execute("SELECT COUNT(*) as count FROM chunks")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+
     def get_all_chunks(self) -> List[Dict]:
         """Retrieve all chunks for building FAISS index."""
         with self._lock:
             cursor = self.conn.execute("""
-                SELECT c.id, c.text, c.vector, c.metadata, d.url, d.title 
+                SELECT c.id, c.text, c.vector, c.metadata, d.url, d.title
                 FROM chunks c
                 JOIN documents d ON c.doc_id = d.id
             """)
@@ -144,3 +151,32 @@ class RAGDatabase:
         cursor = self.conn.execute("SELECT text FROM chunks WHERE id = ?", (chunk_id,))
         row = cursor.fetchone()
         return row['text'] if row else ""
+
+    def clear_all(self):
+        """
+        Clear all documents and chunks from database (DESTRUCTIVE).
+
+        WHAT:
+            - Purpose: Remove all indexed data
+            - Returns: None
+            - Side effects: Deletes all rows from documents and chunks tables
+
+        WHY:
+            - Use case: Remove junk/test data from index
+            - Problem solved: Clean slate for re-indexing
+            - Safety: Irreversible operation
+
+        HOW:
+            1. Delete all chunks
+            2. Delete all documents
+            3. Reset autoincrement counters
+            - Thread-safe with lock
+        """
+        with self._lock:
+            with self.conn:
+                self.conn.execute("DELETE FROM chunks")
+                self.conn.execute("DELETE FROM documents")
+                # Reset autoincrement
+                self.conn.execute("DELETE FROM sqlite_sequence WHERE name='chunks'")
+                self.conn.execute("DELETE FROM sqlite_sequence WHERE name='documents'")
+                logger.info("[DB] All documents and chunks cleared")

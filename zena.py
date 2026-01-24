@@ -79,31 +79,10 @@ API_URL = "http://127.0.0.1:8001/v1/chat/completions"
 from async_backend import AsyncNebulaBackend
 from zena_mode.arbitrage import get_arbitrator
 
-# Backend Implementation (Async HTTP with httpx)
-class NebulaBackend:
-    """Legacy sync backend - deprecated, use AsyncNebulaBackend instead."""
-    
-    def get_models(self):
-        """Fetch available models from Hub API (port 8002)."""
-        try:
-            response = requests.get("http://127.0.0.1:8002/models/available", timeout=2)
-            if response.status_code == 200:
-                models = response.json()
-                if isinstance(models, list):
-                    logger.info(f"[Hub] Fetched {len(models)} models from API")
-                    return models
-        except Exception as e:
-            logger.warning(f"[Hub] API unavailable: {e}")
-        
-        # Fallback: return static list if Hub API fails
-        fallback = ["qwen2.5-coder.gguf", "llama-3.2-3b.gguf"]
-        logger.info(f"[Hub] Using fallback models: {fallback}")
-        return fallback
-
 # Global backend instances
-backend = NebulaBackend()
 async_backend = AsyncNebulaBackend()
-arbitrator = get_arbitrator()
+# Note: arbitrator is now per-session (initialized in UIState)
+# Note: Legacy sync backend removed - all operations now async
 
 # Load Zena Mode Configuration
 ZENA_MODE = False
@@ -127,12 +106,10 @@ if ZENA_MODE:
         ROOT_DIR = Path(__file__).parent.resolve()
         rag_cache = ROOT_DIR / "rag_cache"
         rag_cache.mkdir(exist_ok=True)
-        
-        rag_system = LocalRAG(cache_dir=rag_cache)
-        
-        # Try to load existing index
-        if not rag_system.load(rag_cache):
-            logger.info("[RAG] No cached index found, will build on first use")
+
+        # Enable lazy loading to prevent OOM on large indexes
+        rag_system = LocalRAG(cache_dir=rag_cache, lazy_load=True)
+        logger.info("[RAG] RAG system initialized with lazy loading")
     except Exception as e:
         logger.error(f"[RAG] Failed to initialize: {e}")
 
@@ -154,6 +131,21 @@ except Exception as e:
 # Import state management
 from state_management import attachment_state, chat_history, handle_error
 
+# Import feature detection
+from feature_detection import get_feature_detector, is_feature_available
+
+# Initialize feature detector at startup
+feature_detector = get_feature_detector()
+logger.info("[Features] Feature detection complete")
+
+# Import cleanup policy
+from cleanup_policy import get_cleanup_policy
+
+# Initialize cleanup policy for uploads directory
+ROOT_DIR = Path(__file__).parent.resolve()
+upload_cleanup = get_cleanup_policy(ROOT_DIR / "uploads")
+logger.info("[Cleanup] Upload cleanup policy initialized")
+
 # TTS Setup
 tts_engine = None
 if pyttsx3:
@@ -173,6 +165,8 @@ class UIState:
         self.user_input = None
         self.is_valid = True  # Track if client is still connected
         self.session_id = None  # Unique session ID for conversation memory
+        self.cancellation_event = asyncio.Event()  # For cancelling streaming
+        self.arbitrator = None  # Per-session arbitrator instance
     
     def safe_update(self, element):
         """Safely update a UI element, handling disconnected clients."""
@@ -183,8 +177,9 @@ class UIState:
                 element.update()
         except RuntimeError as e:
             if 'client' in str(e).lower() and 'deleted' in str(e).lower():
-                logger.debug("[UI] Client disconnected, marking invalid")
+                logger.debug("[UI] Client disconnected, marking invalid and cancelling streams")
                 self.is_valid = False
+                self.cancellation_event.set()  # Cancel any ongoing streams
             else:
                 raise
     
@@ -197,8 +192,9 @@ class UIState:
                 self.scroll_container.scroll_to(percent=1.0)
         except RuntimeError as e:
             if 'client' in str(e).lower() and 'deleted' in str(e).lower():
-                logger.debug("[UI] Client disconnected, marking invalid")
+                logger.debug("[UI] Client disconnected, marking invalid and cancelling streams")
                 self.is_valid = False
+                self.cancellation_event.set()  # Cancel any ongoing streams
             else:
                 raise
 
@@ -206,32 +202,36 @@ class UIState:
 async def nebula_page():
     # Create per-client UI state (NOT global!)
     ui_state = UIState()
-    
+
     # Generate unique session ID for conversation memory
     import uuid
     ui_state.session_id = str(uuid.uuid4())[:8]  # Short session ID
     logger.info(f"[Session] New client session: {ui_state.session_id}")
-    
+
+    # Initialize per-session arbitrator (not global!)
+    ui_state.arbitrator = get_arbitrator()
+    logger.info(f"[Session] Created per-session arbitrator for {ui_state.session_id}")
+
     # Theme & Layout
     setup_app_theme()
-    
+
     # App State (Shared)
     app_state = {}
 
     # Initialize Dialogs (Components)
-    dialogs = setup_common_dialogs(backend, app_state)
+    dialogs = setup_common_dialogs(async_backend, app_state)
     model_dialog = dialogs['model']
     llama_dialog = dialogs['llama']
     llama_info = dialogs['llama'].info_label
-    
+
     # --- LEFT SIDEBAR (Drawer) ---
-    drawer = setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state)
+    drawer = setup_drawer(async_backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state)
 
     def scan_swarm():
         """Refresh the arbitrator's knowledge of live experts."""
         try:
-            arbitrator.discover_swarm()
-            count = len(arbitrator.ports)
+            ui_state.arbitrator.discover_swarm()
+            count = len(ui_state.arbitrator.ports)
             status = app_state.get('swarm_status')
             if status:
                 if count > 1:
@@ -244,9 +244,25 @@ async def nebula_page():
             logger.error(f"[Swarm] Scan failed: {e}")
 
     app_state['scan_swarm'] = scan_swarm
-    
+
     # Run initial scan after UI is ready
     ui.timer(2.0, scan_swarm, once=True)
+
+    # Periodic upload cleanup (run every 6 hours)
+    def run_cleanup():
+        """Run periodic cleanup of uploads directory."""
+        try:
+            stats_before = upload_cleanup.get_stats()
+            logger.info(f"[Cleanup] Starting cleanup (current: {stats_before['count']} files, {stats_before['size_mb']} MB)")
+            result = upload_cleanup.cleanup()
+            if result['deleted'] > 0:
+                logger.info(f"[Cleanup] Cleanup complete: {result['deleted']} files deleted, {result['freed_mb']} MB freed")
+        except Exception as e:
+            logger.error(f"[Cleanup] Failed: {e}")
+
+    # Run cleanup on startup (after 10 seconds) and then every 6 hours
+    ui.timer(10.0, run_cleanup, once=True)
+    ui.timer(6 * 3600, run_cleanup)
 
             
 
@@ -687,7 +703,19 @@ async def nebula_page():
         
         with msg_row:
             with ui.column().classes('w-full max-w-3xl'):
-                msg_ui = ui.markdown("⏳").classes(Styles.CHAT_BUBBLE_AI + ' p-4 rounded-3xl shadow-sm ' + Styles.LOADING_PULSE + ' w-full')
+                # Get appropriate loading message based on context
+                import random
+                use_rag = rag_enabled['value'] and rag_system and rag_system.index
+                use_swarm = app_state.get('use_cot_swarm') and app_state['use_cot_swarm'].value
+
+                if use_swarm:
+                    loading_msg = random.choice(locale.LOADING_SWARM_THINKING)
+                elif use_rag:
+                    loading_msg = random.choice(locale.LOADING_RAG_THINKING)
+                else:
+                    loading_msg = random.choice(locale.LOADING_THINKING)
+
+                msg_ui = ui.markdown(loading_msg).classes(Styles.CHAT_BUBBLE_AI + ' p-4 rounded-3xl shadow-sm ' + Styles.LOADING_PULSE + ' w-full')
                 sources_ui = ui.column().classes('w-full')
         
         logger.info(f"[UI] msg_ui created with initial content '⏳'")
@@ -761,7 +789,7 @@ ANSWER:"""
         # Use CoT Swarm Arbitrator if enabled
         if app_state.get('use_cot_swarm') and app_state['use_cot_swarm'].value:
             is_quiet = app_state.get('quiet_cot') and app_state['quiet_cot'].value
-            async for chunk in arbitrator.get_cot_response(final_prompt, "You are Zena, working within an Expert Swarm.", verbose=not is_quiet):
+            async for chunk in ui_state.arbitrator.get_cot_response(final_prompt, "You are Zena, working within an Expert Swarm.", verbose=not is_quiet):
                 if not ui_state.is_valid:
                     break
                 full_text += chunk
@@ -774,7 +802,10 @@ ANSWER:"""
             try:
                 chunk_count = 0
                 async with async_backend:
-                    async for chunk in async_backend.send_message_async(final_prompt):
+                    async for chunk in async_backend.send_message_async(
+                        final_prompt,
+                        cancellation_event=ui_state.cancellation_event
+                    ):
                         if not ui_state.is_valid:
                             logger.info("[UI] Client disconnected mid-stream, stopping")
                             break
@@ -851,19 +882,24 @@ ANSWER:"""
         text = ""
         try:
             # Check for PDF
-            if filename.lower().endswith('.pdf') and pypdf:
-                try:
-                    # pypdf needs a file-like object
-                    file_obj = io.BytesIO(raw_data)
-                    pdf_reader = pypdf.PdfReader(file_obj)
-                    extracted = []
-                    for page in pdf_reader.pages:
-                        extracted.append(page.extract_text() or "")
-                    text = "\n".join(extracted)
-                    logger.info(f"[Upload] Extracted {len(text)} chars from PDF")
-                except Exception as e:
-                    logger.error(f"[Upload] PDF extraction failed: {e}")
-                    text = f"[Error extracting PDF: {e}]"
+            if filename.lower().endswith('.pdf'):
+                if not is_feature_available('pdf'):
+                    reason = feature_detector.get_unavailable_reason('pdf')
+                    ui.notify(f"{EMOJI['warning']} PDF Support Unavailable\n{reason}", color='warning', timeout=5000)
+                    text = f"[PDF file: {filename} - extraction unavailable, install pypdf to enable]"
+                else:
+                    try:
+                        # pypdf needs a file-like object
+                        file_obj = io.BytesIO(raw_data)
+                        pdf_reader = pypdf.PdfReader(file_obj)
+                        extracted = []
+                        for page in pdf_reader.pages:
+                            extracted.append(page.extract_text() or "")
+                        text = "\n".join(extracted)
+                        logger.info(f"[Upload] Extracted {len(text)} chars from PDF")
+                    except Exception as e:
+                        logger.error(f"[Upload] PDF extraction failed: {e}")
+                        text = f"[Error extracting PDF: {e}]"
             else:
                 # Assume text/binary
                 # Simple binary check (null bytes)
@@ -963,8 +999,9 @@ ANSWER:"""
 
     # Voice Handler
     async def on_voice_click():
-        if not sd:
-            ui.notify(locale.NOTIFY_SOUNDDEVICE_MISSING, color='red')
+        if not is_feature_available('audio'):
+            reason = feature_detector.get_unavailable_reason('audio')
+            ui.notify(f"{EMOJI['error']} Voice Recording Unavailable\n{reason}", color='negative', timeout=5000)
             return
             
         ui_state.status_text.text = locale.CHAT_RECORDING
@@ -1075,6 +1112,21 @@ ANSWER:"""
                 # Actions
                 ui.button(icon=Icons.RECORD, on_click=on_voice_click).props('flat round dense icon-size=24px').classes(Styles.LABEL_MUTED + ' hover:text-blue-600')
                 ui.button(icon=Icons.SEND, on_click=handle_send).props('round dense unelevated').classes(Styles.BTN_PRIMARY + ' w-10 h-10')
+
+            # Fun waiting status below input (rotating messages)
+            import random
+            waiting_msg = random.choice(locale.LOADING_WAITING_FOR_USER)
+            waiting_status = ui.label(waiting_msg).classes('text-xs text-gray-400 italic text-center mt-1 animate-pulse')
+
+            # Rotate waiting message every 5 seconds
+            def update_waiting_message():
+                try:
+                    new_msg = random.choice(locale.LOADING_WAITING_FOR_USER)
+                    waiting_status.text = new_msg
+                except Exception:
+                    pass  # Ignore if element deleted
+
+            ui.timer(5.0, update_waiting_message)
 
     # Apply Dark Mode on Initial Load based on saved settings
     # This must be called AFTER all UI elements are created

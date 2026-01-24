@@ -184,12 +184,12 @@ class TestPDFIntegrationWithRAG:
         }]
         
         # Index in RAG - build_index handles chunking internally
-        rag = LocalRAG()
-        rag.build_index(documents)  # Pass documents, not chunks
+        rag = LocalRAG(cache_dir=tmp_path)
+        rag.build_index(documents, filter_junk=False)  # Ensure indexed for test
         
         assert rag.index is not None
-        assert rag.index.ntotal >= 1  # Should have indexed at least 1 chunk
-        assert len(rag.chunks) >= 1  # Should have created at least 1 chunk
+        assert rag.index.ntotal >= 1
+        assert len(rag.chunks) >= 1
 
 
 if __name__ == '__main__':

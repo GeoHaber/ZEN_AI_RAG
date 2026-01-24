@@ -451,9 +451,9 @@ class TestRAGPipeline:
         
         # Verify SQLite file exists
         assert (tmp_path / "rag.db").exists()
-        
-        # Load
-        rag2 = LocalRAG(cache_dir=tmp_path)
+
+        # Load with lazy_load disabled for testing
+        rag2 = LocalRAG(cache_dir=tmp_path, lazy_load=False)
         assert len(rag2.chunks) == len(docs)
     
     def test_large_index_sqlite_scalability(self, tmp_path):
@@ -470,14 +470,14 @@ class TestRAGPipeline:
         
         # Verify DB exists
         assert (tmp_path / "rag.db").exists()
-        
-        # Load should work
-        rag2 = LocalRAG(cache_dir=tmp_path)
+
+        # Load should work with lazy_load disabled for testing
+        rag2 = LocalRAG(cache_dir=tmp_path, lazy_load=False)
         assert len(rag2.chunks) >= 1000
     
-    def test_query(self):
+    def test_query(self, tmp_path):
         """Test querying RAG index."""
-        rag = LocalRAG()
+        rag = LocalRAG(cache_dir=tmp_path)
         
         docs = [
             {"url": "test", "title": "Hospital", "content": "The hospital offers emergency services"},
@@ -504,9 +504,9 @@ class TestRAGPipeline:
 class TestRAGIntegration:
     """Test RAG integration with chat."""
     
-    def test_rag_context_injection(self):
+    def test_rag_context_injection(self, tmp_path):
         """Test RAG context is injected into prompts."""
-        rag = LocalRAG()
+        rag = LocalRAG(cache_dir=tmp_path)
         
         docs = [
             {"url": "test", "title": "Info", "content": "The manager is John Doe"},

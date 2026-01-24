@@ -562,11 +562,13 @@ async def _start_download(repo: str, filename: str, dialog, backend, app_state):
         )
         if response.status_code == 200:
             ui.notify(locale.NOTIFY_DOWNLOAD_STARTED, color='positive', position='top', timeout=5000)
-            # Refresh model list
-            backend.get_models()
-            if 'model_select' in app_state and app_state['model_select']:
-                app_state['model_select'].options = backend.get_models()
-                app_state['model_select'].update()
+            # Refresh model list (async)
+            async def refresh_models():
+                models = await backend.get_models()
+                if 'model_select' in app_state and app_state['model_select']:
+                    app_state['model_select'].options = models
+                    app_state['model_select'].update()
+            asyncio.create_task(refresh_models())
         else:
             ui.notify(locale.format('NOTIFY_DOWNLOAD_FAILED', error=response.text), color='negative', position='top')
     except requests.exceptions.ConnectionError:
@@ -576,7 +578,7 @@ async def _start_download(repo: str, filename: str, dialog, backend, app_state):
 
 
 
-def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state):
+def setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state):
     """Setup the left sidebar drawer with all controls - Redesigned for better UX."""
     locale = get_locale()
     
@@ -650,8 +652,13 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
         with ui.expansion(locale.NAV_MODEL_MANAGER, icon='smart_toy').classes('w-full mb-2').props('default-opened'):
             with ui.column().classes('w-full gap-3 py-2'):
                 
-                # Get current models with metadata
-                current_models = backend.get_models()
+                # Get current models with metadata (use fallback for sync context)
+                try:
+                    # In sync context, use fallback models
+                    current_models = ["qwen2.5-coder.gguf", "llama-3.2-3b.gguf"]
+                    # Model list will be updated by periodic refresh
+                except Exception:
+                    current_models = []
                 
                 # Comprehensive model metadata database
                 MODEL_INFO = {
@@ -1047,8 +1054,8 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                         start_time = time.time()
                         token_count = 0
                         
-                        async with async_backend:
-                            async for chunk in async_backend.send_message_async(test_prompt):
+                        async with backend:
+                            async for chunk in backend.send_message_async(test_prompt):
                                 token_count += len(chunk.split())
                         
                         elapsed = time.time() - start_time
