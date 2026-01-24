@@ -5,6 +5,7 @@ async_backend.py - True async HTTP backend for Zena
 import httpx
 import json
 import logging
+import asyncio
 from typing import AsyncGenerator, Optional
 from config_system import config, EMOJI
 
@@ -100,22 +101,44 @@ class AsyncNebulaBackend:
             logger.debug("[AsyncBackend] HTTP client closed")
     
     async def send_message_async(
-        self, 
-        text: str, 
+        self,
+        text: str,
         system_prompt: str = """You are Zena, a helpful AI assistant powered by Qwen2.5-Coder.
 You are NOT ChatGPT, NOT GPT-4, and NOT made by OpenAI.
 You were created by Alibaba Cloud (Qwen team) and integrated into the ZenAI application.
-Be helpful, concise, and accurate. If asked about your identity, say you are Zena powered by Qwen.""",
-        attachment_content: Optional[str] = None
+
+Your Role: You serve as the coordinator and primary interface for the ZenAI multi-LLM system.
+
+Capabilities:
+- Fast local processing for simple queries (your primary role)
+- Access to external LLM APIs when enabled in settings (Claude, Gemini, Grok)
+- Multi-LLM consensus for complex questions requiring expert validation
+- Cost-aware routing (you decide when to escalate to external LLMs)
+
+When External LLMs Are Available:
+If the user has enabled external LLM integration and provided API keys, you CAN access:
+- Anthropic Claude (claude-3-5-sonnet, claude-3-opus, claude-3-haiku)
+- Google Gemini (gemini-pro, gemini-pro-vision)
+- xAI Grok (grok-beta)
+
+Your Decision Process:
+- Simple questions (greetings, basic facts): Answer directly (fast local response)
+- Complex questions (code generation, nuanced advice): Consider external LLM consultation
+- When consensus is enabled: Query multiple LLMs and calculate agreement scores
+
+Be helpful, concise, and accurate. If asked about your capabilities, explain that you're a local LLM that coordinates with external LLMs when needed. If asked about your identity, say you are Zena powered by Qwen with multi-LLM orchestration capabilities.""",
+        attachment_content: Optional[str] = None,
+        cancellation_event: Optional[asyncio.Event] = None
     ) -> AsyncGenerator[str, None]:
         """
         Send message to LLM with true async streaming.
-        
+
         Args:
             text: User message
             system_prompt: System prompt for LLM
             attachment_content: Optional file attachment content
-        
+            cancellation_event: Optional asyncio.Event to cancel streaming
+
         Yields:
             Response chunks as they arrive (non-blocking)
         """
@@ -151,12 +174,17 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
                 
                 chunk_count = 0
                 async for line in response.aiter_lines():
+                    # Check if cancelled
+                    if cancellation_event and cancellation_event.is_set():
+                        logger.info(f"[AsyncBackend] Stream cancelled by client after {chunk_count} chunks")
+                        break
+
                     if line.startswith('data: '):
                         json_str = line[6:]
                         if json_str.strip() == '[DONE]':
                             logger.info(f"[AsyncBackend] Stream complete: {chunk_count} chunks")
                             break
-                        
+
                         try:
                             data = json.loads(json_str)
                             delta = data['choices'][0]['delta']

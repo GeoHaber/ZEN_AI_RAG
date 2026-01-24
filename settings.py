@@ -58,6 +58,22 @@ class VoiceSettings:
 
 
 @dataclass
+class ExternalLLMSettings:
+    """External LLM API settings for multi-LLM consensus."""
+    enabled: bool = False
+    anthropic_api_key: str = ""
+    google_api_key: str = ""
+    xai_api_key: str = ""  # Grok
+    use_consensus: bool = True  # Whether to query multiple LLMs
+    cost_tracking_enabled: bool = True
+    budget_limit: float = 10.0  # Maximum spend in dollars
+    # Model selections
+    anthropic_model: str = "claude-3-5-sonnet-20241022"
+    google_model: str = "gemini-pro"
+    xai_model: str = "grok-beta"
+
+
+@dataclass
 class RAGSettings:
     """RAG (Retrieval Augmented Generation) settings."""
     enabled: bool = False
@@ -104,6 +120,7 @@ class AppSettings:
     appearance: AppearanceSettings = field(default_factory=AppearanceSettings)
     ai_model: AIModelSettings = field(default_factory=AIModelSettings)
     voice: VoiceSettings = field(default_factory=VoiceSettings)
+    external_llm: ExternalLLMSettings = field(default_factory=ExternalLLMSettings)
     rag: RAGSettings = field(default_factory=RAGSettings)
     chat: ChatSettings = field(default_factory=ChatSettings)
     system: SystemSettings = field(default_factory=SystemSettings)
@@ -129,6 +146,8 @@ class AppSettings:
             settings.ai_model = AIModelSettings(**data["ai_model"])
         if "voice" in data:
             settings.voice = VoiceSettings(**data["voice"])
+        if "external_llm" in data:
+            settings.external_llm = ExternalLLMSettings(**data["external_llm"])
         if "rag" in data:
             settings.rag = RAGSettings(**data["rag"])
         if "chat" in data:
@@ -211,7 +230,11 @@ class SettingsManager:
     @property
     def voice(self) -> VoiceSettings:
         return self._settings.voice
-    
+
+    @property
+    def external_llm(self) -> ExternalLLMSettings:
+        return self._settings.external_llm
+
     @property
     def rag(self) -> RAGSettings:
         return self._settings.rag
