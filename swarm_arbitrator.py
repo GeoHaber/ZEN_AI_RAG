@@ -675,6 +675,179 @@ class SwarmArbitrator:
         return True
 
     # ========================================================================
+    # TRAFFIC CONTROLLER MODE (2 LLMs)
+    # ========================================================================
+
+    async def _traffic_controller_mode(
+        self,
+        query: str,
+        system_prompt: str = "You are a helpful AI assistant."
+    ) -> AsyncGenerator[str, None]:
+        """
+        Traffic controller mode for 2 LLMs.
+
+        Strategy:
+        1. Fast LLM evaluates difficulty
+        2. Easy → Fast LLM answers
+        3. Hard → Powerful LLM answers
+        4. Medium → Get second opinion
+        """
+        fast_llm = self.endpoints[0]
+        powerful_llm = self.endpoints[1]
+
+        # Step 1: Evaluate difficulty
+        yield "🚦 Evaluating query complexity...\n"
+        evaluation = await self._evaluate_query_difficulty(query)
+
+        difficulty = evaluation['difficulty']
+        confidence = evaluation['confidence']
+
+        # Step 2: Route based on evaluation
+        if difficulty == 'easy' and confidence > 0.8:
+            # Fast LLM handles it
+            yield f"💨 **Fast response** ({difficulty}, confidence: {confidence:.0%})\n\n"
+            async for chunk in self._stream_from_llm(fast_llm, query, system_prompt):
+                yield chunk
+
+        elif difficulty == 'hard' or confidence < 0.5:
+            # Route to powerful LLM
+            yield f"🚀 **Expert routing** ({difficulty}, confidence: {confidence:.0%})\n\n"
+            async for chunk in self._stream_from_llm(powerful_llm, query, system_prompt):
+                yield chunk
+
+        else:
+            # Medium difficulty - get second opinion
+            yield f"⚖️ **Verification** ({difficulty}, confidence: {confidence:.0%})\n\n"
+
+            # Get both answers
+            fast_answer = await self._get_answer(fast_llm, query, system_prompt)
+            powerful_answer = await self._get_answer(powerful_llm, query, system_prompt)
+
+            # Quick consensus
+            agreement = self._calculate_consensus([fast_answer, powerful_answer])
+
+            if agreement > 0.7:
+                # They agree - use fast answer (cheaper)
+                yield fast_answer
+            else:
+                # Disagree - use powerful answer (safer)
+                yield powerful_answer
+
+    async def _evaluate_query_difficulty(self, query: str) -> Dict:
+        """
+        Use fast LLM to classify query difficulty.
+
+        Returns:
+            {
+                "difficulty": "easy|medium|hard",
+                "domain": "code|math|creative|factual|reasoning",
+                "confidence": 0.0-1.0,
+                "reasoning": "brief explanation"
+            }
+        """
+        # Use traffic controller LLM (Phi-3-mini on port 8020)
+        controller_endpoint = f"http://{self.host}:8020/v1/chat/completions"
+
+        eval_prompt = f"""Analyze this query and respond ONLY with JSON:
+
+Query: {query}
+
+{{
+    "difficulty": "easy|medium|hard",
+    "domain": "code|math|creative|factual|reasoning",
+    "confidence": 0.0-1.0,
+    "reasoning": "1 sentence"
+}}
+
+Rules:
+- "easy": Factual QA, simple math, definitions
+- "medium": Code, explanations, analysis
+- "hard": Complex reasoning, research, proofs
+
+JSON:"""
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await self._query_model_with_timeout(
+                    client,
+                    controller_endpoint,
+                    [{"role": "user", "content": eval_prompt}],
+                    timeout=5.0  # Fast timeout for classifier
+                )
+
+                # Parse JSON response
+                content = response['content']
+
+                # Extract JSON (handle markdown code blocks)
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+
+                result = json.loads(content)
+                return result
+
+        except Exception as e:
+            logger.error(f"[Traffic Controller] Classification failed: {e}")
+            # Fallback: default to medium difficulty
+            return {
+                "difficulty": "medium",
+                "domain": "general",
+                "confidence": 0.5,
+                "reasoning": "Classification failed, defaulting to medium"
+            }
+
+    async def _stream_from_llm(
+        self,
+        endpoint: str,
+        query: str,
+        system_prompt: str
+    ) -> AsyncGenerator[str, None]:
+        """Stream response from a single LLM."""
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": query}
+        ]
+
+        payload = {
+            "messages": messages,
+            "stream": True,
+            "temperature": 0.7,
+            "max_tokens": -1
+        }
+
+        async with httpx.AsyncClient() as client:
+            async with client.stream('POST', endpoint, json=payload, timeout=120.0) as response:
+                async for line in response.aiter_lines():
+                    if line.startswith('data: '):
+                        json_str = line[6:]
+                        if json_str.strip() == '[DONE]':
+                            break
+                        try:
+                            data = json.loads(json_str)
+                            content = data['choices'][0]['delta'].get('content', '')
+                            if content:
+                                yield content
+                        except:
+                            pass
+
+    async def _get_answer(
+        self,
+        endpoint: str,
+        query: str,
+        system_prompt: str
+    ) -> str:
+        """Get complete answer from a single LLM (non-streaming)."""
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": query}
+        ]
+
+        async with httpx.AsyncClient() as client:
+            response = await self._query_model_with_timeout(client, endpoint, messages)
+            return response['content']
+
+    # ========================================================================
     # MAIN CONSENSUS METHOD
     # ========================================================================
 
@@ -700,9 +873,38 @@ class SwarmArbitrator:
         if not self.endpoints:
             await self.discover_swarm()
 
-        if len(self.endpoints) == 0:
+        num_llms = len(self.endpoints)
+
+        if num_llms == 0:
             yield "❌ **Error:** No experts available.\n"
             return
+
+        # Route based on swarm size
+        elif num_llms == 1:
+            # Single LLM mode - direct routing (no consensus needed)
+            logger.info("[Arbitrator] Single LLM mode")
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text}
+            ]
+            async with httpx.AsyncClient() as client:
+                response = await self._query_model_with_timeout(
+                    client,
+                    self.endpoints[0],
+                    messages
+                )
+                yield response['content']
+            return
+
+        elif num_llms == 2:
+            # NEW: Traffic controller mode
+            logger.info("[Arbitrator] Traffic controller mode (2 LLMs)")
+            async for chunk in self._traffic_controller_mode(text, system_prompt):
+                yield chunk
+            return
+
+        # 3+ LLMs: Full consensus mode (existing code below)
+        logger.info(f"[Arbitrator] Consensus mode ({num_llms} LLMs)")
 
         # Build messages
         messages = [
