@@ -1,33 +1,29 @@
 """
-rag_pipeline.py - RAG implementation with FAISS + SQLite + Advanced Deduplication
-
-Features:
-- Exact hash deduplication (SHA256)
-- Semantic near-duplicate detection via FAISS (checks against existing index)
-- Junk chunk filtering (entropy, length, blacklist)
-- Thread-safe operations
-- Hybrid search with RRF fusion
+rag_pipeline.py - RAG implementation with Qdrant + BM25 + Advanced Deduplication
 """
 import time
 import hashlib
 import logging
 import threading
+import re
 from pathlib import Path
 from typing import List, Dict, Generator, Optional, Set, FrozenSet
 from collections import Counter
 from math import log2
+from .chunker import TextChunker, ChunkerConfig
 
 logger = logging.getLogger(__name__)
 
 # Core dependencies
 try:
-    from sentence_transformers import SentenceTransformer
-    import faiss
+    from sentence_transformers import SentenceTransformer, CrossEncoder
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
     import numpy as np
     DEPS_AVAILABLE = True
 except ImportError:
     DEPS_AVAILABLE = False
-    logger.warning("[RAG] sentence-transformers or faiss-cpu not installed")
+    logger.warning("[RAG] sentence-transformers or qdrant-client not installed")
 
 # Optional: BM25 for hybrid search
 try:
@@ -36,8 +32,6 @@ try:
 except ImportError:
     BM25_AVAILABLE = False
 
-from .rag_db import RAGDatabase
-
 
 # =============================================================================
 # Configuration Constants
@@ -45,540 +39,429 @@ from .rag_db import RAGDatabase
 class DedupeConfig:
     """Deduplication configuration - adjust per use case."""
     SIMILARITY_THRESHOLD: float = 0.95  # Cosine similarity for near-duplicates
-    MIN_CHUNK_LENGTH: int = 50          # Skip chunks shorter than this
-    MIN_ENTROPY: float = 1.5            # Skip low-entropy (repetitive) text
-    MAX_ENTROPY: float = 6.0            # Skip high-entropy (garbage/encoded) text
-    BLACKLIST_KEYWORDS: FrozenSet[str] = frozenset({
-        'advertisement', 'sponsored', 'cookie policy', 'privacy policy',
-        'subscribe now', 'sign up for', 'click here to'
-    })
+    # Compatibility aliases for tests
+    MIN_ENTROPY: float = ChunkerConfig.MIN_ENTROPY
+    MAX_ENTROPY: float = ChunkerConfig.MAX_ENTROPY
+    MIN_CHUNK_LENGTH: int = ChunkerConfig.MIN_CHUNK_LENGTH
+    BLACKLIST_KEYWORDS: Set[str] = ChunkerConfig.BLACKLIST_KEYWORDS
 
 
 class LocalRAG:
     """
-    Local RAG system with FAISS vector search, SQLite persistence,
-    and advanced deduplication.
+    Production-grade RAG system using Qdrant.
+    Combines Qdrant's high-performance vector search with BM25 keyword search.
     """
     
     def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_dir: Optional[Path] = None):
-        if not DEPS_AVAILABLE:
-            raise ImportError("Install: pip install sentence-transformers faiss-cpu")
+        self.cache_dir = cache_dir or Path("./rag_storage")
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-        self.model_name = model_name
+        self.collection_name = "zenai_knowledge"
+        self._lock = threading.Lock()
+        
+        # Initialize Embedding Model
+        logger.info(f"[RAG] Loading transformer: {model_name}")
         self.model = SentenceTransformer(model_name)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
         
-        self.index: Optional[faiss.IndexFlatIP] = None  # Inner product for cosine sim
-        self.chunks: List[Dict] = []  # In-memory cache for fast retrieval
-        self.chunk_hashes: Set[str] = set()  # Fast hash lookup
+        # Initialize Qdrant Client (100% Local)
+        self.qdrant = QdrantClient(path=str(self.cache_dir))
+        self._init_collection()
         
-        self.cache_dir = cache_dir or Path(".")
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Connect to SQLite
-        db_path = self.cache_dir / "rag.db"
-        self.db = RAGDatabase(db_path)
-        
+        # Standard In-memory buffers for quick lookups and BM25
+        self.chunks = []         # Metadata cache for BM25 mapping
+        self.chunk_hashes = set() # For O(1) exact duplicate check
         self.bm25 = None
+        self.cross_encoder = None # Lazy loaded
+        self._tokenizer_pattern = re.compile(r'\w+')
         
-        # Thread safety
-        self._lock = threading.RLock()
+        # Loader
+        self._load_metadata()
         
-        # Load state from DB
-        self._load_from_db()
+        # Initialize Chunker
+        self.chunker = TextChunker()
+        
+        # --- COMPATIBILITY SHIM FOR LEGACY TESTS ---
+        self.index = self # Alias for old tests (allows rag.index.ntotal)
+        
+        # Initialize Advanced Extractor
+        try:
+            from .universal_extractor import UniversalExtractor
+            self.extractor = UniversalExtractor()
+        except ImportError:
+            self.extractor = None
 
-    # =========================================================================
-    # State Management
-    # =========================================================================
-    
-    def _load_from_db(self):
-        """Restore index from DB."""
-        with self._lock:
-            load_start = time.time()
-            self.chunks = self.db.get_all_chunks()
-            self.chunk_hashes = {
-                hashlib.sha256(c.get('text', '').encode()).hexdigest() 
-                for c in self.chunks
-            }
+    def warmup(self):
+        """Pre-load heavy models into memory to avoid first-query lag."""
+        logger.info("[RAG] Warming up models...")
+        # 1. Warmup Embedding Model
+        _ = self.model.encode(["warmup"], normalize_embeddings=True)
+        
+        # 2. Warmup Cross-Encoder (New)
+        if self.cross_encoder is None:
+            self.cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+            _ = self.cross_encoder.predict([["warmup query", "warmup doc"]])
+            
+        logger.info("[RAG] Models warmed up and ready.")
+
+    @property
+    def ntotal(self) -> int:
+        """Compatibility shim for legacy FAISS tests."""
+        try:
+            return self.qdrant.get_collection(self.collection_name).points_count
+        except:
+            return 0
+
+    def close(self):
+        """Explicitly close the Qdrant client to release storage locks."""
+        try:
+            if hasattr(self, 'qdrant'):
+                # In newer qdrant-client versions, the client has a close method
+                if hasattr(self.qdrant, 'close'):
+                    self.qdrant.close()
+                elif hasattr(self.qdrant, '_client') and hasattr(self.qdrant._client, 'close'):
+                    self.qdrant._client.close()
+                del self.qdrant
+        except:
+            pass
+
+    def __del__(self):
+        self.close()
+
+    def _init_collection(self):
+        """Initialize Qdrant collection if not exists."""
+        try:
+            collections = self.qdrant.get_collections().collections
+            exists = any(c.name == self.collection_name for c in collections)
+            
+            if not exists:
+                self.qdrant.create_collection(
+                    collection_name=self.collection_name,
+                    vectors_config=VectorParams(
+                        size=self.embedding_dim,
+                        distance=Distance.COSINE
+                    )
+                )
+                logger.info(f"[RAG] Created Qdrant collection: {self.collection_name}")
+        except Exception as e:
+            logger.error(f"[RAG] Qdrant init failed: {e}")
+
+    def _load_metadata(self):
+        """Load metadata from Qdrant to populate hash and BM25 buffers."""
+        try:
+            points, _ = self.qdrant.scroll(
+                collection_name=self.collection_name,
+                limit=10000,
+                with_payload=True,
+                with_vectors=False
+            )
+            
+            self.chunks = []
+            self.chunk_hashes = set()
+            
+            for p in points:
+                payload = p.payload
+                text = payload.get('text', '')
+                text_hash = hashlib.sha256(text.encode()).hexdigest()
+                
+                chunk = {
+                    'text': text,
+                    'url': payload.get('url'),
+                    'title': payload.get('title'),
+                    'hash': text_hash,
+                    'qdrant_id': p.id
+                }
+                self.chunks.append(chunk)
+                self.chunk_hashes.add(text_hash)
             
             if self.chunks:
-                logger.info(f"[RAG] Restoring {len(self.chunks)} chunks from DB...")
-                self._rebuild_faiss()
                 self._rebuild_bm25()
-                dur = time.time() - load_start
-                logger.info(f"[RAG] State restored in {dur:.2f}s")
+                logger.info(f"[RAG] Loaded {len(self.chunks)} chunks into search buffers")
+        except Exception as e:
+            logger.warning(f"[RAG] Metadata load failed: {e}")
 
-    def _rebuild_faiss(self):
-        """Rebuild FAISS index from self.chunks vectors using cosine similarity."""
-        if not self.chunks:
-            self.index = None
-            return
-        
-        # Extract and validate vectors
-        vectors = []
-        for c in self.chunks:
-            v = c.get('vector')
-            if v is not None and hasattr(v, 'size') and v.size > 0:
-                vectors.append(v)
-        
-        if not vectors:
-            self.index = None
-            return
-        
-        # Stack and normalize for cosine similarity
-        embeddings = np.vstack(vectors).astype('float32')
-        faiss.normalize_L2(embeddings)
-        
-        # Use Inner Product index (with normalized vectors = cosine similarity)
-        self.index = faiss.IndexFlatIP(embeddings.shape[1])
-        self.index.add(embeddings)
-        logger.info(f"[RAG] FAISS Index rebuilt: {self.index.ntotal} vectors (cosine sim)")
+    def _tokenize(self, text: str) -> List[str]:
+        """Standard tokenizer for BM25 and processing."""
+        return self._tokenizer_pattern.findall(text.lower())
+
+    def close(self):
+        """Explicitly close the Qdrant client to release storage locks."""
+        try:
+            if hasattr(self, 'qdrant'):
+                del self.qdrant
+        except:
+            pass
 
     def _rebuild_bm25(self):
         """Rebuild BM25 index for keyword search."""
-        if BM25_AVAILABLE and self.chunks:
-            texts = [c.get("text", "") for c in self.chunks]
-            tokenized_texts = [text.lower().split() for text in texts]
-            self.bm25 = BM25Okapi(tokenized_texts)
+        if not BM25_AVAILABLE or not self.chunks:
+            return
+        
+        try:
+            tokenized_corpus = [self._tokenize(c['text']) for c in self.chunks]
+            self.bm25 = BM25Okapi(tokenized_corpus)
+            logger.debug(f"[RAG] BM25 Index rebuilt with {len(self.chunks)} items")
+        except Exception as e:
+            logger.error(f"[RAG] BM25 rebuild failed: {e}")
 
-    # =========================================================================
-    # Junk Detection
-    # =========================================================================
-    
     def _calculate_entropy(self, text: str) -> float:
-        """Calculate Shannon entropy of text (measures randomness)."""
-        if not text:
-            return 0.0
-        freq = Counter(text.lower())
-        total = len(text)
-        return -sum((count/total) * log2(count/total) for count in freq.values())
+        """Compatibility delegator for tests."""
+        return self.chunker._calculate_entropy(text)
 
     def _is_junk_chunk(self, text: str) -> bool:
-        """
-        Detect junk chunks that shouldn't be indexed.
-        Returns True if chunk should be skipped.
-        """
-        # Length check
-        if len(text.strip()) < DedupeConfig.MIN_CHUNK_LENGTH:
-            return True
-        
-        # Entropy check (too low = repetitive, too high = garbage)
-        entropy = self._calculate_entropy(text)
-        if entropy < DedupeConfig.MIN_ENTROPY or entropy > DedupeConfig.MAX_ENTROPY:
-            return True
-        
-        # Blacklist keyword check
-        text_lower = text.lower()
-        for keyword in DedupeConfig.BLACKLIST_KEYWORDS:
-            if keyword in text_lower:
-                return True
-        
-        return False
+        """Detect junk chunks using unified chunker."""
+        return self.chunker.is_junk(text)
 
-    # =========================================================================
-    # Deduplication
-    # =========================================================================
-    
-    def _is_exact_duplicate(self, text: str) -> bool:
-        """Check if text is an exact duplicate via SHA256 hash."""
-        text_hash = hashlib.sha256(text.encode()).hexdigest()
-        return text_hash in self.chunk_hashes
+    def _find_near_duplicate(self, embedding: 'np.ndarray', threshold: float) -> bool:
+        """Check Qdrant for semantic near-duplicates."""
+        try:
+            results = self.qdrant.query_points(
+                collection_name=self.collection_name,
+                query=embedding.tolist(),
+                limit=1,
+                score_threshold=threshold
+            ).points
+            return len(results) > 0
+        except:
+            return False
 
-    def _find_near_duplicate(self, embedding: np.ndarray, threshold: Optional[float] = None) -> Optional[int]:
-        """
-        Check if embedding is a near-duplicate of existing chunks.
-        Returns index of similar chunk if found, None otherwise.
-        
-        Uses existing FAISS index for O(log n) lookup.
-        """
-        threshold = threshold or DedupeConfig.SIMILARITY_THRESHOLD
-        
-        if self.index is None or self.index.ntotal == 0:
-            return None
-        
-        # Normalize query vector for cosine similarity
-        query = embedding.reshape(1, -1).astype('float32')
-        faiss.normalize_L2(query)
-        
-        # Search for nearest neighbor
-        similarities, indices = self.index.search(query, 1)
-        
-        if indices[0][0] >= 0 and similarities[0][0] > threshold:
-            return int(indices[0][0])
-        
-        return None
-
-    # =========================================================================
-    # Document Processing
-    # =========================================================================
-    
     def chunk_documents(self, documents: List[Dict], chunk_size: int = 500, 
                        overlap: int = 50, filter_junk: bool = True) -> List[Dict]:
-        """
-        Split documents into chunks with optional junk filtering.
-        
-        Args:
-            documents: List of dicts with 'content', 'url', 'title' keys
-            chunk_size: Max characters per chunk
-            overlap: Character overlap between chunks
-            filter_junk: Whether to filter out junk chunks
-            
-        Returns:
-            List of chunk dicts
-        """
-        chunks = []
-        filtered_count = 0
-        
+        """Split documents into chunks using unified chunker."""
+        all_chunks = []
+        # Update chunker config if different
+        self.chunker.config.CHUNK_SIZE = chunk_size
+        self.chunker.config.CHUNK_OVERLAP = overlap
+
         for doc in documents:
             content = doc.get("content", "")
-            if not content:
-                continue
+            if not content or not content.strip(): continue
             
-            url = doc.get("url")
-            title = doc.get("title")
+            meta = {"url": doc.get("url"), "title": doc.get("title")}
+            doc_chunks = self.chunker.chunk_document(content, metadata=meta, strategy="recursive", filter_junk=filter_junk)
             
-            start = 0
-            chunk_idx = 0
-            while start < len(content):
-                end = start + chunk_size
-                chunk_text = content[start:end]
-                
-                # Junk filter
-                if filter_junk and self._is_junk_chunk(chunk_text):
-                    filtered_count += 1
-                    start = end - overlap if overlap < chunk_size else end
-                    continue
-                
-                if len(chunk_text.strip()) > 20:
-                    chunks.append({
-                        "url": url,
-                        "title": title,
+            for c in doc_chunks:
+                chunk_text = c.text.strip()
+                if len(chunk_text) > 20:
+                    all_chunks.append({
+                        "url": c.metadata.get("url"),
+                        "title": c.metadata.get("title"),
                         "text": chunk_text,
-                        "chunk_index": chunk_idx
+                        "chunk_index": c.chunk_index
                     })
-                    chunk_idx += 1
-                
-                start = end - overlap if overlap < chunk_size else end
-        
-        if filtered_count > 0:
-            logger.info(f"[RAG] Filtered {filtered_count} junk chunks during chunking")
-        
-        return chunks
+        return all_chunks
 
     def build_index(self, documents: List[Dict], dedup_threshold: Optional[float] = None, 
                     filter_junk: bool = True):
-        """
-        Build/update index with new documents.
-        Includes document-level and chunk-level deduplication.
-        
-        Args:
-            documents: List of dicts with 'content', 'url', 'title' keys
-            dedup_threshold: Cosine similarity threshold for near-duplicate detection
-            filter_junk: Whether to filter out junk chunks (disable for testing)
-        """
+        """Build/update Qdrant index with new documents."""
         with self._lock:
             start_time = time.time()
             threshold = dedup_threshold or DedupeConfig.SIMILARITY_THRESHOLD
             
-            # Stats
             docs_processed = 0
-            docs_skipped = 0
             chunks_added = 0
-            chunks_exact_dup = 0
-            chunks_near_dup = 0
-            
-            BATCH_SIZE = 64
             
             for doc in documents:
-                content = doc.get('content', '')
-                if not content:
-                    continue
-                
-                # Document-level deduplication (SHA256)
-                content_hash = hashlib.sha256(content.encode()).hexdigest()
-                if self.db.document_exists(content_hash):
-                    docs_skipped += 1
-                    continue
-                
-                # Add document to DB
-                doc_id = self.db.add_document(
-                    doc.get('url', ''), 
-                    doc.get('title', 'Untitled'), 
-                    content
-                )
-                
-                # Chunk the document
                 doc_chunks = self.chunk_documents([doc], filter_junk=filter_junk)
+                if not doc_chunks: continue
                 
-                if not doc_chunks:
-                    continue
-                
-                # Process chunks in batches for efficient embedding
-                for batch_start in range(0, len(doc_chunks), BATCH_SIZE):
-                    batch = doc_chunks[batch_start:batch_start + BATCH_SIZE]
+                BATCH_SIZE = 32
+                for i in range(0, len(doc_chunks), BATCH_SIZE):
+                    batch = doc_chunks[i:i + BATCH_SIZE]
                     texts = [c['text'] for c in batch]
+                    embeddings = self.model.encode(texts, normalize_embeddings=True)
                     
-                    # Batch embed
-                    embeddings = self.model.encode(
-                        texts, 
-                        convert_to_numpy=True, 
-                        show_progress_bar=False,
-                        normalize_embeddings=True  # Pre-normalize for cosine sim
-                    )
-                    
-                    # Process each chunk with deduplication
-                    chunks_to_add = []
+                    points = []
                     for chunk, embedding in zip(batch, embeddings):
                         text = chunk['text']
-                        
-                        # Exact duplicate check (O(1) hash lookup)
                         text_hash = hashlib.sha256(text.encode()).hexdigest()
+                        
                         if text_hash in self.chunk_hashes:
-                            chunks_exact_dup += 1
                             continue
                         
-                        # Near-duplicate check against EXISTING index (O(log n))
-                        near_dup_idx = self._find_near_duplicate(embedding, threshold)
-                        if near_dup_idx is not None:
-                            chunks_near_dup += 1
-                            logger.debug(f"[RAG] Near-dup skipped (sim > {threshold})")
+                        if self._find_near_duplicate(embedding, threshold):
                             continue
                         
-                        # Prepare chunk for storage
-                        chunk['doc_id'] = doc_id
-                        chunk['vector'] = embedding
-                        chunk['hash'] = text_hash
-                        chunks_to_add.append(chunk)
+                        point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
                         
-                        # Update in-memory structures immediately for subsequent dedup checks
+                        points.append(PointStruct(
+                            id=point_id,
+                            vector=embedding.tolist(),
+                            payload={
+                                "text": text,
+                                "url": chunk.get("url"),
+                                "title": chunk.get("title")
+                            }
+                        ))
+                        
                         self.chunk_hashes.add(text_hash)
-                        
-                        # Add to FAISS index immediately for near-dup checks in this batch
-                        if self.index is None:
-                            self.index = faiss.IndexFlatIP(self.embedding_dim)
-                        
-                        vec = embedding.reshape(1, -1).astype('float32')
-                        # Already normalized from encode()
-                        self.index.add(vec)
-                        self.chunks.append(chunk)
+                        self.chunks.append({
+                            'text': text,
+                            'url': chunk.get("url"),
+                            'title': chunk.get("title"),
+                            'hash': text_hash,
+                            'qdrant_id': point_id
+                        })
                     
-                    # Batch insert to DB
-                    if chunks_to_add:
-                        self.db.add_chunks(chunks_to_add)
-                        chunks_added += len(chunks_to_add)
-                
+                    if points:
+                        self.qdrant.upsert(
+                            collection_name=self.collection_name,
+                            points=points
+                        )
+                        chunks_added += len(points)
                 docs_processed += 1
             
-            # Rebuild BM25 (needs full rebuild for efficiency)
             self._rebuild_bm25()
-            
             total_time = time.time() - start_time
-            
-            logger.info(
-                f"[RAG] Ingest complete in {total_time:.2f}s: "
-                f"{docs_processed} docs processed, {docs_skipped} skipped, "
-                f"{chunks_added} chunks added, "
-                f"{chunks_exact_dup} exact dups, {chunks_near_dup} near dups filtered"
-            )
+            logger.info(f"[RAG] Ingested {chunks_added} chunks to Qdrant in {total_time:.2f}s")
 
     def add_chunks(self, chunks: List[Dict], dedup_threshold: Optional[float] = None):
-        """
-        Add pre-chunked content with deduplication.
-        For when you have chunks already (e.g., from external source).
-        
-        Args:
-            chunks: List of dicts with 'text', 'url', 'title' keys
-            dedup_threshold: Cosine similarity threshold for near-duplicate detection
-        """
+        """Add pre-chunked content with deduplication."""
         with self._lock:
             threshold = dedup_threshold or DedupeConfig.SIMILARITY_THRESHOLD
             
-            # Filter and prepare
-            valid_chunks = [c for c in chunks if not self._is_junk_chunk(c.get('text', ''))]
-            
-            if not valid_chunks:
-                logger.info("[RAG] No valid chunks to add after junk filtering")
-                return
-            
-            # Batch embed
-            texts = [c['text'] for c in valid_chunks]
-            embeddings = self.model.encode(
-                texts,
-                convert_to_numpy=True,
-                show_progress_bar=len(texts) > 100,
-                normalize_embeddings=True
-            )
-            
-            # Deduplicate and add
-            added = 0
-            exact_dup = 0
-            near_dup = 0
-            chunks_to_persist = []
-            
-            for chunk, embedding in zip(valid_chunks, embeddings):
-                text = chunk['text']
+            points = []
+            for chunk in chunks:
+                text = chunk.get('text', '')
+                if not text: continue
+                
+                if self._is_junk_chunk(text): continue
+                
                 text_hash = hashlib.sha256(text.encode()).hexdigest()
+                if text_hash in self.chunk_hashes: continue
                 
-                # Exact duplicate
-                if text_hash in self.chunk_hashes:
-                    exact_dup += 1
-                    continue
+                embedding = self.model.encode([text], normalize_embeddings=True)[0]
+                if self._find_near_duplicate(embedding, threshold): continue
                 
-                # Near duplicate
-                if self._find_near_duplicate(embedding, threshold) is not None:
-                    near_dup += 1
-                    continue
+                point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
                 
-                # Add
-                chunk['vector'] = embedding
-                chunk['hash'] = text_hash
-                chunk['doc_id'] = 0  # No parent document
+                points.append(PointStruct(
+                    id=point_id,
+                    vector=embedding.tolist(),
+                    payload={
+                        "text": text,
+                        "url": chunk.get("url"),
+                        "title": chunk.get("title")
+                    }
+                ))
                 
                 self.chunk_hashes.add(text_hash)
-                self.chunks.append(chunk)
-                chunks_to_persist.append(chunk)
-                
-                if self.index is None:
-                    self.index = faiss.IndexFlatIP(self.embedding_dim)
-                self.index.add(embedding.reshape(1, -1).astype('float32'))
-                
-                added += 1
+                self.chunks.append({
+                    'text': text,
+                    'url': chunk.get("url"),
+                    'title': chunk.get("title"),
+                    'hash': text_hash,
+                    'qdrant_id': point_id
+                })
             
-            # Persist to DB
-            if chunks_to_persist:
-                self.db.add_chunks(chunks_to_persist)
-            
-            self._rebuild_bm25()
-            
-            logger.info(
-                f"[RAG] Added {added} chunks, "
-                f"skipped {exact_dup} exact dups, {near_dup} near dups"
-            )
+            if points:
+                self.qdrant.upsert(collection_name=self.collection_name, points=points)
+                self._rebuild_bm25()
+                logger.info(f"[RAG] Manually added {len(points)} chunks")
 
-    # =========================================================================
-    # Search
-    # =========================================================================
-    
     def search(self, query: str, k: int = 5) -> List[Dict]:
-        """
-        Semantic search using FAISS.
+        """Direct Semantic search using Qdrant."""
+        query_vec = self.model.encode([query], normalize_embeddings=True)[0].tolist()
+        hits = self.qdrant.query_points(
+            collection_name=self.collection_name,
+            query=query_vec,
+            limit=k
+        ).points
         
-        Returns chunks with 'score' field (cosine similarity, 0-1).
-        """
-        if not self.index or not self.chunks:
-            return []
-        
-        # Encode and normalize query
-        query_vec = self.model.encode(
-            [query], 
-            convert_to_numpy=True,
-            normalize_embeddings=True
-        ).astype('float32')
-        
-        # Search (inner product on normalized vectors = cosine similarity)
-        k = min(k, len(self.chunks))
-        similarities, indices = self.index.search(query_vec, k)
-        
-        results = []
-        for sim, idx in zip(similarities[0], indices[0]):
-            if 0 <= idx < len(self.chunks):
-                chunk = self.chunks[idx].copy()
-                # Similarity is already in [0, 1] range for normalized vectors
-                chunk['score'] = float(max(0, min(1, sim)))
-                results.append(chunk)
-        
-        return results
+        return [
+            {
+                "text": hit.payload.get("text"),
+                "url": hit.payload.get("url"),
+                "title": hit.payload.get("title"),
+                "score": hit.score
+            }
+            for hit in hits
+        ]
 
     def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5) -> List[Dict]:
-        """
-        Hybrid search combining semantic (FAISS) and keyword (BM25) with RRF fusion.
-        
-        Args:
-            query: Search query
-            k: Number of results to return
-            alpha: Weight for semantic vs keyword (0=keyword only, 1=semantic only)
-            
-        Returns:
-            List of chunks with 'fusion_score' field
-        """
-        if not self.index or not self.chunks:
+        """Hybrid search combining Qdrant scores with BM25 via RRF."""
+        if not self.chunks:
             return []
+            
+        k_search = max(k * 5, 20)
+        query_vec = self.model.encode([query], normalize_embeddings=True)[0].tolist()
+        hits = self.qdrant.query_points(
+            collection_name=self.collection_name,
+            query=query_vec,
+            limit=k_search
+        ).points
         
-        k_search = min(k * 3, len(self.chunks))
+        id_to_idx = {c['qdrant_id']: i for i, c in enumerate(self.chunks)}
+        f_ranks = {}
+        for rank, hit in enumerate(hits):
+            if hit.id in id_to_idx:
+                f_ranks[id_to_idx[hit.id]] = rank + 1
         
-        # 1. Semantic search rankings
-        query_vec = self.model.encode(
-            [query],
-            convert_to_numpy=True, 
-            normalize_embeddings=True
-        ).astype('float32')
-        
-        _, f_indices = self.index.search(query_vec, k_search)
-        f_ranks = {
-            int(idx): rank + 1 
-            for rank, idx in enumerate(f_indices[0]) 
-            if 0 <= idx < len(self.chunks)
-        }
-        
-        # 2. Keyword search rankings (BM25)
         b_ranks = {}
         if self.bm25:
-            scores = self.bm25.get_scores(query.lower().split())
-            top_indices = np.argsort(scores)[::-1][:k_search]
-            b_ranks = {int(idx): rank + 1 for rank, idx in enumerate(top_indices)}
-        
-        # 3. Reciprocal Rank Fusion
-        K_RRF = 60  # Standard RRF constant
+            tokens = self._tokenize(query)
+            scores = self.bm25.get_scores(tokens)
+            pos_indices = sorted([(i, s) for i, s in enumerate(scores) if s > 0], key=lambda x: x[1], reverse=True)[:k_search]
+            b_ranks = {i: rank + 1 for rank, (i, s) in enumerate(pos_indices)}
+            
+        K_RRF = 60
         fusion_scores = {}
         all_indices = set(f_ranks.keys()) | set(b_ranks.keys())
-        
         for idx in all_indices:
-            score = 0.0
-            if idx in f_ranks:
-                score += alpha * (1.0 / (K_RRF + f_ranks[idx]))
-            if idx in b_ranks:
-                score += (1.0 - alpha) * (1.0 / (K_RRF + b_ranks[idx]))
-            fusion_scores[idx] = score
-        
-        # Sort by fusion score
+            f_score = (1.0 / (K_RRF + f_ranks[idx])) if idx in f_ranks else 0.0
+            b_score = (1.0 / (K_RRF + b_ranks[idx])) if idx in b_ranks else 0.0
+            fusion_scores[idx] = (alpha * f_score) + ((1.0 - alpha) * b_score)
+            
         sorted_indices = sorted(fusion_scores.keys(), key=lambda x: fusion_scores[x], reverse=True)[:k]
-        
-        results = []
-        for idx in sorted_indices:
-            chunk = self.chunks[idx].copy()
-            chunk['fusion_score'] = fusion_scores[idx]
-            results.append(chunk)
-        
+        results = [self.chunks[idx].copy() for idx in sorted_indices]
+        for i, res in enumerate(results):
+            res['fusion_score'] = fusion_scores[sorted_indices[i]]
         return results
 
-    # =========================================================================
-    # Persistence
-    # =========================================================================
-    
+    def rerank(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
+        """
+        Re-rank retrieved chunks using a Cross-Encoder for higher precision.
+        """
+        if not chunks:
+            return []
+        
+        try:
+            if self.cross_encoder is None:
+                logger.info("[RAG] Loading CrossEncoder for Re-ranking...")
+                # Use a fast & effective re-ranker
+                self.cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+            # Prepare pairs [query, content]
+            pairs = [[query, c['text']] for c in chunks]
+            scores = self.cross_encoder.predict(pairs)
+            
+            # Attach scores
+            for i, chunk in enumerate(chunks):
+                chunk['rerank_score'] = float(scores[i])
+            
+            # Sort by new score
+            sorted_chunks = sorted(chunks, key=lambda x: x['rerank_score'], reverse=True)
+            return sorted_chunks[:top_k]
+        
+        except Exception as e:
+            logger.error(f"[RAG] Re-ranking failed: {e}")
+            return chunks[:top_k]
+
     def save(self, path: Optional[Path] = None):
-        """No-op - SQLite auto-saves. Kept for API compatibility."""
         pass
-    
-    def load(self, path: Optional[Path] = None):
+
+    def load(self, path: Optional[Path] = None) -> bool:
         """Reload state from database."""
-        self._load_from_db()
+        self._load_metadata()
         return True
-    
+
     def get_stats(self) -> Dict:
-        """Get current index statistics."""
-        return {
-            "total_chunks": len(self.chunks),
-            "unique_hashes": len(self.chunk_hashes),
-            "index_vectors": self.index.ntotal if self.index else 0,
-            "model": self.model_name,
-            "embedding_dim": self.embedding_dim,
-            "bm25_available": self.bm25 is not None
-        }
+        try:
+            info = self.qdrant.get_collection(self.collection_name)
+            return {"total_chunks": info.points_count, "collection": self.collection_name}
+        except:
+            return {"error": "Collection not available"}
 
-
-# =============================================================================
-# Response Generation
-# =============================================================================
 
 def generate_rag_response(
     query: str, 
@@ -590,53 +473,22 @@ def generate_rag_response(
 ) -> Generator[str, None, None]:
     """
     Generate streaming response using RAG context.
-    
-    Args:
-        query: User's question
-        rag: LocalRAG instance
-        llm_backend: LLM backend with send_message() method
-        use_hybrid: Use hybrid search (semantic + keyword) if True
-        k: Number of context chunks to retrieve
-        alpha: Hybrid search weight (higher = more semantic)
-        
-    Yields:
-        Response chunks as strings
     """
-    # Retrieve context
-    if use_hybrid and rag.bm25:
-        context_chunks = rag.hybrid_search(query, k=k, alpha=alpha)
+    if use_hybrid:
+        # Retrieve 3x candidates for re-ranking
+        candidates = rag.hybrid_search(query, k=k*3, alpha=alpha)
     else:
-        context_chunks = rag.search(query, k=k)
+        candidates = rag.search(query, k=k*3)
+    
+    # Apply Re-ranking
+    context_chunks = rag.rerank(query, candidates, top_k=k)
     
     if not context_chunks:
-        yield "I don't have enough information in my knowledge base to answer that question."
+        yield "I don't have enough information in my knowledge base."
         return
     
-    # Build context and sources
-    context_parts = []
-    source_lines = []
+    context_text = "\n\n".join([f"Source [{i+1}]: {c['text']}" for i, c in enumerate(context_chunks)])
+    prompt = f"Context:\n{context_text}\n\nQuestion: {query}\n\nAnswer mentioning sources:"
     
-    for i, chunk in enumerate(context_chunks, 1):
-        title = chunk.get('title', 'Unknown')
-        text = chunk.get('text', '')
-        url = chunk.get('url', 'N/A')
-        
-        context_parts.append(f"[{i}] Source: {title}\n{text}")
-        source_lines.append(f"[{i}] {title} - {url}")
-    
-    context_text = "\n\n".join(context_parts)
-    
-    # Build prompt
-    prompt = (
-        f"Using the following sources, answer the question. "
-        f"Cite sources using [1], [2], etc.\n\n"
-        f"{context_text}\n\n"
-        f"Question: {query}"
-    )
-    
-    # Stream response
     for chunk in llm_backend.send_message(prompt):
         yield chunk
-    
-    # Append sources
-    yield "\n\n**Sources:**\n" + "\n".join(source_lines[:k])

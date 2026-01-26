@@ -9,6 +9,7 @@ import json
 import csv
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from test_utils import scan_models
 
 # --- CONFIG ---
 ROOT_DIR = Path(__file__).parent.parent.resolve()
@@ -35,24 +36,12 @@ class CLITester:
     def __init__(self, max_N=10, safe_mode=True):
         self.max_N = max_N
         self.safe_mode = safe_mode
-        self.models = self._scan_models()
+        self.models = scan_models(MODELS_DIR)
         self.results = []
         
         if not CLI_EXE.exists():
             raise FileNotFoundError(f"CLI binary not found at {CLI_EXE}")
             
-    def _scan_models(self):
-        # Find all .gguf files
-        if not MODELS_DIR.exists():
-            print(f"[Warn] Model Dir {MODELS_DIR} not found.")
-            return []
-        
-        files = list(MODELS_DIR.glob("*.gguf"))
-        # Filter out massive models if needed, but this is a crash test :)
-        # Preference sort so smaller ones are used first in rotation? No, user wants variety.
-        models = [f for f in files]
-        print(f"[Init] Found {len(models)} models.")
-        return models
 
     def run_single_cli(self, index, model_path, prompt):
         """Run one standalone llama-cli process"""
@@ -192,6 +181,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "FULL":
         is_safe = False
         
-    print(f"--- Zena Standalone CLI Crash Test (SafeMode={is_safe}) ---")
+    print(f"--- ZenAI Standalone CLI Crash Test (SafeMode={is_safe}) ---")
     tester = CLITester(max_N=12, safe_mode=is_safe)
     tester.run()

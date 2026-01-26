@@ -82,7 +82,7 @@ class FrenchLocale(BaseLocale):
     ENGINE_QUIET_DESCRIPTION = "Afficher uniquement la réponse finale vérifiée"
     ENGINE_SCANNING_SWARM = "Analyse de l'essaim..."
     ENGINE_EXPERTS_ONLINE = "{count} Experts En Ligne"
-    ENGINE_STANDALONE = "Mode Autonome"
+    ENGINE_STANDALONE = "Mode Autonome ZenAI"
     
     # ==========================================================================
     # SYSTEM
@@ -195,7 +195,7 @@ class FrenchLocale(BaseLocale):
     # CHAT INTERFACE
     # ==========================================================================
     CHAT_PLACEHOLDER = "Écrivez un message..."
-    CHAT_PLACEHOLDER_ZENA = "Posez-moi une question..."
+    CHAT_PLACEHOLDER_ZENAI = "Posez-moi une question..."
     CHAT_QUICK_ACTIONS = "Actions Rapides"
     CHAT_CHECK_MODEL = "Vérifier l'État du Modèle"
     CHAT_LATEST_LLAMA = "Dernier llama.cpp"
@@ -300,7 +300,7 @@ class FrenchLocale(BaseLocale):
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
-    WELCOME_ZENA = """👋 **Bienvenue sur ZenAI !**
+    WELCOME_ZENAI = """👋 **Bienvenue sur ZenAI !**
 
 {source_msg}. Je peux vous aider à :
 - Répondre aux questions sur le contenu

@@ -1,0 +1,606 @@
+
+======================================================================
+            [1mTEST RUNNER - 'Trust but Verify' (Ronald Reagan)[0m            
+Timestamp: 2026-01-23 11:08:33
+======================================================================
+
+[1m[94m======================================================================[0m
+[1m[94m                     FULL TEST SUITE - ALL FILES                      [0m
+[1m[94m======================================================================[0m
+
+
+[1mRunning: All Tests[0m
+Command: C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/ -v --tb=short --timeout=60
+----------------------------------------------------------------------
+[91m Failed after 114.02s[0m
+
+--- STDOUT ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG
+plugins: anyio-4.12.1, asyncio-1.3.0, base-url-2.1.0, cov-7.0.0, mock-3.15.1, playwright-0.7.2, timeout-2.4.0, respx-0.22.0, typeguard-4.4.4
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+timeout: 60.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 254 items
+
+tests/Test_RAGED_info.py::test_rag_retrieval_content SKIPPED (RAG in...) [  0%]
+tests/test_advanced_extractor.py::test_initialization PASSED             [  0%]
+tests/test_advanced_extractor.py::test_type_detection PASSED             [  1%]
+tests/test_advanced_extractor.py::test_bytes_routing PASSED              [  1%]
+tests/test_arbitrator_scaling.py::TestArbitratorScaling::test_arbitrator_discovers_scaled_swarm FAILED [  1%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_initialization PASSED [  2%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_context_manager PASSED [  2%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_streaming_with_mock PASSED [  3%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_hub_models_with_mock PASSED [  3%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_backend_has_required_methods PASSED [  3%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_health_check_mocked PASSED [  4%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_health_check_failure PASSED [  4%]
+tests/test_async_backend.py::TestBackendCompatibility::test_old_backend_removed_completely PASSED [  5%]
+tests/test_async_backend.py::TestBackendCompatibility::test_async_backend_available PASSED [  5%]
+tests/test_async_model_management.py::test_set_active_model_mocked PASSED [  5%]
+tests/test_async_model_management.py::test_set_active_model_failure PASSED [  6%]
+tests/test_async_model_management.py::test_download_model_mocked PASSED  [  6%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_get_models_success PASSED [  7%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_get_models_failure_fallback PASSED [  7%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_download_model PASSED [  7%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_set_active_model PASSED [  8%]
+tests/test_backend_integration.py::test_fetch_models_mocked PASSED       [  8%]
+tests/test_backend_integration.py::test_chat_completion_mocked PASSED    [  9%]
+tests/test_branding_cleanup.py::test_no_legacy_branding_in_codebase PASSED [  9%]
+tests/test_butler_reranking.py::test_butler_reranking_logic PASSED       [  9%]
+tests/test_chat_ui.py::test_llm_backend PASSED                           [ 10%]
+tests/test_chat_ui.py::test_streaming_response PASSED                    [ 10%]
+tests/test_chat_ui.py::test_ui_endpoint PASSED                           [ 11%]
+tests/test_chat_ui.py::test_multiple_messages PASSED                     [ 11%]
+tests/test_config_swarm.py::TestConfigSwarm::test_swarm_defaults PASSED  [ 11%]
+tests/test_config_swarm.py::TestConfigSwarm::test_swarm_persistence PASSED [ 12%]
+tests/test_conversation_memory.py::TestMessage::test_message_creation PASSED [ 12%]
+tests/test_conversation_memory.py::TestMessage::test_message_to_dict PASSED [ 12%]
+tests/test_conversation_memory.py::TestMessage::test_message_from_dict PASSED [ 13%]
+tests/test_conversation_memory.py::TestConversationDB::test_db_creation PASSED [ 13%]
+tests/test_conversation_memory.py::TestConversationDB::test_add_message PASSED [ 14%]
+tests/test_conversation_memory.py::TestConversationDB::test_get_recent_messages PASSED [ 14%]
+tests/test_conversation_memory.py::TestConversationDB::test_session_isolation PASSED [ 14%]
+tests/test_conversation_memory.py::TestConversationMemory::test_initialization PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_add_and_retrieve PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_semantic_search PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationMemory::test_context_building PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationMemory::test_contextual_prompt PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationMemory::test_stats PASSED [ 17%]
+tests/test_conversation_memory.py::TestTopicExtraction::test_extract_topics PASSED [ 17%]
+tests/test_conversation_memory.py::TestMultiSession::test_multiple_sessions PASSED [ 18%]
+tests/test_conversation_memory.py::TestMultiSession::test_clear_session PASSED [ 18%]
+tests/test_conversation_memory.py::TestIntegration::test_full_conversation_flow PASSED [ 18%]
+tests/test_conversation_memory.py::TestFactoryFunction::test_get_conversation_memory PASSED [ 19%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_env_int PASSED     [ 19%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_check_processes PASSED [ 20%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_tree PASSED [ 20%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_by_name PASSED [ 20%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_register_process_updates_globals PASSED [ 21%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_launch_expert_process_env PASSED [ 21%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_scale_swarm_integration PASSED [ 22%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_hub_daemon PASSED [ 22%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_voice_stream_server PASSED [ 22%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_server_guard_bypass PASSED [ 23%]
+tests/test_decorators.py::TestDecorators::test_retry_sync_success PASSED [ 23%]
+tests/test_decorators.py::TestDecorators::test_retry_sync_failure PASSED [ 24%]
+tests/test_decorators.py::TestDecorators::test_retry_async PASSED        [ 24%]
+tests/test_decorators.py::TestDecorators::test_log_errors_default PASSED [ 24%]
+tests/test_decorators.py::TestDecorators::test_log_errors_async PASSED   [ 25%]
+tests/test_decorators.py::TestDecorators::test_performance_critical_warning PASSED [ 25%]
+tests/test_decorators.py::TestDecorators::test_timer_logs PASSED         [ 25%]
+tests/test_dual_llm.py::test_butler_master_coordination PASSED           [ 26%]
+tests/test_dual_llm.py::test_butler_error_fallback PASSED                [ 26%]
+tests/test_engine_control.py::test_engine_lifecycle FAILED               [ 27%]
+tests/test_environment_audit.py::test_hardware_profiler PASSED           [ 27%]
+tests/test_environment_audit.py::test_validate_environment_mocked PASSED [ 27%]
+tests/test_environment_audit.py::test_low_disk_warning PASSED            [ 28%]
+tests/test_environment_audit.py::test_web_scanner_logic PASSED           [ 28%]
+tests/test_file_upload_scenarios.py::TestFileUploadScenarios::test_binary_file_handling PASSED [ 29%]
+tests/test_file_upload_scenarios.py::TestFileUploadScenarios::test_python_file_formatting PASSED [ 29%]
+tests/test_file_upload_scenarios.py::TestFileUploadScenarios::test_text_file_formatting PASSED [ 29%]
+tests/test_hub_scaling.py::TestHubScaling::test_hub_scale_endpoint PASSED [ 30%]
+tests/test_hybrid_rag.py::test_hybrid_search_precision PASSED            [ 30%]
+tests/test_hybrid_rag.py::test_rrf_fusion_logic ERROR                    [ 31%]
+tests/test_input_handler.py::TestInputHandlerPattern::test_handler_dict_dispatch PASSED [ 31%]
+tests/test_llm_lifecycle.py::test_hub_health ERROR                       [ 31%]
+tests/test_llm_lifecycle.py::test_model_endpoints ERROR                  [ 32%]
+tests/test_llm_lifecycle.py::test_update_check ERROR                     [ 32%]
+tests/test_localization_switching.py::test_localization_switching_branding PASSED [ 33%]
+tests/test_localization_switching.py::test_invalid_locale_raises_error PASSED [ 33%]
+tests/test_localization_switching.py::test_shorthand_access PASSED       [ 33%]
+tests/test_localization_switching.py::test_menu_strings_not_empty PASSED [ 34%]
+tests/test_mode_switching.py::test_swarm_scaling_logic PASSED            [ 34%]
+tests/test_mode_switching.py::test_router_initialization_on_toggle PASSED [ 35%]
+tests/test_model_management.py::TestModelManagement::test_get_models_fallback_on_error FAILED [ 35%]
+tests/test_model_management.py::TestModelManagement::test_get_models_from_hub_api FAILED [ 35%]
+tests/test_multi_process.py::test_multi_process_concurrency PASSED       [ 36%]
+tests/test_parity.py::test_protocol_routing PASSED                       [ 36%]
+tests/test_parity.py::test_performance_stats PASSED                      [ 37%]
+tests/test_parity.py::test_agent_reliability PASSED                      [ 37%]
+tests/test_parity.py::test_contradiction_detection PASSED                [ 37%]
+tests/test_parity.py::test_weighted_performance_recording PASSED         [ 38%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_text_from_valid_pdf PASSED [ 38%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_text_from_multi_page_pdf PASSED [ 38%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_text_from_empty_pdf PASSED [ 39%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_text_from_nonexistent_file PASSED [ 39%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_text_from_corrupted_file PASSED [ 40%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_is_pdf_valid_extension PASSED [ 40%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_is_pdf_invalid_extension PASSED [ 40%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_text_preserves_structure PASSED [ 41%]
+tests/test_pdf_extraction.py::TestPDFExtractor::test_extract_large_pdf PASSED [ 41%]
+tests/test_pdf_extraction.py::TestPDFIntegrationWithRAG::test_pdf_can_be_indexed PASSED [ 42%]
+tests/test_query_expansion.py::test_butler_query_expansion PASSED        [ 42%]
+tests/test_rag_pipeline.py::TestDeduplication::test_exact_hash_deduplication PASSED [ 42%]
+tests/test_rag_pipeline.py::TestDeduplication::test_near_duplicate_detection PASSED [ 43%]
+tests/test_rag_pipeline.py::TestDeduplication::test_document_level_deduplication PASSED [ 43%]
+tests/test_rag_pipeline.py::TestDeduplication::test_cross_batch_deduplication PASSED [ 44%]
+tests/test_rag_pipeline.py::TestJunkFiltering::test_filter_short_chunks PASSED [ 44%]
+tests/test_rag_pipeline.py::TestJunkFiltering::test_filter_low_entropy_chunks PASSED [ 44%]
+tests/test_rag_pipeline.py::TestJunkFiltering::test_filter_blacklisted_chunks PASSED [ 45%]
+tests/test_rag_pipeline.py::TestJunkFiltering::test_accept_valid_chunks PASSED [ 45%]
+tests/test_rag_pipeline.py::TestJunkFiltering::test_entropy_calculation PASSED [ 46%]
+tests/test_rag_pipeline.py::TestHybridSearch::test_hybrid_search_returns_results PASSED [ 46%]
+tests/test_rag_pipeline.py::TestHybridSearch::test_hybrid_search_alpha_weighting PASSED [ 46%]
+tests/test_rag_pipeline.py::TestThreadSafety::test_concurrent_search PASSED [ 47%]
+tests/test_rag_pipeline.py::TestThreadSafety::test_concurrent_build_index PASSED [ 47%]
+tests/test_rag_pipeline.py::TestAddChunks::test_add_chunks_basic PASSED  [ 48%]
+tests/test_rag_pipeline.py::TestAddChunks::test_add_chunks_deduplication PASSED [ 48%]
+tests/test_rag_pipeline.py::TestGetStats::test_stats_empty_index PASSED  [ 48%]
+tests/test_rag_pipeline.py::TestGetStats::test_stats_populated_index PASSED [ 49%]
+tests/test_rag_pipeline.py::TestEdgeCases::test_unicode_content PASSED   [ 49%]
+tests/test_rag_pipeline.py::TestEdgeCases::test_empty_documents PASSED   [ 50%]
+tests/test_rag_pipeline.py::TestEdgeCases::test_very_long_document PASSED [ 50%]
+tests/test_rag_pipeline.py::TestEdgeCases::test_special_characters_in_query PASSED [ 50%]
+tests/test_rag_pipeline.py::TestEdgeCases::test_score_range PASSED       [ 51%]
+tests/test_rag_pipeline.py::TestRAGPipeline::test_chunk_documents PASSED [ 51%]
+tests/test_rag_pipeline.py::TestRAGPipeline::test_chunk_small_content PASSED [ 51%]
+tests/test_rag_pipeline.py::TestRAGPipeline::test_build_index PASSED     [ 52%]
+tests/test_rag_pipeline.py::TestRAGPipeline::test_save_load_qdrant FAILED [ 52%]
+tests/test_rag_pipeline.py::TestRAGPipeline::test_query PASSED           [ 53%]
+tests/test_rag_pipeline.py::TestRAGPipeline::test_query_empty_index PASSED [ 53%]
+tests/test_rag_pipeline.py::TestRAGIntegration::test_rag_context_injection FAILED [ 53%]
+tests/test_rag_pipeline.py::TestWebsiteScraper::test_scraper_initialization PASSED [ 54%]
+tests/test_rag_pipeline.py::TestWebsiteScraper::test_scraper_respects_rate_limit PASSED [ 54%]
+tests/test_scraper_resilience.py::test_scraper_exponential_backoff PASSED [ 55%]
+tests/test_scraper_resilience.py::test_scraper_antibot_detection PASSED  [ 55%]
+tests/test_scraper_resilience.py::test_scraper_different_domain_filtered PASSED [ 55%]
+tests/test_security.py::TestFileValidator::test_valid_file PASSED        [ 56%]
+tests/test_security.py::TestFileValidator::test_file_too_large PASSED    [ 56%]
+tests/test_security.py::TestFileValidator::test_invalid_extension PASSED [ 57%]
+tests/test_security.py::TestFileValidator::test_valid_extensions PASSED  [ 57%]
+tests/test_security.py::TestFileValidator::test_invalid_utf8 PASSED      [ 57%]
+tests/test_security.py::TestFileValidator::test_unicode_content PASSED   [ 58%]
+tests/test_security.py::TestFileValidator::test_empty_file PASSED        [ 58%]
+tests/test_security.py::TestFileValidator::test_max_size_boundary PASSED [ 59%]
+tests/test_security.py::TestPathTraversal::test_path_traversal_dotdot PASSED [ 59%]
+tests/test_security.py::TestPathTraversal::test_path_traversal_tilde PASSED [ 59%]
+tests/test_security.py::TestPathTraversal::test_path_traversal_env_vars PASSED [ 60%]
+tests/test_security.py::TestPathTraversal::test_safe_paths PASSED        [ 60%]
+tests/test_security.py::TestPathTraversal::test_edge_cases PASSED        [ 61%]
+tests/test_smart_file_handling.py::TestSmartFileHandling::test_python_file_trigger PASSED [ 61%]
+tests/test_smart_file_handling.py::TestSmartFileHandling::test_text_file_trigger PASSED [ 61%]
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_valid_env_var PASSED [ 62%]
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_missing_env_var PASSED [ 62%]
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_invalid_value PASSED [ 62%]
+tests/test_start_llm.py::TestPureFunctions::test_env_int_with_negative_values PASSED [ 63%]
+tests/test_start_llm.py::TestOutputUtilities::test_safe_print_forces_flush PASSED [ 63%]
+tests/test_start_llm.py::TestOutputUtilities::test_safe_print_with_multiple_args PASSED [ 64%]
+tests/test_start_llm.py::TestOutputUtilities::test_safe_print_with_sep_kwarg PASSED [ 64%]
+tests/test_start_llm.py::TestOutputUtilities::test_safe_exit_calls_sys_exit PASSED [ 64%]
+tests/test_start_llm.py::TestOutputUtilities::test_safe_exit_flushes_buffers PASSED [ 65%]
+tests/test_start_llm.py::TestProcessManagement::test_register_process_adds_to_global_dict PASSED [ 65%]
+tests/test_start_llm.py::TestProcessManagement::test_register_process_sets_defaults PASSED [ 66%]
+tests/test_start_llm.py::TestProcessManagement::test_register_process_critical_has_more_restarts PASSED [ 66%]
+tests/test_start_llm.py::TestProcessManagement::test_check_processes_detects_crashes PASSED [ 66%]
+tests/test_start_llm.py::TestProcessManagement::test_check_processes_ignores_running_processes PASSED [ 67%]
+tests/test_start_llm.py::TestProcessManagement::test_check_processes_removes_crashed_from_monitoring PASSED [ 67%]
+tests/test_start_llm.py::TestLazyLoading::test_get_model_manager_caches_import PASSED [ 68%]
+tests/test_start_llm.py::TestLazyLoading::test_get_model_manager_raises_on_missing_module PASSED [ 68%]
+tests/test_start_llm.py::TestLazyLoading::test_get_cached_voice_service_caches_import PASSED [ 68%]
+tests/test_start_llm.py::TestNewUtilities::test_instance_guard_detects_duplicate PASSED [ 69%]
+tests/test_start_llm.py::TestNewUtilities::test_instance_guard_allows_single_instance PASSED [ 69%]
+tests/test_start_llm.py::TestNewUtilities::test_kill_process_by_name PASSED [ 70%]
+tests/test_start_llm.py::TestConfiguration::test_restart_with_model_updates_global_path PASSED [ 70%]
+tests/test_start_llm.py::TestConfiguration::test_build_llama_cmd_returns_list PASSED [ 70%]
+tests/test_start_llm.py::TestProcessUtilities::test_scale_swarm_decreases_expert_count PASSED [ 71%]
+tests/test_start_llm.py::TestOrchestrator::test_do_OPTIONS PASSED        [ 71%]
+tests/test_start_llm.py::TestOrchestrator::test_do_GET_list PASSED       [ 72%]
+tests/test_start_llm.py::TestOrchestrator::test_do_GET_status PASSED     [ 72%]
+tests/test_start_llm.py::TestOrchestrator::test_do_POST_swap PASSED      [ 72%]
+tests/test_state_management.py::TestAttachmentState::test_set_and_get PASSED [ 73%]
+tests/test_state_management.py::TestAttachmentState::test_has_attachment PASSED [ 73%]
+tests/test_state_management.py::TestAttachmentState::test_clear PASSED   [ 74%]
+tests/test_state_management.py::TestAttachmentState::test_thread_safety PASSED [ 74%]
+tests/test_state_management.py::TestChatHistory::test_add_message PASSED [ 74%]
+tests/test_state_management.py::TestChatHistory::test_pagination PASSED  [ 75%]
+tests/test_state_management.py::TestChatHistory::test_get_recent PASSED  [ 75%]
+tests/test_state_management.py::TestChatHistory::test_clear PASSED       [ 75%]
+tests/test_state_management.py::TestChatHistory::test_message_timestamps PASSED [ 76%]
+tests/test_state_management.py::TestErrorHandling::test_handle_error_logging PASSED [ 76%]
+tests/test_state_management.py::TestErrorHandling::test_error_message_mapping PASSED [ 77%]
+tests/test_stress_parallel.py::test_parallel_stress PASSED               [ 77%]
+tests/test_swarm.py::TestSwarmArbitrator::test_discover_swarm_enabled PASSED [ 77%]
+tests/test_swarm.py::TestSwarmArbitrator::test_discover_swarm_disabled PASSED [ 78%]
+tests/test_swarm.py::TestSwarmArbitrator::test_calculate_consensus_simple PASSED [ 78%]
+tests/test_swarm.py::TestSwarmArbitrator::test_query_model_success PASSED [ 79%]
+tests/test_swarm.py::TestSwarmArbitrator::test_query_model_error PASSED  [ 79%]
+tests/test_swarm.py::TestSwarmArbitrator::test_get_cot_response_single_reflection PASSED [ 79%]
+tests/test_swarm.py::TestSwarmArbitrator::test_detect_contradictions PASSED [ 80%]
+tests/test_swarm.py::TestSwarmArbitrator::test_external_agent_bridge FAILED [ 80%]
+tests/test_swarm.py::TestSwarmArbitrator::test_autogen_init PASSED       [ 81%]
+tests/test_ui_e2e.py::TestUIElementsPresent::test_header_elements ERROR  [ 81%]
+tests/test_ui_e2e.py::TestUIElementsPresent::test_input_area ERROR       [ 81%]
+tests/test_ui_e2e.py::TestUIElementsPresent::test_chat_area ERROR        [ 82%]
+tests/test_ui_e2e.py::TestUIElementsPresent::test_welcome_message ERROR  [ 82%]
+tests/test_ui_e2e.py::TestUIInteractions::test_toggle_dark_mode ERROR    [ 83%]
+tests/test_ui_e2e.py::TestUIInteractions::test_open_sidebar ERROR        [ 83%]
+tests/test_ui_e2e.py::TestUIInteractions::test_send_message_flow ERROR   [ 83%]
+tests/test_ui_e2e.py::TestUIInteractions::test_quick_action_chips ERROR  [ 84%]
+tests/test_ui_e2e.py::TestResponseValidation::test_identity_response ERROR [ 84%]
+tests/test_ui_e2e.py::TestResponseValidation::test_code_response ERROR   [ 85%]
+tests/test_ui_e2e.py::TestResponseValidation::test_refusal_harmful ERROR [ 85%]
+tests/test_ui_e2e.py::TestVisualRegression::test_initial_load_screenshot ERROR [ 85%]
+tests/test_ui_e2e.py::TestVisualRegression::test_dark_mode_screenshot ERROR [ 86%]
+tests/test_ui_menu_items.py::TestSidebarMenuItems::test_model_select_exists PASSED [ 86%]
+tests/test_ui_menu_items.py::TestSidebarMenuItems::test_check_llama_version_function_exists PASSED [ 87%]
+tests/test_ui_menu_items.py::TestSidebarMenuItems::test_diagnostics_config_accessible PASSED [ 87%]
+tests/test_ui_menu_items.py::TestHeaderButtons::test_tts_toggle_logic PASSED [ 87%]
+tests/test_ui_menu_items.py::TestHeaderButtons::test_rag_mode_toggle_logic PASSED [ 88%]
+tests/test_ui_menu_items.py::TestChatInput::test_empty_message_rejected PASSED [ 88%]
+tests/test_ui_menu_items.py::TestChatInput::test_message_formatting PASSED [ 88%]
+tests/test_ui_menu_items.py::TestThemeToggle::test_dark_mode_state PASSED [ 89%]
+tests/test_ui_workflow.py::TestMessageSending::test_simple_message_roundtrip PASSED [ 89%]
+tests/test_ui_workflow.py::TestMessageSending::test_empty_message_handling PASSED [ 90%]
+tests/test_ui_workflow.py::TestMessageSending::test_special_characters_in_message PASSED [ 90%]
+tests/test_ui_workflow.py::TestStreamingResponses::test_stream_chunks_arrive_in_order PASSED [ 90%]
+tests/test_ui_workflow.py::TestStreamingResponses::test_stream_handles_slow_chunks PASSED [ 91%]
+tests/test_ui_workflow.py::TestStreamingResponses::test_stream_cancellation PASSED [ 91%]
+tests/test_ui_workflow.py::TestFileUpload::test_small_file_processing PASSED [ 92%]
+tests/test_ui_workflow.py::TestFileUpload::test_large_file_processing PASSED [ 92%]
+tests/test_ui_workflow.py::TestFileUpload::test_binary_file_detection PASSED [ 92%]
+tests/test_ui_workflow.py::TestFileUpload::test_pdf_file_handling PASSED [ 93%]
+tests/test_ui_workflow.py::TestFileUpload::test_file_size_limits PASSED  [ 93%]
+tests/test_ui_workflow.py::TestTimeoutHandling::test_request_timeout_graceful_handling PASSED [ 94%]
+tests/test_ui_workflow.py::TestTimeoutHandling::test_connection_refused_handling PASSED [ 94%]
+tests/test_ui_workflow.py::TestTimeoutHandling::test_timeout_with_large_prompt PASSED [ 94%]
+tests/test_ui_workflow.py::TestUIState::test_ui_state_initialization PASSED [ 95%]
+tests/test_ui_workflow.py::TestUIState::test_ui_state_disconnection_handling PASSED [ 95%]
+tests/test_ui_workflow.py::TestUIState::test_message_state_tracking PASSED [ 96%]
+tests/test_ui_workflow.py::TestRapidMessages::test_sequential_messages PASSED [ 96%]
+tests/test_ui_workflow.py::TestRapidMessages::test_concurrent_messages_isolation PASSED [ 96%]
+tests/test_ui_workflow.py::TestBackendHealth::test_health_check_online PASSED [ 97%]
+tests/test_ui_workflow.py::TestBackendHealth::test_health_check_offline PASSED [ 97%]
+tests/test_ui_workflow.py::TestPromptSanitization::test_sanitize_removes_dangerous_patterns PASSED [ 98%]
+tests/test_ui_workflow.py::TestPromptSanitization::test_sanitize_preserves_normal_content PASSED [ 98%]
+tests/test_ui_workflow.py::TestFullWorkflow::test_complete_chat_cycle PASSED [ 98%]
+tests/test_ui_workflow.py::TestFullWorkflow::test_file_upload_chat_cycle PASSED [ 99%]
+tests/test_zombie_cleanup.py::TestZombieCleanup::test_kill_process_by_port_works PASSED [ 99%]
+tests/test_zombie_cleanup.py::TestZombieCleanup::test_start_server_cleanup_logic PASSED [100%]
+
+=================================== ERRORS ====================================
+___________________ ERROR at setup of test_rrf_fusion_logic ___________________
+tests\test_hybrid_rag.py:12: in temp_rag
+    shutil.rmtree(test_dir)
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\shutil.py:781: in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\shutil.py:635: in _rmtree_unsafe
+    onexc(os.unlink, fullname, err)
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\shutil.py:633: in _rmtree_unsafe
+    os.unlink(fullname)
+E   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'test_rag_hybrid\\collection\\zenai_knowledge\\storage.sqlite'
+______________________ ERROR at setup of test_hub_health ______________________
+tests\test_llm_lifecycle.py:48: in llm_server
+    pytest.fail("Hub API failed to start within 10 seconds")
+E   Failed: Hub API failed to start within 10 seconds
+---------------------------- Captured stdout setup ----------------------------
+
+[Test] Launching C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\start_llm.py...
+___________________ ERROR at setup of test_model_endpoints ____________________
+tests\test_llm_lifecycle.py:48: in llm_server
+    pytest.fail("Hub API failed to start within 10 seconds")
+E   Failed: Hub API failed to start within 10 seconds
+_____________________ ERROR at setup of test_update_check _____________________
+tests\test_llm_lifecycle.py:48: in llm_server
+    pytest.fail("Hub API failed to start within 10 seconds")
+E   Failed: Hub API failed to start within 10 seconds
+________ ERROR at setup of TestUIElementsPresent.test_header_elements _________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+___________ ERROR at setup of TestUIElementsPresent.test_input_area ___________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+___________ ERROR at setup of TestUIElementsPresent.test_chat_area ____________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+________ ERROR at setup of TestUIElementsPresent.test_welcome_message _________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+_________ ERROR at setup of TestUIInteractions.test_toggle_dark_mode __________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+___________ ERROR at setup of TestUIInteractions.test_open_sidebar ____________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+_________ ERROR at setup of TestUIInteractions.test_send_message_flow _________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+________ ERROR at setup of TestUIInteractions.test_quick_action_chips _________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+_______ ERROR at setup of TestResponseValidation.test_identity_response _______
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+_________ ERROR at setup of TestResponseValidation.test_code_response _________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+________ ERROR at setup of TestResponseValidation.test_refusal_harmful ________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+_____ ERROR at setup of TestVisualRegression.test_initial_load_screenshot _____
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+______ ERROR at setup of TestVisualRegression.test_dark_mode_screenshot _______
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest_asyncio\plugin.py:728: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+E   pytest.PytestRemovedIn9Warning: '' requested an async fixture 'browser', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+E   See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+================================== FAILURES ===================================
+________ TestArbitratorScaling.test_arbitrator_discovers_scaled_swarm _________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:198: in _new_conn
+    sock = connection.create_connection(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:494: in request
+    self.endheaders()
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\http\client.py:1037: in send
+    self.connect()
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:325: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:213: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x00000242C1219B80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\adapters.py:644: in send
+    resp = conn.urlopen(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\util\retry.py:519: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=8002): Max retries exceeded with url: /swarm/scale (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000242C1219B80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+During handling of the above exception, another exception occurred:
+tests\test_arbitrator_scaling.py:28: in test_arbitrator_discovers_scaled_swarm
+    resp = requests.post(hub_url, json={"count": 2}, timeout=5.0)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py:589: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py:703: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\adapters.py:677: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8002): Max retries exceeded with url: /swarm/scale (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000242C1219B80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+During handling of the above exception, another exception occurred:
+tests\test_arbitrator_scaling.py:32: in test_arbitrator_discovers_scaled_swarm
+    self.fail(f"Failed to reach Hub: {e}")
+E   AssertionError: Failed to reach Hub: HTTPConnectionPool(host='127.0.0.1', port=8002): Max retries exceeded with url: /swarm/scale (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000242C1219B80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+---------------------------- Captured stdout call -----------------------------
+Sending scale request to http://127.0.0.1:8002/swarm/scale...
+____________________________ test_engine_lifecycle ____________________________
+tests\test_engine_control.py:116: in test_engine_lifecycle
+    assert pid_a not in current_pids, "Instance A (PID {pid_a}) should have been killed!"
+E   AssertionError: Instance A (PID {pid_a}) should have been killed!
+E   assert 35064 not in [35064]
+---------------------------- Captured stdout call -----------------------------
+
+[Test] Starting Instance A...
+[Test] Instance A Running (PID: 35064)
+[Test] Starting Instance B (Should kill A)...
+[Test] Current PIDs: [35064]
+____________ TestModelManagement.test_get_models_fallback_on_error ____________
+tests\test_model_management.py:54: in test_get_models_fallback_on_error
+    self.assertIsInstance(models, list)
+E   AssertionError: <coroutine object AsyncZenAIBackend.get_models at 0x00000242C6C3BC40> is not an instance of <class 'list'>
+______________ TestModelManagement.test_get_models_from_hub_api _______________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:928: in assert_called_once
+    raise AssertionError(msg)
+E   AssertionError: Expected 'get' to have been called once. Called 0 times.
+
+During handling of the above exception, another exception occurred:
+tests\test_model_management.py:33: in test_get_models_from_hub_api
+    mock_get.assert_called_once()
+E   AssertionError: Expected 'get' to have been called once. Called 0 times.
+____________________ TestRAGPipeline.test_save_load_qdrant ____________________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\portalocker\portalocker.py:223: in lock
+    msvcrt.locking(  # type: ignore[attr-defined]
+E   PermissionError: [Errno 13] Permission denied
+
+The above exception was the direct cause of the following exception:
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\local\qdrant_local.py:144: in _load
+    portalocker.lock(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\portalocker\portalocker.py:316: in lock
+    locker(file, flags)
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\portalocker\portalocker.py:230: in lock
+    raise exceptions.AlreadyLocked(
+E   portalocker.exceptions.AlreadyLocked: (1, '[Errno 13] Permission denied')
+
+During handling of the above exception, another exception occurred:
+tests\test_rag_pipeline.py:450: in test_save_load_qdrant
+    rag2 = LocalRAG(cache_dir=storage_dir)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+zena_mode\rag_pipeline.py:68: in __init__
+    self.qdrant = QdrantClient(path=str(self.cache_dir))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\qdrant_client.py:126: in __init__
+    self._client = QdrantLocal(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\local\qdrant_local.py:63: in __init__
+    self._load()
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\local\qdrant_local.py:149: in _load
+    raise RuntimeError(
+E   RuntimeError: Storage folder C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-93\test_save_load_qdrant0\qdrant is already accessed by another instance of Qdrant client. If you require concurrent access, use Qdrant server instead.
+------------------------------ Captured log call ------------------------------
+ERROR    zena_mode.rag_pipeline:rag_pipeline.py:162 [RAG] BM25 rebuild failed: 'LocalRAG' object has no attribute '_tokenize'
+________________ TestRAGIntegration.test_rag_context_injection ________________
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\portalocker\portalocker.py:223: in lock
+    msvcrt.locking(  # type: ignore[attr-defined]
+E   PermissionError: [Errno 13] Permission denied
+
+The above exception was the direct cause of the following exception:
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\local\qdrant_local.py:144: in _load
+    portalocker.lock(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\portalocker\portalocker.py:316: in lock
+    locker(file, flags)
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\portalocker\portalocker.py:230: in lock
+    raise exceptions.AlreadyLocked(
+E   portalocker.exceptions.AlreadyLocked: (1, '[Errno 13] Permission denied')
+
+During handling of the above exception, another exception occurred:
+tests\test_rag_pipeline.py:484: in test_rag_context_injection
+    rag = LocalRAG()
+          ^^^^^^^^^^
+zena_mode\rag_pipeline.py:68: in __init__
+    self.qdrant = QdrantClient(path=str(self.cache_dir))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\qdrant_client.py:126: in __init__
+    self._client = QdrantLocal(
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\local\qdrant_local.py:63: in __init__
+    self._load()
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\qdrant_client\local\qdrant_local.py:149: in _load
+    raise RuntimeError(
+E   RuntimeError: Storage folder rag_storage is already accessed by another instance of Qdrant client. If you require concurrent access, use Qdrant server instead.
+_______________ TestSwarmArbitrator.test_external_agent_bridge ________________
+tests\test_swarm.py:146: in test_external_agent_bridge
+    assert "LITELLM MOCK" in result["content"]
+E   AssertionError: assert 'LITELLM MOCK' in '[ERROR: No API Key found for external agent]'
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\PyPDF2\__init__.py:21
+  C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\PyPDF2\__init__.py:21: DeprecationWarning: PyPDF2 is deprecated. Please move to the pypdf library instead.
+    warnings.warn(
+
+tests/test_coverage_boost.py: 292 warnings
+tests/test_zombie_cleanup.py: 304 warnings
+  C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\utils.py:251: DeprecationWarning: connections() is deprecated and will be removed; use net_connections() instead
+    for conn in proc.connections(kind='inet'):
+
+tests/test_parity.py::test_performance_stats
+  C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\nodes.py:355: RuntimeWarning: coroutine 'AsyncZenAIBackend.get_models' was never awaited
+    for mark in node.own_markers:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_arbitrator_scaling.py::TestArbitratorScaling::test_arbitrator_discovers_scaled_swarm
+FAILED tests/test_engine_control.py::test_engine_lifecycle - AssertionError: ...
+FAILED tests/test_model_management.py::TestModelManagement::test_get_models_fallback_on_error
+FAILED tests/test_model_management.py::TestModelManagement::test_get_models_from_hub_api
+FAILED tests/test_rag_pipeline.py::TestRAGPipeline::test_save_load_qdrant - R...
+FAILED tests/test_rag_pipeline.py::TestRAGIntegration::test_rag_context_injection
+FAILED tests/test_swarm.py::TestSwarmArbitrator::test_external_agent_bridge
+ERROR tests/test_hybrid_rag.py::test_rrf_fusion_logic - PermissionError: [Win...
+ERROR tests/test_llm_lifecycle.py::test_hub_health - Failed: Hub API failed t...
+ERROR tests/test_llm_lifecycle.py::test_model_endpoints - Failed: Hub API fai...
+ERROR tests/test_llm_lifecycle.py::test_update_check - Failed: Hub API failed...
+ERROR tests/test_ui_e2e.py::TestUIElementsPresent::test_header_elements - pyt...
+ERROR tests/test_ui_e2e.py::TestUIElementsPresent::test_input_area - pytest.P...
+ERROR tests/test_ui_e2e.py::TestUIElementsPresent::test_chat_area - pytest.Py...
+ERROR tests/test_ui_e2e.py::TestUIElementsPresent::test_welcome_message - pyt...
+ERROR tests/test_ui_e2e.py::TestUIInteractions::test_toggle_dark_mode - pytes...
+ERROR tests/test_ui_e2e.py::TestUIInteractions::test_open_sidebar - pytest.Py...
+ERROR tests/test_ui_e2e.py::TestUIInteractions::test_send_message_flow - pyte...
+ERROR tests/test_ui_e2e.py::TestUIInteractions::test_quick_action_chips - pyt...
+ERROR tests/test_ui_e2e.py::TestResponseValidation::test_identity_response - ...
+ERROR tests/test_ui_e2e.py::TestResponseValidation::test_code_response - pyte...
+ERROR tests/test_ui_e2e.py::TestResponseValidation::test_refusal_harmful - py...
+ERROR tests/test_ui_e2e.py::TestVisualRegression::test_initial_load_screenshot
+ERROR tests/test_ui_e2e.py::TestVisualRegression::test_dark_mode_screenshot
+= 7 failed, 229 passed, 1 skipped, 601 warnings, 17 errors in 110.44s (0:01:50) =
+
+
+--- STDERR ---
+
+
+[1m[94m======================================================================[0m
+[1m[94m                            FINAL SUMMARY                             [0m
+[1m[94m======================================================================[0m
+
+[91m SOME TESTS FAILED [0m
+
+[1mDuration: 114.02s[0m
+[91mFix failures before committing code![0m
+

@@ -82,7 +82,7 @@ class SpanishLocale(BaseLocale):
     ENGINE_QUIET_DESCRIPTION = "Solo mostrar respuesta final verificada"
     ENGINE_SCANNING_SWARM = "Escaneando enjambre..."
     ENGINE_EXPERTS_ONLINE = "{count} Expertos En Línea"
-    ENGINE_STANDALONE = "Modo Independiente"
+    ENGINE_STANDALONE = "Modo Independiente ZenAI"
     
     # ==========================================================================
     # SYSTEM
@@ -195,7 +195,7 @@ class SpanishLocale(BaseLocale):
     # CHAT INTERFACE
     # ==========================================================================
     CHAT_PLACEHOLDER = "Escribe un mensaje..."
-    CHAT_PLACEHOLDER_ZENA = "Pregúntame lo que quieras..."
+    CHAT_PLACEHOLDER_ZENAI = "Pregúntame lo que quieras..."
     CHAT_QUICK_ACTIONS = "Acciones Rápidas"
     CHAT_CHECK_MODEL = "Verificar Estado del Modelo"
     CHAT_LATEST_LLAMA = "Último llama.cpp"
@@ -300,7 +300,7 @@ class SpanishLocale(BaseLocale):
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
-    WELCOME_ZENA = """👋 **¡Bienvenido a ZenAI!**
+    WELCOME_ZENAI = """👋 **¡Bienvenido a ZenAI!**
 
 {source_msg}. Puedo ayudarte con:
 - Responder preguntas sobre el contenido

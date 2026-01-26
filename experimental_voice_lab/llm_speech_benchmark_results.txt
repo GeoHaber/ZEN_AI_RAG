@@ -1,0 +1,36 @@
+=== Phi-2-2.7B-q4 | Short technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== Phi-2-2.7B-q4 | Medium technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== Phi-2-2.7B-q4 | Long technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== TinyLlama-1.1B-q4 | Short technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== TinyLlama-1.1B-q4 | Medium technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== TinyLlama-1.1B-q4 | Long technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== Mistral-7B-Instruct-q4 | Short technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== Mistral-7B-Instruct-q4 | Medium technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+
+=== Mistral-7B-Instruct-q4 | Long technical question ===
+Time: -1.00s
+Output: ERROR: [WinError 2] The system cannot find the file specified
+

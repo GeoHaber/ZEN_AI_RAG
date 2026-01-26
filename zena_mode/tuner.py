@@ -6,6 +6,10 @@ import os
 import logging
 from typing import List, Dict
 from pathlib import Path
+import sys
+# Add root to path for utils import
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import safe_print
 
 logger = logging.getLogger("SwarmTuner")
 
@@ -49,12 +53,12 @@ class SwarmTuner:
         Step through N=1 to N_max and find the performance 'Knee'.
         """
         if not self.endpoints:
-            print("[Tuner] !!! No experts discovered. Initialization failed?")
+            safe_print("[Tuner] !!! No experts discovered. Initialization failed?")
             return 1
 
         prompt = "Write a 20-word logic puzzle about a hat."
-        print(f"\n[Tuner] QUESTION: {prompt}")
-        print(f"[Tuner] Starting Hardware-In-The-Loop Benchmark on {len(self.endpoints)} slots...")
+        safe_print(f"\n[Tuner] QUESTION: {prompt}")
+        safe_print(f"[Tuner] Starting Hardware-In-The-Loop Benchmark on {len(self.endpoints)} slots...")
         
         results_stats = []
         
@@ -62,7 +66,7 @@ class SwarmTuner:
             # Baseline: N=1
             probe1 = await self._probe_parallel(client, self.endpoints[:1], prompt)
             t1 = probe1['duration']
-            print(f"[Tuner] Baseline (N=1): {t1:.2f}s | Answer: '{probe1['content'][0][:50]}...'")
+            safe_print(f"[Tuner] Baseline (N=1): {t1:.2f}s | Answer: '{probe1['content'][0][:50]}...'")
             results_stats.append(t1)
             
             optimal_n = 1
@@ -76,13 +80,13 @@ class SwarmTuner:
                 speedup = seq_total / tn
                 efficiency = speedup / n
                 
-                print(f"[Tuner] Tier N={n}: Time={tn:.2f}s | Speedup={speedup:.2f}x | Efficiency={efficiency:.1%}")
+                safe_print(f"[Tuner] Tier N={n}: Time={tn:.2f}s | Speedup={speedup:.2f}x | Efficiency={efficiency:.1%}")
                 for i, ans in enumerate(probe_n['content']):
-                    print(f"    - Expert {i+1} Result: {ans[:60]}...")
+                    safe_print(f"    - Expert {i+1} Result: {ans[:60]}...")
                 
                 # RECOVERY: User requested to see results for 1-6, so we disable the break for this run.
                 # if efficiency < 0.40:
-                #    print(f"[Tuner]!!! SATURATION DETECTED AT N={n}. Speedup is too low.")
+                #    safe_print(f"[Tuner]!!! SATURATION DETECTED AT N={n}. Speedup is too low.")
                 #    break
                 
                 if efficiency > 0.5:
@@ -90,7 +94,7 @@ class SwarmTuner:
                 
                 time.sleep(1) # Cool down
 
-        print(f"\n[Tuner] Optimization Complete. Optimal Expert Swarm Size: {optimal_n}")
+        safe_print(f"\n[Tuner] Optimization Complete. Optimal Expert Swarm Size: {optimal_n}")
         self._save_to_config(optimal_n)
         return optimal_n
 
@@ -108,7 +112,7 @@ class SwarmTuner:
         
         with open(self.config_path, 'w') as f:
             json.dump(config_data, f, indent=4)
-        print(f"[Tuner] Saved optimal_experts={n} to {self.config_path}")
+        safe_print(f"[Tuner] Saved optimal_experts={n} to {self.config_path}")
 
 async def run_auto_tune(arb):
     tuner = SwarmTuner(arb.endpoints)

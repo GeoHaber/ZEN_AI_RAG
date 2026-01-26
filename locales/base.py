@@ -110,7 +110,7 @@ class BaseLocale:
     ENGINE_QUIET_DESCRIPTION = "Only show final verified answer"
     ENGINE_SCANNING_SWARM = "Scanning swarm..."
     ENGINE_EXPERTS_ONLINE = "{count} Experts Online"
-    ENGINE_STANDALONE = "Standalone Mode"
+    ENGINE_STANDALONE = "ZenAI Standalone Mode"
     
     # ==========================================================================
     # SYSTEM
@@ -244,7 +244,7 @@ class BaseLocale:
     # CHAT INTERFACE
     # ==========================================================================
     CHAT_PLACEHOLDER = "Message ZenAI..."
-    CHAT_PLACEHOLDER_ZENA = "Ask me anything..."
+    CHAT_PLACEHOLDER_ZENAI = "Ask me anything..."
     CHAT_QUICK_ACTIONS = "Quick Actions"
     CHAT_CHECK_MODEL = "Check Model Status"
     CHAT_LATEST_LLAMA = "Latest llama.cpp"
@@ -349,7 +349,7 @@ class BaseLocale:
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
-    WELCOME_ZENA = """👋 **Welcome to ZenAI!**
+    WELCOME_ZENAI = """👋 **Welcome to ZenAI!**
 
 {source_msg}. I can help you with:
 - Answering questions about the content

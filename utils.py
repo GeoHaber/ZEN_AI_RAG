@@ -9,6 +9,10 @@ import signal
 import hashlib
 import zipfile
 import platform
+try:
+    import psutil
+except ImportError:
+    psutil = None
 from typing import Optional, NoReturn
 from pathlib import Path
 from config import LOG_FILE, HOST, BASE_DIR
@@ -19,16 +23,16 @@ proc_name = str(getattr(sys.modules.get("__main__"), "__file__", "unknown"))
 
 if "start_llm.py" in proc_name:
     CURRENT_LOG_FILE = BASE_DIR / "nebula_engine.log"
-    LOG_NAME = "NebulaEngine"
+    LOG_NAME = "ZenAIEngine"
 elif "Test_Chat.py" in proc_name:
     CURRENT_LOG_FILE = BASE_DIR / "nebula_ui.log"
-    LOG_NAME = "NebulaUI"
+    LOG_NAME = "ZenAIUI"
 elif "nebula_desktop.py" in proc_name:
     CURRENT_LOG_FILE = BASE_DIR / "nebula_desktop.log"
-    LOG_NAME = "NebulaDesktop"
+    LOG_NAME = "ZenAIDesktop"
 else:
     CURRENT_LOG_FILE = LOG_FILE
-    LOG_NAME = "NebulaShared"
+    LOG_NAME = "ZenAIShared"
 
 # Configure valid logging to file and console
 logging.basicConfig(
@@ -40,6 +44,27 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(LOG_NAME)
+
+def safe_print(*args, **kwargs):
+    """
+    Thread-safe print with automatic flush=True.
+    Ensures output is immediately visible in loggers and consoles.
+    Handles Windows console encoding issues by falling back to ASCII-safe text.
+    """
+    kwargs['flush'] = kwargs.get('flush', True)
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        # Fallback for Windows consoles that don't support UTF-8/Emojis
+        safe_args = []
+        for a in args:
+            try:
+                # Try to filter out non-encodable characters
+                s = str(a).encode(sys.stdout.encoding or 'ascii', errors='replace').decode(sys.stdout.encoding or 'ascii')
+                safe_args.append(s)
+            except:
+                safe_args.append(str(a).encode('ascii', 'ignore').decode('ascii'))
+        print(*safe_args, **kwargs)
 
 def sha256sum(path: Path) -> str:
     """Computes SHA256 hash of a file."""
@@ -179,7 +204,6 @@ def ensure_package(import_name: str, install_name: str = None):
 def kill_process_tree(pid: int):
     """Safely kills a process and its children using psutil."""
     try:
-        import psutil
         if not psutil.pid_exists(pid): return
         
         parent = psutil.Process(pid)
@@ -205,7 +229,6 @@ def kill_process_tree(pid: int):
 def kill_process_by_name(image_name: str):
     """Safely kills processes by image name using psutil."""
     try:
-        import psutil
         for proc in psutil.process_iter(['pid', 'name']):
             if proc.info['name'] and proc.info['name'].lower() == image_name.lower():
                 try:

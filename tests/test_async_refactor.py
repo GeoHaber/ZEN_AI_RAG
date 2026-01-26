@@ -1,12 +1,12 @@
 
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from async_backend import AsyncNebulaBackend
+from async_backend import AsyncZenAIBackend
 
 class TestAsyncRefactor:
     @pytest.mark.asyncio
     async def test_get_models_success(self):
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         # Mock httpx response
         mock_response = MagicMock()
@@ -26,7 +26,7 @@ class TestAsyncRefactor:
 
     @pytest.mark.asyncio
     async def test_get_models_failure_fallback(self):
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         # Mock httpx failure
         mock_client = AsyncMock()
@@ -38,11 +38,11 @@ class TestAsyncRefactor:
             models = await backend.get_models()
             
         # Should return fallback
-        assert "qwen2.5-coder.gguf" in models
+        assert any("qwen2.5-coder" in m for m in models)
         
     @pytest.mark.asyncio
     async def test_download_model(self):
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -64,7 +64,7 @@ class TestAsyncRefactor:
 
     @pytest.mark.asyncio
     async def test_set_active_model(self):
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         mock_response = MagicMock()
         mock_response.status_code = 200

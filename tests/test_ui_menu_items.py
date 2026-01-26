@@ -33,17 +33,17 @@ class TestSidebarMenuItems:
         zena = get_zena_module()
         
         # Verify backend exists
-        assert hasattr(zena, 'backend'), "Backend should be initialized"
+        assert hasattr(zena, 'async_backend'), "async_backend should be initialized"
         
         # We can't easily call get_models if it does network calls, but we check the method exists
-        assert hasattr(zena.backend, 'get_models'), "Backend should have get_models method"
+        assert hasattr(zena.async_backend, 'get_models'), "async_backend should have get_models method"
 
     def test_check_llama_version_function_exists(self):
         """Verify the llama.cpp version check function is defined."""
         zena = get_zena_module()
-        # Since the function is defined inside nebula_page, we can't check it directly on the module
-        # But we can check that nebula_page exists
-        assert hasattr(zena, 'nebula_page'), "nebula_page function should exist"
+        # Since the function is defined inside zenai_page, we can't check it directly on the module
+        # But we can check that zenai_page exists
+        assert hasattr(zena, 'zenai_page'), "zenai_page function should exist"
     
     def test_diagnostics_config_accessible(self):
         """Verify diagnostics can access config for health checks."""

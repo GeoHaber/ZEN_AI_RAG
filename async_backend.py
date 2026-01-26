@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-async_backend.py - True async HTTP backend for Zena
+async_backend.py - True async HTTP backend for ZenAI
 """
 import httpx
 import json
@@ -11,7 +11,7 @@ from config_system import config, EMOJI
 logger = logging.getLogger(__name__)
 
 
-class AsyncNebulaBackend:
+class AsyncZenAIBackend:
     """Async HTTP backend using httpx for non-blocking streaming."""
     
     def __init__(self):
@@ -37,8 +37,21 @@ class AsyncNebulaBackend:
                 if isinstance(models, list):
                     return models
         except Exception as e:
-            logger.warning(f"[AsyncHub] API unavailable: {e}")
-        return ["qwen2.5-coder.gguf", "llama-3.2-3b.gguf"]
+            logger.warning(f"[ZenAIHub] API unavailable: {e}")
+        return ["qwen2.5-coder-7b-instruct-q4_k_m.gguf", "llama-3.2-3b.gguf"]
+
+    def get_models_sync(self) -> list:
+        """Synchronous version of get_models for UI initialization."""
+        try:
+            with httpx.Client() as client:
+                response = client.get(f"{self.hub_api_url}/models/available", timeout=1.0)
+                if response.status_code == 200:
+                    models = response.json()
+                    if isinstance(models, list):
+                        return models
+        except Exception:
+            pass
+        return ["qwen2.5-coder-7b-instruct-q4_k_m.gguf", "llama-3.2-3b.gguf"]
 
     async def download_model(self, repo_id: str, filename: str) -> bool:
         """Trigger background model download."""
@@ -60,7 +73,7 @@ class AsyncNebulaBackend:
                     )
                     return response.status_code == 200
         except Exception as e:
-            logger.error(f"[AsyncHub] Download failed: {e}")
+            logger.error(f"[ZenAIHub] Download failed: {e}")
             return False
 
     async def set_active_model(self, model_name: str) -> bool:
@@ -69,7 +82,7 @@ class AsyncNebulaBackend:
             # Use existing client or create temporary one with proper cleanup
             if self.client:
                 response = await self.client.post(
-                    f"{self.hub_api_url}/models/load",
+                    f"{self.hub_api_url}/swap",
                     json={"model": model_name},
                     timeout=30.0
                 )
@@ -83,7 +96,43 @@ class AsyncNebulaBackend:
                     )
                     return response.status_code == 200
         except Exception as e:
-            logger.error(f"[AsyncHub] Model switch failed: {e}")
+            logger.error(f"[ZenAIHub] Model switch failed: {e}")
+            return False
+    
+    async def health_check(self) -> bool:
+        """Verify LLM API is online and responding."""
+        try:
+            if self.client:
+                response = await self.client.get(f"{self.raw_api_url}/health", timeout=2.0)
+                return response.status_code == 200
+            else:
+                async with httpx.AsyncClient() as temp_client:
+                    response = await temp_client.get(f"{self.raw_api_url}/health", timeout=2.0)
+                    return response.status_code == 200
+        except Exception:
+            return False
+
+    async def scale_swarm(self, count: int) -> bool:
+        """Dynamically scale the expert swarm via Hub API."""
+        try:
+            logger.info(f"[AsyncHub] Scaling swarm to {count} experts...")
+            if self.client:
+                response = await self.client.post(
+                    f"{self.hub_api_url}/swarm/scale",
+                    json={"count": count},
+                    timeout=10.0
+                )
+                return response.status_code == 200
+            else:
+                async with httpx.AsyncClient() as temp_client:
+                    response = await temp_client.post(
+                        f"{self.hub_api_url}/swarm/scale",
+                        json={"count": count},
+                        timeout=10.0
+                    )
+                    return response.status_code == 200
+        except Exception as e:
+            logger.error(f"[AsyncHub] Swarm scaling failed: {e}")
             return False
     
     async def __aenter__(self):
@@ -102,10 +151,10 @@ class AsyncNebulaBackend:
     async def send_message_async(
         self, 
         text: str, 
-        system_prompt: str = """You are Zena, a helpful AI assistant powered by Qwen2.5-Coder.
+        system_prompt: str = """You are ZenAI, a helpful AI assistant powered by Qwen2.5-Coder.
 You are NOT ChatGPT, NOT GPT-4, and NOT made by OpenAI.
 You were created by Alibaba Cloud (Qwen team) and integrated into the ZenAI application.
-Be helpful, concise, and accurate. If asked about your identity, say you are Zena powered by Qwen.""",
+Be helpful, concise, and accurate. If asked about your identity, say you are ZenAI powered by Qwen.""",
         attachment_content: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """
@@ -184,4 +233,4 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
 
 
 # Global backend instance
-backend = AsyncNebulaBackend()
+backend = AsyncZenAIBackend()

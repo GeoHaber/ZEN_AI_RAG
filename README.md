@@ -1,8 +1,8 @@
-# Zena - AI Assistant with RAG and Multilingual Support
+# ZenAI - AI Assistant with RAG and Multilingual Support
 
 ## Overview
-Zena is a clean, focused AI assistant inspired by hospital chatbot UX patterns, featuring:
-- Zena-style UI (guided task chips, visual persona, floating popup mode)
+ZenAI is a clean, focused AI assistant inspired by hospital chatbot UX patterns, featuring:
+- ZenAI-style UI (guided task chips, visual persona, floating popup mode)
 - Multilingual support (auto-detect + translate)
 - Local RAG from website scanning
 - Voice interaction (Whisper STT + piper TTS)
@@ -16,7 +16,7 @@ Zena is a clean, focused AI assistant inspired by hospital chatbot UX patterns, 
 
 ### Installation
 ```bash
-cd C:\Users\dvdze\Documents\_Python\Dev\Zena
+cd C:\Users\dvdze\Documents\_Python\Dev\ZenAI
 pip install -r requirements.txt  # (create this from Local_LLM if needed)
 ```
 
@@ -27,7 +27,7 @@ python start_llm.py  # Starts backend + UI on port 8080
 
 ## Project Structure
 ```
-Zena/
+ZenAI/
 ├── zena.py              # Main NiceGUI application
 ├── start_llm.py         # Backend orchestrator
 ├── utils.py             # Shared utilities
@@ -48,7 +48,7 @@ Zena/
 - ✅ TTS output button
 - ✅ llama.cpp version check
 
-## Features Planned (Zena Mode)
+## Features Planned (ZenAI Mode)
 - [ ] Floating popup UI (bottom-right)
 - [ ] Pulsing "Assistance" trigger
 - [ ] Multilingual support (auto-detect)
@@ -61,7 +61,7 @@ python -m pytest tests/  # Run all 4 tests
 ```
 
 ## Configuration
-Edit `config.json` to enable Zena mode:
+Edit `config.json` to enable ZenAI mode:
 ```json
 {
   "zena_mode": {
@@ -82,7 +82,7 @@ This repository is a clean migration from `Local_LLM`, excluding:
 **Result**: 85% file reduction, focused codebase
 
 ## Next Steps
-1. Add Zena to VSCode workspace
+1. Add ZenAI to VSCode workspace
 2. Implement floating popup UI
 3. Build RAG pipeline
 4. Add multilingual support

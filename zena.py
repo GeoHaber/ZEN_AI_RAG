@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 """
-zena.py - Zena AI Chat Interface
+zena.py - ZenAI AI Chat Interface
 Elegant, professional chatbot with RAG capabilities
 """
 import sys
 import subprocess
 
+from utils import format_message_with_attachment, normalize_input, sanitize_prompt, safe_print
+
 # Safe NiceGUI installation (no auto-restart)
 try:
     from nicegui import ui, app
 except ImportError:
-    print("[!] NiceGUI not found. Installing...")
+    safe_print("[!] NiceGUI not found. Installing...")
     result = subprocess.run(
         [sys.executable, "-m", "pip", "install", "nicegui"],
         capture_output=True,
         text=True
     )
     if result.returncode == 0:
-        print("[✓] NiceGUI installed successfully. Please restart the application manually.")
+        safe_print("[✓] NiceGUI installed successfully. Please restart the application manually.")
         sys.exit(0)
     else:
-        print(f"[✗] Installation failed: {result.stderr}")
+        safe_print(f"[✗] Installation failed: {result.stderr}")
         sys.exit(1)
 
 from nicegui import ui, app
@@ -31,6 +33,7 @@ import os
 import io
 import asyncio
 import json
+import httpx
 import requests
 import numpy as np
 from pathlib import Path
@@ -44,7 +47,7 @@ except ImportError:
 # Import configuration and security
 from config_system import config, EMOJI, load_config
 from security import FileValidator
-from utils import format_message_with_attachment, normalize_input, sanitize_prompt
+from utils import format_message_with_attachment, normalize_input, sanitize_prompt, safe_print
 from ui_components import setup_app_theme, setup_common_dialogs, setup_drawer
 
 # Import localization and UI modules
@@ -66,46 +69,46 @@ logging.basicConfig(
     format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
-        logging.FileHandler('nebula_debug.log', mode='w'),
+        logging.FileHandler('zenai_debug.log', mode='w'),
         logging.StreamHandler(sys.stdout)  # Also print to console
     ]
 )
-logger = logging.getLogger("NebulaUI")
+logger = logging.getLogger("ZenAIUI")
 
 
 API_URL = "http://127.0.0.1:8001/v1/chat/completions"
 
 # Import async backend and arbitrator
-from async_backend import AsyncNebulaBackend
+from async_backend import AsyncZenAIBackend
 from zena_mode.arbitrage import get_arbitrator
 
-# Backend Implementation (Async HTTP with httpx)
-class NebulaBackend:
-    """Legacy sync backend - deprecated, use AsyncNebulaBackend instead."""
-    
-    def get_models(self):
-        """Fetch available models from Hub API (port 8002)."""
-        try:
-            response = requests.get("http://127.0.0.1:8002/models/available", timeout=2)
-            if response.status_code == 200:
-                models = response.json()
-                if isinstance(models, list):
-                    logger.info(f"[Hub] Fetched {len(models)} models from API")
-                    return models
-        except Exception as e:
-            logger.warning(f"[Hub] API unavailable: {e}")
-        
-        # Fallback: return static list if Hub API fails
-        fallback = ["qwen2.5-coder.gguf", "llama-3.2-3b.gguf"]
-        logger.info(f"[Hub] Using fallback models: {fallback}")
-        return fallback
+# Import model router for intelligent model selection
+try:
+    from model_router import ModelRouter, TaskType
+    smart_router = ModelRouter()
+    SMART_ROUTING_AVAILABLE = True
+    logger.info("[Router] Intelligent model routing available")
+except ImportError as e:
+    smart_router = None
+    SMART_ROUTING_AVAILABLE = False
+    logger.warning(f"[Router] Smart routing unavailable: {e}")
 
-# Global backend instances
-backend = NebulaBackend()
-async_backend = AsyncNebulaBackend()
+# Backend Implementation (Async HTTP with httpx)
+# Global backend instance
+async_backend = AsyncZenAIBackend()
 arbitrator = get_arbitrator()
 
-# Load Zena Mode Configuration
+# Architecture V2: Model Orchestrator
+try:
+    from zena_mode.model_orchestrator import get_orchestrator
+    orchestrator = get_orchestrator(async_backend)
+    logger.info("[Orchestrator] V2 Traffic Controller Online")
+except ImportError as e:
+    orchestrator = None
+    logger.warning(f"[Orchestrator] Failed to load: {e}")
+
+# Load ZenAI Mode Configuration
+ROOT_DIR = Path(__file__).parent.resolve()
 ZENA_MODE = False
 ZENA_CONFIG = {}
 try:
@@ -113,28 +116,57 @@ try:
         config = json.load(f)
         ZENA_CONFIG = config.get('zena_mode', {})
         ZENA_MODE = ZENA_CONFIG.get('enabled', False)
-        logger.info(f"[Config] Zena Mode: {ZENA_MODE}")
+        logger.info(f"[Config] ZenAI Mode: {ZENA_MODE}")
 except Exception as e:
     logger.warning(f"[Config] Could not load config.json: {e}")
 
-# Initialize RAG if Zena mode enabled
+# Initialize RAG and Advanced Extractor
 rag_system = None
+universal_extractor = None
 if ZENA_MODE:
     try:
         from zena_mode import LocalRAG, WebsiteScraper
-        from pathlib import Path
-        
-        ROOT_DIR = Path(__file__).parent.resolve()
-        rag_cache = ROOT_DIR / "rag_cache"
+        from zena_mode.web_scanner import WebCrawlScanner
+        rag_cache = ROOT_DIR / "qdrant_storage"
         rag_cache.mkdir(exist_ok=True)
-        
         rag_system = LocalRAG(cache_dir=rag_cache)
+        logger.info("[RAG] Qdrant High-Performance Store initialized")
         
-        # Try to load existing index
-        if not rag_system.load(rag_cache):
-            logger.info("[RAG] No cached index found, will build on first use")
+        # Universal Extractor
+        from zena_mode.universal_extractor import UniversalExtractor
+        universal_extractor = UniversalExtractor()
+        logger.info("[Extractor] Advanced Hybrid Extractor ready")
     except Exception as e:
-        logger.error(f"[RAG] Failed to initialize: {e}")
+        logger.error(f"[Init] RAG/Extractor system failed: {e}")
+
+    # Auto-ingest User Manual if present
+    if rag_system:
+        try:
+            manual_path = ROOT_DIR / "USER_MANUAL.md"
+            if manual_path.exists():
+                logger.info("[Init] Found USER_MANUAL.md, ensuring it is indexed...")
+                with open(manual_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                
+                # Create document structure
+                doc = {
+                    "url": "internal://USER_MANUAL.md",
+                    "title": "ZenAI User Manual",
+                    "content": content
+                }
+                
+                # Build index (deduplication handles repeats)
+                rag_system.build_index([doc], filter_junk=False)
+                logger.info("[Init] User Manual ingestion complete.")
+        except Exception as e:
+            logger.warning(f"[Init] Failed to ingest User Manual: {e}")
+
+# Global RAG Precision Settings
+rag_params = {
+    'alpha': 0.6,          # Higher = more semantic, lower = more keyword
+    'rerank_top_n': 5,     # Chunks to keep after re-ranking
+    'expand_queries': True # Whether to use Butler query expansion
+}
 
 # Initialize Conversation Memory (separate from knowledge RAG)
 conversation_memory = None
@@ -173,6 +205,7 @@ class UIState:
         self.user_input = None
         self.is_valid = True  # Track if client is still connected
         self.session_id = None  # Unique session ID for conversation memory
+        self.last_response_text: str = ""  # Store last AI response for TTS
     
     def safe_update(self, element):
         """Safely update a UI element, handling disconnected clients."""
@@ -203,7 +236,7 @@ class UIState:
                 raise
 
 @ui.page('/')
-async def nebula_page():
+async def zenai_page():
     # Create per-client UI state (NOT global!)
     ui_state = UIState()
     
@@ -219,18 +252,24 @@ async def nebula_page():
     app_state = {}
 
     # Initialize Dialogs (Components)
-    dialogs = setup_common_dialogs(backend, app_state)
+    dialogs = setup_common_dialogs(async_backend, app_state)
     model_dialog = dialogs['model']
     llama_dialog = dialogs['llama']
     llama_info = dialogs['llama'].info_label
     
     # --- LEFT SIDEBAR (Drawer) ---
-    drawer = setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state)
+    drawer = setup_drawer(async_backend, async_backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state)
 
-    def scan_swarm():
+    async def scan_swarm():
         """Refresh the arbitrator's knowledge of live experts."""
         try:
-            arbitrator.discover_swarm()
+            # 1. Warmup Logic (Background)
+            if rag_system:
+                asyncio.create_task(asyncio.to_thread(rag_system.warmup))
+            await arbitrator.warmup()
+            
+            # 2. Discovery Logic
+            await arbitrator.discover_swarm()
             count = len(arbitrator.ports)
             status = app_state.get('swarm_status')
             if status:
@@ -318,7 +357,7 @@ async def nebula_page():
         
         theme_btn.on('click', toggle_dark_mode)
         
-        # Scan & Read Button (Enhanced for Zena mode)
+        # Scan & Read Button (Enhanced for ZenAI mode)
         # Create dialog ONCE - Opaque background for visibility
         with ui.dialog() as rag_dialog, ui.card().classes(Styles.DIALOG_CARD + ' w-96'):
             if ZENA_MODE:
@@ -345,6 +384,22 @@ async def nebula_page():
                 
                 mode_select.on('update:model-value', on_mode_change)
                 
+                # --- NEW: Precision Settings ---
+                with ui.expansion('Precision Settings', icon='troubleshoot').classes('w-full mt-2'):
+                    ui.label('Alpha (0=Keyword, 1=Semantic)').classes('text-xs ' + Styles.TEXT_SECONDARY)
+                    ui.slider(min=0, max=1, step=0.1, value=rag_params['alpha']) \
+                        .on('update:model-value', lambda e: rag_params.update({'alpha': e.value})) \
+                        .props('label-always')
+                    
+                    ui.label('Re-rank Top N').classes('text-xs mt-2 ' + Styles.TEXT_SECONDARY)
+                    ui.slider(min=1, max=10, step=1, value=rag_params['rerank_top_n']) \
+                        .on('update:model-value', lambda e: rag_params.update({'rerank_top_n': e.value})) \
+                        .props('label-always')
+                    
+                    ui.switch('Agentic Query Expansion', value=rag_params['expand_queries']) \
+                        .on('update:model-value', lambda e: rag_params.update({'expand_queries': e.value})) \
+                        .classes('mt-2')
+                
                 # Progress indicators - Enhanced Visibility
                 progress_label = ui.label('').classes('text-md font-bold ' + Styles.TEXT_ACCENT + ' mb-2')
                 progress_bar = ui.linear_progress(value=0, show_value=False).classes(Styles.PROGRESS).props('visible=false color=primary track-color=grey-3')
@@ -358,11 +413,8 @@ async def nebula_page():
                     # Health Check
                     ui.notify(f"Checking {url}...", color='info')
                     try:
-                        # Use run_in_executor to avoid blocking
-                        await asyncio.get_event_loop().run_in_executor(
-                            None, 
-                            lambda: requests.get(url, timeout=5, headers={'User-Agent': 'Zena/1.0'})
-                        )
+                        async with httpx.AsyncClient() as client:
+                            await client.get(url, timeout=5.0, headers={'User-Agent': 'ZenAI/1.0'})
                     except Exception as e:
                         logger.error(f"[RAG] Website check failed: {e}")
                         ui.notify(locale.format('ERROR_WEBSITE_UNREACHABLE', error=str(e)), color='negative')
@@ -384,6 +436,51 @@ async def nebula_page():
                         
                     logger.info(f"[RAG] Starting website scan: {url}")
                     
+                    # --- NEW: Pre-flight Ethical Scan & UI Popup ---
+                    try:
+                        scanner = WebCrawlScanner()
+                        report = await scanner.scan(url)
+                        
+                        # Background check notification
+                        ui.notify(f"Pre-flight Scan: {report.reason}", color='info' if report.can_crawl else 'warning')
+                        
+                        # If blocked or issues found, show report dialog
+                        if not report.can_crawl or report.bot_protection or report.metadata.get("cookie_banner_detected"):
+                            with ui.dialog() as report_dialog, ui.card().classes('w-96'):
+                                ui.label("Pre-flight Crawlability Report").classes('text-xl font-bold mb-2')
+                                
+                                status_color = "green" if report.can_crawl else "red"
+                                ui.label(f"Status: {report.reason}").classes(f'text-{status_color}-600 font-bold mb-4')
+                                
+                                # Details
+                                with ui.column().classes('gap-1 mb-4'):
+                                    if report.metadata.get("high_difficulty"):
+                                        ui.label("🔴 HIGH DIFFICULTY: This site actively blocks AI consumers.").classes('text-red-600 font-bold')
+                                    if report.bot_protection:
+                                        ui.label(f"🛡️ Protection: {report.bot_protection}").classes('text-orange-600')
+                                    if report.metadata.get("cookie_banner_detected"):
+                                        ui.label("🍪 Cookie Banner: Detected (will skip under-the-hood)").classes('text-blue-600')
+                                    if report.requires_js:
+                                        ui.label("🖥️ JS Required: Full content may not be available").classes('text-orange-600')
+                                
+                                with ui.row().classes('w-full justify-end gap-2'):
+                                    ui.button("Cancel", on_click=report_dialog.close).props('flat')
+                                    if report.can_crawl:
+                                        ui.button("Proceed Anyway", on_click=lambda: (report_dialog.close(), _execute_scrape(url, max_pages))).props('color=primary')
+                                    else:
+                                        ui.button("Proceed (Risk of blocking)", on_click=lambda: (report_dialog.close(), _execute_scrape(url, max_pages))).props('flat color=red')
+                            
+                            report_dialog.open()
+                            return # Wait for user decision
+                        
+                        # If totally clean, just proceed
+                        await _execute_scrape(url, max_pages)
+                        
+                    except Exception as e:
+                        logger.error(f"[RAG] Pre-flight failed: {e}")
+                        await _execute_scrape(url, max_pages) # Fallback to trying directly
+
+                async def _execute_scrape(url, max_pages):
                     try:
                         from zena_mode import WebsiteScraper
                         
@@ -537,7 +634,7 @@ async def nebula_page():
                 ui.button('Cancel', on_click=rag_dialog.close).props('flat').classes('w-full mt-2')
 
             else:
-                # Original directory-based RAG (Non-Zena)
+                # Original directory-based RAG (Non-ZenAI)
                 ui.label('RAG Document Indexing').classes('text-xl font-bold mb-4')
                 path_input = ui.input('Directory Path', placeholder='C:/Documents').classes('w-full mb-2')
                 
@@ -581,11 +678,17 @@ async def nebula_page():
             if not tts_engine:
                 ui.notify(locale.VOICE_NOT_AVAILABLE, color='warning')
                 return
+            
+            # Check if there is text to speak
+            text_to_speak = ui_state.last_response_text
+            if not text_to_speak:
+                # Fallback: Try to get from last message via DOM check (less reliable)
+                ui.notify("No recent response to speak.", color='warning')
+                return
+
             try:
-                # Get last AI message from chat log
-                # TODO: Store last AI response in a variable
-                ui.notify("Speaking last response...", color='info')
-                await asyncio.to_thread(tts_engine.say, "Text-to-speech feature coming soon")
+                ui.notify("Speaking...", color='info')
+                await asyncio.to_thread(tts_engine.say, text_to_speak)
                 await asyncio.to_thread(tts_engine.runAndWait)
             except Exception as e:
                 logger.error(f"[TTS] Error: {e}")
@@ -606,7 +709,7 @@ async def nebula_page():
     def add_message(role: str, content: str):
         with ui_state.chat_log:
             with ui.row().classes(Styles.CHAT_ROW_USER if role == 'user' else Styles.CHAT_ROW_AI):
-                # Zena-style colors
+                # ZenAI-style colors
                 if role == 'user':
                     color = Styles.CHAT_BUBBLE_USER
                 else:
@@ -620,7 +723,7 @@ async def nebula_page():
                     ui.avatar(ai_initial, color='primary', text_color='white').classes(Styles.AVATAR + ' mr-2')
                 
                 with ui.column().classes(align):
-                    ai_name = 'Zena' if ZENA_MODE else locale.APP_NAME
+                    ai_name = 'ZenAI' if ZENA_MODE else locale.APP_NAME
                     ui.label(locale.CHAT_YOU if role == 'user' else ai_name).classes(Styles.CHAT_NAME)
                     ui.markdown(content).classes(f'{color} {Styles.CHAT_BUBBLE_BASE}')
         # Auto-scroll to bottom
@@ -720,8 +823,19 @@ async def nebula_page():
         # Then add RAG context if enabled
         if rag_enabled['value'] and rag_system and rag_system.index:
             try:
-                # Query RAG for relevant context
-                relevant_chunks = rag_system.search(prompt, k=5)
+                # Precision RAG: Use smart router for expansion and reranking if available
+                if SMART_ROUTING_AVAILABLE and smart_router:
+                    ui_state.status_text.text = "🤵 [Precise RAG] Expanding & Re-ranking..."
+                    relevant_chunks = await smart_router.precise_rag_search(
+                        prompt, 
+                        rag_system, 
+                        k=rag_params['rerank_top_n'],
+                        alpha=rag_params['alpha'],
+                        expand=rag_params['expand_queries']
+                    )
+                else:
+                    # Fallback to basic hybrid search
+                    relevant_chunks = rag_system.hybrid_search(prompt, k=5, alpha=rag_params['alpha'])
                 
                 if relevant_chunks:
                     # Spec Requirement: RAG Transparency (Subtle Blue Tint)
@@ -731,12 +845,18 @@ async def nebula_page():
                     full_text = locale.RAG_ANSWERED_FROM_SOURCE + "\n\n"
                     msg_ui.content = full_text
                     
-                    # Build formatted context with [1] Source style
+                    # Build formatted context with [1] Source style and Relevance Badges
                     context_parts = []
                     sources_list = []
                     for i, c in enumerate(relevant_chunks, 1):
-                         context_parts.append(f"[{i}] Source: {c.get('title', 'Untitled')}\n{c['text']}")
-                         sources_list.append(f"[{i}] **{c.get('title', 'Untitled')}**\n   📍 Location: {c.get('url', 'N/A')}")
+                         score = c.get('rerank_score', c.get('fusion_score', 0))
+                         reason = c.get('rerank_reason', 'Top match')
+                         
+                         badge = f" [Relevance: {score:.1%}]" if score > 0 else ""
+                         context_parts.append(f"[{i}] Source: {c.get('title', 'Untitled')}{badge}\n{c['text']}")
+                         
+                         source_meta = f"   *{reason}*" if reason else ""
+                         sources_list.append(f"[{i}] **{c.get('title', 'Untitled')}** ({score:.1%})\n{source_meta}\n   📍 {c.get('url', 'N/A')}")
                     
                     context = "\n\n".join(context_parts)
                     
@@ -761,7 +881,7 @@ ANSWER:"""
         # Use CoT Swarm Arbitrator if enabled
         if app_state.get('use_cot_swarm') and app_state['use_cot_swarm'].value:
             is_quiet = app_state.get('quiet_cot') and app_state['quiet_cot'].value
-            async for chunk in arbitrator.get_cot_response(final_prompt, "You are Zena, working within an Expert Swarm.", verbose=not is_quiet):
+            async for chunk in arbitrator.get_cot_response(final_prompt, "You are ZenAI, working within an Expert Swarm.", verbose=not is_quiet):
                 if not ui_state.is_valid:
                     break
                 full_text += chunk
@@ -769,12 +889,68 @@ ANSWER:"""
                 msg_ui.classes(remove=Styles.LOADING_PULSE)
                 ui_state.safe_update(msg_ui)
                 await asyncio.sleep(0.02)
+        elif app_state.get('use_smart_routing') and app_state['use_smart_routing'].value and SMART_ROUTING_AVAILABLE:
+            # 🧠 Dual LLM Flow: Butler (Fast) + Master (Robust)
+            try:
+                # Update routing status
+                if 'routing_status' in app_state:
+                    app_state['routing_status'].text = '🤵 Butler thinking...'
+                    ui_state.safe_update(app_state['routing_status'])
+                
+                # Stream both stages sequentially
+                chunk_count = 0
+                async for chunk in smart_router.stream_butler_master(final_prompt):
+                    if not ui_state.is_valid:
+                        break
+                    chunk_count += 1
+                    full_text += chunk
+                    msg_ui.content = full_text
+                    msg_ui.classes(remove=Styles.LOADING_PULSE)
+                    ui_state.safe_update(msg_ui)
+                    
+                    # Periodic scroll to keep up with streaming
+                    if chunk_count % 10 == 0:
+                        ui_state.safe_scroll()
+                    
+                    await asyncio.sleep(0.01)
+                
+                logger.info(f"[DualLLM] Complete: {chunk_count} chunks")
+                if 'routing_status' in app_state:
+                    app_state['routing_status'].text = '✅ Master complete'
+                    ui_state.safe_update(app_state['routing_status'])
+                
+            except Exception as e:
+                logger.error(f"[Router] Smart routing failed: {e}, falling back to standard")
+                # Fallback to standard backend
+                full_text = f"*[⚠️ Router fallback: {str(e)[:50]}]*\n\n"
+                async with async_backend:
+                    async for chunk in async_backend.send_message_async(final_prompt):
+                        if not ui_state.is_valid:
+                            break
+                        full_text += chunk
+                        msg_ui.content = full_text
+                        msg_ui.classes(remove=Styles.LOADING_PULSE)
+                        ui_state.safe_update(msg_ui)
+                        await asyncio.sleep(0.02)
         else:
-            # Standard single-model streaming
+            # Orchestrator / Standard Streaming
             try:
                 chunk_count = 0
                 async with async_backend:
-                    async for chunk in async_backend.send_message_async(final_prompt):
+                    # Use Orchestrator if available (V2 Architecture)
+                    # Use Orchestrator if available (V2 Architecture)
+                    if orchestrator:
+                        # V2: Orchestrator handles system prompt internall or we pass a refined one
+                        sys_prompt = """You are ZenAI, a helpful AI assistant.
+1. USE RAG contexts to answer questions about 'ZenAI', 'models', 'settings', or 'how to'.
+2. If the user asks for help using this app, refer to the [User Manual] sections in the context.
+3. Be concise and helpful."""
+                        stream_gen = orchestrator.route_and_execute(final_prompt, sys_prompt)
+                        logger.info("[UI] Using Orchestrator Routing")
+                    else:
+                        stream_gen = async_backend.send_message_async(final_prompt)
+                    
+                    async for chunk in stream_gen:
                         if not ui_state.is_valid:
                             logger.info("[UI] Client disconnected mid-stream, stopping")
                             break
@@ -817,6 +993,42 @@ ANSWER:"""
                 msg_ui.content = full_text
                 ui_state.safe_update(msg_ui)
                 
+                # [NEW] Capture full response for TTS
+                ui_state.last_response_text = full_text
+
+                # --- Hallucination Verification (Integration) ---
+                if rag_enabled['value'] and 'relevant_chunks' in locals() and relevant_chunks:
+                     try:
+                         # Run verification in background thread to keep UI responsive
+                         # We use the existing 'arbitrator' instance if available
+                         if 'arbitrator' in globals() and arbitrator:
+                             verification_result = await asyncio.to_thread(
+                                 arbitrator.verify_hallucination, 
+                                 full_text, 
+                                 [c['text'] for c in relevant_chunks]
+                             )
+                             
+                             v_score = verification_result.get('score', 1.0)
+                             
+                             if v_score >= 0.8:
+                                 # High Confidence
+                                 badge = f"\n\n> [!TIP]\n> **Verified ✅**\n> Response checks out against sources. (Score: {v_score:.0%})"
+                             elif v_score < 0.6:
+                                 # Low Confidence
+                                 badge = f"\n\n> [!WARNING]\n> **Uncertain ⚠️**\n> Potential hallucination or weak support from context. (Score: {v_score:.0%})"
+                             else:
+                                 # Neutral
+                                 badge = f"\n\n> [!NOTE]\n> **Plausible ℹ️**\n> Partially supported by context. (Score: {v_score:.0%})"
+                                 
+                             full_text += badge
+                             msg_ui.content = full_text
+                             ui_state.safe_update(msg_ui)
+                             
+                             if v_score < 0.6:
+                                 logger.warning(f"[Verification] Flagged response (Score {v_score}): {verification_result.get('unsupported', [])}")
+                     except Exception as ve:
+                         logger.error(f"[Verification] Check failed: {ve}")
+                
                 # Save assistant response to conversation memory
                 if conversation_memory:
                     try:
@@ -847,32 +1059,32 @@ ANSWER:"""
 
     # Helper for robust content extraction
     def extract_text(raw_data, filename):
-        """Extracts text from raw bytes based on extension."""
+        """Extracts text from raw bytes using the Advanced Hybrid Extractor."""
         text = ""
         try:
-            # Check for PDF
-            if filename.lower().endswith('.pdf') and pypdf:
+            ext = filename.lower()
+            # 1. Check if it's a PDF or Image for universal_extractor
+            is_heavy = ext.endswith('.pdf') or any(ext.endswith(img_ext) for img_ext in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.webp'])
+            
+            if is_heavy and universal_extractor:
                 try:
-                    # pypdf needs a file-like object
-                    file_obj = io.BytesIO(raw_data)
-                    pdf_reader = pypdf.PdfReader(file_obj)
-                    extracted = []
-                    for page in pdf_reader.pages:
-                        extracted.append(page.extract_text() or "")
-                    text = "\n".join(extracted)
-                    logger.info(f"[Upload] Extracted {len(text)} chars from PDF")
+                    chunks, stats = universal_extractor.process(raw_data, filename=filename)
+                    if chunks:
+                        text = "\n\n".join([c.text for c in chunks])
+                        logger.info(f"[Extractor] Extracted {len(text)} chars from {filename}")
+                    else:
+                        text = f"[No text found in {filename}]"
                 except Exception as e:
-                    logger.error(f"[Upload] PDF extraction failed: {e}")
-                    text = f"[Error extracting PDF: {e}]"
+                    logger.error(f"[Extractor] Failed to extract from {filename}: {e}")
+                    text = f"[Error processing file: {e}]"
             else:
-                # Assume text/binary
-                # Simple binary check (null bytes)
-                if b'\x00' in raw_data[:1024] and not filename.lower().endswith('.txt'):
+                # 2. Standard text/binary handling
+                if b'\x00' in raw_data[:1024] and not ext.endswith('.txt'):
                      text = f"[Attached binary file: {filename}]"
                 else:
                      text = raw_data.decode('utf-8', errors='replace')
         except Exception as e:
-             logger.error(f"[Upload] Helper extraction failed: {e}")
+             logger.error(f"[Upload] Extraction failed: {e}")
              text = f"[Error reading file: {e}]"
              
         return text
@@ -993,7 +1205,8 @@ ANSWER:"""
             
             # Send to Backend API
             # Note: start_llm.py endpoint expects data in body
-            response = await asyncio.to_thread(requests.post, "http://127.0.0.1:8001/voice/transcribe", data=wav_buffer.read())
+            async with httpx.AsyncClient() as client:
+                response = await client.post("http://127.0.0.1:8001/voice/transcribe", content=wav_buffer.read(), timeout=10.0)
             
             if response.status_code == 200:
                 transcription = response.json().get('text', '')
@@ -1034,7 +1247,7 @@ ANSWER:"""
                     .classes(Styles.LABEL_MUTED + ' hover:text-blue-600')
                 
                 # Input Field - simple approach with on_change
-                placeholder_text = locale.CHAT_PLACEHOLDER_ZENA if ZENA_MODE else locale.CHAT_PLACEHOLDER
+                placeholder_text = locale.CHAT_PLACEHOLDER_ZENAI if ZENA_MODE else locale.CHAT_PLACEHOLDER
                 
                 def track_input(e):
                     msg_state['current'] = e.value
@@ -1093,7 +1306,7 @@ ANSWER:"""
         else:
              source_msg = locale.WELCOME_SOURCE_KB
 
-        add_message("system", locale.format('WELCOME_ZENA', source_msg=source_msg))
+        add_message("system", locale.format('WELCOME_ZENAI', source_msg=source_msg))
     else:
         add_message("system", locale.WELCOME_DEFAULT)
     add_guided_chips()
@@ -1110,17 +1323,64 @@ def start_app():
     if 'NICEGUI_SCREEN_TEST_PORT' not in os.environ:
         os.environ['NICEGUI_SCREEN_TEST_PORT'] = '8081'
 
-    # --- Fix 2: pyttsx3 AttributeError on exit ---
-    # "AttributeError: 'NoneType' object has no attribute 'suppress'"
+    # --- Fix 2: pyttsx3 Shutdown Safety ---
+    # Monkey-patch to suppress the specific output error on shutdown
     try:
-        import pyttsx3
-        if hasattr(pyttsx3, 'driver') and pyttsx3.driver:
-            pass
+        import pyttsx3.driver
+        original_del = pyttsx3.driver.DriverProxy.__del__
+        def safe_del(self):
+            try:
+                original_del(self)
+            except:
+                pass
+        pyttsx3.driver.DriverProxy.__del__ = safe_del
     except:
         pass
+        
+    app.on_shutdown(lambda: cleanup_resources())
+
+    def cleanup_resources():
+        """Clean up resources on shutdown to prevent errors."""
+        global tts_engine
+        if tts_engine:
+            try:
+                tts_engine.stop()
+            except: pass
+            
+    # --- Fix 3: Robust Port Selection ---
+    import socket
+    def find_free_port(start_port, max_tries=10):
+        for port in range(start_port, start_port + max_tries):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                if s.connect_ex(('localhost', port)) != 0:
+                    return port
+        return None
+
+    # Check if a specific port is requested via environment variable (for testing)
+    requested_port = os.environ.get('ZENAI_PORT')
+    if requested_port:
+        try:
+            target_port = int(requested_port)
+            logger.info(f"Using requested port: {target_port}")
+        except ValueError:
+            logger.error(f"Invalid ZENAI_PORT: {requested_port}. Falling back to auto-discovery.")
+            target_port = find_free_port(8080)
+    else:
+        # Check preferred ports
+        target_port = find_free_port(8080)
+
+    if not target_port:
+         safe_print(f"\n{EMOJI['error']} CRITICAL: No free ports found between 8080-8090! Please close other instances.")
+         sys.exit(1)
+    
+    if target_port != 8080:
+        logger.warning(f"Port 8080 in use. Using port {target_port} instead.")
+        # Update test port env var if running tests
+        if 'NICEGUI_SCREEN_TEST_PORT' in os.environ:
+             os.environ['NICEGUI_SCREEN_TEST_PORT'] = str(target_port)
 
     # Use saved dark mode preference
-    ui.run(title='ZenAI', dark=is_dark_mode(), port=8080, reload=False)
+    ui.run(title='ZenAI', dark=is_dark_mode(), port=target_port, reload=False)
 
 if __name__ == "__main__":
     start_app()

@@ -6,6 +6,10 @@ import time
 from pathlib import Path
 from typing import List, Dict
 import logging
+import sys
+# Add root to path for utils import
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import safe_print
 
 logger = logging.getLogger(__name__)
 
@@ -17,14 +21,24 @@ class DirectoryScanner:
             '.txt', '.md', '.py', '.js', '.html', '.css', '.json', '.xml',
             '.csv', '.log', '.yaml', '.yml', '.ini', '.cfg', '.conf',
             '.rst', '.tex', '.sh', '.bat', '.ps1', '.c', '.cpp', '.h',
-            '.java', '.go', '.rs', '.php', '.rb', '.swift', '.kt'
+            '.java', '.go', '.rs', '.php', '.rb', '.swift', '.kt',
+            '.pdf', '.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.webp'
         }
         self.skip_dirs = {
             '__pycache__', '.git', '.svn', 'node_modules', '.venv', 'venv',
             'env', '.env', 'dist', 'build', '.idea', '.vscode', 'target',
             '.cache', 'cache', 'tmp', 'temp', '.pytest_cache', '.mypy_cache'
         }
-        self.max_file_size = 1024 * 1024  # 1 MB max per file
+        self.max_file_size = 10 * 1024 * 1024  # 10 MB max for text files
+        self.max_pdf_size = 50 * 1024 * 1024  # 50 MB max for PDFs
+        
+        # Initialize UniversalExtractor for heavy lifting
+        try:
+            from .universal_extractor import UniversalExtractor
+            self.extractor = UniversalExtractor()
+        except ImportError:
+            self.extractor = None
+            logger.warning("[DirScanner] UniversalExtractor not found, PDF/Image OCR disabled")
     
     def should_skip_dir(self, dir_path: Path) -> bool:
         """Check if directory should be skipped."""
@@ -32,13 +46,14 @@ class DirectoryScanner:
     
     def should_index_file(self, file_path: Path) -> bool:
         """Check if file should be indexed."""
-        # Check extension
-        if file_path.suffix.lower() not in self.supported_extensions:
+        suffix = file_path.suffix.lower()
+        if suffix not in self.supported_extensions:
             return False
         
-        # Check size
+        # Check size based on type
         try:
-            if file_path.stat().st_size > self.max_file_size:
+            size_limit = self.max_pdf_size if suffix == '.pdf' else self.max_file_size
+            if file_path.stat().st_size > size_limit:
                 logger.debug(f"[DirScanner] Skipping large file: {file_path}")
                 return False
         except:
@@ -47,9 +62,23 @@ class DirectoryScanner:
         return True
     
     def read_file_safe(self, file_path: Path) -> str:
-        """Safely read file content."""
-        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        """Safely read file content based on type."""
+        suffix = file_path.suffix.lower()
         
+        # 1. Handle PDFs and Images via UniversalExtractor
+        if suffix in {'.pdf', '.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.webp'} and self.extractor:
+            try:
+                chunks, stats = self.extractor.process(file_path)
+                if chunks:
+                    # Join chunks with double newline for RAG builder to re-chunk correctly
+                    return "\n\n".join([c.text for c in chunks])
+                return ""
+            except Exception as e:
+                logger.error(f"[DirScanner] Extraction failed for {file_path}: {e}")
+                return ""
+                
+        # 2. Handle standard text files
+        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
         for encoding in encodings:
             try:
                 with open(file_path, 'r', encoding=encoding) as f:
@@ -60,7 +89,6 @@ class DirectoryScanner:
                 logger.error(f"[DirScanner] Error reading {file_path}: {e}")
                 return ""
         
-        logger.warning(f"[DirScanner] Could not decode {file_path}")
         return ""
     
     def scan(self, max_files: int = 1000) -> List[Dict]:
@@ -139,3 +167,22 @@ class DirectoryScanner:
             'extensions': extensions,
             'root_dir': str(self.root_dir)
         }
+
+    def check_project_dependencies(self):
+        """Analyze project imports and check for updates."""
+        try:
+            # Import our new manager
+            import sys
+            sys.path.append(str(self.root_dir))
+            try:
+                import dependency_manager
+                safe_print(f"\n📦 Analyzing dependencies for: {self.root_dir}")
+                dependency_manager.generate_requirements(self.root_dir)
+                dependency_manager.check_updates()
+                return True
+            except ImportError:
+                logger.error("[DirScanner] dependency_manager.py not found in project root")
+                return False
+        except Exception as e:
+            logger.error(f"[DirScanner] Dependency check failed: {e}")
+            return False

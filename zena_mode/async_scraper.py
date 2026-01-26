@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import logging
 import time
+from .web_scanner import WebCrawlScanner, CrawlabilityReport
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,9 @@ class SafeAsyncScraper:
             'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive',
         }
+        
+        self.scanner = WebCrawlScanner(user_agent=self.headers['User-Agent'])
+        self.crawl_report = None
         
         logger.info(
             f"[SafeScraper] Initialized: max {max_concurrent} concurrent, "
@@ -220,6 +224,15 @@ class SafeAsyncScraper:
             f"{self.delay}s delay"
         )
         
+        # Pre-flight ethical scan
+        self.crawl_report = await self.scanner.scan(self.base_url)
+        if not self.crawl_report.can_crawl:
+            logger.error(f"[SafeScraper] 🛑 Scrape aborted: {self.crawl_report.reason}")
+            return []
+            
+        if self.crawl_report.bot_protection:
+            logger.warning(f"[SafeScraper] ⚠️ Target site has {self.crawl_report.bot_protection} protection. Results may be limited.")
+
         # Create session with connection pooling
         connector = aiohttp.TCPConnector(limit=self.max_concurrent)
         async with aiohttp.ClientSession(connector=connector) as session:

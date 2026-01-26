@@ -82,7 +82,7 @@ class HungarianLocale(BaseLocale):
     ENGINE_QUIET_DESCRIPTION = "Csak a végleges ellenőrzött válasz megjelenítése"
     ENGINE_SCANNING_SWARM = "Raj szkennelése..."
     ENGINE_EXPERTS_ONLINE = "{count} Szakértő Online"
-    ENGINE_STANDALONE = "Önálló Mód"
+    ENGINE_STANDALONE = "ZenAI Önálló Mód"
     
     # ==========================================================================
     # SYSTEM
@@ -195,7 +195,7 @@ class HungarianLocale(BaseLocale):
     # CHAT INTERFACE
     # ==========================================================================
     CHAT_PLACEHOLDER = "Írj egy üzenetet..."
-    CHAT_PLACEHOLDER_ZENA = "Kérdezz bármit..."
+    CHAT_PLACEHOLDER_ZENAI = "Kérdezz bármit..."
     CHAT_QUICK_ACTIONS = "Gyors Műveletek"
     CHAT_CHECK_MODEL = "Modell Állapot Ellenőrzése"
     CHAT_LATEST_LLAMA = "Legújabb llama.cpp"
@@ -300,7 +300,7 @@ class HungarianLocale(BaseLocale):
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
-    WELCOME_ZENA = """👋 **Üdvözöllek a ZenAI-ban!**
+    WELCOME_ZENAI = """👋 **Üdvözöllek a ZenAI-ban!**
 
 {source_msg}. Segíthetek neked:
 - Kérdések megválaszolásában a tartalomról

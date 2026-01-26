@@ -6,10 +6,12 @@ import asyncio
 import httpx
 import sys
 import os
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+@pytest.mark.asyncio
 async def test_llm_backend():
     """Test that LLM backend is responding."""
     print("=" * 60)
@@ -50,6 +52,7 @@ async def test_llm_backend():
         return False
 
 
+@pytest.mark.asyncio
 async def test_streaming_response():
     """Test streaming response from LLM."""
     print("\n" + "=" * 60)
@@ -60,7 +63,7 @@ async def test_streaming_response():
     
     payload = {
         "messages": [
-            {"role": "system", "content": "You are Zena."},
+            {"role": "system", "content": "You are ZenAI."},
             {"role": "user", "content": "Count from 1 to 5."}
         ],
         "stream": True,
@@ -105,6 +108,7 @@ async def test_streaming_response():
         return False
 
 
+@pytest.mark.asyncio
 async def test_ui_endpoint():
     """Test that NiceGUI is responding."""
     print("\n" + "=" * 60)
@@ -123,7 +127,7 @@ async def test_ui_endpoint():
                 
                 print(f"  ✅ Web server responding (HTTP 200)")
                 print(f"  ✅ NiceGUI/Quasar detected: {has_nicegui}")
-                print(f"  ✅ Zena content detected: {has_zena}")
+                print(f"  ✅ ZenAI content detected: {has_zena}")
                 print(f"  📊 HTML size: {len(html)} bytes")
                 return True
             else:
@@ -138,6 +142,7 @@ async def test_ui_endpoint():
         return False
 
 
+@pytest.mark.asyncio
 async def test_multiple_messages():
     """Test sending multiple messages in sequence."""
     print("\n" + "=" * 60)

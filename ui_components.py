@@ -2,6 +2,7 @@ from nicegui import ui
 import logging
 import asyncio
 import requests
+import httpx
 import subprocess
 from utils import normalize_input
 import time
@@ -14,9 +15,16 @@ from ui.settings_dialog import create_settings_dialog
 
 logger = logging.getLogger("UI Components")
 
+async def _on_smart_routing_change(enabled: bool, router):
+    """Event handler for smart routing toggle (Module Level)."""
+    if enabled and router:
+        logger.info("[Router] Initializing Smart Router...")
+        return await router.initialize()
+    return enabled
+
 def setup_app_theme():
     """Configures the application theme, colors, and CSS."""
-    # Theme & Layout (Zena Style - Light & Professional)
+    # Theme & Layout (ZenAI Style - Light & Professional)
     ui.colors(primary='#3b82f6', secondary='#6c757d', accent='#17a2b8', dark=False)
     # Set light background
     ui.query('body').classes('bg-gray-50 dark:bg-slate-900')
@@ -554,24 +562,19 @@ async def _start_download(repo: str, filename: str, dialog, backend, app_state):
     ui.notify(locale.format('NOTIFY_DOWNLOAD_STARTING', filename=filename), color='info', position='top')
     
     try:
-        response = await asyncio.to_thread(
-            requests.post,
-            "http://127.0.0.1:8002/models/download",
-            json={"repo_id": repo, "filename": filename},
-            timeout=10
-        )
-        if response.status_code == 200:
+        success = await backend.download_model(repo, filename)
+        if success:
             ui.notify(locale.NOTIFY_DOWNLOAD_STARTED, color='positive', position='top', timeout=5000)
             # Refresh model list
-            backend.get_models()
+            models = await backend.get_models()
             if 'model_select' in app_state and app_state['model_select']:
-                app_state['model_select'].options = backend.get_models()
+                app_state['model_select'].options = models
                 app_state['model_select'].update()
         else:
-            ui.notify(locale.format('NOTIFY_DOWNLOAD_FAILED', error=response.text), color='negative', position='top')
-    except requests.exceptions.ConnectionError:
-        ui.notify(locale.NOTIFY_HUB_CONNECTION_ERROR, color='negative', position='top')
+            ui.notify(locale.format('NOTIFY_DOWNLOAD_FAILED', error="Start failed"), color='negative', position='top')
     except Exception as e:
+        logger.error(f"[UI] Download error: {e}")
+        ui.notify(locale.format('NOTIFY_DOWNLOAD_FAILED', error=str(e)), color='negative', position='top')
         ui.notify(locale.format('NOTIFY_DOWNLOAD_ERROR', error=str(e)), color='negative', position='top')
 
 
@@ -598,7 +601,7 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
             # Logo & Name
             with ui.row().classes('items-center gap-3'):
                 ui.avatar('Z' if ZENA_MODE else 'N', color='primary', text_color='white').classes('text-xl')
-                app_name = 'Zena' if ZENA_MODE else locale.APP_NAME
+                app_name = 'ZenAI' if ZENA_MODE else locale.APP_NAME
                 ui.label(app_name).classes('text-2xl font-bold ' + Styles.TEXT_ACCENT)
             
             # Settings Button (Top Right - Easy Access)
@@ -629,6 +632,32 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
             
             ui.button(icon=Icons.SETTINGS, on_click=settings_dialog.open).props('flat round').classes(Styles.TEXT_MUTED + ' hover:text-blue-500').tooltip(locale.SETTINGS_TITLE)
         
+        # --- MODE SWITCH HANDLERS ---
+        async def _on_cot_change(is_enabled: bool):
+            """Handle CoT Swarm toggle."""
+            ui.notify(f"{'🚀 Scaling up' if is_enabled else '🛑 Scaling down'} expert swarm...", color='info')
+            success = await backend.scale_swarm(3 if is_enabled else 0)
+            if success:
+                # Trigger a swarm scan to update the UI labels
+                if 'scan_swarm' in app_state:
+                    await app_state['scan_swarm']()
+                ui.notify("✅ Swarm configuration updated", color='positive')
+            else:
+                ui.notify("❌ Hub communication error", color='negative')
+
+        async def _on_smart_routing_change(is_enabled: bool):
+            """Handle Smart Routing toggle."""
+            if is_enabled:
+                ui.notify("🧠 Initializing Smart Router...", color='info')
+                if smart_router:
+                    success = await smart_router.initialize()
+                    if success:
+                        ui.notify("✅ Smart Router online", color='positive')
+                    else:
+                        ui.notify("⚠️ Router init failed (using fallback)", color='warning')
+            else:
+                ui.notify("🧠 Smart Routing disabled", color='info')
+        
         # ============================================================
         # PRIMARY ACTION: New Chat Button
         # ============================================================
@@ -651,7 +680,7 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
             with ui.column().classes('w-full gap-3 py-2'):
                 
                 # Get current models with metadata
-                current_models = backend.get_models()
+                current_models = backend.get_models_sync()
                 
                 # Comprehensive model metadata database
                 MODEL_INFO = {
@@ -817,16 +846,14 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                         async def switch_to_model(m=model_file, i=info):
                             ui.notify(f"⏳ Loading {i['name']}...", color='info', position='bottom-right', timeout=2000)
                             try:
-                                response = await asyncio.to_thread(
-                                    requests.post, "http://127.0.0.1:8002/models/load",
-                                    json={"model": m}, timeout=30
-                                )
-                                if response.status_code == 200:
+                                success = await async_backend.set_active_model(m)
+                                if success:
                                     ui.notify(f"✅ {i['name']} ready!", color='positive', position='bottom-right')
                                 else:
-                                    ui.notify(f"✅ {i['name']} selected", color='positive', position='bottom-right')
-                            except Exception:
-                                ui.notify(f"✅ {i['name']} active", color='positive', position='bottom-right')
+                                    ui.notify(f"⚠️ {i['name']} switch failed", color='warning', position='bottom-right')
+                            except Exception as e:
+                                logger.error(f"[UI] Model switch error: {e}")
+                                ui.notify(f"❌ {i['name']} error", color='negative', position='bottom-right')
                             
                             # Update the active model card
                             active_model_name.text = i['name']
@@ -937,15 +964,13 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                                         async def download_model(m=model):
                                             ui.notify(f"⬇️ Starting download: {m['name']}...", color='info', position='bottom-right')
                                             try:
-                                                response = await asyncio.to_thread(
-                                                    requests.post, "http://127.0.0.1:8002/models/download",
-                                                    json={"repo_id": m['repo'], "filename": m['file']}, timeout=5
-                                                )
-                                                if response.status_code == 200:
+                                                success = await async_backend.download_model(m['repo'], m['file'])
+                                                if success:
                                                     ui.notify(f"✅ {m['name']} download started!", color='positive', position='bottom-right')
                                                 else:
-                                                    ui.notify(f"❌ Download failed: {response.text[:50]}", color='negative', position='bottom-right')
+                                                    ui.notify(f"❌ Download failed to start", color='negative', position='bottom-right')
                                             except Exception as e:
+                                                logger.error(f"[UI] Download error: {e}")
                                                 ui.notify(f"❌ Error: {str(e)[:50]}", color='negative', position='bottom-right')
                                         
                                         ui.button('Download', icon=Icons.DOWNLOAD, on_click=download_model).props('flat dense color=primary').classes('text-xs')
@@ -962,7 +987,7 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
         with ui.expansion(locale.NAV_AI_ENGINE, icon='psychology').classes('w-full mb-2'):
             with ui.column().classes('w-full gap-2 py-2'):
                 # Chain of Thought / Swarm
-                use_cot = ui.switch(locale.ENGINE_COT_SWARM, value=False).classes('text-sm')
+                use_cot = ui.switch(locale.ENGINE_COT_SWARM, value=False, on_change=lambda e: _on_cot_change(e.value)).classes('text-sm')
                 ui.label(locale.ENGINE_COT_DESCRIPTION).classes(Styles.LABEL_MUTED + ' ml-10 -mt-1 text-xs')
                 
                 quiet_cot = ui.switch(locale.ENGINE_QUIET_MODE, value=True).classes('text-sm ml-4').bind_visibility_from(use_cot, 'value')
@@ -977,6 +1002,20 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                 
                 app_state['use_cot_swarm'] = use_cot
                 app_state['quiet_cot'] = quiet_cot
+                
+                ui.separator().classes('my-2')
+                
+                # Smart Model Routing - Auto-select best model for task
+                use_smart_routing = ui.switch('🧠 Smart Routing', value=False, on_change=lambda e: _on_smart_routing_change(e.value)).classes('text-sm')
+                ui.label('Auto-select best model for each task').classes(Styles.LABEL_MUTED + ' ml-10 -mt-1 text-xs')
+                
+                # Show routing indicator when enabled
+                with ui.row().classes('items-center gap-2 mt-2 px-2 py-1 bg-purple-50 dark:bg-purple-900/20 rounded').bind_visibility_from(use_smart_routing, 'value'):
+                    ui.icon('auto_awesome', size='16px').classes('text-purple-500')
+                    routing_status = ui.label('Ready to classify').classes('text-xs font-medium text-purple-600 dark:text-purple-400')
+                    app_state['routing_status'] = routing_status
+                
+                app_state['use_smart_routing'] = use_smart_routing
         
         # ============================================================
         # SECTION 3: System Tools (Expandable)
@@ -1013,15 +1052,16 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                         # Try to get latest version from GitHub
                         latest_version = "Unknown"
                         try:
-                            response = await asyncio.to_thread(
-                                requests.get, 
-                                "https://api.github.com/repos/ggerganov/llama.cpp/releases/latest", 
-                                timeout=5,
-                                headers={'Accept': 'application/vnd.github.v3+json'}
-                            )
-                            if response.status_code == 200:
-                                latest_version = response.json().get("tag_name", "Unknown")
-                        except Exception:
+                            async with httpx.AsyncClient() as client:
+                                response = await client.get(
+                                    "https://api.github.com/repos/ggerganov/llama.cpp/releases/latest", 
+                                    timeout=5.0,
+                                    headers={'Accept': 'application/vnd.github.v3+json'}
+                                )
+                                if response.status_code == 200:
+                                    latest_version = response.json().get("tag_name", "Unknown")
+                        except Exception as e:
+                            logger.error(f"[UI] GitHub version check failed: {e}")
                             latest_version = "API unavailable"
                         
                         # Show result in a nice notification
@@ -1070,13 +1110,12 @@ def setup_drawer(backend, async_backend, rag_system, config, dialogs, ZENA_MODE,
                         
                         # LLM Check
                         try:
-                            llm_url = config.get('LLM_API_URL', "http://127.0.0.1:8001") if isinstance(config, dict) else getattr(config, 'LLM_API_URL', "http://127.0.0.1:8001")
-                            response = await asyncio.to_thread(requests.get, f"{llm_url}/v1/models", timeout=3)
-                            if response.status_code == 200:
+                            if await async_backend.health_check():
                                 results.append("✅ LLM Backend: Online")
                             else:
-                                results.append(f"⚠️ LLM Backend: Error {response.status_code}")
-                        except Exception:
+                                results.append("❌ LLM Backend: Offline")
+                        except Exception as e:
+                            logger.error(f"[UI] Diagnostic LLM check failed: {e}")
                             results.append("❌ LLM Backend: Offline")
                         
                         # RAG Check

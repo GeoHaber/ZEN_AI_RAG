@@ -1,0 +1,13 @@
+torch
+transformers
+scipy
+accelerate
+soundfile
+sounddevice
+numpy
+requests
+nicegui
+fastapi
+uvicorn
+
+

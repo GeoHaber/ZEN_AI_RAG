@@ -1,0 +1,1406 @@
+{
+  "last_updated": "2026-01-22T08:00:34.718058",
+  "recommendations": [
+    {
+      "model_id": "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
+      "display_name": "Meta-Llama-3.1-8B-Instruct",
+      "size_gb": 4.58,
+      "downloads": 162229,
+      "likes": 307,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 83.34645,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 162,229 downloads",
+      "case_detailed": "## \ud83e\udd16 Meta-Llama-3.1-8B-Instruct\n**Score: 83/100** | Size: 4.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 162,229 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.6 GB) - Fast loading, low VRAM",
+      "status": "approved",
+      "discovered_at": "2026-01-22T08:00:08.771123",
+      "gguf_files": [
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-IQ2_M.gguf",
+          "size_gb": 2.75
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-IQ3_M.gguf",
+          "size_gb": 3.52
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-IQ3_XS.gguf",
+          "size_gb": 3.28
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-IQ4_NL.gguf",
+          "size_gb": 4.36
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-IQ4_XS.gguf",
+          "size_gb": 4.14
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q2_K.gguf",
+          "size_gb": 2.96
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q2_K_L.gguf",
+          "size_gb": 3.44
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q3_K_L.gguf",
+          "size_gb": 4.03
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q3_K_M.gguf",
+          "size_gb": 3.74
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q3_K_S.gguf",
+          "size_gb": 3.41
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q3_K_XL.gguf",
+          "size_gb": 4.45
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q4_0_4_4.gguf",
+          "size_gb": 4.34
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q4_0_4_8.gguf",
+          "size_gb": 4.34
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q4_0_8_8.gguf",
+          "size_gb": 4.34
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q4_K_L.gguf",
+          "size_gb": 4.95
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+          "size_gb": 4.58
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q4_K_S.gguf",
+          "size_gb": 4.37
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q5_K_L.gguf",
+          "size_gb": 5.64
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q5_K_M.gguf",
+          "size_gb": 5.34
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf",
+          "size_gb": 5.21
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q6_K.gguf",
+          "size_gb": 6.14
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q6_K_L.gguf",
+          "size_gb": 6.38
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-Q8_0.gguf",
+          "size_gb": 7.95
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct-f32.gguf",
+          "size_gb": 29.92
+        }
+      ],
+      "recommended_file": "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF",
+      "display_name": "Meta-Llama-3-8B-Instruct",
+      "size_gb": 4.58,
+      "downloads": 136845,
+      "likes": 101,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 81.04725,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 136,845 downloads",
+      "case_detailed": "## \ud83e\udd16 Meta-Llama-3-8B-Instruct\n**Score: 81/100** | Size: 4.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 136,845 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.6 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:10.129460",
+      "gguf_files": [
+        {
+          "name": "Meta-Llama-3-8B-Instruct.IQ1_M.gguf",
+          "size_gb": 2.01
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.IQ1_S.gguf",
+          "size_gb": 1.88
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.IQ2_XS.gguf",
+          "size_gb": 2.43
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.IQ3_XS.gguf",
+          "size_gb": 3.28
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.IQ4_XS.gguf",
+          "size_gb": 4.14
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q2_K.gguf",
+          "size_gb": 2.96
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q3_K_L.gguf",
+          "size_gb": 4.03
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q3_K_M.gguf",
+          "size_gb": 3.74
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q3_K_S.gguf",
+          "size_gb": 3.41
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
+          "size_gb": 4.58
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q4_K_S.gguf",
+          "size_gb": 4.37
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q5_K_M.gguf",
+          "size_gb": 5.34
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q5_K_S.gguf",
+          "size_gb": 5.22
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q6_K.gguf",
+          "size_gb": 6.14
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.Q8_0.gguf",
+          "size_gb": 7.95
+        },
+        {
+          "name": "Meta-Llama-3-8B-Instruct.fp16.gguf",
+          "size_gb": 14.97
+        }
+      ],
+      "recommended_file": "Meta-Llama-3-8B-Instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Llama-3-8B-Instruct-32k-v0.1-GGUF",
+      "display_name": "Llama-3-8B-Instruct-32k-v0.1",
+      "size_gb": 4.58,
+      "downloads": 131754,
+      "likes": 58,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 80.57770000000001,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 131,754 downloads",
+      "case_detailed": "## \ud83e\udd16 Llama-3-8B-Instruct-32k-v0.1\n**Score: 81/100** | Size: 4.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 131,754 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.6 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:11.864467",
+      "gguf_files": [
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.IQ1_M.gguf",
+          "size_gb": 2.01
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.IQ1_S.gguf",
+          "size_gb": 1.88
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.IQ2_XS.gguf",
+          "size_gb": 2.43
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.IQ3_XS.gguf",
+          "size_gb": 3.28
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.IQ4_XS.gguf",
+          "size_gb": 4.14
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q2_K.gguf",
+          "size_gb": 2.96
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q3_K_L.gguf",
+          "size_gb": 4.03
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q3_K_M.gguf",
+          "size_gb": 3.74
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q3_K_S.gguf",
+          "size_gb": 3.41
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q4_K_M.gguf",
+          "size_gb": 4.58
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q4_K_S.gguf",
+          "size_gb": 4.37
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q5_K_M.gguf",
+          "size_gb": 5.34
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q5_K_S.gguf",
+          "size_gb": 5.21
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q6_K.gguf",
+          "size_gb": 6.14
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.Q8_0.gguf",
+          "size_gb": 7.95
+        },
+        {
+          "name": "Llama-3-8B-Instruct-32k-v0.1.fp16.gguf",
+          "size_gb": 14.97
+        }
+      ],
+      "recommended_file": "Llama-3-8B-Instruct-32k-v0.1.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Meta-Llama-3.1-8B-Instruct-GGUF",
+      "display_name": "Meta-Llama-3.1-8B-Instruct",
+      "size_gb": 4.58,
+      "downloads": 133933,
+      "likes": 32,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 80.55665,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 133,933 downloads",
+      "case_detailed": "## \ud83e\udd16 Meta-Llama-3.1-8B-Instruct\n**Score: 81/100** | Size: 4.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 133,933 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.6 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:10.349119",
+      "gguf_files": [
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q2_K.gguf",
+          "size_gb": 2.96
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q3_K_L.gguf",
+          "size_gb": 4.03
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q3_K_M.gguf",
+          "size_gb": 3.74
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q3_K_S.gguf",
+          "size_gb": 3.41
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q4_K_M.gguf",
+          "size_gb": 4.58
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q4_K_S.gguf",
+          "size_gb": 4.37
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q5_K_M.gguf",
+          "size_gb": 5.34
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q5_K_S.gguf",
+          "size_gb": 5.21
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q6_K.gguf",
+          "size_gb": 6.14
+        },
+        {
+          "name": "Meta-Llama-3.1-8B-Instruct.Q8_0.gguf",
+          "size_gb": 7.95
+        }
+      ],
+      "recommended_file": "Meta-Llama-3.1-8B-Instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Llama-3-8B-Instruct-64k-GGUF",
+      "display_name": "Llama-3-8B-Instruct-64k",
+      "size_gb": 4.58,
+      "downloads": 130623,
+      "likes": 13,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 80.29615,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 130,623 downloads",
+      "case_detailed": "## \ud83e\udd16 Llama-3-8B-Instruct-64k\n**Score: 80/100** | Size: 4.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 130,623 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.6 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:13.216624",
+      "gguf_files": [
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q2_K.gguf",
+          "size_gb": 2.96
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q3_K_L.gguf",
+          "size_gb": 4.03
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q3_K_M.gguf",
+          "size_gb": 3.74
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q3_K_S.gguf",
+          "size_gb": 3.41
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q4_K_M.gguf",
+          "size_gb": 4.58
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q4_K_S.gguf",
+          "size_gb": 4.37
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q5_K_M.gguf",
+          "size_gb": 5.34
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q5_K_S.gguf",
+          "size_gb": 5.21
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q6_K.gguf",
+          "size_gb": 6.14
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.Q8_0.gguf",
+          "size_gb": 7.95
+        },
+        {
+          "name": "Llama-3-8B-Instruct-64k.fp16.gguf",
+          "size_gb": 14.97
+        }
+      ],
+      "recommended_file": "Llama-3-8B-Instruct-64k.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Meta-Llama-3.1-405B-Instruct-GGUF",
+      "display_name": "Meta-Llama-3.1-405B-Instruct",
+      "size_gb": 16.06,
+      "downloads": 129902,
+      "likes": 14,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 80.2651,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 129,902 downloads",
+      "case_detailed": "## \ud83e\udd16 Meta-Llama-3.1-405B-Instruct\n**Score: 80/100** | Size: 16.1 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 129,902 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u26a0\ufe0f Large model (16.1 GB) - Needs adequate VRAM but delivers best quality",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:14.061998",
+      "gguf_files": [
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00001-of-00009.gguf",
+          "size_gb": 16.06
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00002-of-00009.gguf",
+          "size_gb": 15.59
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00003-of-00009.gguf",
+          "size_gb": 15.68
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00004-of-00009.gguf",
+          "size_gb": 15.66
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00005-of-00009.gguf",
+          "size_gb": 15.75
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00006-of-00009.gguf",
+          "size_gb": 15.67
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00007-of-00009.gguf",
+          "size_gb": 15.59
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00008-of-00009.gguf",
+          "size_gb": 15.41
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00009-of-00009.gguf",
+          "size_gb": 15.42
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00001-of-00009.gguf",
+          "size_gb": 18.91
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00002-of-00009.gguf",
+          "size_gb": 18.26
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00003-of-00009.gguf",
+          "size_gb": 18.41
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00004-of-00009.gguf",
+          "size_gb": 18.4
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00005-of-00009.gguf",
+          "size_gb": 18.4
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00006-of-00009.gguf",
+          "size_gb": 18.41
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00007-of-00009.gguf",
+          "size_gb": 18.26
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00008-of-00009.gguf",
+          "size_gb": 18.06
+        },
+        {
+          "name": "Meta-Llama-3.1-405B-Instruct.Q3_K_S.gguf-00009-of-00009.gguf",
+          "size_gb": 17.77
+        }
+      ],
+      "recommended_file": "Meta-Llama-3.1-405B-Instruct.Q2_K.gguf-00001-of-00009.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Meta-Llama-3.1-70B-Instruct-GGUF",
+      "display_name": "Meta-Llama-3.1-70B-Instruct",
+      "size_gb": 39.6,
+      "downloads": 137527,
+      "likes": 40,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 70.77635000000001,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 137,527 downloads",
+      "case_detailed": "## \ud83e\udd16 Meta-Llama-3.1-70B-Instruct\n**Score: 71/100** | Size: 39.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 137,527 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u26a0\ufe0f Large model (39.6 GB) - Needs adequate VRAM but delivers best quality",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:09.541598",
+      "gguf_files": [
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.IQ1_M.gguf",
+          "size_gb": 15.6
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.IQ1_S.gguf",
+          "size_gb": 14.29
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.IQ2_XS.gguf",
+          "size_gb": 19.69
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.IQ3_XS.gguf",
+          "size_gb": 27.29
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.IQ4_XS.gguf",
+          "size_gb": 35.3
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q2_K.gguf",
+          "size_gb": 24.56
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q3_K_L.gguf",
+          "size_gb": 34.59
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q3_K_M.gguf",
+          "size_gb": 31.91
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q3_K_S.gguf",
+          "size_gb": 28.79
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q4_K_M.gguf",
+          "size_gb": 39.6
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q4_K_S.gguf",
+          "size_gb": 37.58
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q5_K_M.gguf",
+          "size_gb": 46.52
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q5_K_S.gguf",
+          "size_gb": 45.32
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q6_K.gguf-00001-of-00006.gguf",
+          "size_gb": 9.96
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q6_K.gguf-00002-of-00006.gguf",
+          "size_gb": 9.51
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q6_K.gguf-00003-of-00006.gguf",
+          "size_gb": 9.33
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q6_K.gguf-00004-of-00006.gguf",
+          "size_gb": 9.21
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q6_K.gguf-00005-of-00006.gguf",
+          "size_gb": 9.21
+        },
+        {
+          "name": "Meta-Llama-3.1-70B-Instruct.Q6_K.gguf-00006-of-00006.gguf",
+          "size_gb": 6.69
+        }
+      ],
+      "recommended_file": "Meta-Llama-3.1-70B-Instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Llama-3.3-70B-Instruct-GGUF",
+      "display_name": "Llama-3.3-70B-Instruct",
+      "size_gb": 39.6,
+      "downloads": 132474,
+      "likes": 20,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": true,
+      "upgrades_from": "llama-3.2-3b-instruct-q4_k_m",
+      "score": 70.4237,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \u2b06\ufe0f Upgrades llama-3.2-3b-instruct-q4_k_m | \ud83d\udce5 132,474 downloads",
+      "case_detailed": "## \ud83e\udd16 Llama-3.3-70B-Instruct\n**Score: 70/100** | Size: 39.6 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `llama-3.2-3b-instruct-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**4. Community Validated**\n   With 132,474 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u26a0\ufe0f Large model (39.6 GB) - Needs adequate VRAM but delivers best quality",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:11.109103",
+      "gguf_files": [
+        {
+          "name": "Llama-3.3-70B-Instruct.Q2_K.gguf",
+          "size_gb": 24.56
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q3_K_L.gguf",
+          "size_gb": 34.59
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q3_K_M.gguf",
+          "size_gb": 31.91
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q3_K_S.gguf",
+          "size_gb": 28.79
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q4_K_M.gguf",
+          "size_gb": 39.6
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q4_K_S.gguf",
+          "size_gb": 37.58
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q5_K_M.gguf",
+          "size_gb": 46.52
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q5_K_S.gguf",
+          "size_gb": 45.32
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q6_K.gguf-00001-of-00006.gguf",
+          "size_gb": 10.59
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q6_K.gguf-00002-of-00006.gguf",
+          "size_gb": 9.33
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q6_K.gguf-00003-of-00006.gguf",
+          "size_gb": 9.16
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q6_K.gguf-00004-of-00006.gguf",
+          "size_gb": 9.26
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q6_K.gguf-00005-of-00006.gguf",
+          "size_gb": 9.34
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q6_K.gguf-00006-of-00006.gguf",
+          "size_gb": 6.24
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q8_0.gguf-00001-of-00006.gguf",
+          "size_gb": 13.71
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q8_0.gguf-00002-of-00006.gguf",
+          "size_gb": 12.09
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q8_0.gguf-00003-of-00006.gguf",
+          "size_gb": 11.86
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q8_0.gguf-00004-of-00006.gguf",
+          "size_gb": 11.99
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q8_0.gguf-00005-of-00006.gguf",
+          "size_gb": 12.1
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.Q8_0.gguf-00006-of-00006.gguf",
+          "size_gb": 8.09
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.fp16.gguf-00001-of-00006.gguf",
+          "size_gb": 24.28
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.fp16.gguf-00002-of-00006.gguf",
+          "size_gb": 22.75
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.fp16.gguf-00003-of-00006.gguf",
+          "size_gb": 23.19
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.fp16.gguf-00004-of-00006.gguf",
+          "size_gb": 22.33
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.fp16.gguf-00005-of-00006.gguf",
+          "size_gb": 22.56
+        },
+        {
+          "name": "Llama-3.3-70B-Instruct.fp16.gguf-00006-of-00006.gguf",
+          "size_gb": 16.32
+        }
+      ],
+      "recommended_file": "Llama-3.3-70B-Instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "hugging-quants/Llama-3.2-1B-Instruct-Q8_0-GGUF",
+      "display_name": "Llama-3.2-1B-Instruct-Q8_0",
+      "size_gb": 1.23,
+      "downloads": 398693,
+      "likes": 40,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": false,
+      "upgrades_from": null,
+      "score": 68.7,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \ud83d\udce5 398,693 downloads | \ud83d\udcaa general chat, creative writing, function calling",
+      "case_detailed": "## \ud83e\udd16 Llama-3.2-1B-Instruct-Q8_0\n**Score: 69/100** | Size: 1.2 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**4. Community Validated**\n   With 398,693 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (1.2 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:08.318653",
+      "gguf_files": [
+        {
+          "name": "llama-3.2-1b-instruct-q8_0.gguf",
+          "size_gb": 1.23
+        }
+      ],
+      "recommended_file": "llama-3.2-1b-instruct-q8_0.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Llama-3.2-1B-Instruct-GGUF",
+      "display_name": "Llama-3.2-1B-Instruct",
+      "size_gb": 0.75,
+      "downloads": 137541,
+      "likes": 17,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.82,
+      "strengths": [
+        "general_chat",
+        "creative_writing",
+        "function_calling"
+      ],
+      "fills_gap": true,
+      "gap_description": "Fills gap in 'creative writing'",
+      "is_upgrade": false,
+      "upgrades_from": null,
+      "score": 65.66205000000001,
+      "case_summary": "\ud83c\udfaf Fills gap in 'creative writing' | \ud83d\udce5 137,541 downloads | \ud83d\udcaa general chat, creative writing, function calling",
+      "case_detailed": "## \ud83e\udd16 Llama-3.2-1B-Instruct\n**Score: 66/100** | Size: 0.8 GB\n\n### Why you should consider this model:\n\n**1. Fills a Capability Gap**\n   Your arsenal currently lacks strong coverage in 'creative writing'.\n   This model specializes in that area.\n\n**4. Community Validated**\n   With 137,541 downloads, this model has been battle-tested by the community.\n\n**Strengths:** general chat, creative writing, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (0.8 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:09.321832",
+      "gguf_files": [
+        {
+          "name": "Llama-3.2-1B-Instruct.IQ1_M.gguf",
+          "size_gb": 0.39
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.IQ1_S.gguf",
+          "size_gb": 0.37
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.IQ2_XS.gguf",
+          "size_gb": 0.44
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.IQ3_XS.gguf",
+          "size_gb": 0.58
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.IQ4_XS.gguf",
+          "size_gb": 0.69
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q2_K.gguf",
+          "size_gb": 0.54
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q3_K_L.gguf",
+          "size_gb": 0.68
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q3_K_M.gguf",
+          "size_gb": 0.64
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q3_K_S.gguf",
+          "size_gb": 0.6
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q4_K_M.gguf",
+          "size_gb": 0.75
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q4_K_S.gguf",
+          "size_gb": 0.72
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q5_K_M.gguf",
+          "size_gb": 0.85
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q5_K_S.gguf",
+          "size_gb": 0.83
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q6_K.gguf",
+          "size_gb": 0.95
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.Q8_0.gguf",
+          "size_gb": 1.23
+        },
+        {
+          "name": "Llama-3.2-1B-Instruct.fp16.gguf",
+          "size_gb": 2.31
+        }
+      ],
+      "recommended_file": "Llama-3.2-1B-Instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/mistral-small-3.1-24b-instruct-2503-hf-GGUF",
+      "display_name": "mistral-small-3.1-24b-instruct-2503-hf",
+      "size_gb": 13.35,
+      "downloads": 130766,
+      "likes": 2,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.87,
+      "strengths": [
+        "function_calling",
+        "general_chat",
+        "fast_inference"
+      ],
+      "fills_gap": false,
+      "gap_description": "",
+      "is_upgrade": true,
+      "upgrades_from": "mistral-7b-instruct-v0.3.q4_k_m",
+      "score": 56.9983,
+      "case_summary": "\u2b06\ufe0f Upgrades mistral-7b-instruct-v0.3.q4_k_m | \u2b50 High-quality model family | \ud83d\udce5 130,766 downloads",
+      "case_detailed": "## \ud83e\udd16 mistral-small-3.1-24b-instruct-2503-hf\n**Score: 57/100** | Size: 13.3 GB\n\n### Why you should consider this model:\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `mistral-7b-instruct-v0.3.q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**3. Quality Pedigree**\n   This model comes from a highly-rated family with proven benchmark results.\n\n**4. Community Validated**\n   With 130,766 downloads, this model has been battle-tested by the community.\n\n**Strengths:** function calling, general chat, fast inference\n\n### Resource Consideration:\n   \u26a0\ufe0f Large model (13.3 GB) - Needs adequate VRAM but delivers best quality",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:13.001536",
+      "gguf_files": [
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q2_K.gguf",
+          "size_gb": 8.28
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q3_K_L.gguf",
+          "size_gb": 11.55
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q3_K_M.gguf",
+          "size_gb": 10.69
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q3_K_S.gguf",
+          "size_gb": 9.69
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q4_K_M.gguf",
+          "size_gb": 13.35
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q4_K_S.gguf",
+          "size_gb": 12.62
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q5_K_M.gguf",
+          "size_gb": 15.61
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q5_K_S.gguf",
+          "size_gb": 15.18
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q6_K.gguf",
+          "size_gb": 18.02
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.Q8_0.gguf",
+          "size_gb": 23.33
+        },
+        {
+          "name": "mistral-small-3.1-24b-instruct-2503-hf.fp16.gguf",
+          "size_gb": 43.92
+        }
+      ],
+      "recommended_file": "mistral-small-3.1-24b-instruct-2503-hf.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "RichardErkhov/Alibaba-NLP_-_gte-Qwen2-7B-instruct-gguf",
+      "display_name": "Alibaba-NLP_-_gte-Qwen2-7B-instruct",
+      "size_gb": 4.36,
+      "downloads": 195028,
+      "likes": 6,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.88,
+      "strengths": [
+        "code_generation",
+        "reasoning",
+        "multilingual",
+        "function_calling"
+      ],
+      "fills_gap": false,
+      "gap_description": "",
+      "is_upgrade": true,
+      "upgrades_from": "qwen2.5-0.5b-instruct-q5_k_m",
+      "score": 55.581399999999995,
+      "case_summary": "\u2b06\ufe0f Upgrades qwen2.5-0.5b-instruct-q5_k_m | \u2b50 High-quality model family | \ud83d\udce5 195,028 downloads",
+      "case_detailed": "## \ud83e\udd16 Alibaba-NLP_-_gte-Qwen2-7B-instruct\n**Score: 56/100** | Size: 4.4 GB\n\n### Why you should consider this model:\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `qwen2.5-0.5b-instruct-q5_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**3. Quality Pedigree**\n   This model comes from a highly-rated family with proven benchmark results.\n\n**4. Community Validated**\n   With 195,028 downloads, this model has been battle-tested by the community.\n\n**Strengths:** code generation, reasoning, multilingual, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.4 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:08.543086",
+      "gguf_files": [
+        {
+          "name": "gte-Qwen2-7B-instruct.IQ3_M.gguf",
+          "size_gb": 3.33
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.IQ3_S.gguf",
+          "size_gb": 3.26
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.IQ3_XS.gguf",
+          "size_gb": 3.11
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.IQ4_NL.gguf",
+          "size_gb": 4.15
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.IQ4_XS.gguf",
+          "size_gb": 3.96
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q2_K.gguf",
+          "size_gb": 2.81
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q3_K.gguf",
+          "size_gb": 3.55
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q3_K_L.gguf",
+          "size_gb": 3.81
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q3_K_M.gguf",
+          "size_gb": 3.55
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q3_K_S.gguf",
+          "size_gb": 3.25
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q4_0.gguf",
+          "size_gb": 4.13
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q4_1.gguf",
+          "size_gb": 4.54
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q4_K.gguf",
+          "size_gb": 4.36
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q4_K_M.gguf",
+          "size_gb": 4.36
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q4_K_S.gguf",
+          "size_gb": 4.15
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q5_0.gguf",
+          "size_gb": 4.95
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q5_1.gguf",
+          "size_gb": 5.36
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q5_K.gguf",
+          "size_gb": 5.07
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q5_K_M.gguf",
+          "size_gb": 5.07
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q5_K_S.gguf",
+          "size_gb": 4.95
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q6_K.gguf",
+          "size_gb": 5.82
+        },
+        {
+          "name": "gte-Qwen2-7B-instruct.Q8_0.gguf",
+          "size_gb": 7.54
+        }
+      ],
+      "recommended_file": "gte-Qwen2-7B-instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "display_name": "Qwen3-Coder-30B-A3B-Instruct",
+      "size_gb": 17.28,
+      "downloads": 96732,
+      "likes": 400,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.91,
+      "strengths": [
+        "code_generation",
+        "reasoning",
+        "multilingual",
+        "function_calling"
+      ],
+      "fills_gap": false,
+      "gap_description": "",
+      "is_upgrade": true,
+      "upgrades_from": "deepseek-r1-distill-qwen-14b-q4_k_m",
+      "score": 53.6866,
+      "case_summary": "\u2b06\ufe0f Upgrades deepseek-r1-distill-qwen-14b-q4_k_m | \u2b50 High-quality model family | \ud83d\udce5 96,732 downloads",
+      "case_detailed": "## \ud83e\udd16 Qwen3-Coder-30B-A3B-Instruct\n**Score: 54/100** | Size: 17.3 GB\n\n### Why you should consider this model:\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `deepseek-r1-distill-qwen-14b-q4_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**3. Quality Pedigree**\n   This model comes from a highly-rated family with proven benchmark results.\n\n**4. Community Validated**\n   With 96,732 downloads, this model has been battle-tested by the community.\n\n**Strengths:** code generation, reasoning, multilingual, function calling\n\n### Resource Consideration:\n   \u26a0\ufe0f Large model (17.3 GB) - Needs adequate VRAM but delivers best quality",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:14.471219",
+      "gguf_files": [
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-IQ4_NL.gguf",
+          "size_gb": 16.12
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-IQ4_XS.gguf",
+          "size_gb": 15.25
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf",
+          "size_gb": 10.49
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q2_K_L.gguf",
+          "size_gb": 10.55
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_M.gguf",
+          "size_gb": 13.7
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_S.gguf",
+          "size_gb": 12.38
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q4_0.gguf",
+          "size_gb": 16.19
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q4_1.gguf",
+          "size_gb": 17.87
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf",
+          "size_gb": 17.28
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q4_K_S.gguf",
+          "size_gb": 16.26
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q5_K_M.gguf",
+          "size_gb": 20.23
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q5_K_S.gguf",
+          "size_gb": 19.63
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf",
+          "size_gb": 23.37
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf",
+          "size_gb": 30.25
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ1_M.gguf",
+          "size_gb": 8.97
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ1_S.gguf",
+          "size_gb": 8.3
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_M.gguf",
+          "size_gb": 10.09
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS.gguf",
+          "size_gb": 9.62
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ3_XXS.gguf",
+          "size_gb": 11.97
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q2_K_XL.gguf",
+          "size_gb": 10.98
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q3_K_XL.gguf",
+          "size_gb": 12.86
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
+          "size_gb": 16.45
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q5_K_XL.gguf",
+          "size_gb": 20.25
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q6_K_XL.gguf",
+          "size_gb": 24.53
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q8_K_XL.gguf",
+          "size_gb": 33.52
+        },
+        {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-TQ1_0.gguf",
+          "size_gb": 7.46
+        }
+      ],
+      "recommended_file": "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Qwen2.5-7B-Instruct-GGUF",
+      "display_name": "Qwen2.5-7B-Instruct",
+      "size_gb": 4.36,
+      "downloads": 133911,
+      "likes": 11,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.88,
+      "strengths": [
+        "code_generation",
+        "reasoning",
+        "multilingual",
+        "function_calling"
+      ],
+      "fills_gap": false,
+      "gap_description": "",
+      "is_upgrade": true,
+      "upgrades_from": "qwen2.5-0.5b-instruct-q5_k_m",
+      "score": 52.550549999999994,
+      "case_summary": "\u2b06\ufe0f Upgrades qwen2.5-0.5b-instruct-q5_k_m | \u2b50 High-quality model family | \ud83d\udce5 133,911 downloads",
+      "case_detailed": "## \ud83e\udd16 Qwen2.5-7B-Instruct\n**Score: 53/100** | Size: 4.4 GB\n\n### Why you should consider this model:\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `qwen2.5-0.5b-instruct-q5_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**3. Quality Pedigree**\n   This model comes from a highly-rated family with proven benchmark results.\n\n**4. Community Validated**\n   With 133,911 downloads, this model has been battle-tested by the community.\n\n**Strengths:** code generation, reasoning, multilingual, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.4 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:10.586907",
+      "gguf_files": [
+        {
+          "name": "Qwen2.5-7B-Instruct.IQ1_M.gguf",
+          "size_gb": 1.9
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.IQ1_S.gguf",
+          "size_gb": 1.77
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.IQ2_XS.gguf",
+          "size_gb": 2.3
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.IQ3_XS.gguf",
+          "size_gb": 3.12
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.IQ4_XS.gguf",
+          "size_gb": 3.93
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q2_K.gguf",
+          "size_gb": 2.81
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q3_K_L.gguf",
+          "size_gb": 3.81
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q3_K_M.gguf",
+          "size_gb": 3.55
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q3_K_S.gguf",
+          "size_gb": 3.25
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q4_K_M.gguf",
+          "size_gb": 4.36
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q4_K_S.gguf",
+          "size_gb": 4.15
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q5_K_M.gguf",
+          "size_gb": 5.07
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q5_K_S.gguf",
+          "size_gb": 4.95
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q6_K.gguf",
+          "size_gb": 5.82
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.Q8_0.gguf",
+          "size_gb": 7.54
+        },
+        {
+          "name": "Qwen2.5-7B-Instruct.fp16.gguf",
+          "size_gb": 14.19
+        }
+      ],
+      "recommended_file": "Qwen2.5-7B-Instruct.Q4_K_M.gguf"
+    },
+    {
+      "model_id": "MaziyarPanahi/Qwen2-7B-Instruct-GGUF",
+      "display_name": "Qwen2-7B-Instruct",
+      "size_gb": 4.36,
+      "downloads": 131186,
+      "likes": 11,
+      "trending_score": 0,
+      "last_modified": "",
+      "estimated_quality": 0.88,
+      "strengths": [
+        "code_generation",
+        "reasoning",
+        "multilingual",
+        "function_calling"
+      ],
+      "fills_gap": false,
+      "gap_description": "",
+      "is_upgrade": true,
+      "upgrades_from": "qwen2.5-0.5b-instruct-q5_k_m",
+      "score": 52.4143,
+      "case_summary": "\u2b06\ufe0f Upgrades qwen2.5-0.5b-instruct-q5_k_m | \u2b50 High-quality model family | \ud83d\udce5 131,186 downloads",
+      "case_detailed": "## \ud83e\udd16 Qwen2-7B-Instruct\n**Score: 52/100** | Size: 4.4 GB\n\n### Why you should consider this model:\n\n**2. Direct Upgrade**\n   This is a larger/newer version of `qwen2.5-0.5b-instruct-q5_k_m` you already have.\n   Expect better quality with similar characteristics.\n\n**3. Quality Pedigree**\n   This model comes from a highly-rated family with proven benchmark results.\n\n**4. Community Validated**\n   With 131,186 downloads, this model has been battle-tested by the community.\n\n**Strengths:** code generation, reasoning, multilingual, function calling\n\n### Resource Consideration:\n   \u2705 Lightweight (4.4 GB) - Fast loading, low VRAM",
+      "status": "pending",
+      "discovered_at": "2026-01-22T08:00:12.410964",
+      "gguf_files": [
+        {
+          "name": "Qwen2-7B-Instruct.IQ1_M.gguf",
+          "size_gb": 1.9
+        },
+        {
+          "name": "Qwen2-7B-Instruct.IQ1_S.gguf",
+          "size_gb": 1.77
+        },
+        {
+          "name": "Qwen2-7B-Instruct.IQ2_XS.gguf",
+          "size_gb": 2.3
+        },
+        {
+          "name": "Qwen2-7B-Instruct.IQ3_XS.gguf",
+          "size_gb": 3.12
+        },
+        {
+          "name": "Qwen2-7B-Instruct.IQ4_XS.gguf",
+          "size_gb": 3.93
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q2_K.gguf",
+          "size_gb": 2.81
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q3_K_L.gguf",
+          "size_gb": 3.81
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q3_K_M.gguf",
+          "size_gb": 3.55
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q3_K_S.gguf",
+          "size_gb": 3.25
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q4_K_M.gguf",
+          "size_gb": 4.36
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q4_K_S.gguf",
+          "size_gb": 4.15
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q5_K_M.gguf",
+          "size_gb": 5.07
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q5_K_S.gguf",
+          "size_gb": 4.95
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q6_K.gguf",
+          "size_gb": 5.82
+        },
+        {
+          "name": "Qwen2-7B-Instruct.Q8_0.gguf",
+          "size_gb": 7.54
+        },
+        {
+          "name": "Qwen2-7B-Instruct.fp16.gguf",
+          "size_gb": 14.19
+        }
+      ],
+      "recommended_file": "Qwen2-7B-Instruct.Q4_K_M.gguf"
+    }
+  ]
+}
