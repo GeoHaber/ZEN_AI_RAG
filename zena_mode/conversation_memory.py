@@ -176,7 +176,7 @@ class ConversationDB:
             self.conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp)")
             self.conn.execute("CREATE INDEX IF NOT EXISTS idx_summaries_session ON summaries(session_id)")
     
-    def add_message(self, msg: Message, vector: Optional[np.ndarray] = None) -> int:
+    def add_message(self, msg: Message, vector: Optional['np.ndarray'] = None) -> int:
         """Add a message to the database."""
         with self._lock:
             vector_blob = vector.tobytes() if vector is not None else None
@@ -236,7 +236,7 @@ class ConversationDB:
             self.conn.commit()
     
     def add_summary(self, session_id: str, summary: ConversationSummary, 
-                   vector: Optional[np.ndarray] = None) -> int:
+                   vector: Optional['np.ndarray'] = None) -> int:
         """Store a conversation summary."""
         with self._lock:
             vector_blob = vector.tobytes() if vector is not None else None

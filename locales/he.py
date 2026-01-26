@@ -84,7 +84,7 @@ class HebrewLocale(BaseLocale):
     ENGINE_QUIET_DESCRIPTION = "הצג רק תשובה סופית מאומתת"
     ENGINE_SCANNING_SWARM = "סורק נחיל..."
     ENGINE_EXPERTS_ONLINE = "{count} מומחים מחוברים"
-    ENGINE_STANDALONE = "מצב עצמאי"
+    ENGINE_STANDALONE = "מצב עצמאי ZenAI"
     
     # ==========================================================================
     # SYSTEM
@@ -197,7 +197,7 @@ class HebrewLocale(BaseLocale):
     # CHAT INTERFACE
     # ==========================================================================
     CHAT_PLACEHOLDER = "כתוב הודעה..."
-    CHAT_PLACEHOLDER_ZENA = "שאל אותי כל דבר..."
+    CHAT_PLACEHOLDER_ZENAI = "שאל אותי כל דבר..."
     CHAT_QUICK_ACTIONS = "פעולות מהירות"
     CHAT_CHECK_MODEL = "בדוק סטטוס מודל"
     CHAT_LATEST_LLAMA = "llama.cpp אחרון"
@@ -302,7 +302,7 @@ class HebrewLocale(BaseLocale):
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
-    WELCOME_ZENA = """👋 **ברוכים הבאים ל-ZenAI!**
+    WELCOME_ZENAI = """👋 **ברוכים הבאים ל-ZenAI!**
 
 {source_msg}. אני יכול לעזור לך עם:
 - מענה על שאלות לגבי התוכן

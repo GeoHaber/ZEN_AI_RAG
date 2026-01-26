@@ -6,14 +6,14 @@ from typing import Dict, Optional
 
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(name)s] %(levelname)s: %(message)s')
-_config_logger = logging.getLogger("NebulaConfig")
+_config_logger = logging.getLogger("ZenAIConfig")
 
 # --- Project Paths ---
 BASE_DIR: Path = Path(__file__).resolve().parent
 LOG_FILE: Path = BASE_DIR / "nebula_debug.log"
 PID_FILE: Path = BASE_DIR / ".nebula_ui.pid"
 
-# --- Load Config from JSON (Nebula Installer Interface) ---
+# --- Load Config from JSON (ZenAI Installer Interface) ---
 CONFIG_JSON = BASE_DIR / "config.json"
 _external_config: Dict = {}
 if CONFIG_JSON.exists():
@@ -94,4 +94,28 @@ DEFAULTS = {
     "CTX_SIZE": 8192,
     "BATCH_SIZE": 1024,
     "THREADS": 4
+}
+
+# --- Swarm Settings ---
+SWARM_SIZE: int = _external_config.get("swarm_size", 3)
+SWARM_ENABLED: bool = _external_config.get("swarm_enabled", False)
+
+# --- UI / Display (Emoji Set) ---
+EMOJI = {
+    'warning': '⚠️',
+    'search': '🔍',
+    'success': '✅',
+    'error': '❌',
+    'thinking': '💭',
+    'file': '📄',
+    'folder': '📁',
+    'database': '💾',
+    'web': '🌐',
+    'robot': '🤖',
+    'sparkles': '✨',
+    'check': '✓',
+    'info': 'ℹ️',
+    'timer': '⏱️',
+    'loading': '💡',
+    'expert': '🤖',
 }

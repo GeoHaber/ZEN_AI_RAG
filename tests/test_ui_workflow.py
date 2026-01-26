@@ -1,5 +1,5 @@
 """
-Comprehensive UI Workflow Tests - TDD for Zena Chat Interface
+Comprehensive UI Workflow Tests - TDD for ZenAI Chat Interface
 
 Tests the actual user workflow:
 1. Sending messages
@@ -21,7 +21,7 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from async_backend import AsyncNebulaBackend
+from async_backend import AsyncZenAIBackend
 
 
 # =============================================================================
@@ -41,7 +41,7 @@ def mock_llm_response():
 @pytest.fixture
 def backend():
     """Create a test backend instance."""
-    return AsyncNebulaBackend()  # No args - uses config
+    return AsyncZenAIBackend()  # No args - uses config
 
 
 @pytest.fixture
@@ -307,7 +307,7 @@ class TestTimeoutHandling:
     async def test_connection_refused_handling(self):
         """Test handling when LLM server is not running."""
         # Create backend and override URL to a port that's definitely not running
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         backend.api_url = "http://127.0.0.1:59999/v1/chat/completions"
         
         async with backend:

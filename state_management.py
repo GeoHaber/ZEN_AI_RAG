@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-state_management.py - Thread-safe state management for Zena
+state_management.py - Thread-safe state management for ZenAI
 """
 import threading
 import time

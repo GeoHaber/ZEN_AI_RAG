@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-security.py - Security validation utilities for Zena
+security.py - Security validation utilities for ZenAI
 """
 from pathlib import Path
 from typing import Tuple, Optional

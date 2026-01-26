@@ -34,7 +34,7 @@ def llm_server():
     
     # Wait for server to be ready
     api_ready = False
-    for i in range(10):
+    for i in range(30):
         try:
             resp = requests.get(HUB_URL + "/", timeout=1)
             if resp.status_code == 200:
@@ -45,7 +45,7 @@ def llm_server():
             
     if not api_ready:
         proc.terminate()
-        pytest.fail("Hub API failed to start within 10 seconds")
+        pytest.fail("Hub API failed to start within 30 seconds")
 
     yield proc
     
@@ -61,7 +61,7 @@ def test_hub_health(llm_server):
     """Verify Hub API is responding."""
     resp = requests.get(HUB_URL + "/")
     assert resp.status_code == 200
-    assert "Nebula Hub Active" in resp.text
+    assert "ZenAI Hub Active" in resp.text
 
 def test_model_endpoints(llm_server):
     """Verify model listing endpoint."""

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-config.py - Zena Configuration System
+config.py - ZenAI Configuration System
 Centralized configuration for all application constants
 """
 from dataclasses import dataclass, field

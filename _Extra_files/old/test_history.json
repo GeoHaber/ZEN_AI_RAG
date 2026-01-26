@@ -1,0 +1,74 @@
+{
+  "runs": [
+    {
+      "timestamp": "2026-01-23 01:26:30",
+      "success": false,
+      "duration": 3.193632125854492,
+      "fast_mode": true,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 01:30:59",
+      "success": false,
+      "duration": 3.0890495777130127,
+      "fast_mode": true,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 01:37:08",
+      "success": false,
+      "duration": 3.0362954139709473,
+      "fast_mode": true,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 01:37:57",
+      "success": false,
+      "duration": 1.4723875522613525,
+      "fast_mode": true,
+      "coverage": true
+    },
+    {
+      "timestamp": "2026-01-23 01:39:06",
+      "success": true,
+      "duration": 6.73199987411499,
+      "fast_mode": true,
+      "coverage": true
+    },
+    {
+      "timestamp": "2026-01-23 10:42:10",
+      "success": true,
+      "duration": 2.9050486087799072,
+      "fast_mode": true,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 10:43:20",
+      "success": false,
+      "duration": 2.908421754837036,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 10:47:01",
+      "success": false,
+      "duration": 152.49742364883423,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 11:10:27",
+      "success": false,
+      "duration": 114.01979470252991,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-23 11:14:03",
+      "success": false,
+      "duration": 119.43344044685364,
+      "fast_mode": false,
+      "coverage": false
+    }
+  ]
+}

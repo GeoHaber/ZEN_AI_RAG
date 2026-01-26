@@ -82,7 +82,7 @@ class RomanianLocale(BaseLocale):
     ENGINE_QUIET_DESCRIPTION = "Afișează doar răspunsul final verificat"
     ENGINE_SCANNING_SWARM = "Se scanează roiul..."
     ENGINE_EXPERTS_ONLINE = "{count} Experți Online"
-    ENGINE_STANDALONE = "Mod Independent"
+    ENGINE_STANDALONE = "Mod Independent ZenAI"
     
     # ==========================================================================
     # SYSTEM
@@ -195,7 +195,7 @@ class RomanianLocale(BaseLocale):
     # CHAT INTERFACE
     # ==========================================================================
     CHAT_PLACEHOLDER = "Scrie un mesaj..."
-    CHAT_PLACEHOLDER_ZENA = "Întreabă-mă orice..."
+    CHAT_PLACEHOLDER_ZENAI = "Întreabă-mă orice..."
     CHAT_QUICK_ACTIONS = "Acțiuni Rapide"
     CHAT_CHECK_MODEL = "Verifică Starea Modelului"
     CHAT_LATEST_LLAMA = "Ultimul llama.cpp"
@@ -300,7 +300,7 @@ class RomanianLocale(BaseLocale):
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
-    WELCOME_ZENA = """👋 **Bine ai venit la ZenAI!**
+    WELCOME_ZENAI = """👋 **Bine ai venit la ZenAI!**
 
 {source_msg}. Te pot ajuta cu:
 - Răspunsuri la întrebări despre conținut

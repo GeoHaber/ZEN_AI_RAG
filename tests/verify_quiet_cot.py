@@ -14,7 +14,7 @@ async def test_quiet_cot_logic():
     prompt = "Why is the sky blue?"
     
     chunks = []
-    async for chunk in arb.get_cot_response(prompt, "You are Zena.", verbose=False):
+    async for chunk in arb.get_cot_response(prompt, "You are ZenAI.", verbose=False):
         chunks.append(chunk)
         
     print(f"Captured {len(chunks)} stream chunks.")
@@ -38,7 +38,7 @@ async def test_quiet_cot_logic():
 
     print("\n[Test 2] Verbose Mode Validation...")
     v_chunks = []
-    async for chunk in arb.get_cot_response(prompt, "You are Zena.", verbose=True):
+    async for chunk in arb.get_cot_response(prompt, "You are ZenAI.", verbose=True):
         v_chunks.append(chunk)
     
     v_full = "".join(v_chunks)

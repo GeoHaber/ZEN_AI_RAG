@@ -7,6 +7,7 @@ import asyncio
 import httpx
 import sys
 import os
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -63,7 +64,7 @@ async def test_streaming_response():
     
     payload = {
         "messages": [
-            {"role": "system", "content": "You are Zena."},
+            {"role": "system", "content": "You are ZenAI."},
             {"role": "user", "content": "Count from 1 to 5."}
         ],
         "stream": True,
@@ -127,7 +128,7 @@ async def test_ui_endpoint():
                 
                 print(f"  ✅ Web server responding (HTTP 200)")
                 print(f"  ✅ NiceGUI/Quasar detected: {has_nicegui}")
-                print(f"  ✅ Zena content detected: {has_zena}")
+                print(f"  ✅ ZenAI content detected: {has_zena}")
                 print(f"  📊 HTML size: {len(html)} bytes")
                 return True
             else:

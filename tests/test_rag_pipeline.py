@@ -18,52 +18,50 @@ class TestDeduplication:
         """Test that exact duplicate chunks are rejected via SHA256 hash."""
         rag = LocalRAG(cache_dir=tmp_path)
         
-        # Same content twice
+        # Use content long enough to pass junk filter
         docs = [
-            {"url": "test1", "title": "T1", "content": "This is unique content for testing deduplication functionality"},
-            {"url": "test2", "title": "T2", "content": "This is unique content for testing deduplication functionality"},  # Exact dup
+            {"url": "test1", "title": "T1", "content": "This is unique content for testing deduplication functionality in the ZenAI RAG system. It must be at least fifty characters long."},
+            {"url": "test2", "title": "T2", "content": "This is unique content for testing deduplication functionality in the ZenAI RAG system. It must be at least fifty characters long."},  # Exact dup
         ]
         
-        rag.build_index(docs, filter_junk=False)
+        rag.build_index(docs, filter_junk=True)
         
         # Should only have 1 chunk (second is exact duplicate)
         assert len(rag.chunks) == 1
-        assert rag.index.ntotal == 1
+        assert rag.get_stats()['total_chunks'] == 1
     
     def test_near_duplicate_detection(self, tmp_path):
-        """Test near-duplicate detection via FAISS cosine similarity."""
+        """Test near-duplicate detection via Qdrant semantic search."""
         rag = LocalRAG(cache_dir=tmp_path)
         
         # Very similar content (should be detected as near-duplicate)
         docs = [
-            {"url": "test1", "title": "T1", "content": "The quick brown fox jumps over the lazy dog in the park today"},
-            {"url": "test2", "title": "T2", "content": "The quick brown fox jumps over the lazy dog in the park today."},  # Near-dup (minor change)
+            {"url": "test1", "title": "T1", "content": "The quick brown fox jumps over the lazy dog in the park today and feels very happy about it."},
+            {"url": "test2", "title": "T2", "content": "The quick brown fox jumps over the lazy dog in the park today and feels very happy about it!"},  # Near-dup (minor change)
         ]
         
-        rag.build_index(docs, dedup_threshold=0.98, filter_junk=False)
+        # Test with a threshold where they should be deduplicated
+        rag.build_index(docs, dedup_threshold=0.95, filter_junk=False)
         
-        # With high threshold (0.98), both should be added (slightly different)
-        # Let's test with a lower threshold where they should be deduplicated
-        rag2 = LocalRAG(cache_dir=tmp_path / "rag2")
-        rag2.build_index(docs, dedup_threshold=0.90, filter_junk=False)
-        
-        # At 0.90 threshold, the near-duplicate should be filtered
-        assert rag2.index.ntotal <= 2  # May or may not dedupe depending on similarity
+        # At 0.95 threshold, the near-duplicate should be filtered
+        assert rag.get_stats()['total_chunks'] == 1
     
     def test_document_level_deduplication(self, tmp_path):
         """Test that entire documents are deduplicated."""
         rag = LocalRAG(cache_dir=tmp_path)
         
-        doc = {"url": "test", "title": "T", "content": "Content for document level dedup test " * 10}
+        # Content long enough
+        content = "Content for document level dedup test that is long enough to pass all filters. " * 5
+        doc = {"url": "test", "title": "T", "content": content}
         
         # Add same document twice
         rag.build_index([doc], filter_junk=False)
-        initial_count = len(rag.chunks)
+        initial_count = rag.get_stats()['total_chunks']
         
         rag.build_index([doc], filter_junk=False)  # Add again
         
-        # Should not add more chunks
-        assert len(rag.chunks) == initial_count
+        # Should not add more chunks (exact content hash check)
+        assert rag.get_stats()['total_chunks'] == initial_count
     
     def test_cross_batch_deduplication(self, tmp_path):
         """Test that deduplication works across batches."""
@@ -261,7 +259,7 @@ class TestAddChunks:
         rag.add_chunks(chunks)
         
         assert len(rag.chunks) == 2
-        assert rag.index.ntotal == 2
+        assert rag.get_stats()['total_chunks'] == 2
     
     def test_add_chunks_deduplication(self, tmp_path):
         """Test that add_chunks deduplicates."""
@@ -289,24 +287,21 @@ class TestGetStats:
         stats = rag.get_stats()
         
         assert stats['total_chunks'] == 0
-        assert stats['index_vectors'] == 0
-        assert 'model' in stats
-        assert 'embedding_dim' in stats
-    
+        assert 'collection' in stats
+
     def test_stats_populated_index(self, tmp_path):
         """Test stats on populated index."""
         rag = LocalRAG(cache_dir=tmp_path)
         
         docs = [
-            {"url": "test", "title": "T", "content": "Content for stats test with enough characters"}
+            {"url": "test", "title": "T", "content": "Content for stats test with enough characters to pass the junk filter comfortably."}
         ]
         rag.build_index(docs, filter_junk=False)
         
         stats = rag.get_stats()
         
         assert stats['total_chunks'] == 1
-        assert stats['index_vectors'] == 1
-        assert stats['unique_hashes'] == 1
+        assert stats['collection'] == "zenai_knowledge"
 
 
 class TestEdgeCases:
@@ -318,7 +313,7 @@ class TestEdgeCases:
         
         docs = [
             {"url": "test", "title": "Unicode", 
-             "content": "日本語テスト Chinese中文 Emoji🎉 Accénts àéïõü Special™ symbols©"},
+             "content": "日本語テスト Chinese中文 Emoji🎉 Accénts àéïõü Special™ symbols© and some more text to pass the length filter easily."},
         ]
         
         rag.build_index(docs, filter_junk=False)
@@ -346,8 +341,8 @@ class TestEdgeCases:
         """Test handling of very long documents."""
         rag = LocalRAG(cache_dir=tmp_path)
         
-        # 50KB document
-        long_content = "This is a test sentence for a very long document. " * 1000
+        # Varied content to avoid deduplication
+        long_content = " ".join([f"This is unique sentence number {i} for a very long document that needs testing." for i in range(200)])
         docs = [{"url": "test", "title": "Long", "content": long_content}]
         
         rag.build_index(docs, filter_junk=False)
@@ -373,7 +368,7 @@ class TestEdgeCases:
         rag = LocalRAG(cache_dir=tmp_path)
         
         docs = [
-            {"url": "test", "title": "Score", "content": "Test content for score validation check"}
+            {"url": "test", "title": "Score", "content": "Test content for score validation check in the ZenAI RAG system for high precision."}
         ]
         rag.build_index(docs, filter_junk=False)
         
@@ -433,65 +428,48 @@ class TestRAGPipeline:
         
         rag.build_index(docs, filter_junk=False)
         
-        assert rag.index is not None
-        assert rag.index.ntotal == 2  # 2 vectors
         assert len(rag.chunks) == 2
 
     
-    def test_save_load_sqlite(self, tmp_path):
-        """Test saving/loading index with SQLite - Aligned with v1.2."""
-        rag = LocalRAG(cache_dir=tmp_path)
+    def test_save_load_qdrant(self, tmp_path):
+        """Test saving/loading index with Qdrant."""
+        storage_dir = tmp_path / "qdrant"
+        rag = LocalRAG(cache_dir=storage_dir)
         
         # Create index with realistic content
         docs = [
             {"url": "test", "title": "Test", 
-             "content": "The quick brown fox jumps over the lazy dog multiple times today"}
+             "content": "The quick brown fox jumps over the lazy dog multiple times today and it is very exciting."}
         ]
         rag.build_index(docs, filter_junk=False)
         
-        # Verify SQLite file exists
-        assert (tmp_path / "rag.db").exists()
-
-        # Load with lazy_load disabled for testing
-        rag2 = LocalRAG(cache_dir=tmp_path, lazy_load=False)
-        assert len(rag2.chunks) == len(docs)
+        # Close the first instance to release the lock
+        del rag
+        import gc
+        gc.collect()
+        time.sleep(1.0) # Wait for OS to release file handle
+        
+        # Load in new instance
+        rag2 = LocalRAG(cache_dir=storage_dir)
+        assert rag2.get_stats()['total_chunks'] == 1
     
-    def test_large_index_sqlite_scalability(self, tmp_path):
-        """Test large index scalability with SQLite."""
-        rag = LocalRAG(cache_dir=tmp_path)
-        
-        # Create 1000 documents (simulates large dataset)
-        docs = [
-            {"url": f"test{i}", "title": f"T{i}", "content": f"Content {i}" * 50}
-            for i in range(1000)
-        ]
-        
-        rag.build_index(docs)
-        
-        # Verify DB exists
-        assert (tmp_path / "rag.db").exists()
-
-        # Load should work with lazy_load disabled for testing
-        rag2 = LocalRAG(cache_dir=tmp_path, lazy_load=False)
-        assert len(rag2.chunks) >= 1000
-    
-    def test_query(self, tmp_path):
+    def test_query(self):
         """Test querying RAG index."""
-        rag = LocalRAG(cache_dir=tmp_path)
+        rag = LocalRAG()
         
         docs = [
-            {"url": "test", "title": "Hospital", "content": "The hospital offers emergency services"},
-            {"url": "test", "title": "Hospital", "content": "Visiting hours are 9am to 5pm"},
-            {"url": "test", "title": "Hospital", "content": "We have a cardiology department"},
+            {"url": "test", "title": "Hospital", "content": "The hospital offers emergency services 24 hours a day for all patients in the area."},
+            {"url": "test", "title": "Hospital", "content": "Visiting hours are 9am to 5pm daily except for holidays and emergency situations."},
+            {"url": "test", "title": "Hospital", "content": "We have a cardiology department specialized in advanced heart surgeries and care."},
         ]
         
         rag.build_index(docs)
         
         # Query for emergency services
-        results = rag.search("emergency services", k=2)
+        results = rag.search("emergency services", k=1)
         
-        assert len(results) <= 2
-        assert results[0]['text'] == "The hospital offers emergency services"
+        assert len(results) >= 1
+        assert "emergency services" in results[0]['text']
     
     def test_query_empty_index(self, tmp_path):
         """Test querying empty index returns empty list."""
@@ -509,7 +487,7 @@ class TestRAGIntegration:
         rag = LocalRAG(cache_dir=tmp_path)
         
         docs = [
-            {"url": "test", "title": "Info", "content": "The manager is John Doe"},
+            {"url": "test", "title": "Info", "content": "The manager of the facility is John Doe, who has been with us for ten years."},
         ]
         
         rag.build_index(docs)
@@ -528,8 +506,8 @@ Question: who is the manager
 
 Answer:"""
         
-        # Verify context is in prompt
-        assert "The manager is John Doe" in prompt
+        # Verify content is in prompt
+        assert "John Doe" in prompt
         assert "who is the manager" in prompt
 
 

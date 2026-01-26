@@ -1,0 +1,60 @@
+{
+  "runs": [
+    {
+      "timestamp": "2026-01-25 11:44:10",
+      "success": false,
+      "duration": 149.4943971633911,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 11:52:11",
+      "success": false,
+      "duration": 101.0732262134552,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 12:22:59",
+      "success": false,
+      "duration": 127.77360320091248,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 12:25:56",
+      "success": false,
+      "duration": 117.15513682365417,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 14:29:04",
+      "success": false,
+      "duration": 104.6267237663269,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 15:12:31",
+      "success": false,
+      "duration": 104.63553714752197,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 15:15:15",
+      "success": false,
+      "duration": 122.71007871627808,
+      "fast_mode": false,
+      "coverage": false
+    },
+    {
+      "timestamp": "2026-01-25 15:26:45",
+      "success": false,
+      "duration": 101.76922917366028,
+      "fast_mode": false,
+      "coverage": false
+    }
+  ]
+}
