@@ -1,55 +1,55 @@
 {
-    "timestamp": 1769524397.8099766,
-    "avg_quality_score": 0.22519587114220485,
-    "avg_latency": 3.107312351465225,
+    "timestamp": 1769627901.9416335,
+    "avg_quality_score": 0.25858816219260916,
+    "avg_latency": 2.5539725720882416,
     "detailed_results": [
         {
             "question": "What is ZenAI?",
-            "response": "ZenAI is an intelligent assistant powered by Qwen, a large language model created by Alibaba Cloud. It is designed to help users with a wide range of tasks, providing information, answering questions, and offering guidance on various topics.",
-            "score": 0.8638488054275513,
-            "duration": 6.693584442138672
+            "response": "ZenAI is an intelligent assistant developed by Alibaba Cloud, leveraging the advanced natural language processing capabilities of the Qwen model to provide users with quick, efficient, and accurate information retrieval and assistance. It is designed to help users solve problems, answer questions, and perform tasks more effectively.",
+            "score": 0.832517147064209,
+            "duration": 4.643706321716309
         },
         {
             "question": "How many experts can run in a swarm?",
             "response": "\u274c Server returned 400: ",
             "score": -0.008027935400605202,
-            "duration": 0.003519773483276367
+            "duration": 0.005233049392700195
         },
         {
             "question": "What is RAG?",
-            "response": "RAG stands for Retrieval-Augmented Generation. It's a framework that combines the strengths of information retrieval and generative models to improve the quality and relevance of text generation tasks. In RAG, an information retrieval component first retrieves relevant documents or passages from a large corpus based on the input query, and then a generative model like BERT or GPT uses these retrieved pieces to produce the final output. This approach helps in generating more accurate and contextually relevant responses by leveraging both the structured information from retrieval and the flexibility of generation.",
-            "score": 0.6587567329406738,
-            "duration": 8.401245594024658
+            "response": "RAG stands for Retrieval-Augmented Generation. It's a method that combines information retrieval and generation to improve the quality of generated text. This approach uses a retriever to fetch relevant documents or passages from a large corpus based on a query, and then a generator to produce responses using these retrieved pieces. The goal is to leverage the strengths of both approaches: retrieval ensures relevance, while generation provides fluency and detail.",
+            "score": 0.6854251623153687,
+            "duration": 6.714018106460571
         },
         {
             "question": "Who created Qwen?",
             "response": "\u274c Server returned 400: ",
             "score": 0.06544312089681625,
-            "duration": 0.004525423049926758
+            "duration": 0.0050792694091796875
         },
         {
             "question": "If ZenAI 2.0 has 5 pillars and we finish 3, how many are left?",
             "response": "\u274c Server returned 400: ",
             "score": 0.0020847520790994167,
-            "duration": 0.002573728561401367
+            "duration": 0.0042552947998046875
         },
         {
             "question": "Which file handles the multi-LLM consensus logic?",
-            "response": "\u274c Server returned 400: ",
-            "score": -0.037275053560733795,
-            "duration": 0.004830837249755859
+            "response": "I'm sorry, but I don't have specific information on which file handles the multi-LLM consensus logic in any particular system or application. The structure of such systems can vary widely depending on their design and implementation.\n\nIf you're working with a specific software or framework that uses multi-LLM (Large Language Model) consensus, I would recommend checking the documentation for that software or reaching out to the maintainers for more detailed information.\n\nIf you provide more context or specify the system you're referring to, I might be able to offer more targeted assistance.",
+            "score": 0.48154908418655396,
+            "duration": 9.049433469772339
         },
         {
             "question": "Explain the benefit of latency-aware routing in one sentence.",
             "response": "\u274c Server returned 400: ",
             "score": 0.06147371232509613,
-            "duration": 0.004527091979980469
+            "duration": 0.006084918975830078
         },
         {
             "question": "What happens if an expert provides a response with low fact-check score?",
-            "response": "If an expert provides a response with a low fact-check score, it means that the information provided may not be entirely accurate or reliable. It's important to verify such responses using additional sources to ensure their correctness before accepting them as valid. In professional settings, it's advisable to cross-reference information and consult multiple experts if possible to maintain high standards of accuracy and reliability.",
-            "score": 0.1952628344297409,
-            "duration": 9.74369192123413
+            "response": "\u274c Server returned 400: ",
+            "score": -0.0517597459256649,
+            "duration": 0.003970146179199219
         }
     ]
 }

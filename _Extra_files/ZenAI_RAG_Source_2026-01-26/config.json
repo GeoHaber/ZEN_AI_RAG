@@ -1,0 +1,15 @@
+{
+    "model_dir": "C:\\AI\\Models",
+    "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
+    "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+    "zena_mode": {
+        "enabled": true,
+        "language": "auto",
+        "rag_source": "website",
+        "website_url": "https://www.linkedin.com/in/georgehaber/",
+        "voice_enabled": true,
+        "popup_position": "bottom-right",
+        "optimal_experts": 5,
+        "network_access": false
+    }
+}

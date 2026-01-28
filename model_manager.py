@@ -8,7 +8,9 @@ from typing import List, Dict, Optional
 from huggingface_hub import hf_hub_download, list_repo_files
 from tqdm import tqdm
 
-from config import BASE_DIR, MODEL_DIR
+from config_system import config
+MODEL_DIR = config.MODEL_DIR
+BASE_DIR = config.BASE_DIR
 from utils import logger
 
 # Enable Fast Downloads (Rust-based)

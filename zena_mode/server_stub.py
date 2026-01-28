@@ -12,7 +12,9 @@ from typing import Tuple
 
 # Use project config defaults so shim/tests don't need to pass ports
 try:
-    from config import HOST, PORTS
+    from config_system import config
+    HOST = config.host
+    PORTS = {"MGMT_API": config.mgmt_port}
 except Exception:
     HOST = "127.0.0.1"
     PORTS = {"MGMT_API": 8002}

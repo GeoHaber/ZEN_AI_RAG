@@ -13,7 +13,7 @@ WHY:
     - Design decision: Standalone tests enable fast, reliable CI/CD
 
 HOW:
-    1. Mock backend services (AsyncNebulaBackend, LocalRAG, SwarmArbitrator)
+    1. Mock backend services (AsyncZenAIBackend, LocalRAG, SwarmArbitrator)
     2. Create minimal UI instances for each component
     3. Simulate user interactions (clicks, toggles, input)
     4. Assert expected state changes and visual updates

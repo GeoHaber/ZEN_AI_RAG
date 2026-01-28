@@ -12,6 +12,7 @@ from collections import Counter
 from math import log2
 from .chunker import TextChunker, ChunkerConfig
 from .profiler import profile_execution, profile_async_execution
+from config_system import config
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class LocalRAG:
     """
     
     def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or Path("./rag_storage")
+        self.cache_dir = cache_dir or config.BASE_DIR / "rag_storage"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
         self.collection_name = "zenai_knowledge"
@@ -551,7 +552,14 @@ def generate_rag_response(
         yield "I don't have enough information in my knowledge base."
         return
     
-    context_text = "\n\n".join([f"Source [{i+1}]: {c['text']}" for i, c in enumerate(context_chunks)])
+    MAX_CTX_CHARS = 12000 # Approx 3000 tokens
+    context_text = ""
+    for i, c in enumerate(context_chunks):
+        chunk_text = f"Source [{i+1}]: {c['text']}\n\n"
+        if len(context_text) + len(chunk_text) > MAX_CTX_CHARS:
+            break
+        context_text += chunk_text
+    
     prompt = f"Context:\n{context_text}\n\nQuestion: {query}\n\nAnswer mentioning sources:"
     
     for chunk in llm_backend.send_message(prompt):

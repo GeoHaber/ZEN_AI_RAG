@@ -190,6 +190,7 @@ class RomanianLocale(BaseLocale):
     RAG_START_SCAN = "Începe Scanarea"
     RAG_ANSWERED_FROM_SOURCE = "**🔍 Răspuns din Sursa de Date**"
     RAG_VIEW_SOURCES = "📂 Vezi Datele Sursă"
+    RAG_LABEL = "Context Local"
     
     # ==========================================================================
     # CHAT INTERFACE

@@ -5,7 +5,6 @@ security.py - Security validation utilities for ZenAI
 from pathlib import Path
 from typing import Tuple, Optional
 from config_system import config, EMOJI
-from config import BASE_DIR, MODEL_DIR
 import os
 
 def validate_path(user_path: str, allowed_roots: Optional[list[Path]] = None) -> Path:
@@ -13,7 +12,7 @@ def validate_path(user_path: str, allowed_roots: Optional[list[Path]] = None) ->
 
     - Expands user (~), resolves symlinks where possible, and ensures the
       resulting path is contained within one of the allowed_roots (by default
-      `BASE_DIR` and `MODEL_DIR`).
+      `config.BASE_DIR` and `config.MODEL_DIR`).
     - Rejects obvious system paths.
     """
     if not user_path:
@@ -27,7 +26,7 @@ def validate_path(user_path: str, allowed_roots: Optional[list[Path]] = None) ->
 
     # Default allowed roots
     if allowed_roots is None:
-        allowed_roots = [Path(BASE_DIR).resolve(), Path(MODEL_DIR).resolve()]
+        allowed_roots = [Path(config.BASE_DIR).resolve(), Path(config.MODEL_DIR).resolve()]
 
     # Reject system paths explicitly
     sys_roots = [Path('/usr'), Path('/bin'), Path('/etc'), Path('/Windows'), Path('/Program Files'), Path('/System')]

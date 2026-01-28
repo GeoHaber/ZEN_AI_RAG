@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 import time
 import logging
 
-from config import BASE_DIR
+from config_system import config
 from zena_mode.resource_manager import resource_manager
 
 logger = logging.getLogger('BatchManager')
@@ -15,13 +15,13 @@ logger = logging.getLogger('BatchManager')
 class BatchManager:
     """Simple persistent job queue for batch jobs.
 
-    - Jobs persisted to `jobs.json` in BASE_DIR
+    - Jobs persisted to `jobs.json` in config.BASE_DIR
     - Uses resource_manager to run blocking tasks in threads
     """
 
     def __init__(self, path: Path = None):
         self._lock = threading.RLock()
-        self.path = path or (BASE_DIR / 'jobs.json')
+        self.path = path or (config.BASE_DIR / 'jobs.json')
         self._jobs: Dict[str, Dict[str, Any]] = {}
         self._load()
 

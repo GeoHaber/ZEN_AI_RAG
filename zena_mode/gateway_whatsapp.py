@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 # --- Security: Whitelist ---
 # Numbers should be in E.164 format: '+1234567890'
-ALLOWED_NUMBERS = config.get("whatsapp_whitelist", [])
+ALLOWED_NUMBERS = getattr(config, "whatsapp_whitelist", [])
 
 async def get_zenai_response(query: str) -> str:
     """Helper to get non-streaming response for WhatsApp (MMS/SMS limit)."""
@@ -56,7 +56,7 @@ def whatsapp_webhook():
 
 def run_whatsapp_gateway():
     """Start the Flask server for WhatsApp webhooks."""
-    port = config.get("whatsapp_port", 5001)
+    port = getattr(config, "whatsapp_port", 5001)
     logger.info(f"🚀 WhatsApp Gateway (Webhook) is running on port {port}...")
     app.run(port=port)
 

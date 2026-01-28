@@ -5,14 +5,14 @@ Tests async HTTP streaming and error handling
 """
 import pytest
 import asyncio
-from async_backend import AsyncNebulaBackend
+from async_backend import AsyncZenAIBackend
 
-class TestAsyncNebulaBackend:
-    """Test AsyncNebulaBackend class."""
+class TestAsyncZenAIBackend:
+    """Test AsyncZenAIBackend class."""
     
     def test_initialization(self):
         """Test backend initializes correctly."""
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         assert backend.client is None  # Not created until context manager
         assert "8001" in backend.api_url
@@ -20,7 +20,7 @@ class TestAsyncNebulaBackend:
     @pytest.mark.asyncio
     async def test_context_manager(self):
         """Test async context manager creates/closes client."""
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         assert backend.client is None
         
@@ -33,7 +33,7 @@ class TestAsyncNebulaBackend:
     @pytest.mark.asyncio
     async def test_send_message_async_structure(self):
         """Test send_message_async returns async generator."""
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         # Verify it's an async generator function
         import inspect
@@ -44,7 +44,7 @@ class TestAsyncNebulaBackend:
     
     def test_backend_has_required_methods(self):
         """Test backend has all required methods (CRITICAL - catches AttributeError bug)."""
-        backend = AsyncNebulaBackend()
+        backend = AsyncZenAIBackend()
         
         # Must have send_message_async
         assert hasattr(backend, 'send_message_async')

@@ -18,7 +18,4 @@ class EnglishLocale(BaseLocale):
     LANGUAGE_NAME = "English"
     LANGUAGE_NATIVE = "English"
     
-    # Any English-specific overrides can go here
-    # For example, regional variants:
-    # APP_NAME = "ZenAI"  # US English
-    # APP_NAME = "ZenAI"  # UK English could be different
+    RAG_LABEL = "Local Context"

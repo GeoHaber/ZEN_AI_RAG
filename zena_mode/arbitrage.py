@@ -16,7 +16,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, AsyncGenerator, Dict
 import os
-from config import BASE_DIR, SWARM_ENABLED, SWARM_SIZE, EMOJI, PORTS, HOST
+from config_system import config, EMOJI
 from utils import safe_print, logger
 from .profiler import monitor
 
@@ -37,7 +37,7 @@ class AgentPerformanceTracker:
     """Track agent accuracy and reliability over time using SQLite."""
     def __init__(self, db_path: str = None):
         if db_path is None:
-            db_path = str(BASE_DIR / "agent_performance.db")
+            db_path = str(config.BASE_DIR / "agent_performance.db")
         self.db_path = db_path
         self._init_db()
 
@@ -146,8 +146,8 @@ class SwarmArbitrator:
     """
     
     def __init__(self, ports: List[int] = None):
-        # Default scan range (8001 main, 8005-8012 experts)
-        self.scan_ports = [PORTS["LLM_API"]] + list(range(8005, 8013))
+        # Default scan range (main port + experts in 8005-8012 range)
+        self.scan_ports = [config.llm_port] + list(range(8005, 8013))
         self.ports = []
         self.endpoints = []
         self.performance_tracker = AgentPerformanceTracker()
@@ -158,18 +158,17 @@ class SwarmArbitrator:
         
         if ports:
             self.ports = ports
-            self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in ports]
+            self.endpoints = [f"http://{config.host}:{p}/v1/chat/completions" for p in ports]
         # Backwards compatibility: if no ports provided, perform a synchronous
         # discovery using a blocking HTTP client to avoid creating an event loop
-        # during import (which breaks pytest-asyncio). This keeps tests and
-        # older call sites working without using `asyncio.run` here.
+        # during import (which breaks pytest-asyncio).
         if not ports:
             try:
                 self.discover_swarm_sync()
             except Exception:
                 # If anything goes wrong, fall back to using main port only
-                self.ports = [PORTS["LLM_API"]]
-                self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
+                self.ports = [config.llm_port]
+                self.endpoints = [f"http://{config.host}:{config.llm_port}/v1/chat/completions"]
 
     def discover_swarm_sync(self):
         """Synchronous version of swarm discovery using blocking httpx.Client.
@@ -179,31 +178,31 @@ class SwarmArbitrator:
         import httpx as _httpx
         self.ports = []
 
-        if not SWARM_ENABLED:
-            self.ports = [PORTS["LLM_API"]]
-            self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
+        if not config.swarm_enabled:
+            self.ports = [config.llm_port]
+            self.endpoints = [f"http://{config.host}:{config.llm_port}/v1/chat/completions"]
             return
 
         try:
             with _httpx.Client() as client:
                 for p in self.scan_ports:
                     try:
-                        resp = client.get(f"http://{HOST}:{p}/health", timeout=1.0)
+                        resp = client.get(f"http://{config.host}:{p}/health", timeout=1.0)
                         if resp.status_code in (200, 503):
                             self.ports.append(p)
                     except Exception:
                         continue
 
-            if SWARM_SIZE > 0 and len(self.ports) > SWARM_SIZE:
-                self.ports = [self.ports[0]] + self.ports[1:SWARM_SIZE]
+            if config.swarm_enabled and len(self.ports) > 8: # Arbitrary expert cap
+                self.ports = [self.ports[0]] + self.ports[1:9]
 
-            self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in self.ports]
+            self.endpoints = [f"http://{config.host}:{p}/v1/chat/completions" for p in self.ports]
             logger.debug(f"[Arbitrator] (sync) Live Swarm discovered on ports: {self.ports}")
         except Exception as e:
             logger.error(f"[Arbitrator] Sync discovery failed: {e}")
             # Fall back to main port to keep behavior predictable
-            self.ports = [PORTS["LLM_API"]]
-            self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
+            self.ports = [config.llm_port]
+            self.endpoints = [f"http://{config.host}:{config.llm_port}/v1/chat/completions"]
 
     async def warmup(self):
         """Pre-load NLI model."""
@@ -220,9 +219,9 @@ class SwarmArbitrator:
         self.ports = []
         
         # If swarm is globally disabled in config, only use the main model
-        if not SWARM_ENABLED:
-            self.ports = [PORTS["LLM_API"]]
-            self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
+        if not config.swarm_enabled:
+            self.ports = [config.llm_port]
+            self.endpoints = [f"http://{config.host}:{config.llm_port}/v1/chat/completions"]
             logger.debug("[Arbitrator] Swarm disabled in config. Using main port only.")
             return
 
@@ -237,16 +236,11 @@ class SwarmArbitrator:
                 if is_live and not isinstance(is_live, Exception):
                     self.ports.append(port)
         
-        # Limit to SWARM_SIZE if specified
-        if SWARM_SIZE > 0 and len(self.ports) > SWARM_SIZE:
-             # Keep first port (usually 8001) and then top N-1 experts
-             self.ports = [self.ports[0]] + self.ports[1:SWARM_SIZE]
-
-        self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in self.ports]
+        self.endpoints = [f"http://{config.host}:{p}/v1/chat/completions" for p in self.ports]
         
         # Sort ports by latency (improvement 16)
         self.ports.sort(key=lambda p: self.latencies.get(p, 999))
-        self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in self.ports]
+        self.endpoints = [f"http://{config.host}:{p}/v1/chat/completions" for p in self.ports]
         
         logger.debug(f"[Arbitrator] Live Swarm discovered (sorted by latency): {self.ports}")
 
@@ -254,7 +248,7 @@ class SwarmArbitrator:
         """Check if a port is live and measure latency."""
         start = time.time()
         try:
-            resp = await client.get(f"http://{HOST}:{port}/health", timeout=1.0)
+            resp = await client.get(f"http://{config.host}:{port}/health", timeout=1.0)
             latency = time.time() - start
             if resp.status_code in [200, 503]:
                 self.latencies[port] = latency
@@ -640,7 +634,7 @@ class SwarmArbitrator:
                 yield f"⚖️ **Arbitrage Hub**: Synthesizing ({confidence} Consensus)...\n\n"
 
             # 4. Arbitrage Logic (Synthesis in Memory)
-            referee_endpoint = self.endpoints[0] if self.endpoints else f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"
+            referee_endpoint = self.endpoints[0] if self.endpoints else f"http://{config.host}:{config.llm_port}/v1/chat/completions"
 
             # --- TERMINAL TRACE: DECISION ---
             safe_print("\n[DECISION MATRIX]")

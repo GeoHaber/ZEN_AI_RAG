@@ -23,8 +23,8 @@ def get_help_rag():
     global _help_rag
     if _help_rag is None:
         try:
-            from config import BASE_DIR
-            rag_cache = BASE_DIR / "rag_cache"
+            from config_system import config
+            rag_cache = config.BASE_DIR / "rag_cache"
             _help_rag = LocalRAG(cache_dir=rag_cache)
         except Exception as e:
             logger.error(f"[HelpSystem] Failed to initialize RAG: {e}")
@@ -111,5 +111,5 @@ def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
 
 if __name__ == "__main__":
     # Test run
-    from config import BASE_DIR
-    index_internal_docs(BASE_DIR)
+    from config_system import config
+    index_internal_docs(config.BASE_DIR)

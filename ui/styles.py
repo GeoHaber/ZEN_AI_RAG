@@ -87,7 +87,8 @@ class Styles:
     # ==========================================================================
     CHAT_BUBBLE_USER = "bg-blue-600 text-white"
     CHAT_BUBBLE_AI = "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-slate-800 dark:text-slate-100"
-    CHAT_BUBBLE_RAG = "bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-slate-800 dark:text-slate-100"
+    CHAT_BUBBLE_RAG = "bg-[#E0F7FA] dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-slate-800 dark:text-slate-100"
+    LABEL_RAG = "bg-green-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold uppercase mr-2"
     CHAT_BUBBLE_BASE = "px-3 md:px-4 py-2 md:py-3 rounded-2xl max-w-[92%] md:max-w-[85%] text-[13px] md:text-[14px] leading-relaxed shadow-sm"
     
     CHAT_ROW_USER = "w-full flex justify-end mb-3 md:mb-4"

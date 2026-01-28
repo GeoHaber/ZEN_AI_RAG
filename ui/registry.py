@@ -34,6 +34,9 @@ class UI_IDS:
     BTN_DOWNLOAD_MODEL = "ui-btn-download-model"
     BTN_UPDATE_ENGINE = "ui-btn-update-engine"
     BTN_CLOSE_DIALOG = "ui-btn-close-dialog"
+    BTN_SWARM = "ui-btn-swarm-manager"
+    BTN_SCAN = "ui-btn-scan-trigger"
+    BTN_JUDGE = "ui-btn-intelligence-judge"
     
     # --- Batch Analysis ---
     BTN_BATCH_MENU = "ui-btn-batch-menu"
@@ -52,6 +55,9 @@ UI_METADATA = {
     UI_IDS.BTN_BATCH_MENU: "Expand the Batch Analysis and Code Review section.",
     UI_IDS.BTN_BATCH_START: "Start a background analysis job for the selected files.",
     UI_IDS.BTN_CLOSE_DIALOG: "Close the currently active modal or dialog window.",
+    UI_IDS.BTN_SWARM: "Open the Swarm Control Center.",
+    UI_IDS.BTN_SCAN: "Manual trigger for RAG scanning.",
+    UI_IDS.BTN_JUDGE: "Open the Intelligence Judge quality tab.",
 }
 
 # List of all IDs that should be "poked" during a monkey test

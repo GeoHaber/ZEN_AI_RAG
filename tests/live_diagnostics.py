@@ -10,7 +10,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from async_backend import AsyncZenAIBackend
-from config import HOST, PORTS
+from config_system import config
+import model_manager
 from ui.registry import UI_IDS, MONKEY_TARGETS, UI_METADATA
 
 async def check_service(name, url, timeout=2.0):
@@ -140,9 +141,9 @@ async def run_diagnostics(monkey_mode=False):
     
     # 1. Check Infrastructure
     infra_healthy = True
-    infra_healthy &= await check_service("Engine API", f"http://{HOST}:{PORTS['LLM_API']}/health")
-    infra_healthy &= await check_service("Hub API", f"http://{HOST}:8002/models/available")
-    infra_healthy &= await check_service("UI Server", f"http://{HOST}:8080")
+    infra_healthy &= await check_service("Engine API", f"http://{config.host}:{config.llm_port}/health")
+    infra_healthy &= await check_service("Hub API", f"http://{config.host}:{config.mgmt_port}/models/available")
+    infra_healthy &= await check_service("UI Server", f"http://{config.host}:8080")
     
     if not infra_healthy:
         print("\n😱 SYSTEM UNHEALTHY: Some core services are offline.")

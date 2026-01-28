@@ -12,7 +12,7 @@ import json
 import random
 
 from async_backend import AsyncZenAIBackend
-from config import BASE_DIR
+from config_system import config
 from locales import get_locale
 
 logger = logging.getLogger('BatchEngine')

@@ -9,7 +9,7 @@ logger = logging.getLogger("TelegramGateway")
 
 # --- Security: Whitelist ---
 # This should be populated from config or secrets.json
-ALLOWED_USER_IDS = config.get("telegram_whitelist", [])
+ALLOWED_USER_IDS = getattr(config, "telegram_whitelist", [])
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command."""
@@ -74,7 +74,7 @@ async def handle_telegram_message(update: Update, context: ContextTypes.DEFAULT_
 
 def run_gateway():
     """Blocking call to start the bot (used in a separate thread/process)."""
-    token = config.get("telegram_token")
+    token = getattr(config, "telegram_token", None)
     if not token:
         logger.warning("Telegram token missing. Gateway disabled.")
         return

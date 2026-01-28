@@ -14,19 +14,19 @@ try:
     import websockets
 except ImportError:
     websockets = None
-
 # --- Shared Imports ---
-from utils import logger, trace_log, kill_process_by_name, kill_process_by_port, kill_zombie_process, HardwareProfiler, ensure_package, safe_print, kill_process_tree, is_port_active
-from config import BASE_DIR, MODEL_DIR, BIN_DIR, PORTS, HOST, DEFAULTS
-
-# Ensure critical dependencies
+from utils import (
+    logger, HardwareProfiler, ensure_package, safe_print, 
+    ProcessManager, is_port_active, kill_process_by_name
+)
+from config_system import config
 ensure_package("psutil")
 import psutil
 
 
-# Global Variables
-MODEL_PATH = MODEL_DIR / "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
-SERVER_EXE = BIN_DIR / "llama-server.exe"
+# Global Variables (Derived from Config)
+MODEL_PATH = config.MODEL_DIR / config.default_model
+SERVER_EXE = config.BIN_DIR / "llama-server.exe"
 
 # Suppress HuggingFace/Windows symlink warnings
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
@@ -224,15 +224,33 @@ class ZenAIOrchestrator(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/voice/lab':
              # Serve index.html or redirect
+             lab_path = config.BASE_DIR / "experimental_voice_lab" / "templates" / "index.html"
+             if not lab_path.exists():
+                 self.send_json_response(404, {"error": "Voice Lab template not found"})
+                 return
+             with open(lab_path, 'r', encoding='utf-8') as f:
+                 html = f.read()
              self.send_response(200)
              self.send_header('Content-Type', 'text/html')
              self.end_headers()
-             lab_path = BASE_DIR / "experimental_voice_lab" / "templates" / "index.html"
-             if lab_path.exists():
-                 with open(lab_path, 'rb') as f:
+             self.wfile.write(html.encode('utf-8'))
+             
+        elif self.path.startswith('/voice/static/'):
+             file_path = config.BASE_DIR / self.path.lstrip('/')
+             if file_path.exists() and file_path.is_file():
+                 self.send_response(200)
+                 self.send_header('Access-Control-Allow-Origin', '*')
+                 # Determine MIME type based on extension
+                 mime_type, _ = mimetypes.guess_type(file_path)
+                 if mime_type:
+                     self.send_header('Content-Type', mime_type)
+                 else:
+                     self.send_header('Content-Type', 'application/octet-stream') # Default
+                 self.end_headers()
+                 with open(file_path, 'rb') as f:
                      self.wfile.write(f.read())
              else:
-                 self.wfile.write(b"Voice Lab not found or not built.")
+                 self.send_error(404, "Static file not found")
              return
 
         # Handle /updates/check first
@@ -421,7 +439,7 @@ class ZenAIOrchestrator(BaseHTTPRequestHandler):
             try:
                 content_length = int(self.headers.get('Content-Length', 0))
                 filename = os.path.basename(self.headers.get('X-Filename', 'upload.bin'))
-                UPLOAD_DIR = BASE_DIR / "uploads"
+                UPLOAD_DIR = config.BASE_DIR / "uploads"
                 UPLOAD_DIR.mkdir(exist_ok=True)
                 with open(UPLOAD_DIR / filename, "wb") as f:
                     f.write(self.rfile.read(content_length))
@@ -517,15 +535,15 @@ def scale_swarm(target_count: int):
             to_remove = current_count - target_count
             for _ in range(to_remove):
                 port, proc = EXPERT_PROCESSES.popitem()
-                kill_process_tree(proc.pid)
+                ProcessManager.kill_tree(proc.pid)
 
 def start_hub():
     """Start the Management API (Hub)."""
     try:
-        safe_print(f"[*] Attempting to start Hub API on port {PORTS['MGMT_API']}...")
-        hub = ThreadingHTTPServer(('127.0.0.1', PORTS["MGMT_API"]), ZenAIOrchestrator)
+        safe_print(f"[*] Attempting to start Hub API on port {config.mgmt_port}...")
+        hub = ThreadingHTTPServer(('127.0.0.1', config.mgmt_port), ZenAIOrchestrator)
         threading.Thread(target=hub.serve_forever, daemon=True).start()
-        safe_print(f"[*] Hub API listening on Port {PORTS['MGMT_API']}")
+        safe_print(f"[*] Hub API listening on Port {config.mgmt_port}")
     except Exception as e:
         safe_print(f"❌ Hub Startup Failed: {e}")
         logger.error(f"Hub Startup Failed: {e}")
@@ -568,47 +586,50 @@ def start_server() -> NoReturn:
     
     if not MODEL_PATH.exists():
         # Try to find any gguf in model dir
-        ggufs = list(MODEL_DIR.glob("*.gguf"))
+        ggufs = list(config.MODEL_DIR.glob("*.gguf"))
         if ggufs:
             MODEL_PATH = ggufs[0]
             logger.info(f"[Engine] Default model missing, using discovered: {MODEL_PATH.name}")
         else:
-            safe_print(f"❌ ERROR: No .gguf models found in {MODEL_DIR}")
+            safe_print(f"❌ ERROR: No .gguf models found in {config.MODEL_DIR}")
             sys.exit(1)
     
-    import multiprocessing
-    # Dynamic Thread Scaling
-    # Use typically physical cores minus 1 or 2, but safely bounded
-    # Minimum 4 threads for 7B models if hardware allows
-    core_count = multiprocessing.cpu_count()
-    optimal_threads = max(4, core_count - 2)
-    threads = env_int("LLM_THREADS", optimal_threads) 
-    logger.info(f"[Engine] Configured with {threads} threads (Cores detected: {core_count})")
+    # Dynamic Thread Scaling - Use tuned values from Orchestrator
+    threads = env_int("LLM_THREADS", config.threads) 
+    gpu_layers = env_int("LLM_GPU_LAYERS", config.gpu_layers)
+    logger.info(f"[Engine] Configured with {threads} threads and {gpu_layers} GPU layers.")
     
     # TTFT Optimization: Increase batch size for faster prompt eval
     # RAG contexts are typically 500-1000 tokens. 2048 handles them in one pass.
     cmd = build_llama_cmd(
         port=port, 
         threads=threads, 
-        batch=2048, 
-        ubatch=2048
+        ctx=config.context_size,
+        batch=config.batch_size, 
+        ubatch=config.ubatch_size
     ) 
     
+    # Apply GPU layers set by Orchestrator
+    if "--n-gpu-layers" not in cmd and "--n_gpu_layers" not in cmd:
+        cmd.extend(["--n-gpu-layers", str(gpu_layers)])
+
     # Fix: --cache-reuse takes an integer (min chunk size)
     cmd.extend(["--cache-reuse", "256"])
     
     # Removed --flash-attn as it can cause crashes on unsupported hardware
     
     # 2. Robust Startup Cleanup
-    safe_print(f"[*] Pre-flight Cleanup: Checking Ports...")
-    kill_zombie_process(port, allowed_names=['llama-server.exe', 'python.exe'])
-    kill_zombie_process(8002, allowed_names=['python.exe']) # Hub
-    kill_zombie_process(8003, allowed_names=['python.exe']) # Voice
-    kill_process_by_name("llama-server.exe")
-    time.sleep(2)
+    # 2. Startup Guard - Orchestrator handles pruning, but we do a safe check
+    if os.environ.get("ZENA_SKIP_PRUNE") != "1":
+        safe_print(f"[*] Engine Guard: Ensuring ports are clean...")
+        ProcessManager.prune(port, allowed_names=['llama-server.exe', 'python.exe'])
+        kill_process_by_name("llama-server.exe")
+        time.sleep(1)
 
     try:
-        if "--guard-bypass" not in sys.argv:
+        # Start Hub if this is the primary server or not in bypass mode
+        safe_print(f"[*] Hub Check: port={port}, config.llm_port={config.llm_port}, bypass={('--guard-bypass' in sys.argv)}")
+        if "--guard-bypass" not in sys.argv or port == config.llm_port:
             start_hub()
             start_voice_stream_server()
         
@@ -620,7 +641,7 @@ def start_server() -> NoReturn:
                 SERVER_PROCESS = subprocess.Popen(
                     cmd,
                     env=os.environ,
-                    cwd=str(BIN_DIR),
+                    cwd=str(config.BIN_DIR),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=False,
@@ -640,12 +661,12 @@ def start_server() -> NoReturn:
         # Launch the UI immediately so the user sees something happening.
         # We pass ZENA_SKIP_PRUNE=1 to prevent the UI from killing the backend we just started.
         if "--guard-bypass" not in sys.argv and "--no-ui" not in sys.argv:
-            zena_script = str(BASE_DIR / "zena.py")
+            zena_script = str(config.BASE_DIR / "zena.py")
             ui_env = os.environ.copy()
             ui_env["ZENA_SKIP_PRUNE"] = "1"
             ui_process = subprocess.Popen(
                 [sys.executable, zena_script], 
-                cwd=str(BASE_DIR), 
+                cwd=str(config.BASE_DIR), 
                 env=ui_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
@@ -713,11 +734,11 @@ def start_server() -> NoReturn:
     finally:
         safe_print("[*] Shutting down all managed processes...")
         if SERVER_PROCESS:
-            try: kill_process_tree(SERVER_PROCESS.pid)
+            try: ProcessManager.kill_tree(SERVER_PROCESS.pid)
             except: pass
         with EXPERT_LOCK:
             for p in EXPERT_PROCESSES.values():
-                try: kill_process_tree(p.pid)
+                try: ProcessManager.kill_tree(p.pid)
                 except: pass
         safe_print("[*] Orchestrator shutdown complete.")
 

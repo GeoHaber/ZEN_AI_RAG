@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 import logging
 
-from config import BASE_DIR
+from config_system import config
 import security
 
 logger = logging.getLogger('Analysis')
@@ -53,7 +53,7 @@ def analyze_and_write_report(files: List[str], job_id: str = None) -> Dict[str, 
         # validate path
         try:
             p = Path(f)
-            # For safety, ensure path is under BASE_DIR or absolute validated
+            # For safety, ensure path is under config.BASE_DIR or absolute validated
             valid = security.validate_path(p)
             if not valid:
                 report['files'].append({'path': f, 'issues': [{'severity': 'error', 'message': 'Path not allowed'}]})
@@ -74,7 +74,7 @@ def analyze_and_write_report(files: List[str], job_id: str = None) -> Dict[str, 
 
     report['summary'] = counts
 
-    out = BASE_DIR / '_zena_analisis'
+    out = config.BASE_DIR / '_zena_analisis'
     try:
         with open(out, 'w', encoding='utf-8') as fh:
             json.dump(report, fh, indent=2)

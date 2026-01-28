@@ -19,9 +19,9 @@ class AsyncZenAIBackend:
     
     def __init__(self):
         self.client: Optional[httpx.AsyncClient] = None
-        self.api_url = f"{config.LLM_API_URL}/v1/chat/completions"
-        self.raw_api_url = config.LLM_API_URL
-        self.hub_api_url = "http://127.0.0.1:8002"
+        self.api_url = f"http://{config.host}:{config.llm_port}/v1/chat/completions"
+        self.raw_api_url = f"http://{config.host}:{config.llm_port}"
+        self.hub_api_url = f"http://{config.host}:{config.mgmt_port}"
         logger.info(f"[AsyncBackend] Initialized with API: {self.api_url}")
     
     async def get_models(self) -> list:
@@ -178,13 +178,14 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
             user_message = f"{text}\n\n```\n{attachment_content}\n```"
         
         payload = {
+            "model": "local-model",
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message}
             ],
             "stream": True,
             "temperature": 0.7,
-            "max_tokens": -1
+            "max_tokens": 1024  # Reduced for stability against n_ctx=4096
         }
         
         try:
@@ -192,13 +193,21 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
                 yield f"{EMOJI['error']} Backend not initialized. Use 'async with backend:'"
                 return
             
-            logger.info(f"[AsyncBackend] Sending message: {text[:50]}...")
-            
+            logger.info(f"[AsyncBackend] Sending POST request to: {self.api_url}")
+            # Robust diagnostic dump
+            try:
+                with open("tests/last_payload.json", "w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=2)
+            except: pass
+
             async with self.client.stream('POST', self.api_url, json=payload) as response:
                 if response.status_code != 200:
                     error_text = await response.aread()
                     error_msg = f"{EMOJI['error']} Server returned {response.status_code}: {error_text.decode()}"
-                    logger.error(f"[AsyncBackend] {error_msg}")
+                    logger.error(f"[AsyncBackend] Request Failed!")
+                    logger.error(f"  URL: {self.api_url}")
+                    logger.error(f"  Status: {response.status_code}")
+                    logger.error(f"  Response: {error_text.decode()}")
                     yield error_msg
                     return
                 

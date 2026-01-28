@@ -239,6 +239,7 @@ class BaseLocale:
     RAG_START_SCAN = "Start Scan"
     RAG_ANSWERED_FROM_SOURCE = "**🔍 Answered from Data Source**"
     RAG_VIEW_SOURCES = "📂 View Source Data"
+    RAG_LABEL = "Local Context"
     
     # ==========================================================================
     # CHAT INTERFACE
