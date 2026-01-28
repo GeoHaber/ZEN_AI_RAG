@@ -17,6 +17,15 @@ from typing import Optional, NoReturn
 from pathlib import Path
 from config import LOG_FILE, HOST, BASE_DIR
 
+def safe_print(*args, **kwargs):
+    """
+    Thread-safe print with automatic flush.
+    Replaces default print to ensure logs are captured in real-time.
+    """
+    kwargs.setdefault('flush', True)
+    print(*args, **kwargs)
+
+
 # --- Logging Setup ---
 # Determine log file based on process
 proc_name = str(getattr(sys.modules.get("__main__"), "__file__", "unknown"))

@@ -149,7 +149,107 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
                                 ui.label(locale.SETTINGS_QUIET_COT).classes('font-semibold ' + Styles.TEXT_PRIMARY)
                                 ui.label(locale.SETTINGS_QUIET_COT_DESC).classes(Styles.LABEL_XS)
                             ui.switch(value=settings.ai_model.quiet_cot).bind_value(settings.ai_model, 'quiet_cot')
-                
+
+                # ==================== EXTERNAL LLMs ====================
+                with ui.expansion("External LLMs (Multi-LLM Consensus)", icon='cloud').classes('w-full ' + Styles.CARD_BASE):
+                    with ui.column().classes('w-full gap-4 p-4'):
+                        # Enable External LLMs
+                        with ui.row().classes('w-full items-center justify-between'):
+                            with ui.column().classes('gap-0'):
+                                ui.label("Enable External LLMs").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                                ui.label("Query external LLM APIs for multi-model consensus").classes(Styles.LABEL_XS)
+                            ui.switch(value=settings.external_llm.enabled).bind_value(settings.external_llm, 'enabled')
+
+                        ui.separator()
+
+                        # Anthropic Claude
+                        with ui.column().classes('w-full gap-2'):
+                            ui.label("🤖 Anthropic Claude").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                            ui.label("Get $5 free credits at https://console.anthropic.com/").classes(Styles.LABEL_XS + ' text-green-600')
+                            with ui.row().classes('w-full gap-2'):
+                                ui.input(
+                                    label="API Key (sk-ant-...)",
+                                    value=settings.external_llm.anthropic_api_key,
+                                    password=True,
+                                    password_toggle_button=True
+                                ).bind_value(settings.external_llm, 'anthropic_api_key').classes('flex-1')
+                                ui.select(
+                                    options=['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+                                    value=settings.external_llm.anthropic_model,
+                                    label="Model"
+                                ).bind_value(settings.external_llm, 'anthropic_model').classes('w-64')
+
+                        ui.separator()
+
+                        # Google Gemini
+                        with ui.column().classes('w-full gap-2'):
+                            ui.label("🌟 Google Gemini").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                            ui.label("FREE forever at https://aistudio.google.com/app/apikey").classes(Styles.LABEL_XS + ' text-green-600')
+                            with ui.row().classes('w-full gap-2'):
+                                ui.input(
+                                    label="API Key (AIza...)",
+                                    value=settings.external_llm.google_api_key,
+                                    password=True,
+                                    password_toggle_button=True
+                                ).bind_value(settings.external_llm, 'google_api_key').classes('flex-1')
+                                ui.select(
+                                    options=['gemini-pro', 'gemini-pro-vision'],
+                                    value=settings.external_llm.google_model,
+                                    label="Model"
+                                ).bind_value(settings.external_llm, 'google_model').classes('w-64')
+
+                        ui.separator()
+
+                        # Grok
+                        with ui.column().classes('w-full gap-2'):
+                            ui.label("🚀 Grok (xAI)").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                            ui.label("Get $25 free credits at https://x.ai/api").classes(Styles.LABEL_XS + ' text-green-600')
+                            with ui.row().classes('w-full gap-2'):
+                                ui.input(
+                                    label="API Key (xai-...)",
+                                    value=settings.external_llm.xai_api_key,
+                                    password=True,
+                                    password_toggle_button=True
+                                ).bind_value(settings.external_llm, 'xai_api_key').classes('flex-1')
+                                ui.select(
+                                    options=['grok-beta'],
+                                    value=settings.external_llm.xai_model,
+                                    label="Model"
+                                ).bind_value(settings.external_llm, 'xai_model').classes('w-64')
+
+                        ui.separator()
+
+                        # Consensus Settings
+                        with ui.row().classes('w-full items-center justify-between'):
+                            with ui.column().classes('gap-0'):
+                                ui.label("Multi-LLM Consensus").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                                ui.label("Query multiple LLMs and calculate consensus score").classes(Styles.LABEL_XS)
+                            ui.switch(value=settings.external_llm.use_consensus).bind_value(settings.external_llm, 'use_consensus')
+
+                        # Cost Tracking
+                        with ui.row().classes('w-full items-center justify-between'):
+                            with ui.column().classes('gap-0'):
+                                ui.label("Cost Tracking").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                                ui.label("Track API costs and enforce budget limits").classes(Styles.LABEL_XS)
+                            ui.switch(value=settings.external_llm.cost_tracking_enabled).bind_value(settings.external_llm, 'cost_tracking_enabled')
+
+                        # Budget Limit
+                        with ui.row().classes('w-full items-center gap-4'):
+                            with ui.column().classes('flex-1'):
+                                ui.label("Budget Limit").classes('font-semibold ' + Styles.TEXT_PRIMARY)
+                                ui.label("Maximum spend per month (USD)").classes(Styles.LABEL_XS)
+                            ui.number(
+                                value=settings.external_llm.budget_limit,
+                                min=0,
+                                max=1000,
+                                step=5,
+                                format='$%.2f'
+                            ).bind_value(settings.external_llm, 'budget_limit').classes('w-32')
+
+                        # Info banner
+                        with ui.card().classes('w-full bg-blue-50 dark:bg-blue-900 p-3'):
+                            ui.label("💡 Tip: Start with Google Gemini (FREE) to test multi-LLM consensus!").classes('text-sm')
+
                 # ==================== VOICE ====================
                 with ui.expansion(locale.SETTINGS_CAT_VOICE, icon='mic').classes('w-full ' + Styles.CARD_BASE):
                     with ui.column().classes('w-full gap-4 p-4'):

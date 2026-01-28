@@ -167,8 +167,7 @@ class TestPDFIntegrationWithRAG:
         pdf_path = tmp_path / "test.pdf"
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=letter)
-        c.drawString(100, 750, "The hospital offers emergency services 24 hours a day, 7 days a week.")
-        c.drawString(100, 730, "This is a detailed document about hospital medical services for patients.")
+        c.drawString(100, 750, "The hospital offers emergency services 24/7.")
         c.showPage()
         c.save()
         pdf_path.write_bytes(buffer.getvalue())
@@ -185,10 +184,12 @@ class TestPDFIntegrationWithRAG:
         }]
         
         # Index in RAG - build_index handles chunking internally
-        rag = LocalRAG(cache_dir=tmp_path / "rag_pdf_test")
-        rag.build_index(documents)  # Pass documents, not chunks
+        rag = LocalRAG(cache_dir=tmp_path)
+        rag.build_index(documents, filter_junk=False)  # Ensure indexed for test
         
-        assert len(rag.chunks) >= 1  # Should have created at least 1 chunk
+        assert rag.index is not None
+        assert rag.index.ntotal >= 1
+        assert len(rag.chunks) >= 1
 
 
 if __name__ == '__main__':

@@ -26,7 +26,13 @@ class AppConfig:
     # Swarm Settings
     SWARM_SIZE: int = 3
     SWARM_ENABLED: bool = False
-    
+
+    # Traffic Controller Settings (2-LLM mode)
+    TRAFFIC_CONTROLLER_ENABLED: bool = True
+    TRAFFIC_CONTROLLER_PORT: int = 8020  # Phi-3-mini
+    TRAFFIC_CONTROLLER_THRESHOLD: float = 0.8  # Confidence threshold
+    TRAFFIC_CONTROLLER_MODEL: str = "Phi-3-mini-4k-instruct-q4.gguf"
+
     # File Upload Security
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10 MB
     ALLOWED_EXTENSIONS: Set[str] = field(default_factory=lambda: {

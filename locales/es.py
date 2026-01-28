@@ -206,6 +206,41 @@ class SpanishLocale(BaseLocale):
     CHAT_READY = "Listo"
     CHAT_RECORDING = "🔴 Grabando (5s)..."
     CHAT_TRANSCRIBING = "Transcribiendo..."
+
+    # Loading Messages - Fun rotating messages (Spanish)
+    LOADING_WAITING_FOR_USER = [
+        "💭 Esperando tus brillantes ideas...",
+        "✨ Listo cuando tú lo estés...",
+        "🎯 En espera de tu próxima pregunta...",
+        "🌟 Tu deseo es mi comando...",
+        "💡 Esperando tu consulta...",
+        "🚀 Listo para ayudar cuando estés preparado...",
+    ]
+
+    LOADING_THINKING = [
+        "🤔 Pensando profundamente...",
+        "🧠 Neuronas disparando...",
+        "⚙️ Procesando los números...",
+        "✨ Invocando los espíritus de respuestas...",
+        "🎯 Calculando la respuesta perfecta...",
+        "🔬 Ejecutando los experimentos...",
+    ]
+
+    LOADING_RAG_THINKING = [
+        "📖 Leyendo tus documentos...",
+        "🔎 Buscando en la base de conocimiento...",
+        "📚 Cruzando referencias de fuentes...",
+        "🗂️ Indexando información...",
+        "🎯 Encontrando la coincidencia perfecta...",
+    ]
+
+    LOADING_SWARM_THINKING = [
+        "🐝 Consultando el enjambre de expertos...",
+        "👥 Reuniendo sabiduría colectiva...",
+        "🎯 Encuestando a los expertos...",
+        "🌊 Mente colmena activándose...",
+        "🏛️ Consejo en sesión...",
+    ]
     
     # ==========================================================================
     # FILE UPLOAD

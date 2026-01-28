@@ -4,6 +4,7 @@ state_management.py - Thread-safe state management for ZenAI
 """
 import threading
 import time
+import asyncio
 from dataclasses import dataclass, field
 from typing import Optional, List, Tuple
 from config_system import config, EMOJI

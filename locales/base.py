@@ -247,6 +247,41 @@ class BaseLocale:
     CHAT_PLACEHOLDER_ZENAI = "Ask me anything..."
     CHAT_QUICK_ACTIONS = "Quick Actions"
     CHAT_CHECK_MODEL = "Check Model Status"
+
+    # Loading Messages - Fun rotating messages
+    LOADING_WAITING_FOR_USER = [
+        "💭 Waiting for your brilliant ideas...",
+        "✨ Ready when you are...",
+        "🎯 Standing by for your next question...",
+        "🌟 Your wish is my command...",
+        "💡 Awaiting your input...",
+        "🚀 Ready to help whenever you're ready...",
+    ]
+
+    LOADING_THINKING = [
+        "🤔 Thinking deeply...",
+        "🧠 Neurons firing...",
+        "⚙️ Crunching the numbers...",
+        "✨ Summoning the answer spirits...",
+        "🎯 Calculating the perfect response...",
+        "🔬 Running the experiments...",
+    ]
+
+    LOADING_RAG_THINKING = [
+        "📖 Reading through your documents...",
+        "🔎 Searching the knowledge base...",
+        "📚 Cross-referencing sources...",
+        "🗂️ Indexing through information...",
+        "🎯 Finding the perfect match...",
+    ]
+
+    LOADING_SWARM_THINKING = [
+        "🐝 Consulting the expert swarm...",
+        "👥 Gathering collective wisdom...",
+        "🎯 Polling the experts...",
+        "🌊 Hive mind activating...",
+        "🏛️ Council in session...",
+    ]
     CHAT_LATEST_LLAMA = "Latest llama.cpp"
     CHAT_RUN_BENCHMARK = "Run Benchmark"
     CHAT_HELP = "Help"

@@ -2,6 +2,7 @@
 Automated test for chat UI functionality.
 Tests that messages are sent and responses are displayed.
 """
+import pytest
 import asyncio
 import httpx
 import sys

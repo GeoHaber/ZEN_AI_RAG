@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile:*)",
+      "Bash(timeout 30 python start_llm.py:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(python start_llm.py:*)",
+      "Bash(taskkill:*)",
+      "Bash(python:*)",
+      "Bash(tee:*)",
+      "Bash(\".\\\\_bin\\\\llama-server.exe\" --help)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(pkill:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git tag:*)",
+      "Bash(set PYTHONPATH=%CD%)",
+      "Bash(timeout 10 tail:*)",
+      "Bash(git worktree:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(Select-Object -First 100)",
+      "Bash(netstat:*)",
+      "Bash(timeout /t 3)",
+      "Bash(ping:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}
