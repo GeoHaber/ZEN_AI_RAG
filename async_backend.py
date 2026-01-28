@@ -6,7 +6,10 @@ import httpx
 import json
 import logging
 from typing import AsyncGenerator, Optional
+import time
+import asyncio
 from config_system import config, EMOJI
+from zena_mode.profiler import monitor
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +158,8 @@ class AsyncZenAIBackend:
 You are NOT ChatGPT, NOT GPT-4, and NOT made by OpenAI.
 You were created by Alibaba Cloud (Qwen team) and integrated into the ZenAI application.
 Be helpful, concise, and accurate. If asked about your identity, say you are ZenAI powered by Qwen.""",
-        attachment_content: Optional[str] = None
+        attachment_content: Optional[str] = None,
+        cancellation_event: Optional[asyncio.Event] = None
     ) -> AsyncGenerator[str, None]:
         """
         Send message to LLM with true async streaming.
@@ -199,11 +203,23 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
                     return
                 
                 chunk_count = 0
+                first_token_time = None
+                start_request_time = time.time()
+                
                 async for line in response.aiter_lines():
+                    # Check for cancellation
+                    if cancellation_event and cancellation_event.is_set():
+                        logger.info("[AsyncBackend] Request cancelled by user")
+                        break
+                        
                     if line.startswith('data: '):
                         json_str = line[6:]
                         if json_str.strip() == '[DONE]':
-                            logger.info(f"[AsyncBackend] Stream complete: {chunk_count} chunks")
+                            total_generation_time = time.time() - (first_token_time or start_request_time)
+                            if total_generation_time > 0 and chunk_count > 0:
+                                tps = chunk_count / total_generation_time
+                                monitor.add_metric('llm_tps', tps)
+                            logger.info(f"[AsyncBackend] Stream complete: {chunk_count} chunks in {total_generation_time:.1f}s")
                             break
                         
                         try:
@@ -211,6 +227,12 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
                             delta = data['choices'][0]['delta']
                             content = delta.get('content', '')
                             if content:
+                                if first_token_time is None:
+                                    first_token_time = time.time()
+                                    ttft_ms = (first_token_time - start_request_time) * 1000
+                                    monitor.add_metric('llm_ttft', ttft_ms)
+                                    logger.info(f"[AsyncBackend] First token received in {ttft_ms:.1f}ms")
+                                    
                                 chunk_count += 1
                                 yield content
                         except (json.JSONDecodeError, KeyError, IndexError) as e:
@@ -234,3 +256,5 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
 
 # Global backend instance
 backend = AsyncZenAIBackend()
+# Backwards-compatibility alias expected by tests
+AsyncBackend = AsyncZenAIBackend

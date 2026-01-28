@@ -1,0 +1,299 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG
+configfile: pytest.ini
+plugins: anyio-4.12.1, asyncio-1.3.0, base-url-2.1.0, cov-7.0.0, mock-3.15.1, playwright-0.7.2, timeout-2.4.0, respx-0.22.0, typeguard-4.4.4
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=function
+timeout: 30.0s
+timeout method: thread
+timeout func_only: False
+collecting ... 
+----------------------------- live log collection -----------------------------
+2026-01-27 19:08:42 [    INFO] Loaded config from C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\config.json (config.py:41)
+2026-01-27 19:08:42 [    INFO] Config Content: {
+  "model_dir": "C:\\AI\\Models",
+  "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
+  "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+  "zena_mode": {
+    "enabled": true,
+    "language": "auto",
+    "rag_source": "website",
+    "website_url": "https://www.linkedin.com/in/georgehaber/",
+    "voice_enabled": true,
+    "popup_position": "bottom-right",
+    "optimal_experts": 5,
+    "network_access": false,
+    "auto_update_enabled": true,
+    "telegram_token": "",
+    "telegram_whitelist": [],
+    "whatsapp_whitelist": []
+  }
+} (config.py:42)
+2026-01-27 19:08:45 [    INFO] Loading faiss with AVX512 support. (loader.py:120)
+2026-01-27 19:08:45 [    INFO] Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'") (loader.py:125)
+2026-01-27 19:08:45 [    INFO] Loading faiss with AVX2 support. (loader.py:132)
+2026-01-27 19:08:45 [    INFO] Successfully loaded faiss with AVX2 support. (loader.py:134)
+2026-01-27 19:08:45 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:45 [    INFO] [ResourceManager] Strategy: PARALLEL (Total: 91.6GB, Avail: 70.6GB) (resource_manager.py:137)
+2026-01-27 19:08:46 [    INFO] [ChatHistory] Initialized with max 100 messages (state_management.py:65)
+collected 291 items
+
+tests/Test_RAGED_info.py::test_rag_retrieval_content 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:46 [    INFO] [RAG] Lazy loading heavy dependencies (SentenceTransformers, Qdrant)... (rag_pipeline.py:119)
+2026-01-27 19:08:46 [    INFO] [RAG] Dependencies loaded. (rag_pipeline.py:125)
+2026-01-27 19:08:46 [    INFO] [RAG] Loading transformer: all-MiniLM-L6-v2 (rag_pipeline.py:71)
+2026-01-27 19:08:46 [    INFO] [RAG] Created Qdrant collection: zenai_knowledge (rag_pipeline.py:182)
+2026-01-27 19:08:46 [ WARNING] [RAG] Metadata load failed: not enough values to unpack (expected 2, got 0) (rag_pipeline.py:218)
+2026-01-27 19:08:46 [ WARNING] [RAG] Metadata load failed: not enough values to unpack (expected 2, got 0) (rag_pipeline.py:218)
+2026-01-27 19:08:46 [    INFO] [Profiler] RAG Semantic Search took 0.5ms (profiler.py:67)
+PASSED                                                                   [  0%]
+tests/smoke_test_startup.py::test_zena_imports_successfully FAILED       [  0%]
+tests/smoke_test_startup.py::test_zenai_page_execution FAILED            [  1%]
+tests/test_advanced_extractor.py::test_initialization PASSED             [  1%]
+tests/test_advanced_extractor.py::test_type_detection PASSED             [  1%]
+tests/test_advanced_extractor.py::test_bytes_routing PASSED              [  2%]
+tests/test_analysis.py::test_analyze_and_write_report PASSED             [  2%]
+tests/test_arbitrator_scaling.py::TestArbitratorScaling::test_arbitrator_discovers_scaled_swarm 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:46 [    INFO] HTTP Request: GET http://127.0.0.1:8001/health "HTTP/1.1 200 OK" (_client.py:1025)
+2026-01-27 19:08:46 [    INFO] HTTP Request: GET http://127.0.0.1:8005/health "HTTP/1.1 200 OK" (_client.py:1025)
+2026-01-27 19:08:46 [    INFO] HTTP Request: GET http://127.0.0.1:8006/health "HTTP/1.1 200 OK" (_client.py:1025)
+2026-01-27 19:08:46 [    INFO] HTTP Request: GET http://127.0.0.1:8001/health "HTTP/1.1 200 OK" (_client.py:1740)
+2026-01-27 19:08:46 [    INFO] HTTP Request: GET http://127.0.0.1:8005/health "HTTP/1.1 200 OK" (_client.py:1740)
+2026-01-27 19:08:46 [    INFO] HTTP Request: GET http://127.0.0.1:8006/health "HTTP/1.1 200 OK" (_client.py:1740)
+PASSED                                                                   [  2%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_initialization 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:46 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+PASSED                                                                   [  3%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_context_manager 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:46 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+PASSED                                                                   [  3%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_streaming_with_mock 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Sending message: test query... (async_backend.py:195)
+2026-01-27 19:08:47 [    INFO] HTTP Request: POST http://127.0.0.1:8001/v1/chat/completions "HTTP/1.1 200 OK" (_client.py:1740)
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] First token received in 0.0ms (async_backend.py:234)
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Stream complete: 2 chunks in 0.0s (async_backend.py:222)
+PASSED                                                                   [  3%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_hub_models_with_mock 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:47 [    INFO] HTTP Request: GET http://127.0.0.1:8002/models/available "HTTP/1.1 200 OK" (_client.py:1740)
+PASSED                                                                   [  4%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_backend_has_required_methods 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+PASSED                                                                   [  4%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_health_check_mocked 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:47 [    INFO] HTTP Request: GET http://127.0.0.1:8001/health "HTTP/1.1 200 OK" (_client.py:1740)
+PASSED                                                                   [  4%]
+tests/test_async_backend.py::TestAsyncZenAIBackend::test_health_check_failure 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:47 [    INFO] HTTP Request: GET http://127.0.0.1:8001/health "HTTP/1.1 500 Internal Server Error" (_client.py:1740)
+PASSED                                                                   [  5%]
+tests/test_async_backend.py::TestBackendCompatibility::test_old_backend_removed_completely FAILED [  5%]
+tests/test_async_backend.py::TestBackendCompatibility::test_async_backend_available FAILED [  5%]
+tests/test_async_model_management.py::test_set_active_model_mocked 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:47 [    INFO] HTTP Request: POST http://127.0.0.1:8002/models/load "HTTP/1.1 200 OK" (_client.py:1740)
+PASSED                                                                   [  6%]
+tests/test_async_model_management.py::test_set_active_model_failure 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:47 [    INFO] HTTP Request: POST http://127.0.0.1:8002/models/load "HTTP/1.1 500 Internal Server Error" (_client.py:1740)
+PASSED                                                                   [  6%]
+tests/test_async_model_management.py::test_download_model_mocked 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:47 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:48 [    INFO] HTTP Request: POST http://127.0.0.1:8002/models/download "HTTP/1.1 200 OK" (_client.py:1740)
+PASSED                                                                   [  6%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_get_models_success 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+PASSED                                                                   [  7%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_get_models_failure_fallback 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:48 [ WARNING] [ZenAIHub] API unavailable: Connection Refused (async_backend.py:43)
+PASSED                                                                   [  7%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_download_model 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+PASSED                                                                   [  7%]
+tests/test_async_refactor.py::TestAsyncRefactor::test_set_active_model 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+PASSED                                                                   [  8%]
+tests/test_auto_updater.py::TestAutoUpdater::test_binary_swap_simulation 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] Backed up current binary to llama-server.bak (auto_updater.py:115)
+2026-01-27 19:08:48 [    INFO] Successfully swapped binary: llama-server.exe (auto_updater.py:119)
+PASSED                                                                   [  8%]
+tests/test_auto_updater.py::TestAutoUpdater::test_github_monitor 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] \u2728 Shiny new version found: b4100 (Current: b4000) (auto_updater.py:88)\nPASSED                                                                   [  8%]
+tests/test_auto_updater.py::TestAutoUpdater::test_version_comparison PASSED [  9%]
+tests/test_backend_integration.py::test_fetch_models_mocked 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:48 [    INFO] HTTP Request: GET http://127.0.0.1:8002/models/available "HTTP/1.1 200 OK" (_client.py:1740)
+PASSED                                                                   [  9%]
+tests/test_backend_integration.py::test_chat_completion_mocked 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:25)
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Sending message: Say hello in English.... (async_backend.py:195)
+2026-01-27 19:08:48 [    INFO] HTTP Request: POST http://127.0.0.1:8001/v1/chat/completions "HTTP/1.1 200 OK" (_client.py:1740)
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] First token received in 0.0ms (async_backend.py:234)
+2026-01-27 19:08:48 [    INFO] [AsyncBackend] Stream complete: 2 chunks in 0.0s (async_backend.py:222)
+PASSED                                                                   [  9%]
+tests/test_batch_engine.py::test_batch_analysis_logic PASSED             [ 10%]
+tests/test_branding_cleanup.py::test_no_legacy_branding_in_codebase PASSED [ 10%]
+tests/test_chat_ui.py::test_llm_backend PASSED                           [ 10%]
+tests/test_chat_ui.py::test_streaming_response PASSED                    [ 11%]
+tests/test_chat_ui.py::test_ui_endpoint PASSED                           [ 11%]
+tests/test_chat_ui.py::test_chat_ui_e2e_playwright PASSED                [ 12%]
+tests/test_config_swarm.py::TestConfigSwarm::test_swarm_defaults PASSED  [ 12%]
+tests/test_config_swarm.py::TestConfigSwarm::test_swarm_persistence 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:15 [    INFO] [Config] Saved to test_config.json (config_system.py:119)
+2026-01-27 19:09:15 [    INFO] [Config] Loaded from test_config.json (config_system.py:93)
+PASSED                                                                   [ 12%]
+tests/test_conversation_memory.py::TestMessage::test_message_creation PASSED [ 13%]
+tests/test_conversation_memory.py::TestMessage::test_message_to_dict PASSED [ 13%]
+tests/test_conversation_memory.py::TestMessage::test_message_from_dict PASSED [ 13%]
+tests/test_conversation_memory.py::TestConversationDB::test_db_creation PASSED [ 14%]
+tests/test_conversation_memory.py::TestConversationDB::test_add_message PASSED [ 14%]
+tests/test_conversation_memory.py::TestConversationDB::test_get_recent_messages PASSED [ 14%]
+tests/test_conversation_memory.py::TestConversationDB::test_session_isolation PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_initialization 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:15 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:15 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:16 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_initialization0 (conversation_memory.py:357)
+PASSED                                                                   [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_add_and_retrieve 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:16 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:16 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:17 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_add_and_retrieve0 (conversation_memory.py:357)
+PASSED                                                                   [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_semantic_search 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:17 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:17 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:17 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_semantic_search0 (conversation_memory.py:357)
+PASSED                                                                   [ 16%]
+tests/test_conversation_memory.py::TestConversationMemory::test_context_building 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:17 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:17 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:18 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_context_building0 (conversation_memory.py:357)
+PASSED                                                                   [ 16%]
+tests/test_conversation_memory.py::TestConversationMemory::test_contextual_prompt 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:18 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:18 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:18 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_contextual_prompt0 (conversation_memory.py:357)
+PASSED                                                                   [ 16%]
+tests/test_conversation_memory.py::TestConversationMemory::test_stats 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:18 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:18 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:19 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_stats0 (conversation_memory.py:357)
+PASSED                                                                   [ 17%]
+tests/test_conversation_memory.py::TestTopicExtraction::test_extract_topics 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:19 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:19 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:19 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_extract_topics0 (conversation_memory.py:357)
+PASSED                                                                   [ 17%]
+tests/test_conversation_memory.py::TestMultiSession::test_multiple_sessions 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:19 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:19 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:20 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_multiple_sessions0 (conversation_memory.py:357)
+PASSED                                                                   [ 17%]
+tests/test_conversation_memory.py::TestMultiSession::test_clear_session 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:20 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:20 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:20 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_clear_session0 (conversation_memory.py:357)
+2026-01-27 19:09:20 [    INFO] [ConvMemory] Cleared in-memory data for session to_clear (conversation_memory.py:687)
+PASSED                                                                   [ 18%]
+tests/test_conversation_memory.py::TestIntegration::test_full_conversation_flow 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:20 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:20 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:21 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_full_conversation_flow0 (conversation_memory.py:357)
+PASSED                                                                   [ 18%]
+tests/test_conversation_memory.py::TestFactoryFunction::test_get_conversation_memory 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:21 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-27 19:09:21 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-27 19:09:21 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\AppData\Local\Temp\pytest-of-Geo\pytest-155\test_get_conversation_memory0 (conversation_memory.py:357)
+PASSED                                                                   [ 18%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_env_int PASSED     [ 19%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_check_processes 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:21 [    INFO] [Monitor] Registered CRITICAL process: Test (PID: <Mock name='mock.pid' id='1993823727696'>) (server.py:157)
+PASSED                                                                   [ 19%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_tree PASSED [ 19%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_by_name PASSED [ 20%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_register_process_updates_globals 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:21 [    INFO] [Monitor] Registered process: Unit-Test-Proc (PID: <Mock name='mock.pid' id='1993823723568'>) (server.py:157)
+PASSED                                                                   [ 20%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_launch_expert_process_env 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:21 [    INFO] [Monitor] Registered process: Expert-9000 (PID: <MagicMock name='Popen().pid' id='1993823727264'>) (server.py:157)
+PASSED                                                                   [ 20%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_scale_swarm_integration PASSED [ 21%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_hub_daemon 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:21 [    INFO] [*] Attempting to start Hub API on port 8002... (utils.py:88)
+2026-01-27 19:09:21 [    INFO] [*] Hub API listening on Port 8002 (utils.py:88)
+PASSED                                                                   [ 21%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_voice_stream_server PASSED [ 21%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_server_guard_bypass 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:21 [    INFO] [*] Pre-flight Cleanup: Checking Ports... (utils.py:88)
+2026-01-27 19:09:23 [    INFO] [Engine] Launching: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\_bin\llama-server.exe --model C:\AI\Models\qwen2.5-coder-7b-instruct-q4_k_m.gguf --host 127.0.0.1 --port 8001 --ctx-size 4096 --n-gpu-layers 0 --threads 2 --threads-batch 2 --batch-size 256 --ubatch-size 256 --repeat-penalty 1.1 --repeat-last-n 1024 --min-p 0.1 --alias local-model --no-warmup --timeout -1 -np 1 (server.py:598)
+2026-01-27 19:09:23 [    INFO] [Monitor] Registered CRITICAL process: LLM-Server (PID: <MagicMock name='Popen().pid' id='1993780371792'>) (server.py:157)
+2026-01-27 19:09:23 [    INFO] [*] Waiting for LLM-Server to bind to port 8001... (utils.py:88)
+2026-01-27 19:09:24 [    INFO] \u2705 LLM-Server online on port 8001 (utils.py:88)\n2026-01-27 19:09:29 [    INFO] [!] LLM-Server crashed (exit code 1) (utils.py:88)
+2026-01-27 19:09:29 [    INFO] \u274c Critical process LLM-Server died. System shutdown initiated. (utils.py:88)\n2026-01-27 19:09:29 [    INFO] [*] Shutting down all managed processes... (utils.py:88)
+2026-01-27 19:09:29 [   ERROR] Failed to kill tree <MagicMock name='Popen().pid' id='1993780371792'>: '<' not supported between instances of 'MagicMock' and 'int' (utils.py:247)
+2026-01-27 19:09:29 [    INFO] [*] Orchestrator shutdown complete. (utils.py:88)
+PASSED                                                                   [ 22%]
+tests/test_decorators.py::TestDecorators::test_retry_sync_success 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:30 [ WARNING] \u26a0\ufe0f [flaky] Attempt 1/3 failed: Fail. Retrying in 0.0s... (decorators.py:81)\nPASSED                                                                   [ 22%]
+tests/test_decorators.py::TestDecorators::test_retry_sync_failure 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:31 [ WARNING] \u26a0\ufe0f [failure] Attempt 1/2 failed: Always fail. Retrying in 0.0s... (decorators.py:81)\n2026-01-27 19:09:31 [   ERROR] \u274c [failure] Failed after 2 attempts: Always fail (decorators.py:76)\nPASSED                                                                   [ 23%]
+tests/test_decorators.py::TestDecorators::test_retry_async 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:33 [ WARNING] \u26a0\ufe0f [flaky_async] Attempt 1/3 failed: Async Fail. Retrying in 0.0s... (decorators.py:102)\nPASSED                                                                   [ 23%]
+tests/test_decorators.py::TestDecorators::test_log_errors_default 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:34 [   ERROR] \u274c [crasher] Error: Crash (decorators.py:136)\nTraceback (most recent call last):\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_Extra_files\\decorators.py", line 134, in sync_wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\tests\\test_decorators.py", line 59, in crasher\n    raise RuntimeError("Crash")\nRuntimeError: Crash\nPASSED                                                                   [ 23%]
+tests/test_decorators.py::TestDecorators::test_log_errors_async 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:36 [   ERROR] \u274c [async_crasher] Error: Async Crash (decorators.py:153)\nTraceback (most recent call last):\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_Extra_files\\decorators.py", line 151, in async_wrapper\n    return await func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\tests\\test_decorators.py", line 68, in async_crasher\n    raise RuntimeError("Async Crash")\nRuntimeError: Async Crash\nPASSED                                                                   [ 24%]
+tests/test_decorators.py::TestDecorators::test_performance_critical_warning 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:38 [ WARNING] \u26a0\ufe0f [slow_func] SLOW: 1395.7ms (threshold: 10.0ms) (decorators.py:194)\nPASSED                                                                   [ 24%]
+tests/test_decorators.py::TestDecorators::test_timer_logs 
+-------------------------------- live log call --------------------------------
+2026-01-27 19:09:39 [    INFO] \u23f1\ufe0f [timed_func] completed in 0.00s (decorators.py:33)\nPASSED                                                                   [ 24%]
+tests/test_engine_control.py::test_engine_lifecycle 

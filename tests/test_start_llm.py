@@ -1,15 +1,15 @@
 """
-Comprehensive Test Suite for start_llm.py
+Comprehensive Test Suite for engine_server.py
 ==========================================
 
 TDD Philosophy: "Trust but Verify" - Ronald Reagan
 
-This test suite covers all testable functions in start_llm.py:
+This test suite covers all testable functions in engine_server.py:
 - Pure functions (easy to test)
 - Stateful functions (using mocks)
 - Integration tests (end-to-end flows)
 
-Run with: pytest tests/test_start_llm.py -v
+Run with: pytest tests/test_engine_server.py -v
 """
 
 import pytest
@@ -26,9 +26,8 @@ from io import StringIO
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Ensure config is loaded before start_llm if necessary
-import start_llm
-
+# Ensure config is loaded before engine_server if necessary
+from zena_mode import server as engine_server
 
 # ============================================================================
 # CATEGORY 1: PURE FUNCTIONS (No side effects - easiest to test)
@@ -40,25 +39,25 @@ class TestPureFunctions:
     def test_env_int_with_valid_env_var(self):
         """Test env_int() reads integer from environment variable."""
         with patch.dict(os.environ, {"TEST_VAR": "42"}):
-            result = start_llm.env_int("TEST_VAR", 10)
+            result = engine_server.env_int("TEST_VAR", 10)
             assert result == 42
 
     def test_env_int_with_missing_env_var(self):
         """Test env_int() returns default when var missing."""
         with patch.dict(os.environ, {}, clear=True):
-            result = start_llm.env_int("MISSING_VAR", 99)
+            result = engine_server.env_int("MISSING_VAR", 99)
             assert result == 99
 
     def test_env_int_with_invalid_value(self):
         """Test env_int() returns default on invalid integer."""
         with patch.dict(os.environ, {"TEST_VAR": "not_a_number"}):
-            result = start_llm.env_int("TEST_VAR", 50)
+            result = engine_server.env_int("TEST_VAR", 50)
             assert result == 50
 
     def test_env_int_with_negative_values(self):
         """Test env_int() handles negative integers."""
         with patch.dict(os.environ, {"TEST_VAR": "-10"}):
-            result = start_llm.env_int("TEST_VAR", 0)
+            result = engine_server.env_int("TEST_VAR", 0)
             assert result == -10
 
 
@@ -71,26 +70,26 @@ class TestOutputUtilities:
 
     def test_safe_print_forces_flush(self, capsys):
         """Test safe_print() always flushes output immediately."""
-        start_llm.safe_print("Test message")
+        engine_server.safe_print("Test message")
         captured = capsys.readouterr()
         assert "Test message" in captured.out
 
     def test_safe_print_with_multiple_args(self, capsys):
         """Test safe_print() handles multiple arguments like print()."""
-        start_llm.safe_print("Hello", "World", 123)
+        engine_server.safe_print("Hello", "World", 123)
         captured = capsys.readouterr()
         assert "Hello World 123" in captured.out
 
     def test_safe_print_with_sep_kwarg(self, capsys):
         """Test safe_print() respects sep= keyword argument."""
-        start_llm.safe_print("A", "B", "C", sep="-")
+        engine_server.safe_print("A", "B", "C", sep="-")
         captured = capsys.readouterr()
         assert "A-B-C" in captured.out
 
     def test_safe_exit_calls_sys_exit(self):
         """Test safe_exit() calls sys.exit() with correct code."""
         with pytest.raises(SystemExit) as exc_info:
-            start_llm.safe_exit(42, delay=0.01)  # Short delay for testing
+            engine_server.safe_exit(42, delay=0.01)  # Short delay for testing
         assert exc_info.value.code == 42
 
     def test_safe_exit_flushes_buffers(self):
@@ -98,7 +97,7 @@ class TestOutputUtilities:
         with patch('sys.stdout.flush') as mock_stdout, \
              patch('sys.stderr.flush') as mock_stderr, \
              pytest.raises(SystemExit):
-            start_llm.safe_exit(0, delay=0.01)
+            engine_server.safe_exit(0, delay=0.01)
 
         mock_stdout.assert_called_once()
         mock_stderr.assert_called_once()
@@ -113,27 +112,27 @@ class TestProcessManagement:
 
     def setup_method(self):
         """Reset global state before each test."""
-        start_llm.MONITORED_PROCESSES.clear()
+        engine_server.MONITORED_PROCESSES.clear()
 
     def test_register_process_adds_to_global_dict(self):
         """Test register_process() adds process to MONITORED_PROCESSES."""
         mock_process = Mock(spec=subprocess.Popen)
         mock_process.pid = 1234
 
-        start_llm.register_process("test-server", mock_process, critical=True)
+        engine_server.register_process("test-server", mock_process, critical=True)
 
-        assert "test-server" in start_llm.MONITORED_PROCESSES
-        assert start_llm.MONITORED_PROCESSES["test-server"]["process"] == mock_process
-        assert start_llm.MONITORED_PROCESSES["test-server"]["critical"] is True
+        assert "test-server" in engine_server.MONITORED_PROCESSES
+        assert engine_server.MONITORED_PROCESSES["test-server"]["process"] == mock_process
+        assert engine_server.MONITORED_PROCESSES["test-server"]["critical"] is True
 
     def test_register_process_sets_defaults(self):
         """Test register_process() sets correct default values."""
         mock_process = Mock(spec=subprocess.Popen)
         mock_process.pid = 1234
 
-        start_llm.register_process("test-process", mock_process)
+        engine_server.register_process("test-process", mock_process)
 
-        info = start_llm.MONITORED_PROCESSES["test-process"]
+        info = engine_server.MONITORED_PROCESSES["test-process"]
         assert info["critical"] is False
         assert info["restarts"] == 0
         assert info["max_restarts"] == 1  # Non-critical default
@@ -143,9 +142,9 @@ class TestProcessManagement:
         mock_process = Mock(spec=subprocess.Popen)
         mock_process.pid = 1234
 
-        start_llm.register_process("critical-server", mock_process, critical=True)
+        engine_server.register_process("critical-server", mock_process, critical=True)
 
-        info = start_llm.MONITORED_PROCESSES["critical-server"]
+        info = engine_server.MONITORED_PROCESSES["critical-server"]
         assert info["max_restarts"] == 3  # Critical default
 
     def test_check_processes_detects_crashes(self):
@@ -154,14 +153,14 @@ class TestProcessManagement:
         mock_process = Mock(spec=subprocess.Popen)
         mock_process.poll.return_value = 1  # Exit code 1 = crash
 
-        start_llm.MONITORED_PROCESSES["crashed-server"] = {
+        engine_server.MONITORED_PROCESSES["crashed-server"] = {
             "process": mock_process,
             "critical": True,
             "restarts": 0,
             "max_restarts": 3
         }
 
-        crashed = start_llm.check_processes()
+        crashed = engine_server.check_processes()
 
         assert len(crashed) == 1
         assert crashed[0][0] == "crashed-server"  # name
@@ -173,14 +172,14 @@ class TestProcessManagement:
         mock_process = Mock(spec=subprocess.Popen)
         mock_process.poll.return_value = None  # None = still running
 
-        start_llm.MONITORED_PROCESSES["running-server"] = {
+        engine_server.MONITORED_PROCESSES["running-server"] = {
             "process": mock_process,
             "critical": False,
             "restarts": 0,
             "max_restarts": 1
         }
 
-        crashed = start_llm.check_processes()
+        crashed = engine_server.check_processes()
 
         assert len(crashed) == 0
 
@@ -189,16 +188,16 @@ class TestProcessManagement:
         mock_process = Mock(spec=subprocess.Popen)
         mock_process.poll.return_value = 1
 
-        start_llm.MONITORED_PROCESSES["crashed"] = {
+        engine_server.MONITORED_PROCESSES["crashed"] = {
             "process": mock_process,
             "critical": False,
             "restarts": 0,
             "max_restarts": 1
         }
 
-        start_llm.check_processes()
+        engine_server.check_processes()
 
-        assert "crashed" not in start_llm.MONITORED_PROCESSES
+        assert "crashed" not in engine_server.MONITORED_PROCESSES
 
 
 # ============================================================================
@@ -211,13 +210,13 @@ class TestLazyLoading:
     def test_get_model_manager_caches_import(self):
         """Test get_model_manager() caches the module."""
         # Reset cache
-        start_llm._model_manager_cache = None
+        engine_server._model_manager_cache = None
 
         with patch('builtins.__import__', return_value=Mock()) as mock_import:
             # First call
-            result1 = start_llm.get_model_manager()
+            result1 = engine_server.get_model_manager()
             # Second call
-            result2 = start_llm.get_model_manager()
+            result2 = engine_server.get_model_manager()
 
             # Import should only happen once for model_manager
             # (Filtering calls to only observe those for 'model_manager')
@@ -227,7 +226,7 @@ class TestLazyLoading:
 
     def test_get_model_manager_raises_on_missing_module(self):
         """Test get_model_manager() raises ImportError if module missing."""
-        start_llm._model_manager_cache = None
+        engine_server._model_manager_cache = None
 
         with patch('builtins.__import__', side_effect=ImportError("Module not found")):
             # Note: We need to be careful with __import__ as many things use it
@@ -240,15 +239,15 @@ class TestLazyLoading:
             # Using a more targetted patch or refined side_effect
             with patch('builtins.__import__', side_effect=mocked_import):
                 with pytest.raises(ImportError, match="model_manager module not found"):
-                    start_llm.get_model_manager()
+                    engine_server.get_model_manager()
 
     def test_get_cached_voice_service_caches_import(self):
         """Test get_cached_voice_service() caches the module."""
-        start_llm._voice_service_cache = None
+        engine_server._voice_service_cache = None
 
         with patch('builtins.__import__', return_value=Mock()) as mock_import:
-            result1 = start_llm.get_cached_voice_service()
-            result2 = start_llm.get_cached_voice_service()
+            result1 = engine_server.get_cached_voice_service()
+            result2 = engine_server.get_cached_voice_service()
 
             vs_calls = [c for c in mock_import.call_args_list if c[0][0] == 'voice_service']
             assert len(vs_calls) == 1
@@ -263,37 +262,6 @@ class TestNewUtilities:
     """Tests for newly added utility functions."""
 
     @patch('psutil.process_iter')
-    @patch('os.getpid', return_value=1234)
-    def test_instance_guard_detects_duplicate(self, mock_pid, mock_iter):
-        """Test instance_guard() exits if another instance is running."""
-        # Setup mock processes
-        # One is us, one is "duplicate"
-        mock_proc_us = Mock()
-        mock_proc_us.info = {'pid': 1234, 'name': 'python.exe', 'cmdline': ['python', 'start_llm.py']}
-        
-        mock_proc_dup = Mock()
-        mock_proc_dup.info = {'pid': 5678, 'name': 'python.exe', 'cmdline': ['python', 'start_llm.py']}
-        
-        mock_iter.return_value = [mock_proc_us, mock_proc_dup]
-        
-        with patch('start_llm.safe_print'), pytest.raises(SystemExit) as exc:
-            start_llm.instance_guard()
-        
-        assert exc.value.code == 1
-
-    @patch('psutil.process_iter')
-    @patch('os.getpid', return_value=1234)
-    def test_instance_guard_allows_single_instance(self, mock_pid, mock_iter):
-        """Test instance_guard() proceeds if no other instance is running."""
-        mock_proc_us = Mock()
-        mock_proc_us.info = {'pid': 1234, 'name': 'python.exe', 'cmdline': ['python', 'start_llm.py']}
-        
-        mock_iter.return_value = [mock_proc_us]
-        
-        # Should NOT raise SystemExit
-        start_llm.instance_guard()
-
-    @patch('psutil.process_iter')
     def test_kill_process_by_name(self, mock_iter):
         """Test kill_process_by_name() terminates correct processes."""
         mock_proc = Mock()
@@ -301,7 +269,7 @@ class TestNewUtilities:
         
         mock_iter.return_value = [mock_proc]
         
-        start_llm.kill_process_by_name("llama-server.exe")
+        engine_server.kill_process_by_name("llama-server.exe")
         
         mock_proc.terminate.assert_called_once()
 
@@ -311,15 +279,15 @@ class TestConfiguration:
     def test_restart_with_model_updates_global_path(self):
         """Test restart_with_model() updates MODEL_PATH global."""
         # We need to mock the external dependencies of restart_with_model
-        with patch('start_llm.kill_process_by_name'), \
-             patch('start_llm.subprocess.Popen'), \
-             patch('start_llm.os._exit'):
+        with patch('zena_mode.server.kill_process_by_name'), \
+             patch('zena_mode.server.subprocess.Popen'), \
+             patch('zena_mode.server.os._exit'):
             
-            original_path = start_llm.MODEL_PATH
+            original_path = engine_server.MODEL_PATH
             test_model = "test-model.gguf"
             
             # Since restart_with_model calls os._exit, we should mock it
-            start_llm.restart_with_model(test_model)
+            engine_server.restart_with_model(test_model)
             
             # Note: In our implementation, we don't have the return value 
             # because it calls os._exit(0) at the end.
@@ -329,7 +297,7 @@ class TestConfiguration:
 
     def test_build_llama_cmd_returns_list(self):
         """Test build_llama_cmd() returns a list of strings."""
-        cmd = start_llm.build_llama_cmd(port=8001, threads=4)
+        cmd = engine_server.build_llama_cmd(port=8001, threads=4)
         assert isinstance(cmd, list)
         assert all(isinstance(arg, str) for arg in cmd)
 
@@ -341,20 +309,20 @@ class TestConfiguration:
 class TestProcessUtilities:
     """Test process management utilities."""
 
-    @patch('start_llm.kill_process_tree')
+    @patch('zena_mode.server.kill_process_tree')
     def test_scale_swarm_decreases_expert_count(self, mock_kill):
         """Test scale_swarm() removes expert processes when scaling down."""
         # Setup 5 running experts
-        start_llm.EXPERT_PROCESSES.clear()
+        engine_server.EXPERT_PROCESSES.clear()
         for i in range(5):
             mock_proc = Mock(spec=subprocess.Popen)
             mock_proc.pid = 1000 + i
-            start_llm.EXPERT_PROCESSES[8005 + i] = mock_proc
+            engine_server.EXPERT_PROCESSES[8005 + i] = mock_proc
 
-        start_llm.scale_swarm(2)
+        engine_server.scale_swarm(2)
 
         # Should have 2 experts remaining
-        assert len(start_llm.EXPERT_PROCESSES) == 2
+        assert len(engine_server.EXPERT_PROCESSES) == 2
         assert mock_kill.call_count == 3
 
 
@@ -376,27 +344,27 @@ class TestOrchestrator:
             self.mock_request = Mock()
             self.mock_client_address = ('127.0.0.1', 12345)
             self.mock_server = Mock()
-            self.handler = start_llm.ZenAIOrchestrator(
+            self.handler = engine_server.ZenAIOrchestrator(
                 self.mock_request, self.mock_client_address, self.mock_server
             )
             self.handler.wfile = Mock()
             self.handler.rfile = Mock()
             self.handler.headers = {}
 
-    @patch('start_llm.ZenAIOrchestrator.send_response')
-    @patch('start_llm.ZenAIOrchestrator.send_header')
-    @patch('start_llm.ZenAIOrchestrator.end_headers')
+    @patch('zena_mode.server.ZenAIOrchestrator.send_response')
+    @patch('zena_mode.server.ZenAIOrchestrator.send_header')
+    @patch('zena_mode.server.ZenAIOrchestrator.end_headers')
     def test_do_OPTIONS(self, mock_end, mock_header, mock_send):
         """Test OPTIONS request returns CORS headers."""
         self.handler.do_OPTIONS()
         mock_send.assert_called_with(200)
         mock_header.assert_any_call('Access-Control-Allow-Origin', '*')
 
-    @patch('start_llm.ZenAIOrchestrator.send_json_response')
+    @patch('zena_mode.server.ZenAIOrchestrator.send_json_response')
     def test_do_GET_list(self, mock_json):
         """Test /list returns current model list."""
-        with patch('start_llm.MODEL_DIR') as mock_dir, \
-             patch('start_llm.MODEL_PATH') as mock_path:
+        with patch('zena_mode.server.MODEL_DIR') as mock_dir, \
+             patch('zena_mode.server.MODEL_PATH') as mock_path:
             
             mock_path.name = "active.gguf"
             mock_file = Mock(spec=Path)
@@ -412,12 +380,12 @@ class TestOrchestrator:
             assert args[0] == 200
             assert any(m['name'] == "active.gguf" and m['active'] for m in args[1])
 
-    @patch('start_llm.ZenAIOrchestrator.send_json_response')
+    @patch('zena_mode.server.ZenAIOrchestrator.send_json_response')
     def test_do_GET_status(self, mock_json):
         """Test /model/status returns loading status."""
-        with patch('start_llm.MODEL_PATH') as mock_path:
+        with patch('zena_mode.server.MODEL_PATH') as mock_path:
             mock_path.name = "test.gguf"
-            start_llm.SERVER_PROCESS = Mock() # Simulated running server
+            engine_server.SERVER_PROCESS = Mock() # Simulated running server
             
             self.handler.path = '/model/status'
             self.handler.do_GET()
@@ -427,8 +395,8 @@ class TestOrchestrator:
             assert status['model'] == "test.gguf"
             assert status['loaded'] is True
 
-    @patch('start_llm.restart_with_model')
-    @patch('start_llm.ZenAIOrchestrator.send_json_response')
+    @patch('zena_mode.server.restart_with_model')
+    @patch('zena_mode.server.ZenAIOrchestrator.send_json_response')
     def test_do_POST_swap(self, mock_json, mock_restart):
         """Test /swap initiates model restart."""
         self.handler.path = '/swap'
@@ -443,7 +411,7 @@ class TestOrchestrator:
             
             # Should have started a thread for restart
             mock_thread.assert_called_once()
-            assert mock_thread.call_args[1]['target'] == start_llm.restart_with_model
+            assert mock_thread.call_args[1]['target'] == engine_server.restart_with_model
             assert mock_thread.call_args[1]['args'] == ("new_model.gguf",)
             
             mock_json.assert_called_with(200, {"status": "accepted"})

@@ -298,6 +298,22 @@ class BaseLocale:
     NOTIFY_TRANSCRIBED = "Transcribed!"
     NOTIFY_NO_SPEECH = "No speech detected"
     NOTIFY_TRANSCRIPTION_FAILED = "Transcription Failed: {error}"
+
+    # ======================================================================
+    # BATCH / ANALYSIS
+    # ======================================================================
+    BATCH_MENU = "Batch Jobs"
+    BATCH_CREATE_REVIEW = "Create Code Review"
+    BATCH_FILES_PLACEHOLDER = "Enter file paths or directory (comma-separated)"
+    BATCH_ENQUEUE = "Enqueue"
+    ANALYSIS_SAVED = "Analysis saved to _zena_analisis"
+
+    # ======================================================================
+    # ENGAGEMENT / THINKING MESSAGES
+    # ======================================================================
+    ENGAGE_THINKING_SHORT = "Thinking..."
+    ENGAGE_THINKING_LONG = "Thinking deeply — fetching references and verifying facts..."
+    ENGAGE_FETCHING_REFS = "Fetching references..."
     NOTIFY_VOICE_ERROR = "Voice Error: {error}"
     
     # RAG notifications
@@ -352,11 +368,11 @@ class BaseLocale:
     WELCOME_ZENAI = """👋 **Welcome to ZenAI!**
 
 {source_msg}. I can help you with:
-- Answering questions about the content
-- Finding information quickly
-- Providing guidance
+- **Batch Code Review**: Analyze entire directories for security and logic.
+- **Deep Research**: Answering questions based on scanned data.
+- **Auto-Maintenance**: Pruning zombie processes and scouting for "Shiny" updates.
 
-*Ask me about it if you want!*"""
+*Ask me about my 'Anti-Zombie' guardian or 'Batch Review' capabilities!*"""
 
     WELCOME_SOURCE_WEBSITE = "I scanned the website: **{url}**"
     WELCOME_SOURCE_FILESYSTEM = "I scanned the local directory: **{path}**"
@@ -365,12 +381,12 @@ class BaseLocale:
     WELCOME_DEFAULT = """👋 **Welcome to ZenAI!**
 
 I'm your AI assistant powered by NiceGUI. I can help you with:
-- Managing AI models
-- Analyzing code files
-- Running benchmarks
-- Voice transcription
+- **Batch Code Review**: Deep architectural scans of multiple files.
+- **AI Model Management**: Scouting and downloading "Best-in-Class" models.
+- **Active Reliability**: My "Anti-Zombie" guardian ensures clean startups.
+- **Voice Intelligence**: High-accuracy transcription and feedback.
 
-*Remember, I'm still learning and improving!*"""
+*Try pasting a directory path in the Batch menu to get started!*"""
 
     # ==========================================================================
     # RAG SUCCESS MESSAGE
@@ -405,6 +421,59 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
     # ==========================================================================
     ERROR_WEBSITE_UNREACHABLE = "Cannot access website: {error}"
     ERROR_GENERIC = "An error occurred: {error}"
+    
+    # ==========================================================================
+    # LOADING / WAITING (Fun Rotating Messages)
+    # ==========================================================================
+    LOADING_WAITING_FOR_USER = [
+        "Waiting for your brilliance...",
+        "Pondering the digital void...",
+        "Contemplating the meaning of code...",
+        "Ready when you are!",
+        "ZenAI at your service...",
+        "Tidying up the neural networks...",
+        "Brewing some fresh logic...",
+        "Dreaming of electric sheep...",
+        "Scanning the horizon for new ideas...",
+        "Maintaining flow state..."
+    ]
+
+    LOADING_THINKING = [
+        "Thinking...",
+        "Processing...",
+        "Generating response...",
+        "Analyzing intent...",
+        "Consulting neural pathways...",
+        "Scratching my head for the best answer...",
+        "Wait a second, let me double-check that logic...",
+        "Almost there, just polishing the phrasing...",
+        "Consulting the digital oracles...",
+        "Hold on, this is a juicy one..."
+    ]
+
+    LOADING_SWARM_THINKING = [
+        "Consulting expert swarm...",
+        "Gathering consensus...",
+        "Experts deliberating...",
+        "Comparing parallel outputs...",
+        "Verifying with the swarm..."
+    ]
+
+    LOADING_RAG_THINKING = [
+        "Searching knowledge base...",
+        "Retrieving relevant chunks...",
+        "Consulting your project docs...",
+        "Fact-checking against sources...",
+        "Reading the fine print..."
+    ]
+
+    BATCH_PROGRESS_START = "🚀 Batch analysis started..."
+    BATCH_PROGRESS_READING = "📄 Reading file: {filename}..."
+    BATCH_PROGRESS_ANALYZING = "🧠 Analyzing content..."
+    BATCH_PROGRESS_AI_REVIEW = "🤖 AI code review in progress..."
+    BATCH_PROGRESS_WRITING = "💾 Writing analysis to {filename}..."
+    BATCH_PROGRESS_COMPLETE = "✅ Batch analysis complete!"
+    BATCH_ERROR_FILE = "❌ Error reading {filename}: {error}"
     
     # ==========================================================================
     # HELPER METHODS

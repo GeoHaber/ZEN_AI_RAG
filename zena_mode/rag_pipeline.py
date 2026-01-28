@@ -11,19 +11,25 @@ from typing import List, Dict, Generator, Optional, Set, FrozenSet
 from collections import Counter
 from math import log2
 from .chunker import TextChunker, ChunkerConfig
+from .profiler import profile_execution, profile_async_execution
 
 logger = logging.getLogger(__name__)
 
 # Core dependencies
-try:
-    from sentence_transformers import SentenceTransformer, CrossEncoder
-    from qdrant_client import QdrantClient
-    from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
-    import numpy as np
-    DEPS_AVAILABLE = True
-except ImportError:
-    DEPS_AVAILABLE = False
-    logger.warning("[RAG] sentence-transformers or qdrant-client not installed")
+# Core dependencies - LAZY LOADED
+# We define placeholders here to avoid NameErrors, actual import happens in init
+SentenceTransformer = None
+CrossEncoder = None
+QdrantClient = None
+Distance = None
+VectorParams = None
+PointStruct = None
+Filter = None
+FieldCondition = None
+MatchValue = None
+np = None
+DEPS_AVAILABLE = True # Assume true, check later or wrap in try/except during lazy load
+
 
 # Optional: BM25 for hybrid search
 try:
@@ -60,13 +66,25 @@ class LocalRAG:
         self._lock = threading.Lock()
         
         # Initialize Embedding Model
+        self._lazy_load_deps()
+        
         logger.info(f"[RAG] Loading transformer: {model_name}")
         self.model = SentenceTransformer(model_name)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
         
         # Initialize Qdrant Client (100% Local)
-        self.qdrant = QdrantClient(path=str(self.cache_dir))
-        self._init_collection()
+        try:
+            self.qdrant = QdrantClient(path=str(self.cache_dir))
+            self._init_collection()
+            self.read_only = False
+        except Exception as e:
+            if "already accessed by another instance" in str(e):
+                logger.warning(f"[RAG] ⚠️ Storage LOCKED by another process. Running in DEGRADED mode (Metadata only).")
+                self.qdrant = None
+                self.read_only = True
+            else:
+                logger.error(f"[RAG] ❌ Failed to initialize Qdrant: {e}")
+                raise
         
         # Standard In-memory buffers for quick lookups and BM25
         self.chunks = []         # Metadata cache for BM25 mapping
@@ -90,6 +108,25 @@ class LocalRAG:
             self.extractor = UniversalExtractor()
         except ImportError:
             self.extractor = None
+
+    def _lazy_load_deps(self):
+        """Lazy load heavy dependencies to prevent startup freeze."""
+        global SentenceTransformer, CrossEncoder, QdrantClient, Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, np, DEPS_AVAILABLE
+        
+        if SentenceTransformer is not None: return
+        
+        try:
+             logger.info("[RAG] Lazy loading heavy dependencies (SentenceTransformers, Qdrant)...")
+             from sentence_transformers import SentenceTransformer, CrossEncoder
+             from qdrant_client import QdrantClient
+             from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+             import numpy as np
+             DEPS_AVAILABLE = True
+             logger.info("[RAG] Dependencies loaded.")
+        except ImportError as e:
+             DEPS_AVAILABLE = False
+             logger.warning(f"[RAG] Dependencies missing: {e}")
+             raise ImportError(f"RAG dependencies missing: {e}")
 
     def warmup(self):
         """Pre-load heavy models into memory to avoid first-query lag."""
@@ -251,9 +288,14 @@ class LocalRAG:
                     })
         return all_chunks
 
+    @profile_execution("RAG Indexing")
     def build_index(self, documents: List[Dict], dedup_threshold: Optional[float] = None, 
                     filter_junk: bool = True):
         """Build/update Qdrant index with new documents."""
+        if not self.qdrant:
+            logger.warning("[RAG] Skipping indexing: Storage is LOCKED or not initialized.")
+            return
+
         with self._lock:
             start_time = time.time()
             threshold = dedup_threshold or DedupeConfig.SIMILARITY_THRESHOLD
@@ -317,6 +359,10 @@ class LocalRAG:
 
     def add_chunks(self, chunks: List[Dict], dedup_threshold: Optional[float] = None):
         """Add pre-chunked content with deduplication."""
+        if not self.qdrant:
+            logger.warning("[RAG] Skipping chunk addition: Storage is LOCKED or not initialized.")
+            return
+
         with self._lock:
             threshold = dedup_threshold or DedupeConfig.SIMILARITY_THRESHOLD
             
@@ -359,8 +405,16 @@ class LocalRAG:
                 self._rebuild_bm25()
                 logger.info(f"[RAG] Manually added {len(points)} chunks")
 
+    @profile_execution("RAG Semantic Search")
     def search(self, query: str, k: int = 5) -> List[Dict]:
         """Direct Semantic search using Qdrant."""
+        if not self.qdrant:
+             # Fallback: If BM25 is available, use it, otherwise return empty
+             if self.bm25:
+                 logger.debug("[RAG] Qdrant offline, falling back to BM25 for search.")
+                 return self.hybrid_search(query, k, alpha=0.0)
+             return []
+
         query_vec = self.model.encode([query], normalize_embeddings=True)[0].tolist()
         hits = self.qdrant.query_points(
             collection_name=self.collection_name,
@@ -384,12 +438,19 @@ class LocalRAG:
             return []
             
         k_search = max(k * 5, 20)
-        query_vec = self.model.encode([query], normalize_embeddings=True)[0].tolist()
-        hits = self.qdrant.query_points(
-            collection_name=self.collection_name,
-            query=query_vec,
-            limit=k_search
-        ).points
+        
+        # 1. Semantic Search (Qdrant)
+        hits = []
+        if self.qdrant:
+            query_vec = self.model.encode([query], normalize_embeddings=True)[0].tolist()
+            hits = self.qdrant.query_points(
+                collection_name=self.collection_name,
+                query=query_vec,
+                limit=k_search
+            ).points
+        else:
+            logger.debug("[RAG] Qdrant offline, search using BM25 only.")
+            alpha = 0.0 # Force BM25 only if Qdrant is missing
         
         id_to_idx = {c['qdrant_id']: i for i, c in enumerate(self.chunks)}
         f_ranks = {}
@@ -456,6 +517,8 @@ class LocalRAG:
         return True
 
     def get_stats(self) -> Dict:
+        if not self.qdrant:
+            return {"points_count": len(self.chunks), "status": "degraded"}
         try:
             info = self.qdrant.get_collection(self.collection_name)
             return {"total_chunks": info.points_count, "collection": self.collection_name}
@@ -463,6 +526,7 @@ class LocalRAG:
             return {"error": "Collection not available"}
 
 
+@profile_execution("RAG Retrieval Logic")
 def generate_rag_response(
     query: str, 
     rag: LocalRAG, 

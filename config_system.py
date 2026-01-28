@@ -11,6 +11,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+BASE_DIR = Path(__file__).parent.absolute()
+
 @dataclass
 class AppConfig:
     """Application configuration with sensible defaults."""
@@ -50,6 +52,25 @@ class AppConfig:
     THEME_SECONDARY: str = '#6c757d'
     THEME_ACCENT: str = '#17a2b8'
     
+    # ZenAI 2.1 - Autonomy & Connectivity
+    bin_dir: str = "_bin"
+    model_dir: str = "models"
+    default_model: str = ""
+    auto_update_enabled: bool = True
+    telegram_token: str = ""
+    telegram_whitelist: list = field(default_factory=list)
+    whatsapp_whitelist: list = field(default_factory=list)
+    whatsapp_port: int = 5001
+
+    # Thread worker limits (defaults)
+    RAG_MAX_WORKERS: int = 8
+    TTS_MAX_WORKERS: int = 4
+    GENERIC_MAX_WORKERS: int = 4
+    
+    def get(self, key: str, default=None):
+        """Dict-like access helper for backward compatibility."""
+        return getattr(self, key, default)
+
     @classmethod
     def from_json(cls, path: Path) -> 'AppConfig':
         """Load configuration from JSON file."""
@@ -57,11 +78,17 @@ class AppConfig:
             with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # Extract relevant fields (ignore zena_mode for now)
+            # Extract top-level fields
             config_data = {
                 k: v for k, v in data.items() 
                 if k in cls.__dataclass_fields__
             }
+            
+            # Flatten zena_mode fields if they exist
+            zena_data = data.get('zena_mode', {})
+            for k, v in zena_data.items():
+                if k in cls.__dataclass_fields__:
+                    config_data[k] = v
             
             logger.info(f"[Config] Loaded from {path}")
             return cls(**config_data)
@@ -113,6 +140,7 @@ EMOJI = {
     'timer': '⏱️',
     'loading': '💡',
     'expert': '🤖',
+    'rocket': '🚀',
 }
 
 

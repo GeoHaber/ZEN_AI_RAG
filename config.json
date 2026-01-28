@@ -1,6 +1,7 @@
 {
     "model_dir": "C:\\AI\\Models",
     "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
+    "LLM_API_URL": "http://127.0.0.1:8001",
     "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
     "zena_mode": {
         "enabled": true,
@@ -9,6 +10,11 @@
         "website_url": "https://www.linkedin.com/in/georgehaber/",
         "voice_enabled": true,
         "popup_position": "bottom-right",
-        "optimal_experts": 5
+        "optimal_experts": 5,
+        "network_access": false,
+        "auto_update_enabled": true,
+        "telegram_token": "",
+        "telegram_whitelist": [],
+        "whatsapp_whitelist": []
     }
 }

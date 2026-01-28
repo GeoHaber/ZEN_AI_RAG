@@ -1,0 +1,60 @@
+{
+  "language": {
+    "ui_language": "en"
+  },
+  "appearance": {
+    "dark_mode": false,
+    "font_size": "medium",
+    "chat_density": "comfortable",
+    "show_avatars": true,
+    "animate_messages": true
+  },
+  "ai_model": {
+    "default_model": "",
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "context_window": 4096,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1,
+    "use_cot_swarm": false,
+    "quiet_cot": true
+  },
+  "voice": {
+    "tts_enabled": true,
+    "voice_speed": 1.0,
+    "auto_speak_responses": false,
+    "voice_id": "default",
+    "recording_duration": 5
+  },
+  "rag": {
+    "enabled": false,
+    "chunk_size": 500,
+    "chunk_overlap": 50,
+    "similarity_threshold": 0.7,
+    "max_results": 5,
+    "auto_index_on_startup": false,
+    "last_source_type": "website",
+    "last_website_url": "",
+    "last_directory_path": ""
+  },
+  "chat": {
+    "show_timestamps": false,
+    "auto_scroll": true,
+    "history_days": 30,
+    "stream_responses": true,
+    "show_token_count": false,
+    "max_history_messages": 100,
+    "save_conversations": true
+  },
+  "system": {
+    "api_port": 8001,
+    "hub_port": 8002,
+    "ui_port": 8080,
+    "models_directory": "_models",
+    "check_updates_on_startup": true,
+    "auto_start_backend": true,
+    "log_level": "INFO"
+  },
+  "version": "1.0",
+  "first_run": false
+}

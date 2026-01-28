@@ -34,8 +34,10 @@ try:
     import numpy as np
     DEPS_AVAILABLE = True
 except ImportError:
+    SentenceTransformer = None
+    faiss = None
+    np = None
     DEPS_AVAILABLE = False
-    logger.warning("[ConvMemory] sentence-transformers or faiss-cpu not installed")
 
 
 # =============================================================================
@@ -130,6 +132,9 @@ class ConversationDB:
         """Initialize database schema."""
         self.conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
+        
+        # Ensure numpy is loaded for vectors if needed
+        # (Actually vector handling below uses bytes, so numpy only needed for FAISS interaction)
         
         with self.conn:
             # Messages table
@@ -334,7 +339,9 @@ class ConversationMemory:
         # Separate DB from main RAG
         self.db = ConversationDB(self.cache_dir / "conversation.db")
         
-        # Embedding model
+        if not DEPS_AVAILABLE:
+            raise ImportError("Install: pip install sentence-transformers faiss-cpu numpy")
+
         self.model = SentenceTransformer(self.config.EMBEDDING_MODEL)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
         
@@ -348,6 +355,8 @@ class ConversationMemory:
         self._lock = threading.RLock()
         
         logger.info(f"[ConvMemory] Initialized at {self.cache_dir}")
+
+
     
     def _get_or_create_index(self, session_id: str) -> Tuple[faiss.IndexFlatIP, List]:
         """Get or create FAISS index for a session."""

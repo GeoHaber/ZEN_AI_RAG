@@ -27,7 +27,7 @@ class LanguageSettings:
 @dataclass
 class AppearanceSettings:
     """Visual appearance settings."""
-    dark_mode: bool = True
+    dark_mode: bool = False
     font_size: str = "medium"  # small, medium, large
     chat_density: str = "comfortable"  # compact, comfortable, spacious
     show_avatars: bool = True

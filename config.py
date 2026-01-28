@@ -4,14 +4,32 @@ import logging
 from pathlib import Path
 from typing import Dict, Optional
 
-# --- Logging Setup ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(name)s] %(levelname)s: %(message)s')
-_config_logger = logging.getLogger("ZenAIConfig")
+from logging.handlers import RotatingFileHandler
 
 # --- Project Paths ---
 BASE_DIR: Path = Path(__file__).resolve().parent
 LOG_FILE: Path = BASE_DIR / "nebula_debug.log"
 PID_FILE: Path = BASE_DIR / ".nebula_ui.pid"
+
+# --- Logging Setup ---
+# Default to INFO, but allow env var override
+LOG_LEVEL = logging.DEBUG if os.environ.get("NEBULA_DEBUG") == "1" else logging.INFO
+
+# Ensure handlers
+handlers = [
+    RotatingFileHandler(BASE_DIR / "nebula_debug.log", maxBytes=5*1024*1024, backupCount=3, encoding='utf-8'),
+    logging.StreamHandler()
+]
+
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+    handlers=handlers
+)
+_config_logger = logging.getLogger("ZenAIConfig")
+
+# Export DEBUG flag for other modules to use
+DEBUG = LOG_LEVEL == logging.DEBUG
 
 # --- Load Config from JSON (ZenAI Installer Interface) ---
 CONFIG_JSON = BASE_DIR / "config.json"
@@ -21,6 +39,7 @@ if CONFIG_JSON.exists():
         with open(CONFIG_JSON, "r") as f:
             _external_config = json.load(f)
         _config_logger.info(f"Loaded config from {CONFIG_JSON}")
+        _config_logger.info(f"Config Content: {json.dumps(_external_config, indent=2)}")
     except json.JSONDecodeError as e:
         _config_logger.warning(f"Failed to parse config.json: {e}, using defaults")
     except (IOError, OSError) as e:

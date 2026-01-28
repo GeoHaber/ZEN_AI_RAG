@@ -1,0 +1,52 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG
+configfile: pytest.ini
+plugins: anyio-4.12.1, asyncio-1.3.0, base-url-2.1.0, cov-7.0.0, mock-3.15.1, playwright-0.7.2, timeout-2.4.0, respx-0.22.0, typeguard-4.4.4
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=function
+timeout: 30.0s
+timeout method: thread
+timeout func_only: False
+collecting ... 
+----------------------------- live log collection -----------------------------
+2026-01-26 21:09:27 [    INFO] Loaded config from C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\config.json (config.py:41)
+2026-01-26 21:09:27 [    INFO] Config Content: {
+  "model_dir": "C:\\AI\\Models",
+  "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
+  "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+  "zena_mode": {
+    "enabled": true,
+    "language": "auto",
+    "rag_source": "website",
+    "website_url": "https://www.linkedin.com/in/georgehaber/",
+    "voice_enabled": true,
+    "popup_position": "bottom-right",
+    "optimal_experts": 5,
+    "network_access": false
+  }
+} (config.py:42)
+collected 12 items
+
+tests/test_decorators.py::TestDecorators::test_retry_sync_success 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [ WARNING] \u26a0\ufe0f [flaky] Attempt 1/3 failed: Fail. Retrying in 0.0s... (decorators.py:81)\nPASSED                                                                   [  8%]
+tests/test_decorators.py::TestDecorators::test_retry_sync_failure 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [ WARNING] \u26a0\ufe0f [failure] Attempt 1/2 failed: Always fail. Retrying in 0.0s... (decorators.py:81)\n2026-01-26 21:09:27 [   ERROR] \u274c [failure] Failed after 2 attempts: Always fail (decorators.py:76)\nPASSED                                                                   [ 16%]
+tests/test_decorators.py::TestDecorators::test_retry_async 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [ WARNING] \u26a0\ufe0f [flaky_async] Attempt 1/3 failed: Async Fail. Retrying in 0.0s... (decorators.py:102)\nPASSED                                                                   [ 25%]
+tests/test_decorators.py::TestDecorators::test_log_errors_default 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [   ERROR] \u274c [crasher] Error: Crash (decorators.py:136)\nTraceback (most recent call last):\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_Extra_files\\decorators.py", line 134, in sync_wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\tests\\test_decorators.py", line 59, in crasher\n    raise RuntimeError("Crash")\nRuntimeError: Crash\nPASSED                                                                   [ 33%]
+tests/test_decorators.py::TestDecorators::test_log_errors_async 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [   ERROR] \u274c [async_crasher] Error: Async Crash (decorators.py:153)\nTraceback (most recent call last):\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_Extra_files\\decorators.py", line 151, in async_wrapper\n    return await func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\tests\\test_decorators.py", line 68, in async_crasher\n    raise RuntimeError("Async Crash")\nRuntimeError: Async Crash\nPASSED                                                                   [ 41%]
+tests/test_decorators.py::TestDecorators::test_performance_critical_warning 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [ WARNING] \u26a0\ufe0f [slow_func] SLOW: 20.3ms (threshold: 10.0ms) (decorators.py:194)\nPASSED                                                                   [ 50%]
+tests/test_decorators.py::TestDecorators::test_timer_logs 
+-------------------------------- live log call --------------------------------
+2026-01-26 21:09:27 [    INFO] \u23f1\ufe0f [timed_func] completed in 0.00s (decorators.py:33)\nPASSED                                                                   [ 58%]
+tests/test_engine_control.py::test_engine_lifecycle 

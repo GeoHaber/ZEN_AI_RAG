@@ -6,6 +6,8 @@ try:
 except ImportError:
     dependency_manager = None
 
+import datetime
+
 def create_zena_zip():
     base_dir = Path(os.getcwd())
     
@@ -14,7 +16,9 @@ def create_zena_zip():
         print("🔄 Updating requirements.txt...")
         dependency_manager.generate_requirements(base_dir)
     
-    output_zip = base_dir / "ZenAI_RAG_Source.zip"
+    # Date-stamped filename
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    output_zip = base_dir / f"ZenAI_RAG_Source_{date_str}.zip"
     
     # Files to explicitly include
     include_files = [
@@ -28,6 +32,7 @@ def create_zena_zip():
         "decorators.py",
         "utils.py",
         "ui_components.py",
+        "ui_state.py",
         "model_manager.py",
         "voice_service.py",
         "requirements.txt",
@@ -39,7 +44,7 @@ def create_zena_zip():
         "config.json",
         "download_deps.py",
         "dependency_manager.py",
-        "package_zena.py",
+        "Zena_Zip_All.py", # Self-reference updated
         "model_router.py",
         "settings.py",
         "settings.json",
@@ -51,7 +56,8 @@ def create_zena_zip():
         "zena_mode",
         "tests",
         "locales",
-        "ui"
+        "ui",
+        "_bin"
     ]
     
     print(f"Creating {output_zip}...")
@@ -72,7 +78,9 @@ def create_zena_zip():
             if dir_path.exists():
                 for root, _, files in os.walk(dir_path):
                     for file in files:
-                        if file == "__init__.py" or file.endswith((".py", ".md", ".json")):
+                        # Modified filter: Include .exe and .dll for _bin folder
+                        is_bin = "_bin" in str(Path(root))
+                        if file == "__init__.py" or file.endswith((".py", ".md", ".json")) or (is_bin and file.endswith((".exe", ".dll"))):
                             abs_path = Path(root) / file
                             rel_path = abs_path.relative_to(base_dir)
                             if "__pycache__" not in str(rel_path):

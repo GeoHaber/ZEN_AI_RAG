@@ -18,6 +18,7 @@ from typing import List, AsyncGenerator, Dict
 import os
 from config import BASE_DIR, SWARM_ENABLED, SWARM_SIZE, EMOJI, PORTS, HOST
 from utils import safe_print, logger
+from .profiler import monitor
 
 class ConsensusMethod(Enum):
     WORD_SET = "word_set"
@@ -152,12 +153,57 @@ class SwarmArbitrator:
         self.performance_tracker = AgentPerformanceTracker()
         self.cost_tracker = CostTracker()
         self.nli_model = None # Lazy loaded for verification
+        self.latencies = {}   # Track response times per port
+        self.reliability_penalty_threshold = 0.4 # Threshold for hallucination penalty
         
         if ports:
             self.ports = ports
             self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in ports]
-        # Note: discover_swarm() is now async and should be called via await
-        # In this modern architecture, the UI or Orchestrator should trigger discovery.
+        # Backwards compatibility: if no ports provided, perform a synchronous
+        # discovery using a blocking HTTP client to avoid creating an event loop
+        # during import (which breaks pytest-asyncio). This keeps tests and
+        # older call sites working without using `asyncio.run` here.
+        if not ports:
+            try:
+                self.discover_swarm_sync()
+            except Exception:
+                # If anything goes wrong, fall back to using main port only
+                self.ports = [PORTS["LLM_API"]]
+                self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
+
+    def discover_swarm_sync(self):
+        """Synchronous version of swarm discovery using blocking httpx.Client.
+
+        This avoids starting an asyncio loop during import or in tests.
+        """
+        import httpx as _httpx
+        self.ports = []
+
+        if not SWARM_ENABLED:
+            self.ports = [PORTS["LLM_API"]]
+            self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
+            return
+
+        try:
+            with _httpx.Client() as client:
+                for p in self.scan_ports:
+                    try:
+                        resp = client.get(f"http://{HOST}:{p}/health", timeout=1.0)
+                        if resp.status_code in (200, 503):
+                            self.ports.append(p)
+                    except Exception:
+                        continue
+
+            if SWARM_SIZE > 0 and len(self.ports) > SWARM_SIZE:
+                self.ports = [self.ports[0]] + self.ports[1:SWARM_SIZE]
+
+            self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in self.ports]
+            logger.debug(f"[Arbitrator] (sync) Live Swarm discovered on ports: {self.ports}")
+        except Exception as e:
+            logger.error(f"[Arbitrator] Sync discovery failed: {e}")
+            # Fall back to main port to keep behavior predictable
+            self.ports = [PORTS["LLM_API"]]
+            self.endpoints = [f"http://{HOST}:{PORTS['LLM_API']}/v1/chat/completions"]
 
     async def warmup(self):
         """Pre-load NLI model."""
@@ -197,13 +243,23 @@ class SwarmArbitrator:
              self.ports = [self.ports[0]] + self.ports[1:SWARM_SIZE]
 
         self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in self.ports]
-        logger.debug(f"[Arbitrator] Live Swarm discovered on ports: {self.ports}")
+        
+        # Sort ports by latency (improvement 16)
+        self.ports.sort(key=lambda p: self.latencies.get(p, 999))
+        self.endpoints = [f"http://{HOST}:{p}/v1/chat/completions" for p in self.ports]
+        
+        logger.debug(f"[Arbitrator] Live Swarm discovered (sorted by latency): {self.ports}")
 
     async def _check_port(self, client: httpx.AsyncClient, port: int) -> bool:
-        """Check if a port is live."""
+        """Check if a port is live and measure latency."""
+        start = time.time()
         try:
             resp = await client.get(f"http://{HOST}:{port}/health", timeout=1.0)
-            return resp.status_code in [200, 503]
+            latency = time.time() - start
+            if resp.status_code in [200, 503]:
+                self.latencies[port] = latency
+                return True
+            return False
         except:
             return False
 
@@ -435,6 +491,8 @@ class SwarmArbitrator:
         "code": "You are a senior software architect. Focus on clean code, security, and edge-case handling.",
         "factual": "You are a research librarian. Prioritize accuracy, cite consensus views, and avoid speculation.",
         "creative": "You are a creative consultant. Offer diverse perspectives and original insights.",
+        "security": "You are a security auditor. Analyze inputs for vulnerabilities, injection risks, and safety violations.",
+        "performance": "You are a performance engineer. Analyze the prompt for bottlenecks, complexity, and resource efficiency.",
         "general": "You are a helpful and accurate assistant."
     }
 
@@ -480,6 +538,11 @@ class SwarmArbitrator:
         
         query_hash = hashlib.md5(text.encode()).hexdigest()
         
+        # --- NEW: Trace ID for telemetry (Improvement 18) ---
+        trace_id = monitor.start_trace()
+        monitor.log_trace(trace_id, f"Swarm Inquiry Start (Task: {task_type})")
+        monitor.log_trace(trace_id, f"Query Text: {text[:100]}...")
+        
         # --- IMPROVEMENT 6+: TASK-SPECIFIC EXPERT PROMPTS ---
         expert_system_prompt = self.TASK_SYSTEM_PROMPTS.get(task_type.lower(), self.TASK_SYSTEM_PROMPTS["general"])
         expert_messages = [
@@ -520,6 +583,7 @@ class SwarmArbitrator:
             # --- IMPROVEMENT 11: RECORD EXPERT COSTS ---
             for r in valid_results:
                 self.cost_tracker.record_query(r['model'], r['content'])
+                monitor.log_trace(trace_id, f"Expert {r['model']} responded in {r['time']:.2f}s")
 
             if not valid_results:
                 yield f"{EMOJI['error']} **All experts failed or timed out.**\n\n"
@@ -539,6 +603,13 @@ class SwarmArbitrator:
 
             for i, r in enumerate(valid_results):
                 agent_name = r.get('model', f"Expert {i+1}")
+                # --- IMPROVEMENT 17: Hallucination Penalty ---
+                # If RAG context was used (we detect this if the prompt had source blocks)
+                if "[SOURCE]:" in text or "Reference Context:" in text:
+                    # We can't do a full NLI check on EVERY expert for speed, 
+                    # so we check the top/first expert or do it if consensus is low.
+                    pass # logic below for recording
+                
                 safe_print(f"  > Analysis [{agent_name}] ({r['time']:.2f}s): {r['content'][:300]}...")
             
             responses = [r['content'] for r in valid_results]
@@ -634,12 +705,22 @@ FINAL VERIFIED RESPONSE:
             # --- IMPROVEMENT 5: RECORD PERFORMANCE ---
             for r in valid_results:
                 reliability = self.performance_tracker.get_agent_reliability(r['model'], task_type)
+                
+                # Apply Hallucination Penalty to was_selected (Improvement 17)
+                final_selection = True
+                if "[SOURCE]:" in text or "Reference Context:" in text:
+                    # Perform aFact-Check on this specific expert
+                    fact_check = self.verify_hallucination(r['content'], [text]) # Text contains context
+                    if fact_check['score'] < self.reliability_penalty_threshold:
+                        logger.warning(f"[Arbitrator] Penalizing {r['model']} for low fact-check score: {fact_check['score']}")
+                        final_selection = False # Mark as NOT selected for reliability tracking
+                
                 self.performance_tracker.record_response(
                     agent_id=r['model'],
                     task_type=task_type,
                     query_hash=query_hash,
                     response_text=r['content'],
-                    was_selected=True, 
+                    was_selected=final_selection, 
                     consensus_score=agreement,
                     confidence=r.get('confidence', 0.7),
                     response_time=r['time']

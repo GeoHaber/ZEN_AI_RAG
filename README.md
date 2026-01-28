@@ -44,7 +44,8 @@ ZenAI/
 - ✅ Voice input (mic button)
 - ✅ Guided task chips
 - ✅ AI avatar (robot icon)
-- ✅ RAG popup (dialog ready)
+- ✅ **Knowledge Base (RAG)** (Integrated in Sidebar)
+- ✅ **Appearance (Light/Dark Mode)** (Integrated in Sidebar)
 - ✅ TTS output button
 - ✅ llama.cpp version check
 

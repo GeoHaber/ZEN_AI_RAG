@@ -11,6 +11,7 @@ from locales import get_locale, set_locale, get_available_locales
 from ui.styles import Styles
 from ui.icons import Icons
 from ui.theme import Colors
+from ui.registry import UI_IDS
 
 
 def create_settings_dialog(on_save: Optional[Callable] = None, on_language_change: Optional[Callable] = None, on_dark_mode_change: Optional[Callable[[bool], None]] = None):
@@ -38,7 +39,7 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
         # Header
         with ui.row().classes('w-full items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700'):
             ui.label(locale.SETTINGS_TITLE).classes('text-xl font-bold ' + Styles.TEXT_PRIMARY)
-            ui.button(icon=Icons.CLOSE, on_click=dialog.close).props('flat round dense')
+            ui.button(icon=Icons.CLOSE, on_click=dialog.close).props(f'flat round dense id={UI_IDS.BTN_CLOSE_DIALOG}')
         
         # Scrollable Content
         with ui.scroll_area().classes('w-full flex-1 p-4'):
@@ -58,7 +59,7 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
                             options=language_options,
                             value=settings.language.ui_language,
                             on_change=lambda e: _on_language_select(e.value, on_language_change)
-                        ).classes('w-full max-w-xs')
+                        ).classes('w-full max-w-xs').props(f'id={UI_IDS.SET_LANGUAGE}')
                 
                 # ==================== APPEARANCE ====================
                 with ui.expansion(locale.SETTINGS_CAT_APPEARANCE, icon='palette').classes('w-full ' + Styles.CARD_BASE):
@@ -68,7 +69,7 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
                             with ui.column().classes('gap-0'):
                                 ui.label(locale.SETTINGS_DARK_MODE).classes('font-semibold ' + Styles.TEXT_PRIMARY)
                                 ui.label(locale.SETTINGS_DARK_MODE_DESC).classes(Styles.LABEL_XS)
-                            ui.switch(value=settings.appearance.dark_mode, on_change=_handle_dark_mode_change)
+                            ui.switch(value=settings.appearance.dark_mode, on_change=_handle_dark_mode_change).props(f'id={UI_IDS.SET_DARK_MODE}')
                         
                         ui.separator()
                         
@@ -141,7 +142,7 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
                             with ui.column().classes('gap-0'):
                                 ui.label(locale.SETTINGS_USE_COT_SWARM).classes('font-semibold ' + Styles.TEXT_PRIMARY)
                                 ui.label(locale.SETTINGS_USE_COT_SWARM_DESC).classes(Styles.LABEL_XS)
-                            ui.switch(value=settings.ai_model.use_cot_swarm).bind_value(settings.ai_model, 'use_cot_swarm')
+                            ui.switch(value=settings.ai_model.use_cot_swarm).bind_value(settings.ai_model, 'use_cot_swarm').props(f'id={UI_IDS.SET_SWARM_COT}')
                         
                         with ui.row().classes('w-full items-center justify-between'):
                             with ui.column().classes('gap-0'):
@@ -157,7 +158,7 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
                             with ui.column().classes('gap-0'):
                                 ui.label(locale.SETTINGS_TTS_ENABLED).classes('font-semibold ' + Styles.TEXT_PRIMARY)
                                 ui.label(locale.SETTINGS_TTS_ENABLED_DESC).classes(Styles.LABEL_XS)
-                            ui.switch(value=settings.voice.tts_enabled).bind_value(settings.voice, 'tts_enabled')
+                            ui.switch(value=settings.voice.tts_enabled).bind_value(settings.voice, 'tts_enabled').props(f'id={UI_IDS.SET_TTS_ENABLE}')
                         
                         ui.separator()
                         
@@ -190,7 +191,7 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
                             with ui.column().classes('gap-0'):
                                 ui.label(locale.SETTINGS_RAG_ENABLED).classes('font-semibold ' + Styles.TEXT_PRIMARY)
                                 ui.label(locale.SETTINGS_RAG_ENABLED_DESC).classes(Styles.LABEL_XS)
-                            ui.switch(value=settings.rag.enabled).bind_value(settings.rag, 'enabled')
+                            ui.switch(value=settings.rag.enabled).bind_value(settings.rag, 'enabled').props(f'id={UI_IDS.SET_RAG_ENABLE}')
                         
                         ui.separator()
                         
@@ -307,11 +308,11 @@ def create_settings_dialog(on_save: Optional[Callable] = None, on_language_chang
         
         # Footer with Save/Reset buttons
         with ui.row().classes('w-full items-center justify-between p-4 border-t border-gray-200 dark:border-slate-700'):
-            ui.button(locale.SETTINGS_RESET, icon=Icons.REFRESH, on_click=lambda: _reset_settings(dialog, on_save)).props('flat').classes(Styles.TEXT_ERROR)
+            ui.button(locale.SETTINGS_RESET, icon=Icons.REFRESH, on_click=lambda: _reset_settings(dialog, on_save)).props(f'flat id={UI_IDS.BTN_SET_RESET}').classes(Styles.TEXT_ERROR)
             
             with ui.row().classes('gap-2'):
-                ui.button(locale.BTN_CANCEL, on_click=dialog.close).props('flat')
-                ui.button(locale.SETTINGS_SAVE, icon=Icons.SAVE, on_click=lambda: _save_settings(dialog, on_save)).classes(Styles.BTN_PRIMARY)
+                ui.button(locale.BTN_CANCEL, on_click=dialog.close).props(f'flat id={UI_IDS.BTN_CLOSE_DIALOG}')
+                ui.button(locale.SETTINGS_SAVE, icon=Icons.SAVE, on_click=lambda: _save_settings(dialog, on_save)).classes(Styles.BTN_PRIMARY).props(f'id={UI_IDS.BTN_SET_SAVE}')
     
     return dialog
 
