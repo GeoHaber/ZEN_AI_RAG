@@ -5,11 +5,11 @@ I have completed a comprehensive "Zero Tolerance" audit and hardening of the Zen
 ## 🏗️ The Golden Thirteen Structure
 The project has been consolidated into 13 core functional areas, with over 60 redundant files moved to `_legacy_audit`.
 
-1.  **[zena.py](file:///c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG/zena.py)**: Main UI Entry (Native Mode Enabled).
-2.  **[start_llm.py](file:///c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG/start_llm.py)**: Hardened Orchestrator (Hardware Profiling + Health Checks).
-3.  **[config_system.py](file:///c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG/config_system.py)**: Unified Configuration Management.
-4.  **[utils.py](file:///c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG/utils.py)**: Unified Global Utilities & Zombie Guardian.
-5.  **[security.py](file:///c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG/security.py)**: High-Security I/O & Sanitization.
+1.  **[zena.py](../../zena.py)**: Main UI Entry (Native Mode Enabled).
+2.  **[start_llm.py](../../start_llm.py)**: Hardened Orchestrator (Hardware Profiling + Health Checks).
+3.  **[config_system.py](../../config_system.py)**: Unified Configuration Management.
+4.  **[utils.py](../../utils.py)**: Unified Global Utilities & Zombie Guardian.
+5.  **[security.py](../../security.py)**: High-Security I/O & Sanitization.
 6.  **ui/**: Registry, Styles, and Themes.
 7.  **locales/**: Multi-language Support.
 8.  **zena_mode/**: AI & RAG Engine Core.
@@ -22,7 +22,7 @@ The project has been consolidated into 13 core functional areas, with over 60 re
 ## 🚀 Key Hardening Achievements
 
 ### 1. Hardened Orchestrator
-The [start_llm.py](file:///c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG/start_llm.py) now performs a **Global Health Check** on every startup:
+The [start_llm.py](../../start_llm.py) now performs a **Global Health Check** on every startup:
 -   **Zombie Pruning**: Automatically clears blocking processes.
 -   **Hardware Profiling**: Dynamically optimizes threads and GPU layers.
 -   **Binary Verification**: Ensures `llama-server.exe` integrity.

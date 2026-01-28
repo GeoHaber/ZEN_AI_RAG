@@ -28,18 +28,18 @@
 ### 🛡️ Strategy: Decoupled Stabilization
 We successfully used a "Divide and Conquer" approach:
 - **Phase 1 (UI)**: Isolated the frontend using `mock_backend.py`. This allowed us to fix UI crashes and `AttributeError` issues without being blocked by LLM engine crashes.
-- **Phase 2 (Backend)**: Headless testing of the LLM and RAG systems using `tests/test_backend_full.py`.
+- **Phase 2 (Backend)**: Headless testing of the LLM and RAG systems using [test_backend_full.py](tests/test_backend_full.py).
 - **Phase 3 (Integration)**: Final stitch with real-time smoke tests.
 
 ### ⚠️ Problems & Solutions
 1. **Zombie Processes**: Python and llama-server processes would often "hang" on ports 8080/8001.
-   - *Solution*: Implemented `ProcessManager.prune()` in a new `zombie_killer` logic within `utils.py`. The UI now proactively clears its own ports at startup.
-2. **LLM 400 Bad Request**: The `async_backend` was failing with empty responses.
+   - *Solution*: Implemented `ProcessManager.prune()` in a new `zombie_killer` logic within [utils.py](utils.py). The UI now proactively clears its own ports at startup.
+2. **LLM 400 Bad Request**: The [async_backend.py](async_backend.py) was failing with empty responses.
    - *Solution*: Standardized the OpenAI JSON payload and ensured `max_tokens` and `temperature` are correctly typed.
 3. **NiceGUI Client Iteration**: Automated click tests failed due to changes in how NiceGUI handles `app.clients`.
-   - *Solution*: Robustified `zena.py` to handle `clients` as a dictionary, list, or callable.
+   - *Solution*: Robustified [zena.py](zena.py) to handle `clients` as a dictionary, list, or callable.
 4. **Model Location**: The system needed to prioritize a central store.
-   - *Solution*: Added `central_model_dir` to `settings.json` and updated `config_system.py` logic.
+   - *Solution*: Added `central_model_dir` to [settings.json](settings.json) and updated [config_system.py](config_system.py) logic.
 
 ### 🏁 Final System Status
 - **UI**: 100% Stable, No AttributeErrors.
