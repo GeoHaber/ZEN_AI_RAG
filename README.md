@@ -16,7 +16,7 @@ ZenAI is a clean, focused AI assistant inspired by hospital chatbot UX patterns,
 
 ### Installation
 ```bash
-cd C:\Users\dvdze\Documents\_Python\Dev\ZenAI
+cd C:\Users{the place you want to installint from}
 pip install -r requirements.txt  # (create this from Local_LLM if needed)
 ```
 
