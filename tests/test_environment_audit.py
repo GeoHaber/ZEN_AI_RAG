@@ -3,7 +3,7 @@ import psutil
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 from utils import HardwareProfiler
-from start_llm import validate_environment
+from zena_mode.server import validate_environment
 
 def test_hardware_profiler():
     """Verify HardwareProfiler returns reasonable data."""

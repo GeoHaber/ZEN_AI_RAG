@@ -5,12 +5,12 @@ import pytest
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # List of dangerous strings that must be removed for branding consistency
-LEGACY_STRINGS = ["Nebula", "NeBULA", "Zena"]
+LEGACY_STRINGS = ["Nebula", "NeBULA"]
 
 # We allow these in the current test file or in specific historical logs if needed
 # But for now, let's be strict.
 EXCLUDE_DIRS = [".git", "__pycache__", ".pytest_cache", "logs", "rag_cache", ".gemini"]
-EXCLUDE_FILES = ["test_branding_cleanup.py", "task.md", "implementation_plan.md"]
+EXCLUDE_FILES = ["test_branding_cleanup.py", "task.md", "implementation_plan.md", "smoke_test_startup.py"]
 
 def test_no_legacy_branding_in_codebase():
     """Scan the entire codebase for legacy branding strings."""

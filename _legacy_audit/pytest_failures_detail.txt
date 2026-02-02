@@ -1,0 +1,737 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG
+configfile: pytest.ini
+plugins: anyio-4.12.1, asyncio-1.3.0, base-url-2.1.0, cov-7.0.0, mock-3.15.1, playwright-0.7.2, timeout-2.4.0, respx-0.22.0, typeguard-4.4.4
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=function
+timeout: 30.0s
+timeout method: thread
+timeout func_only: False
+collecting ... 
+----------------------------- live log collection -----------------------------
+2026-01-26 20:57:47 [    INFO] Loaded config from C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\config.json (config.py:41)
+2026-01-26 20:57:47 [    INFO] Config Content: {
+  "model_dir": "C:\\AI\\Models",
+  "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
+  "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+  "zena_mode": {
+    "enabled": true,
+    "language": "auto",
+    "rag_source": "website",
+    "website_url": "https://www.linkedin.com/in/georgehaber/",
+    "voice_enabled": true,
+    "popup_position": "bottom-right",
+    "optimal_experts": 5,
+    "network_access": false
+  }
+} (config.py:42)
+2026-01-26 20:57:47 [    INFO] [DEBUG] Initializing zena_mode package... (utils.py:87)
+2026-01-26 20:57:47 [    INFO] [DEBUG] Importing scraper... (utils.py:87)
+2026-01-26 20:57:47 [    INFO] [DEBUG] Importing rag_pipeline (Heavy)... (utils.py:87)
+2026-01-26 20:57:47 [    INFO] [DEBUG] Importing directory_scanner... (utils.py:87)
+2026-01-26 20:57:51 [    INFO] Loading faiss with AVX512 support. (loader.py:120)
+2026-01-26 20:57:51 [    INFO] Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'") (loader.py:125)
+2026-01-26 20:57:51 [    INFO] Loading faiss with AVX2 support. (loader.py:132)
+2026-01-26 20:57:51 [    INFO] Successfully loaded faiss with AVX2 support. (loader.py:134)
+2026-01-26 20:57:51 [    INFO] [DEBUG] Importing voice_engine... (utils.py:87)
+2026-01-26 20:57:51 [    INFO] [DEBUG] zena_mode package initialized. (utils.py:87)
+2026-01-26 20:57:51 [    INFO] [DEBUG] Importing config... (utils.py:87)
+2026-01-26 20:57:51 [    INFO] [DEBUG] Importing utils... (utils.py:87)
+2026-01-26 20:57:51 [    INFO] [DEBUG] Ensuring psutil... (utils.py:87)
+2026-01-26 20:57:51 [    INFO] [DEBUG] Importing psutil... (utils.py:87)
+collected 12 items
+
+tests/smoke_test_startup.py::test_zena_imports_successfully 
+-------------------------------- live log call --------------------------------
+2026-01-26 20:57:52 [    INFO] [AsyncBackend] Initialized with API: http://127.0.0.1:8001/v1/chat/completions (async_backend.py:22)
+2026-01-26 20:57:52 [    INFO] [Config] Zena Mode: True (zena.py:91)
+2026-01-26 20:57:52 [   ERROR] [RAG] Failed to initialize: LocalRAG.__init__() got an unexpected keyword argument 'lazy_load' (zena.py:110)
+2026-01-26 20:57:52 [    INFO] Use pytorch device_name: cpu (SentenceTransformer.py:219)
+2026-01-26 20:57:52 [    INFO] Load pretrained SentenceTransformer: all-MiniLM-L6-v2 (SentenceTransformer.py:227)
+2026-01-26 20:57:53 [    INFO] [ConvMemory] Initialized at C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\conversation_cache (conversation_memory.py:357)
+2026-01-26 20:57:53 [    INFO] [Memory] Conversation memory initialized (zena.py:123)
+2026-01-26 20:57:53 [    INFO] [ChatHistory] Initialized with max 100 messages (state_management.py:65)
+2026-01-26 20:57:53 [    INFO] Imported existing <module 'comtypes.gen' from 'C:\\Users\\dvdze\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'> (_code_cache.py:102)
+2026-01-26 20:57:53 [    INFO] Using writeable comtypes cache directory: 'C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen' (_code_cache.py:83)
+2026-01-26 20:57:53 [    INFO] [FeatureDetector] Available features: voice_tts, pdf, rag, audio (feature_detection.py:47)
+2026-01-26 20:57:53 [    INFO] [FeatureDetector] Unavailable features: voice_stt (feature_detection.py:49)
+2026-01-26 20:57:53 [    INFO] [Features] Feature detection complete (zena.py:135)
+2026-01-26 20:57:53 [    INFO] [Cleanup] Upload cleanup policy initialized (zena.py:143)
+PASSED                                                                   [  8%]
+tests/smoke_test_startup.py::test_zenai_page_execution FAILED            [ 16%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_env_int FAILED     [ 25%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_check_processes FAILED [ 33%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_tree FAILED [ 41%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_by_name FAILED [ 50%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_register_process_updates_globals FAILED [ 58%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_launch_expert_process_env FAILED [ 66%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_scale_swarm_integration FAILED [ 75%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_hub_daemon FAILED [ 83%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_voice_stream_server FAILED [ 91%]
+tests/test_coverage_boost.py::TestCoverageBoost::test_start_server_guard_bypass FAILED [100%]
+
+================================== FAILURES ===================================
+__________________________ test_zenai_page_execution __________________________
+
+    @pytest.mark.asyncio
+    async def test_zenai_page_execution():
+        """
+        Test that the main page function 'zenai_page' executes without
+        NameError or AttributeError.
+    
+        This catches issues like missing 'Icons', 'ui_state', or 'rag_dialog'
+        referenced inside the page function.
+        """
+        # 1. Import zena
+        import zena
+    
+        # 2. Mock the Client and UI context
+        # NiceGUI functions (ui.label, etc) usually require an active client context.
+        # We will try to run it. If it fails due to missing context, that's fine,
+        # as long as it's not a NameError.
+    
+        client_mock = MagicMock()
+    
+        try:
+            # We wrap it in a catch-all because we expect it might fail on
+            # "RuntimeError: No client connected" or similar, which verifies
+            # that it DIDN'T fail on NameError before reaching NiceGUI logic.
+>           await zena.zenai_page(client_mock)
+                  ^^^^^^^^^^^^^^^
+E           AttributeError: module 'zena' has no attribute 'zenai_page'
+
+tests\smoke_test_startup.py:42: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+    @pytest.mark.asyncio
+    async def test_zenai_page_execution():
+        """
+        Test that the main page function 'zenai_page' executes without
+        NameError or AttributeError.
+    
+        This catches issues like missing 'Icons', 'ui_state', or 'rag_dialog'
+        referenced inside the page function.
+        """
+        # 1. Import zena
+        import zena
+    
+        # 2. Mock the Client and UI context
+        # NiceGUI functions (ui.label, etc) usually require an active client context.
+        # We will try to run it. If it fails due to missing context, that's fine,
+        # as long as it's not a NameError.
+    
+        client_mock = MagicMock()
+    
+        try:
+            # We wrap it in a catch-all because we expect it might fail on
+            # "RuntimeError: No client connected" or similar, which verifies
+            # that it DIDN'T fail on NameError before reaching NiceGUI logic.
+            await zena.zenai_page(client_mock)
+        except NameError as e:
+            pytest.fail(f"CRITICAL: NameError in UI code: {e}")
+        except AttributeError as e:
+            # Check if it's a simple mock attribute error vs a real bug
+            if "has no attribute" in str(e):
+>                pytest.fail(f"CRITICAL: AttributeError in UI code: {e}")
+E                Failed: CRITICAL: AttributeError in UI code: module 'zena' has no attribute 'zenai_page'
+
+tests\smoke_test_startup.py:48: Failed
+_______________________ TestCoverageBoost.test_env_int ________________________
+
+self = <test_coverage_boost.TestCoverageBoost object at 0x00000289EF805A30>
+
+    def test_env_int(self):
+        """Test env_int utility."""
+        os.environ["TEST_ENV_INT"] = "42"
+>       assert start_llm.env_int("TEST_ENV_INT", 10) == 42
+               ^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'start_llm' has no attribute 'env_int'
+
+tests\test_coverage_boost.py:18: AttributeError
+___________________ TestCoverageBoost.test_check_processes ____________________
+
+args = (<test_coverage_boost.TestCoverageBoost object at 0x00000289EF805D60>,)
+keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1375: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1451: in __enter__
+    self.target = self.getter()
+                  ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'start_llm.psutil'
+
+    def resolve_name(name):
+        """
+        Resolve a name to an object.
+    
+        It is expected that `name` will be a string in one of the following
+        formats, where W is shorthand for a valid Python identifier and dot stands
+        for a literal period in these pseudo-regexes:
+    
+        W(.W)*
+        W(.W)*:(W(.W)*)?
+    
+        The first form is intended for backward compatibility only. It assumes that
+        some part of the dotted name is a package, and the rest is an object
+        somewhere within that package, possibly nested inside other objects.
+        Because the place where the package stops and the object hierarchy starts
+        can't be inferred by inspection, repeated attempts to import must be done
+        with this form.
+    
+        In the second form, the caller makes the division point clear through the
+        provision of a single colon: the dotted name to the left of the colon is a
+        package to be imported, and the dotted name to the right is the object
+        hierarchy within that package. Only one import is needed in this form. If
+        it ends with the colon, then a module object is returned.
+    
+        The function will return an object (which might be a module), or raise one
+        of the following exceptions:
+    
+        ValueError - if `name` isn't in a recognised format
+        ImportError - if an import failed when it shouldn't have
+        AttributeError - if a failure occurred when traversing the object hierarchy
+                         within the imported package to get to the desired object.
+        """
+        global _NAME_PATTERN
+        if _NAME_PATTERN is None:
+            # Lazy import to speedup Python startup time
+            import re
+            dotted_words = r'(?!\d)(\w+)(\.(?!\d)(\w+))*'
+            _NAME_PATTERN = re.compile(f'^(?P<pkg>{dotted_words})'
+                                       f'(?P<cln>:(?P<obj>{dotted_words})?)?$',
+                                       re.UNICODE)
+    
+        m = _NAME_PATTERN.match(name)
+        if not m:
+            raise ValueError(f'invalid format: {name!r}')
+        gd = m.groupdict()
+        if gd.get('cln'):
+            # there is a colon - a one-step import is all that's needed
+            mod = importlib.import_module(gd['pkg'])
+            parts = gd.get('obj')
+            parts = parts.split('.') if parts else []
+        else:
+            # no colon - have to iterate to find the package boundary
+            parts = name.split('.')
+            modname = parts.pop(0)
+            # first part *must* be a module/package.
+            mod = importlib.import_module(modname)
+            while parts:
+                p = parts[0]
+                s = f'{modname}.{p}'
+                try:
+                    mod = importlib.import_module(s)
+                    parts.pop(0)
+                    modname = s
+                except ImportError:
+                    break
+        # if we reach this point, mod is the module, already imported, and
+        # parts is the list of parts in the object hierarchy to be traversed, or
+        # an empty list if just the module is wanted.
+        result = mod
+        for p in parts:
+>           result = getattr(result, p)
+                     ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'start_llm' has no attribute 'psutil'
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\pkgutil.py:528: AttributeError
+__________________ TestCoverageBoost.test_kill_process_tree ___________________
+
+self = <test_coverage_boost.TestCoverageBoost object at 0x00000289EF8057C0>
+mock_proc_class = <MagicMock name='Process' id='2794685609792'>
+mock_exists = <MagicMock name='pid_exists' id='2794685698880'>
+
+    @patch('utils.psutil.pid_exists')
+    @patch('utils.psutil.Process')
+    def test_kill_process_tree(self, mock_proc_class, mock_exists):
+        """Test recursive process killing."""
+        mock_exists.return_value = True
+        mock_child = Mock()
+        mock_parent = Mock()
+        mock_parent.children.return_value = [mock_child]
+        mock_proc_class.return_value = mock_parent
+    
+>       start_llm.kill_process_tree(1234)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'start_llm' has no attribute 'kill_process_tree'
+
+tests\test_coverage_boost.py:47: AttributeError
+_________________ TestCoverageBoost.test_kill_process_by_name _________________
+
+self = <test_coverage_boost.TestCoverageBoost object at 0x00000289EF8060C0>
+mock_iter = <MagicMock name='process_iter' id='2794694182480'>
+
+    @patch('utils.psutil.process_iter')
+    def test_kill_process_by_name(self, mock_iter):
+        """Test killing processes by filename."""
+        mock_proc = Mock()
+        mock_proc.info = {'pid': 9999, 'name': 'target.exe'}
+        mock_iter.return_value = [mock_proc]
+    
+>       start_llm.kill_process_by_name("target.exe")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'start_llm' has no attribute 'kill_process_by_name'
+
+tests\test_coverage_boost.py:59: AttributeError
+___________ TestCoverageBoost.test_register_process_updates_globals ___________
+
+self = <test_coverage_boost.TestCoverageBoost object at 0x00000289EF806450>
+
+    def test_register_process_updates_globals(self):
+        """Test register_process correctly populates tracking structures."""
+>       start_llm.MONITORED_PROCESSES.clear()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'start_llm' has no attribute 'MONITORED_PROCESSES'
+
+tests\test_coverage_boost.py:64: AttributeError
+______________ TestCoverageBoost.test_launch_expert_process_env _______________
+
+args = (<test_coverage_boost.TestCoverageBoost object at 0x00000289EF8067B0>,)
+keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1375: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1451: in __enter__
+    self.target = self.getter()
+                  ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'start_llm.subprocess'
+
+    def resolve_name(name):
+        """
+        Resolve a name to an object.
+    
+        It is expected that `name` will be a string in one of the following
+        formats, where W is shorthand for a valid Python identifier and dot stands
+        for a literal period in these pseudo-regexes:
+    
+        W(.W)*
+        W(.W)*:(W(.W)*)?
+    
+        The first form is intended for backward compatibility only. It assumes that
+        some part of the dotted name is a package, and the rest is an object
+        somewhere within that package, possibly nested inside other objects.
+        Because the place where the package stops and the object hierarchy starts
+        can't be inferred by inspection, repeated attempts to import must be done
+        with this form.
+    
+        In the second form, the caller makes the division point clear through the
+        provision of a single colon: the dotted name to the left of the colon is a
+        package to be imported, and the dotted name to the right is the object
+        hierarchy within that package. Only one import is needed in this form. If
+        it ends with the colon, then a module object is returned.
+    
+        The function will return an object (which might be a module), or raise one
+        of the following exceptions:
+    
+        ValueError - if `name` isn't in a recognised format
+        ImportError - if an import failed when it shouldn't have
+        AttributeError - if a failure occurred when traversing the object hierarchy
+                         within the imported package to get to the desired object.
+        """
+        global _NAME_PATTERN
+        if _NAME_PATTERN is None:
+            # Lazy import to speedup Python startup time
+            import re
+            dotted_words = r'(?!\d)(\w+)(\.(?!\d)(\w+))*'
+            _NAME_PATTERN = re.compile(f'^(?P<pkg>{dotted_words})'
+                                       f'(?P<cln>:(?P<obj>{dotted_words})?)?$',
+                                       re.UNICODE)
+    
+        m = _NAME_PATTERN.match(name)
+        if not m:
+            raise ValueError(f'invalid format: {name!r}')
+        gd = m.groupdict()
+        if gd.get('cln'):
+            # there is a colon - a one-step import is all that's needed
+            mod = importlib.import_module(gd['pkg'])
+            parts = gd.get('obj')
+            parts = parts.split('.') if parts else []
+        else:
+            # no colon - have to iterate to find the package boundary
+            parts = name.split('.')
+            modname = parts.pop(0)
+            # first part *must* be a module/package.
+            mod = importlib.import_module(modname)
+            while parts:
+                p = parts[0]
+                s = f'{modname}.{p}'
+                try:
+                    mod = importlib.import_module(s)
+                    parts.pop(0)
+                    modname = s
+                except ImportError:
+                    break
+        # if we reach this point, mod is the module, already imported, and
+        # parts is the list of parts in the object hierarchy to be traversed, or
+        # an empty list if just the module is wanted.
+        result = mod
+        for p in parts:
+>           result = getattr(result, p)
+                     ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'start_llm' has no attribute 'subprocess'
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\pkgutil.py:528: AttributeError
+_______________ TestCoverageBoost.test_scale_swarm_integration ________________
+
+args = (<test_coverage_boost.TestCoverageBoost object at 0x00000289EF806B10>,)
+keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1375: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1467: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000289EF805310>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'start_llm' from 'C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\start_llm.py'> does not have the attribute 'kill_process_tree'
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1437: AttributeError
+___________________ TestCoverageBoost.test_start_hub_daemon ___________________
+
+args = (<test_coverage_boost.TestCoverageBoost object at 0x00000289EF806E70>,)
+keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1375: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1467: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000289EF805430>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'start_llm' from 'C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\start_llm.py'> does not have the attribute 'ThreadingHTTPServer'
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1437: AttributeError
+______________ TestCoverageBoost.test_start_voice_stream_server _______________
+
+args = (<test_coverage_boost.TestCoverageBoost object at 0x00000289EF8071D0>,)
+keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1375: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1451: in __enter__
+    self.target = self.getter()
+                  ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'start_llm.asyncio'
+
+    def resolve_name(name):
+        """
+        Resolve a name to an object.
+    
+        It is expected that `name` will be a string in one of the following
+        formats, where W is shorthand for a valid Python identifier and dot stands
+        for a literal period in these pseudo-regexes:
+    
+        W(.W)*
+        W(.W)*:(W(.W)*)?
+    
+        The first form is intended for backward compatibility only. It assumes that
+        some part of the dotted name is a package, and the rest is an object
+        somewhere within that package, possibly nested inside other objects.
+        Because the place where the package stops and the object hierarchy starts
+        can't be inferred by inspection, repeated attempts to import must be done
+        with this form.
+    
+        In the second form, the caller makes the division point clear through the
+        provision of a single colon: the dotted name to the left of the colon is a
+        package to be imported, and the dotted name to the right is the object
+        hierarchy within that package. Only one import is needed in this form. If
+        it ends with the colon, then a module object is returned.
+    
+        The function will return an object (which might be a module), or raise one
+        of the following exceptions:
+    
+        ValueError - if `name` isn't in a recognised format
+        ImportError - if an import failed when it shouldn't have
+        AttributeError - if a failure occurred when traversing the object hierarchy
+                         within the imported package to get to the desired object.
+        """
+        global _NAME_PATTERN
+        if _NAME_PATTERN is None:
+            # Lazy import to speedup Python startup time
+            import re
+            dotted_words = r'(?!\d)(\w+)(\.(?!\d)(\w+))*'
+            _NAME_PATTERN = re.compile(f'^(?P<pkg>{dotted_words})'
+                                       f'(?P<cln>:(?P<obj>{dotted_words})?)?$',
+                                       re.UNICODE)
+    
+        m = _NAME_PATTERN.match(name)
+        if not m:
+            raise ValueError(f'invalid format: {name!r}')
+        gd = m.groupdict()
+        if gd.get('cln'):
+            # there is a colon - a one-step import is all that's needed
+            mod = importlib.import_module(gd['pkg'])
+            parts = gd.get('obj')
+            parts = parts.split('.') if parts else []
+        else:
+            # no colon - have to iterate to find the package boundary
+            parts = name.split('.')
+            modname = parts.pop(0)
+            # first part *must* be a module/package.
+            mod = importlib.import_module(modname)
+            while parts:
+                p = parts[0]
+                s = f'{modname}.{p}'
+                try:
+                    mod = importlib.import_module(s)
+                    parts.pop(0)
+                    modname = s
+                except ImportError:
+                    break
+        # if we reach this point, mod is the module, already imported, and
+        # parts is the list of parts in the object hierarchy to be traversed, or
+        # an empty list if just the module is wanted.
+        result = mod
+        for p in parts:
+>           result = getattr(result, p)
+                     ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'start_llm' has no attribute 'asyncio'
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\pkgutil.py:528: AttributeError
+______________ TestCoverageBoost.test_start_server_guard_bypass _______________
+
+args = (<test_coverage_boost.TestCoverageBoost object at 0x00000289EF807530>,)
+keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1375: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:526: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1451: in __enter__
+    self.target = self.getter()
+                  ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'start_llm.subprocess'
+
+    def resolve_name(name):
+        """
+        Resolve a name to an object.
+    
+        It is expected that `name` will be a string in one of the following
+        formats, where W is shorthand for a valid Python identifier and dot stands
+        for a literal period in these pseudo-regexes:
+    
+        W(.W)*
+        W(.W)*:(W(.W)*)?
+    
+        The first form is intended for backward compatibility only. It assumes that
+        some part of the dotted name is a package, and the rest is an object
+        somewhere within that package, possibly nested inside other objects.
+        Because the place where the package stops and the object hierarchy starts
+        can't be inferred by inspection, repeated attempts to import must be done
+        with this form.
+    
+        In the second form, the caller makes the division point clear through the
+        provision of a single colon: the dotted name to the left of the colon is a
+        package to be imported, and the dotted name to the right is the object
+        hierarchy within that package. Only one import is needed in this form. If
+        it ends with the colon, then a module object is returned.
+    
+        The function will return an object (which might be a module), or raise one
+        of the following exceptions:
+    
+        ValueError - if `name` isn't in a recognised format
+        ImportError - if an import failed when it shouldn't have
+        AttributeError - if a failure occurred when traversing the object hierarchy
+                         within the imported package to get to the desired object.
+        """
+        global _NAME_PATTERN
+        if _NAME_PATTERN is None:
+            # Lazy import to speedup Python startup time
+            import re
+            dotted_words = r'(?!\d)(\w+)(\.(?!\d)(\w+))*'
+            _NAME_PATTERN = re.compile(f'^(?P<pkg>{dotted_words})'
+                                       f'(?P<cln>:(?P<obj>{dotted_words})?)?$',
+                                       re.UNICODE)
+    
+        m = _NAME_PATTERN.match(name)
+        if not m:
+            raise ValueError(f'invalid format: {name!r}')
+        gd = m.groupdict()
+        if gd.get('cln'):
+            # there is a colon - a one-step import is all that's needed
+            mod = importlib.import_module(gd['pkg'])
+            parts = gd.get('obj')
+            parts = parts.split('.') if parts else []
+        else:
+            # no colon - have to iterate to find the package boundary
+            parts = name.split('.')
+            modname = parts.pop(0)
+            # first part *must* be a module/package.
+            mod = importlib.import_module(modname)
+            while parts:
+                p = parts[0]
+                s = f'{modname}.{p}'
+                try:
+                    mod = importlib.import_module(s)
+                    parts.pop(0)
+                    modname = s
+                except ImportError:
+                    break
+        # if we reach this point, mod is the module, already imported, and
+        # parts is the list of parts in the object hierarchy to be traversed, or
+        # an empty list if just the module is wanted.
+        result = mod
+        for p in parts:
+>           result = getattr(result, p)
+                     ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'start_llm' has no attribute 'subprocess'
+
+..\..\..\..\AppData\Local\Programs\Python\Python312\Lib\pkgutil.py:528: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/smoke_test_startup.py::test_zenai_page_execution - Failed: CRITI...
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_env_int - Attrib...
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_check_processes
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_tree
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_kill_process_by_name
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_register_process_updates_globals
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_launch_expert_process_env
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_scale_swarm_integration
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_start_hub_daemon
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_start_voice_stream_server
+FAILED tests/test_coverage_boost.py::TestCoverageBoost::test_start_server_guard_bypass
+======================== 11 failed, 1 passed in 6.76s =========================

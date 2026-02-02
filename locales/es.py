@@ -391,3 +391,27 @@ Soy tu asistente IA potenciado por NiceGUI. Puedo ayudarte con:
     # ==========================================================================
     ERROR_WEBSITE_UNREACHABLE = "No se puede acceder al sitio web: {error}"
     ERROR_GENERIC = "Ocurrió un error: {error}"
+
+    LOADING_THINKING = [
+        "Pensando...",
+        "Procesando...",
+        "Generando respuesta...",
+        "Analizando intención...",
+        "Consultando rutas neuronales..."
+    ]
+
+    LOADING_SWARM_THINKING = [
+        "Consultando enjambre de expertos...",
+        "Reuniendo consenso...",
+        "Expertos deliberando...",
+        "Comparando salidas paralelas...",
+        "Verificando con el enjambre..."
+    ]
+
+    LOADING_RAG_THINKING = [
+        "Buscando en base de conocimientos...",
+        "Recuperando fragmentos relevantes...",
+        "Consultando tus documentos de proyecto...",
+        "Verificando hechos con fuentes...",
+        "Leyendo la letra pequeña..."
+    ]

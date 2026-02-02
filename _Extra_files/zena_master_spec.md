@@ -173,4 +173,15 @@ ZenAI/
 
 ---
 
+## 8. UI Interaction & Testability
+**MANDATORY TRACKING OF INTERACTIVE ELEMENTS**
+
+1.  **UI Registry**: EVERY button, menu item, and switch MUST have a unique ID defined in `ui/registry.py`.
+2.  **ID Assignment**: IDs MUST be assigned via the `.props(f'id={UI_IDS.NAME}')` or `.classes(id=...)` method in NiceGUI.
+3.  **Chaos Testing**: The `live_diagnostics.py` (Monkey Test) MUST include a UI chaos phase that targets these IDs to ensure no "dead" or crashing elements exist.
+4.  **Semantic Validation**: Chaos testing MUST be "Smart"—utilizing the Local LLM to verify that UI actions and resulting transitions make logical sense based on the registry metadata.
+5.  **No Exceptions**: Any new interactive element added without an ID in the registry and a corresponding test case is a specification violation.
+
+---
+
 **FINAL COMMANDMENT**: REBUILD THIS EXACTLY. AUDIT AGAINST THIS SPEC. ANY MISSING RULE = REJECT AND REDO. Use flow diagrams from prior analysis for visual guidance.

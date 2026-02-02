@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+utils.py - ZenAI Unified Utility System
+=======================================
+Consolidated utilities for process management, hardware profiling, and diagnostics.
+Strictly follows zena_master_spec.md v3.1.
+"""
 import os
 import sys
 import time
@@ -7,73 +14,49 @@ import ctypes
 import subprocess
 import signal
 import hashlib
-import zipfile
 import platform
+from pathlib import Path
+from typing import Optional, NoReturn, List, Dict, Set
+
 try:
     import psutil
 except ImportError:
     psutil = None
-from typing import Optional, NoReturn
-from pathlib import Path
-from config import LOG_FILE, HOST, BASE_DIR
 
-def safe_print(*args, **kwargs):
-    """
-    Thread-safe print with automatic flush.
-    Replaces default print to ensure logs are captured in real-time.
-    """
-    kwargs.setdefault('flush', True)
-    print(*args, **kwargs)
+from config_system import EMOJI, config
 
+# --- Global Logic ---
+BASE_DIR = config.BASE_DIR
 
 # --- Logging Setup ---
-# Determine log file based on process
 proc_name = str(getattr(sys.modules.get("__main__"), "__file__", "unknown"))
-
 if "start_llm.py" in proc_name:
-    CURRENT_LOG_FILE = BASE_DIR / "nebula_engine.log"
     LOG_NAME = "ZenAIEngine"
-elif "Test_Chat.py" in proc_name:
-    CURRENT_LOG_FILE = BASE_DIR / "nebula_ui.log"
+elif "zena.py" in proc_name:
     LOG_NAME = "ZenAIUI"
-elif "nebula_desktop.py" in proc_name:
-    CURRENT_LOG_FILE = BASE_DIR / "nebula_desktop.log"
-    LOG_NAME = "ZenAIDesktop"
 else:
-    CURRENT_LOG_FILE = LOG_FILE
     LOG_NAME = "ZenAIShared"
 
-# Configure valid logging to file and console
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(CURRENT_LOG_FILE, encoding='utf-8', mode='a'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
 logger = logging.getLogger(LOG_NAME)
 
-def safe_print(*args, **kwargs):
-    """
-    Thread-safe print with automatic flush=True.
-    Ensures output is immediately visible in loggers and consoles.
-    Handles Windows console encoding issues by falling back to ASCII-safe text.
-    """
+def safe_print(*args, level: str = "info", **kwargs):
+    """Thread-safe and encoding-safe print with automatic flush."""
     kwargs['flush'] = kwargs.get('flush', True)
+    sep = kwargs.get('sep', ' ')
+    text = sep.join(str(a) for a in args)
+    
     try:
-        print(*args, **kwargs)
+        print(text, **kwargs)
     except UnicodeEncodeError:
-        # Fallback for Windows consoles that don't support UTF-8/Emojis
-        safe_args = []
-        for a in args:
-            try:
-                # Try to filter out non-encodable characters
-                s = str(a).encode(sys.stdout.encoding or 'ascii', errors='replace').decode(sys.stdout.encoding or 'ascii')
-                safe_args.append(s)
-            except:
-                safe_args.append(str(a).encode('ascii', 'ignore').decode('ascii'))
-        print(*safe_args, **kwargs)
+        safe_args = [str(a).encode('ascii', 'ignore').decode('ascii') for a in args]
+        print(sep.join(safe_args), **kwargs)
+
+    # Forward to logger
+    lvl = level.lower()
+    if lvl == "debug": logger.debug(text)
+    elif lvl == "warning": logger.warning(text)
+    elif lvl == "error": logger.error(text)
+    else: logger.info(text)
 
 def sha256sum(path: Path) -> str:
     """Computes SHA256 hash of a file."""
@@ -83,268 +66,234 @@ def sha256sum(path: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
-def safe_extract(zip_path: Path, dest: Path):
-    """Securely extracts a zip file, preventing path traversal (Zip Slip)."""
-    with zipfile.ZipFile(zip_path, 'r') as z:
-        for member in z.namelist():
-            target = dest / member
-            # Security check: ensure target resolves inside dest
-            if not str(target.resolve()).startswith(str(dest.resolve())):
-                raise RuntimeError(f"Security Alert: Zip Slip attempt detected! {member}")
-        z.extractall(dest)
-
-def trace_log(component: str, msg: str):
-    """Legacy helper to maintain trace log format if needed, or just pipe to logger."""
-    logger.info(f"[{component}] PID:{os.getpid()} | {msg}")
-
 # --- Networking ---
-
-def is_port_active(port: int, host: str = HOST) -> bool:
+def is_port_active(port: int, host: str = "127.0.0.1") -> bool:
     """Checks if a TCP port is open/active."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(1.0)
         return s.connect_ex((host, port)) == 0
 
-def wait_for_port(port: int, timeout: int = 60, host: str = HOST) -> bool:
+def wait_for_port(port: int, timeout: int = 60, host: str = "127.0.0.1") -> bool:
     """Waits for a port to become active."""
     start = time.time()
     while time.time() - start < timeout:
-        if is_port_active(port, host):
-            return True
+        if is_port_active(port, host): return True
         time.sleep(1)
     return False
 
 # --- Process Management ---
-
-def is_pid_alive(pid: int) -> bool:
-    """Checks if a process ID is actually running (cross-platform)."""
-    try:
-        import psutil
-        return psutil.pid_exists(pid)
-    except ImportError:
-        # Fallback for Windows without psutil
-        if sys.platform == "win32":
+class ProcessManager:
+    """Unified handler for process lifecycle and 'Zombie' pruning."""
+    
+    @staticmethod
+    def get_zombies(ports: List[int] = None, scripts: List[str] = None) -> Dict[int, Dict]:
+        """Identifies hanging processes by port or script name."""
+        zombies = {}
+        if not psutil: return zombies
+        
+        target_ports = ports or [config.llm_port, config.mgmt_port, config.ui_port, config.voice_port]
+        target_scripts = scripts or ["zena.py", "start_llm.py", "llama-server.exe"]
+        
+        # 1. Port-based detection
+        try:
+            for conn in psutil.net_connections(kind='inet'):
+                if conn.laddr.port in target_ports and conn.status == 'LISTEN':
+                    try:
+                        p = psutil.Process(conn.pid)
+                        if conn.pid == os.getpid(): continue
+                        zombies[conn.pid] = {
+                            'type': 'Port Conflict',
+                            'port': conn.laddr.port,
+                            'name': p.name(),
+                            'cmd': " ".join(p.cmdline()[:3])
+                        }
+                    except (psutil.NoSuchProcess, psutil.AccessDenied): continue
+        except: pass
+        
+        # 2. Script-based detection
+        for p in psutil.process_iter(['pid', 'name', 'cmdline']):
             try:
-                process = ctypes.windll.kernel32.OpenProcess(1, False, pid)
-                if process:
-                    ctypes.windll.kernel32.CloseHandle(process)
-                    return True
-                return False
-            except Exception:
-                return False
-        else:
-            # Unix fallback
-            try:
-                os.kill(pid, 0)
-                return True
-            except OSError:
-                return False
+                pid = p.info['pid']
+                if pid == os.getpid() or pid in zombies: continue
+                cmd = p.info['cmdline'] or []
+                cmd_str = " ".join(cmd).lower()
+                for target in target_scripts:
+                    if target.lower() in cmd_str:
+                        zombies[pid] = {
+                            'type': 'Hanging Instance',
+                            'port': 'N/A',
+                            'name': p.info['name'],
+                            'cmd': cmd_str[:100]
+                        }
+                        break
+            except (psutil.NoSuchProcess, psutil.AccessDenied): continue
+        return zombies
 
+    @staticmethod
+    def kill_tree(pid: int):
+        """Safely terminates a process and all its children."""
+        try:
+            if not psutil or not psutil.pid_exists(pid): return
+            parent = psutil.Process(pid)
+            for child in parent.children(recursive=True):
+                try: child.terminate()
+                except: pass
+            parent.terminate()
+        except: pass
+
+    @staticmethod
+    def prune(auto_confirm: bool = False, ports: List[int] = None, scripts: List[str] = None, **kwargs) -> bool:
+        """Detect and kill zombies for a clean startup."""
+        # Map allowed_names to scripts for backward compatibility
+        if 'allowed_names' in kwargs:
+            scripts = kwargs['allowed_names']
+            
+        zombies = ProcessManager.get_zombies(ports=ports, scripts=scripts)
+        if not zombies: return True
+
+        safe_print(f"\n{EMOJI['warning']} ZOMBIE PROCESSES DETECTED")
+        for pid, info in zombies.items():
+            safe_print(f"  - [{info['type']}] {info['name']} (PID: {pid}, Port: {info['port']})")
+
+        if not auto_confirm:
+            ans = input("\nKill these processes to allow a clean startup? (y/n): ").lower()
+            if ans != 'y': return False
+
+        for pid in zombies:
+            try:
+                if psutil: 
+                    p = psutil.Process(pid)
+                    p.kill()
+                else: os.kill(pid, signal.SIGTERM)
+                safe_print(f"  {EMOJI['success']} Terminated PID {pid}")
+            except: pass
+        time.sleep(1)
+        return True
 
 # --- Hardware Profiling ---
 class HardwareProfiler:
     @staticmethod
     def get_profile() -> dict:
-        """
-        Cross-platform hardware detection.
-        Prefers psutil, falls back to platform-specific commands.
-        """
-        cpu_name = platform.processor()
-        ram_gb = 8.0
-        vram_mb = 0
-        best_gpu = "CPU"
-        threads = os.cpu_count() or 4
-        
-        # Try psutil for RAM
+        """Cross-platform hardware detection."""
+        profile = {"type": "CPU", "ram_gb": 8.0, "vram_mb": 0, "threads": os.cpu_count() or 4}
         try:
-            import psutil
-            ram_gb = round(psutil.virtual_memory().total / (1024**3), 1)
-        except ImportError:
-            # Fallback for Windows
-            if sys.platform == "win32":
-                try:
-                    cmd = "powershell -NoProfile -Command \"(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory\""
-                    raw = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL).strip()
-                    if raw.isdigit(): ram_gb = round(int(raw) / (1024**3), 1)
-                except: pass
-
-        # GPU Detection (Best-effort)
-        try:
+            if psutil: profile['ram_gb'] = round(psutil.virtual_memory().total / (1024**3), 1)
+            
             if sys.platform == "win32":
                 cmd = "powershell -NoProfile -Command \"Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json\""
-                out = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL).strip()
+                out = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
                 if out:
                     import json
                     gpus = json.loads(out)
                     if not isinstance(gpus, list): gpus = [gpus]
                     for g in gpus:
                         name = g.get("Name", "").upper()
-                        v_raw = g.get("AdapterRAM", 0)
-                        v_mb = round(int(v_raw) / (1024**2), 0) if v_raw else 0
-                        
-                        # Heuristic ranking
-                        if "NVIDIA" in name: 
-                            best_gpu = "NVIDIA"; vram_mb = max(vram_mb, v_mb)
-                        elif "AMD" in name and best_gpu != "NVIDIA": 
-                            best_gpu = "AMD"; vram_mb = max(vram_mb, v_mb)
-                        elif "INTEL" in name and best_gpu not in ["NVIDIA", "AMD"]: 
-                            best_gpu = "INTEL"; vram_mb = max(vram_mb, v_mb)
+                        if "NVIDIA" in name: profile['type'] = "NVIDIA"
+                        elif "AMD" in name: profile['type'] = "AMD"
         except: pass
-        
-        logger.info(f"[Profiler] CPU: {cpu_name} | RAM: {ram_gb}GB | GPU: {best_gpu} ({vram_mb}MB)")
-        return {"type": best_gpu, "cpu": cpu_name, "ram_gb": ram_gb, "vram_mb": vram_mb, "threads": threads}
+        logger.info(f"[Profiler] Detected: {profile['type']} | {profile['ram_gb']}GB RAM | {profile['threads']} Cores")
+        return profile
 
 def ensure_package(import_name: str, install_name: str = None):
-    """Ensures a package is installed, installing it via pip if missing."""
-    if not install_name:
-        install_name = import_name
+    """Guarantees a Python package is available."""
+    if not install_name: install_name = import_name
     try:
         __import__(import_name)
     except ImportError:
-        logger.info(f"[!] Installing missing dependency: {install_name}...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", install_name], 
-                                stdout=subprocess.DEVNULL)
-            logger.info(f"[+] Installed {install_name}")
-        except Exception as e:
-            logger.error(f"[!] Failed to install {install_name}: {e}")
-            sys.exit(1)
+        logger.info(f"[Packages] Installing {install_name}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", install_name], stdout=subprocess.DEVNULL)
 
-def kill_process_tree(pid: int):
-    """Safely kills a process and its children using psutil."""
-    try:
-        if not psutil.pid_exists(pid): return
+def restart_program():
+    """Restarts the current python program."""
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+class DiagnosticRunner:
+    """v3.1 Smoke Test Engine."""
+    @staticmethod
+    async def run_smoke_test():
+        results = []
+        safe_print(f"\n{EMOJI['search']} Running Global System Health Check...")
         
-        parent = psutil.Process(pid)
-        children = parent.children(recursive=True)
+        # 1. Config Check
+        results.append(("Config Integrity", "OK" if hasattr(config, 'BIN_DIR') else "FAIL"))
         
-        for child in children:
-            try: child.terminate()
+        # 2. Binary Check
+        results.append(("Engine Binary", "OK" if (config.BIN_DIR / "llama-server.exe").exists() else "MISSING"))
+        
+        # 3. Port Check
+        results.append(("API Port Availability", "OK" if not is_port_active(config.llm_port) else "BUSY"))
+        
+        for name, status in results:
+            icon = EMOJI['success'] if status == "OK" else EMOJI['error']
+            safe_print(f"{icon} {name:<20}: {status}")
+        
+        return all(s == "OK" for _, s in results)
+
+# Legacy shims for backwards compatibility during migration
+def prune_zombies(auto_confirm=False): return ProcessManager.prune(auto_confirm)
+def kill_process_tree(pid): return ProcessManager.kill_tree(pid)
+
+def kill_process_by_name(name: str):
+    """Legacy shim."""
+    if not psutil: return
+    for p in psutil.process_iter(['name']):
+        if p.info['name'] == name:
+            try: p.kill()
             except: pass
-        
-        _, alive = psutil.wait_procs(children, timeout=3)
-        for p in alive:
-            try: p.kill() 
-            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
-            
-        parent.terminate()
-        parent.wait(3)
-    except Exception as e:
-        logger.error(f"Failed to kill tree {pid}: {e}")
-        # Fallback for extreme cases
-        try: os.kill(pid, signal.SIGTERM)
-        except OSError: pass
-
-def kill_process_by_name(image_name: str):
-    """Safely kills processes by image name using psutil."""
-    try:
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.info['name'] and proc.info['name'].lower() == image_name.lower():
-                try:
-                    proc.terminate()
-                    # We don't wait here to avoid blocking large iterations, 
-                    # but real implementations might want to collect and wait.
-                except (psutil.NoSuchProcess, psutil.AccessDenied): pass
-    except ImportError:
-        # Fallback only if psutil is somehow missing (bootstrap edge case)
-        subprocess.run(["taskkill", "/F", "/IM", image_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception as e:
-        logger.error(f"Failed to kill {image_name}: {e}")
 
 def kill_process_by_port(port: int):
-    """Kills any process listening on the specified port."""
-    try:
-        import psutil
-        for proc in psutil.process_iter(['pid', 'name']):
-            try:
-                for conn in proc.connections(kind='inet'):
-                    if conn.laddr.port == port:
-                        logger.info(f"[Cleanup] Killing PID {proc.pid} ({proc.info['name']}) on Port {port}")
-                        proc.terminate()
-                        try: proc.wait(timeout=3)
-                        except: proc.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-    except Exception as e:
-        logger.error(f"Failed to kill process on port {port}: {e}")
+    """Legacy shim."""
+    if not psutil: return
+    for conn in psutil.net_connections():
+        if conn.laddr.port == port:
+            try: psutil.Process(conn.pid).kill()
+            except: pass
+
+def trace_log(msg: str, level: str = "info"):
+    """Legacy shim."""
+    safe_print(f"[Trace] {msg}", level=level)
 
 def format_message_with_attachment(user_query: str, filename: str, content: str) -> str:
-    """
-    Formats a user message to include attached file content.
-    Detects code files and applies markdown formatting.
-    """
+    """Formats a user message to include attached file content."""
+    import os
     ext = os.path.splitext(filename)[1].lower()
-    
-    # Check for binary indicator
     if "[Binary file:" in content or "[Binary Content]" in content:
         return f"[Attached: {filename}] {user_query}"
-        
-    context_block = ""
-    # Smart Detection: Code Analysis vs Context
-    code_extensions = ['.py', '.js', '.html', '.css', '.json', '.cpp', '.c', '.java', '.go', '.rs', '.ts', '.sh', '.bat']
     
+    code_extensions = ['.py', '.js', '.html', '.css', '.json', '.cpp', '.c', '.java', '.go', '.rs', '.ts', '.sh', '.bat']
     if ext in code_extensions:
-        lang = ext[1:]
+        lang = ext[1:]; 
         if lang == 'py': lang = 'python'
-        if lang == 'rs': lang = 'rust'
-        if lang == 'sh': lang = 'bash'
-        
-        # Directive Prompt for Code
-        context_block = (
-            f"I have attached a code file '{filename}'. Please analyze and review its logic:\\n\\n"
-            f"```{lang}\\n{content}\\n```"
-        )
+        context_block = f"I have attached a code file '{filename}'. Please analyze and review its logic:\\n\\n```{lang}\\n{content}\\n```"
     else:
-        # Standard Context
-        context_block = (
-            f"I have attached a file '{filename}' for context:\\n\\n"
-            f"[Start of File]\\n{content}\\n[End of File]"
-        )
-        
+        context_block = f"I have attached a file '{filename}' for context:\\n\\n[Start of File]\\n{content}\\n[End of File]"
     return f"{context_block}\\n\\n{user_query}"
 
 def sanitize_prompt(text: str) -> str:
-    """
-    Sanitizes user input to prevent prompt injection or format manipulation.
-    Removes common LLM control tokens.
-    """
-    if not text:
-        return ""
-    
-    # Remove control tokens
+    """Sanitizes user input to prevent prompt injection."""
+    if not text: return ""
     forbidden = ["<|im_start|>", "<|im_end|>", "<|system|>", "<|user|>", "<|assistant|>", "[INST]", "[/INST]"]
-    for token in forbidden:
-        text = text.replace(token, "")
-    
+    for token in forbidden: text = text.replace(token, "")
     return text.strip()
 
 def normalize_input(value: str, input_type: str = 'url') -> str:
-    """
-    Smart input normalization/correction helper.
-    types: 'url', 'path', 'repo', 'filename'
-    """
-    if not value:
-        return ""
-    
-    # Common cleanup
+    """Normalizes input (url, path, etc.)."""
+    if not value: return ""
     value = value.strip().strip('"').strip("'")
-    
     if input_type == 'url':
-        # Auto-add https if missing (unless file:// or localhost)
         if value and not value.startswith(('http://', 'https://', 'file://')):
-            if 'localhost' in value or '127.0.0.1' in value:
-                return f"http://{value}"
-            # Heuristic: looks like a domainor incomplete url
+            if 'localhost' in value or '127.0.0.1' in value: return f"http://{value}"
             return f"https://{value}"
-            
     elif input_type == 'path':
-        # Fix slashes for OS
         value = value.replace('/', os.sep).replace('\\', os.sep)
-        
-    elif input_type == 'filename':
-        # Ensure extension if obvious missing (heuristic)
-        if not value.endswith('.gguf') and 'gguf' not in value.lower():
-            # Don't force it, but maybe warn? 
-            pass
-
     return value
+
+def safe_extract(zip_path: Path, dest: Path):
+    """Secure extraction helper."""
+    import zipfile
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        for member in z.namelist():
+            target = dest / member
+            if not str(target.resolve()).startswith(str(dest.resolve())):
+                raise RuntimeError("Security Alert: Zip Slip attempt detected!")
+        z.extractall(dest)

@@ -124,6 +124,7 @@ class Icons:
     MORE_HORIZ = "more_horiz"
     VISIBILITY = "visibility"
     VISIBILITY_OFF = "visibility_off"
+    PERSON = "person"
     
     # ==========================================================================
     # EMOJI ALTERNATIVES (for text contexts)

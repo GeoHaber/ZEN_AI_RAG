@@ -190,6 +190,7 @@ class RomanianLocale(BaseLocale):
     RAG_START_SCAN = "Începe Scanarea"
     RAG_ANSWERED_FROM_SOURCE = "**🔍 Răspuns din Sursa de Date**"
     RAG_VIEW_SOURCES = "📂 Vezi Datele Sursă"
+    RAG_LABEL = "Context Local"
     
     # ==========================================================================
     # CHAT INTERFACE
@@ -303,11 +304,11 @@ class RomanianLocale(BaseLocale):
     WELCOME_ZENAI = """👋 **Bine ai venit la ZenAI!**
 
 {source_msg}. Te pot ajuta cu:
-- Răspunsuri la întrebări despre conținut
-- Găsirea rapidă a informațiilor
-- Oferirea de îndrumare
+- **Revizuire Cod în Lot**: Analiză profundă a directoarelor întregi.
+- **Cercetare Avansată**: Răspunsuri bazate pe datele scanate.
+- **Auto-Mentenanță**: Eliminarea proceselor 'Zombie' și căutarea de actualizări.
 
-*Întreabă-mă dacă vrei!*"""
+*Întreabă-mă despre gardianul 'Anti-Zombie' sau capacitățile de 'Batch Review'!*"""
 
     WELCOME_SOURCE_WEBSITE = "Am scanat site-ul web: **{url}**"
     WELCOME_SOURCE_FILESYSTEM = "Am scanat directorul local: **{path}**"
@@ -316,12 +317,12 @@ class RomanianLocale(BaseLocale):
     WELCOME_DEFAULT = """👋 **Bine ai venit la ZenAI!**
 
 Sunt asistentul tău AI alimentat de NiceGUI. Te pot ajuta cu:
-- Gestionarea modelelor AI
-- Analizarea fișierelor de cod
-- Rularea benchmark-urilor
-- Transcriere vocală
+- **Revizuire Cod în Lot**: Scanări arhitecturale profunde.
+- **Management Modele AI**: Căutarea și descărcarea modelelor 'Best-in-Class'.
+- **Fiabilitate Activă**: Gardianul 'Anti-Zombie' asigură porniri curate.
+- **Inteligență Vocală**: Transcriere și feedback de înaltă precizie.
 
-*Ține minte, încă învăț și mă îmbunătățesc!*"""
+*Încearcă să introduci o cale de director în meniul Batch pentru a începe!*"""
 
     # ==========================================================================
     # RAG SUCCESS MESSAGE
@@ -356,3 +357,49 @@ Sunt asistentul tău AI alimentat de NiceGUI. Te pot ajuta cu:
     # ==========================================================================
     ERROR_WEBSITE_UNREACHABLE = "Nu se poate accesa site-ul web: {error}"
     ERROR_GENERIC = "A apărut o eroare: {error}"
+
+    LOADING_THINKING = [
+        "Gândesc...",
+        "Procesez...",
+        "Generez răspunsul...",
+        "Analizez intenția...",
+        "Consult căile neuronale...",
+        "Mă scarpin în cap pentru cel mai bun răspuns...",
+        "Stai o secundă, să verific logica...",
+        "Aproape gata, mai cizelez puțin frazarea...",
+        "Consult oracolul digital...",
+        "Stai așa, asta e o întrebare interesantă..."
+    ]
+
+    LOADING_SWARM_THINKING = [
+        "Consult roiul de experți...",
+        "Adun consensul...",
+        "Experții deliberează...",
+        "Compar rezultatele paralele...",
+        "Verific cu roiul..."
+    ]
+
+    LOADING_RAG_THINKING = [
+        "Caut în baza de cunoștințe...",
+        "Recuperez fragmente relevante...",
+        "Consult documentele proiectului...",
+        "Verific faptele cu sursele...",
+        "Citesc detaliile..."
+    ]
+
+    # ======================================================================
+    # BATCH / ANALYSIS
+    # ======================================================================
+    BATCH_MENU = "Sarcini în Lot"
+    BATCH_CREATE_REVIEW = "Creare Revizuire Cod"
+    BATCH_FILES_PLACEHOLDER = "Introduceți căile fișierelor (separate prin virgulă)"
+    BATCH_ENQUEUE = "Adaugă în Coadă"
+    ANALYSIS_SAVED = "Analiza a fost salvată în _zena_analisis"
+
+    BATCH_PROGRESS_START = "🚀 Analiza în lot a început..."
+    BATCH_PROGRESS_READING = "📄 Se citește fișierul: {filename}..."
+    BATCH_PROGRESS_ANALYZING = "🧠 Se analizează conținutul..."
+    BATCH_PROGRESS_AI_REVIEW = "🤖 Revizuire cod AI în curs..."
+    BATCH_PROGRESS_WRITING = "💾 Se scrie analiza în {filename}..."
+    BATCH_PROGRESS_COMPLETE = "✅ Analiza în lot este finalizată!"
+    BATCH_ERROR_FILE = "❌ Eroare la citirea {filename}: {error}"

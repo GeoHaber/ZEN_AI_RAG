@@ -5,6 +5,54 @@ security.py - Security validation utilities for ZenAI
 from pathlib import Path
 from typing import Tuple, Optional
 from config_system import config, EMOJI
+import os
+
+def validate_path(user_path: str, allowed_roots: Optional[list[Path]] = None) -> Path:
+    """Resolve and validate a user-supplied path.
+
+    - Expands user (~), resolves symlinks where possible, and ensures the
+      resulting path is contained within one of the allowed_roots (by default
+      `config.BASE_DIR` and `config.MODEL_DIR`).
+    - Rejects obvious system paths.
+    """
+    if not user_path:
+        raise ValueError("Empty path")
+
+    p = Path(user_path).expanduser()
+    try:
+        resolved = p.resolve(strict=False)
+    except Exception:
+        resolved = p
+
+    # Default allowed roots
+    if allowed_roots is None:
+        allowed_roots = [Path(config.BASE_DIR).resolve(), Path(config.MODEL_DIR).resolve()]
+
+    # Reject system paths explicitly
+    sys_roots = [Path('/usr'), Path('/bin'), Path('/etc'), Path('/Windows'), Path('/Program Files'), Path('/System')]
+    # On Windows also include C:\Windows paths
+    if os.name == 'nt':
+        sys_roots.extend([Path(r) for r in [os.environ.get('SystemRoot', 'C:\\Windows'), 'C:\\Program Files']])
+
+    for root in sys_roots:
+        try:
+            if resolved.is_relative_to(root.resolve()):
+                raise ValueError("Access to system paths is denied")
+        except Exception:
+            # Path.is_relative_to may raise on some platforms; ignore and continue
+            pass
+
+    # Ensure resolved path is within allowed roots
+    for root in allowed_roots:
+        try:
+            if resolved.is_relative_to(root):
+                return resolved
+        except Exception:
+            # fallback to manual check
+            if str(resolved).startswith(str(root)):
+                return resolved
+
+    raise ValueError(f"Path {user_path} is not inside allowed directories")
 import logging
 
 logger = logging.getLogger(__name__)

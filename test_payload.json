@@ -1,0 +1,10 @@
+{
+    "messages": [
+        {
+            "role": "user",
+            "content": "Hello world"
+        }
+    ],
+    "stream": true,
+    "max_tokens": 50
+}

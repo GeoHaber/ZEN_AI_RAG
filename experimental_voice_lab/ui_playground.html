@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenAI Flow</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        :root {
+            --primary: #6366f1;
+            /* Indigo-500 */
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-light: #f8fafc;
+            --bg-dark: #0f172a;
+            --surface-light: rgba(255, 255, 255, 0.8);
+            --surface-dark: rgba(30, 41, 59, 0.7);
+            --text-light: #1e293b;
+            --text-dark: #f1f5f9;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            /* App-like feel */
+        }
+
+        /* --- MESH GRADIENT BACKGROUND (Dark Mode) --- */
+        body.dark-mode {
+            background-color: #0b0f19;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+            color: var(--text-dark);
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- GLASS HEADER --- */
+        .chat-header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        body.dark-mode .chat-header {
+            background: rgba(15, 23, 42, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- LIVING LOGO (STATUS) --- */
+        .status-logo {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .logo-inner {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            color: white;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            z-index: 2;
+        }
+
+        /* Status Ring */
+        .status-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            border: 2px solid #22c55e;
+            /* Green = Ready */
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        /* Thinking State */
+        .status-logo.thinking .status-ring {
+            border-color: transparent;
+            border-top-color: #6366f1;
+            border-left-color: #8b5cf6;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Error State */
+        .status-logo.error .status-ring {
+            border-color: #ef4444;
+        }
+
+        /* --- RIGHT MENU --- */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        body.dark-mode .brand-text h1 {
+            color: #f8fafc;
+        }
+
+        body.dark-mode .brand-text p {
+            color: #94a3b8;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--primary);
+        }
+
+        body.dark-mode .icon-btn {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* --- CHAT AREA --- */
+        .messages-container {
+            flex: 1;
+            padding: 100px 20px 180px 20px;
+            /* Space for header & footer */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
+        }
+
+        /* Message Bubbles - Modern & Minimal */
+        .message {
+            max-width: 80%;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.ai {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .bubble {
+            padding: 14px 20px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .message.ai .bubble {
+            background: white;
+            color: #334155;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .bubble {
+            background: var(--primary);
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        body.dark-mode .message.ai .bubble {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- FLOATING INPUT CAPSULE --- */
+        .footer-capsule {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 750px;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+            /* Let clicks pass through to messages */
+        }
+
+        /* CHIPS */
+        .chips-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 4px;
+            pointer-events: auto;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chip:hover {
+            transform: translateY(-2px);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            color: var(--primary);
+        }
+
+        body.dark-mode .chip {
+            background: rgba(30, 41, 59, 0.7);
+            color: #cbd5e1;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        body.dark-mode .chip:hover {
+            background: #334155;
+            color: white;
+        }
+
+        /* INPUT BAR */
+        .input-bar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode .input-bar {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 16px;
+            font-size: 16px;
+            color: #1e293b;
+        }
+
+        .input-field:focus {
+            outline: none;
+        }
+
+        body.dark-mode .input-field {
+            color: #f8fafc;
+        }
+
+        body.dark-mode .input-field::placeholder {
+            color: #64748b;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- HIDDEN DRAWER --- */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(2px);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 10px;
+            bottom: 10px;
+            left: 10px;
+            width: 280px;
+            background: white;
+            border-radius: 20px;
+            transform: translateX(-120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 101;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 20px 0 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .drawer.active {
+            transform: translateX(0);
+        }
+
+        body.dark-mode .drawer {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .drawer-item {
+            padding: 12px;
+            border-radius: 12px;
+            color: #475569;
+            font-weight: 500;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .drawer-item:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+
+        body.dark-mode .drawer-item {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .drawer-item:hover {
+            background: #334155;
+        }
+
+        /* RESPONSIVE SCALING */
+        @media (min-width: 1024px) {
+            .drawer {
+                left: 50%;
+                margin-left: -550px;
+            }
+
+            /* Anchor next to centered chat on large screens? No, stick to left edge for now */
+            .drawer {
+                left: 20px;
+                top: 20px;
+                bottom: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .footer-capsule {
+                width: 92%;
+                bottom: 20px;
+            }
+
+            .chat-header {
+                padding: 12px 16px;
+            }
+
+            .drawer {
+                width: 85%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Overlay & Drawer -->
+    <div class="drawer-overlay" onclick="toggleDrawer()"></div>
+    <div class="drawer" id="drawer">
+        <h2 style="font-weight: 700; font-size: 20px; margin-bottom: 24px; color: var(--primary);">ZenAI Flow</h2>
+        <div class="drawer-item"><i class="fas fa-robot"></i> Models</div>
+        <div class="drawer-item"><i class="fas fa-brain"></i> Swarm Mode</div>
+        <div class="drawer-item"><i class="fas fa-database"></i> Knowledge Base</div>
+        <hr style="border:0; border-top:1px solid #e2e8f0; margin: 16px 0; opacity: 0.5;">
+        <div class="drawer-item" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> Dark Mode</div>
+        <div class="drawer-item" style="color: #ef4444;"><i class="fas fa-trash"></i> Clear History</div>
+    </div>
+
+    <!-- Main Chat -->
+    <div class="chat-container">
+
+        <!-- Glass Header (Redesigned) -->
+        <header class="chat-header">
+            <!-- Left: Identity & Status -->
+            <div class="status-logo" id="statusLogo" title="System Status: Ready" onclick="toggleStatus()">
+                <div class="logo-inner">Z</div>
+                <div class="status-ring"></div>
+            </div>
+
+            <div style="margin-right: auto; margin-left: 12px;">
+                <h1 style="font-size:18px; font-weight:700; letter-spacing:-0.5px;">ZenAI</h1>
+            </div>
+
+            <!-- Right: Functions & Menu -->
+            <div class="header-actions">
+                <button class="icon-btn" title="Help"
+                    onclick="addBubble('How can I help you explore features?', 'ai')"><i
+                        class="far fa-question-circle"></i></button>
+                <button class="icon-btn" title="New Chat" onclick="location.reload()"><i
+                        class="fas fa-plus"></i></button>
+                <button class="icon-btn" onclick="toggleDrawer()"><i class="fas fa-bars"></i></button>
+            </div>
+        </header>
+
+        <!-- Messages -->
+        <div class="messages-container" id="chat">
+            <div class="message ai">
+                <div class="bubble">
+                    Hello! Welcome to the new <strong>ZenAI Flow</strong>. <br>
+                    I'm running in "Prototyping Mode". This interface is pure HTML/CSS, designed for rapid polish.
+                    <br><br>
+                    Try the <strong>Dark Mode</strong> in the menu! 🌙
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Footer -->
+        <div class="footer-capsule">
+
+            <!-- Smart Chips -->
+            <div class="chips-row">
+                <div class="chip" onclick="sendMessage('Summarize this context')"><i class="fas fa-magic"></i> Summarize
+                </div>
+                <div class="chip" onclick="sendMessage('Explain quantum mechanics')"><i class="fas fa-atom"></i> Explain
+                </div>
+                <div class="chip" onclick="sendMessage('Write a Python script')"><i class="fas fa-code"></i> Code</div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-bar">
+                <button class="icon-btn" style="width:36px; height:36px;" title="Attach File"><i
+                        class="fas fa-paperclip"></i></button>
+                <input type="text" class="input-field" id="input" placeholder="Message ZenAI..."
+                    onkeydown="if(event.key==='Enter') sendMessage()">
+
+                <!-- Voice Mode (Added) -->
+                <button class="icon-btn" style="width:36px; height:36px; color: #ef4444;" title="Voice Mode"><i
+                        class="fas fa-microphone"></i></button>
+
+                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleDrawer() {
+            document.querySelector('.drawer').classList.toggle('active');
+            document.querySelector('.drawer-overlay').classList.toggle('active');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            toggleDrawer(); // Close drawer after toggle
+        }
+
+        function sendMessage(text) {
+            const input = document.getElementById('input');
+            const msg = text || input.value;
+            if (!msg.trim()) return;
+
+            // Add User Message
+            addBubble(msg, 'user');
+            input.value = '';
+
+            // 1. Set Thinking State
+            const logo = document.getElementById('statusLogo');
+            logo.classList.add('thinking');
+
+            // Simulate Reply
+            setTimeout(() => {
+                // 2. Clear Thinking State
+                logo.classList.remove('thinking');
+                addBubble("That's a great point! In this new design, notice how the content is the hero. The interface fades away.", 'ai');
+            }, 1500); // Longer delay to show animation
+        }
+
+        // Debug function to toggle states
+        function toggleStatus() {
+            const logo = document.getElementById('statusLogo');
+            if (logo.classList.contains('thinking')) {
+                logo.classList.remove('thinking');
+                logo.classList.add('error');
+            } else if (logo.classList.contains('error')) {
+                logo.classList.remove('error');
+            } else {
+                logo.classList.add('thinking');
+            }
+        }
+
+        function addBubble(text, type) {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = `<div class="bubble">${text}</div>`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // Auto-scroll to bottom on load
+        window.onload = () => {
+            // Check system dark mode preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.classList.add('dark-mode');
+            }
+        }
+    </script>
+</body>
+
+</html>

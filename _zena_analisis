@@ -1,0 +1,29 @@
+{
+  "job_id": "test123",
+  "files": [
+    {
+      "path": "C:\\Users\\dvdze\\AppData\\Local\\Temp\\pytest-of-Geo\\pytest-155\\test_analyze_and_write_report0\\sample.py",
+      "issues": [
+        {
+          "severity": "warning",
+          "message": "global usage found",
+          "line": 4
+        },
+        {
+          "severity": "error",
+          "message": "uses eval()",
+          "line": 7
+        },
+        {
+          "severity": "warning",
+          "message": "subprocess usage"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "error": 1,
+    "warning": 2,
+    "info": 0
+  }
+}

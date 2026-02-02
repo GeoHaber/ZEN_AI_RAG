@@ -8,7 +8,13 @@ from pathlib import Path
 
 # --- Config ---
 # Adjust this to the actual model found in C:/AI/Models
-MODEL_PATH = Path("C:/AI/Models/qwen2.5-0.5b-instruct-q5_k_m.gguf")
+MODEL_DIR = Path("C:/AI/Models")
+MODEL_PATH = MODEL_DIR / "qwen2.5-0.5b-instruct-q5_k_m.gguf"
+
+if not MODEL_PATH.exists():
+    candidates = list(MODEL_DIR.glob("*.gguf"))
+    if candidates:
+        MODEL_PATH = candidates[0]
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 START_SCRIPT = ROOT_DIR / "start_llm.py"
 BIN_DIR = ROOT_DIR / "_bin"
@@ -42,8 +48,10 @@ def test_engine_lifecycle(clean_env):
     3. Start Engine (Instance B) -> Should kill A
     4. Verify A dead, B running
     """
-    if not MODEL_PATH.exists():
-        pytest.skip(f"Test Model not found at {MODEL_PATH}")
+    # Skip if model or native llama binary not present in this environment
+    LLAMA_EXE_PATH = Path(__file__).parent.parent / "_bin" / "llama-server.exe"
+    if not MODEL_PATH.exists() or not LLAMA_EXE_PATH.exists():
+        pytest.skip(f"Required model or LLM binary not found ({MODEL_PATH}, {LLAMA_EXE_PATH})")
 
     # --- Step 1: Start Instance A ---
     print("\n[Test] Starting Instance A...")
@@ -124,3 +132,7 @@ def test_engine_lifecycle(clean_env):
     # Cleanup
     proc_a.terminate()
     proc_b.terminate()
+
+if __name__ == "__main__":
+    import pytest
+    pytest.main([__file__])

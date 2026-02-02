@@ -11,6 +11,7 @@ from locales import get_locale, L
 from ui import Styles, Icons, Formatters
 from ui.theme import Theme, Colors
 from ui.settings_dialog import create_settings_dialog
+from ui.quality_dashboard import create_quality_tab
 
 logger = logging.getLogger("UI Components")
 
@@ -393,11 +394,12 @@ def setup_app_theme():
         </style>
     ''')
 
-def setup_common_dialogs(backend, app_state):
+def setup_common_dialogs(backend, app_state, on_settings_save=None, on_language_change=None, on_dark_mode=None):
     """
-    Creates reusable dialogs (Model Download, Llama Update).
-    Returns a dict referencing them: {'model': dialog, 'llama': dialog}
+    Creates reusable dialogs (Model Download, Llama Update, Settings).
+    Returns a dict referencing them: {'model': dialog, 'llama': dialog, 'settings': dialog}
     """
+    from ui.registry import UI_IDS
     locale = get_locale()
     dialogs = {}
 
@@ -409,7 +411,7 @@ def setup_common_dialogs(backend, app_state):
                 with ui.row().classes('items-center gap-3'):
                     ui.icon(Icons.DOWNLOAD, size='28px').classes('text-blue-500')
                     ui.label(locale.MODEL_SECTION_TITLE).classes('text-2xl font-bold')
-                ui.button(icon=Icons.CLOSE, on_click=model_dialog.close).props('flat round')
+                ui.button(icon=Icons.CLOSE, on_click=model_dialog.close).props(f'flat round id={UI_IDS.BTN_CLOSE_DIALOG}')
             
             # Scrollable content area
             with ui.scroll_area().classes('w-full flex-grow p-4'):
@@ -441,7 +443,7 @@ def setup_common_dialogs(backend, app_state):
                                 return
                             await _start_download(repo, filename, model_dialog, backend, app_state)
                         
-                        ui.button(locale.MODEL_CUSTOM_DOWNLOAD, icon=Icons.CLOUD_DOWNLOAD, on_click=download_custom).props('color=primary')
+                        ui.button(locale.MODEL_CUSTOM_DOWNLOAD, icon=Icons.CLOUD_DOWNLOAD, on_click=download_custom).props(f'color=primary id={UI_IDS.BTN_DOWNLOAD_MODEL}')
 
     dialogs['model'] = model_dialog
 
@@ -462,6 +464,14 @@ def setup_common_dialogs(backend, app_state):
             llama_dialog.info_label = llama_info
 
     dialogs['llama'] = llama_dialog
+    
+    # --- Settings Dialog ---
+    settings_dialog = create_settings_dialog(
+        on_save=on_settings_save,
+        on_language_change=on_language_change,
+        on_dark_mode_change=on_dark_mode
+    )
+    dialogs['settings'] = settings_dialog
     
     return dialogs
 
@@ -580,6 +590,7 @@ async def _start_download(repo: str, filename: str, dialog, backend, app_state):
 
 def setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state):
     """Setup the left sidebar drawer with all controls - Redesigned for better UX."""
+    from ui.registry import UI_IDS
     locale = get_locale()
     
     # Retrieve dialogs
@@ -603,34 +614,17 @@ def setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_sta
                 app_name = 'Zena' if ZENA_MODE else locale.APP_NAME
                 ui.label(app_name).classes('text-2xl font-bold ' + Styles.TEXT_ACCENT)
             
-            # Settings Button (Top Right - Easy Access)
-            def _on_dark_mode_change(is_dark: bool):
-                """Apply dark mode change immediately."""
-                dark_mode_ctrl = ui.dark_mode()
-                if is_dark:
-                    dark_mode_ctrl.enable()
-                    ui.query('body').classes(remove='bg-gray-50 text-gray-900', add='bg-slate-900 text-white')
-                else:
-                    dark_mode_ctrl.disable()
-                    ui.query('body').classes(remove='bg-slate-900 text-white', add='bg-gray-50 text-gray-900')
-                _set_dark_mode(is_dark)
-                # Force JavaScript sync
-                ui.run_javascript('if(typeof syncDarkMode === "function") syncDarkMode();')
+            # App Status (Drawer) - Redundant for high visibility
+            with ui.row().classes('items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30'):
+                app_state['drawer_status_dot'] = ui.label('●').classes('text-green-500 animate-pulse text-xs')
+                app_state['drawer_status_label'] = ui.label('ONLINE').classes('text-[9px] font-black tracking-widest text-green-500')
             
-            def _on_language_change(code: str):
-                ui.notify(locale.format('SETTINGS_LANGUAGE_CHANGED', lang=code), color='info')
-            
-            def _on_save():
-                _get_settings().save()
-            
-            settings_dialog = create_settings_dialog(
-                on_save=_on_save,
-                on_language_change=_on_language_change,
-                on_dark_mode_change=_on_dark_mode_change
-            )
-            
-            ui.button(icon=Icons.SETTINGS, on_click=settings_dialog.open).props('flat round').classes(Styles.TEXT_MUTED + ' hover:text-blue-500').tooltip(locale.SETTINGS_TITLE)
-        
+            # Settings Gear Button
+            ui.button(icon=Icons.SETTINGS, on_click=lambda: dialogs['settings'].open()).props(f'flat round dense id={UI_IDS.BTN_SETTINGS}').classes(Styles.TEXT_MUTED + ' hover:text-blue-500 transition-colors')
+
+            # Close button (mobile)
+            ui.button(icon=Icons.CLOSE, on_click=lambda: drawer.hide()).props(f'flat round dense id={UI_IDS.BTN_CLOSE_DIALOG}').classes('md:hidden ' + Styles.TEXT_MUTED)
+
         # ============================================================
         # PRIMARY ACTION: New Chat Button
         # ============================================================
@@ -642,9 +636,131 @@ def setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_sta
                 app_state['chat_history'].clear()
             ui.notify(locale.CHAT_CLEARED if hasattr(locale, 'CHAT_CLEARED') else 'Chat cleared', color='positive', position='bottom-right')
         
-        ui.button(locale.BTN_NEW_CHAT if hasattr(locale, 'BTN_NEW_CHAT') else '💬 New Chat', icon='add_comment', on_click=start_new_chat).classes('w-full mb-4 ' + Styles.BTN_PRIMARY).props('unelevated')
+        ui.button(locale.BTN_NEW_CHAT if hasattr(locale, 'BTN_NEW_CHAT') else '💬 New Chat', icon='add_comment', on_click=start_new_chat).classes('w-full mb-4 ' + Styles.BTN_PRIMARY).props(f'unelevated id={UI_IDS.BTN_NEW_CHAT}')
         
         ui.separator().classes('mb-4')
+
+        # ============================================================
+        # SECTION: Appearance (New/Restored)
+        # ============================================================
+        with ui.expansion(locale.SETTINGS_CAT_APPEARANCE, icon='palette').classes('w-full mb-4').props('default-opened'):
+            with ui.column().classes('w-full gap-2 py-2'):
+                # Theme Toggle
+                def on_theme_change(e):
+                    # Direct interaction with NiceGUI dark mode
+                    if e.value:
+                        ui.dark_mode().enable()
+                        ui.query('body').classes(remove='bg-gray-50 text-gray-900', add='bg-slate-900 text-white')
+                    else:
+                        ui.dark_mode().disable()
+                        ui.query('body').classes(remove='bg-slate-900 text-white', add='bg-gray-50 text-gray-900')
+                    
+                    _set_dark_mode(e.value)
+                    # Force JavaScript sync
+                    ui.run_javascript('if(typeof syncDarkMode === "function") syncDarkMode();')
+                    ui.notify(f"Theme: {'Dark' if e.value else 'Light'}", color='info', position='bottom-right')
+                
+                ui.switch(locale.SETTINGS_DARK_MODE, value=_get_settings().appearance.dark_mode, on_change=on_theme_change).classes('text-sm').props(f'id={UI_IDS.SW_DARK_MODE}')
+                ui.label(locale.SETTINGS_DARK_MODE_DESC).classes(Styles.LABEL_MUTED + ' ml-10 -mt-1 text-xs')
+
+        # ============================================================
+        # SECTION: Knowledge Base (RAG) (New/Restored)
+        # ============================================================
+        with ui.expansion(locale.SETTINGS_CAT_RAG, icon='library_books').classes('w-full mb-4').props('default-opened'):
+            with ui.column().classes('w-full gap-2 py-2'):
+                # Enable RAG Switch
+                # We need to ensure rag_enabled is in app_state
+                rag_enabled_val = app_state.get('rag_enabled', False)
+                
+                def on_rag_toggle(e):
+                    app_state['rag_enabled'] = e.value
+                    if 'rag_scan_btn' in app_state:
+                        app_state['rag_scan_btn'].set_visibility(e.value)
+                    ui.notify(f"RAG {'Enabled' if e.value else 'Disabled'}", color='positive' if e.value else 'info')
+
+                rag_toggle = ui.switch(locale.SETTINGS_RAG_ENABLED, value=rag_enabled_val, on_change=on_rag_toggle).classes('text-sm')
+                ui.label(locale.SETTINGS_RAG_ENABLED_DESC).classes(Styles.LABEL_MUTED + ' ml-10 -mt-1 text-xs')
+                
+                # Scan Button
+                def open_rag_scan():
+                    if 'open_rag_dialog' in app_state:
+                         app_state['open_rag_dialog']()
+                    else:
+                         ui.notify("RAG Scan Dialog not initialized", color='warning')
+
+                scan_btn = ui.button(locale.RAG_START_SCAN, icon='search', on_click=open_rag_scan).props('flat dense align=left').classes('w-full ' + Styles.TEXT_ACCENT)
+                scan_btn.set_visibility(rag_enabled_val)
+                app_state['rag_scan_btn'] = scan_btn
+
+        ui.separator().classes('mb-4')
+
+        # ============================================================
+        # SECTION: Batch Analysis (Pillar 5)
+        # ============================================================
+        from zena_mode.batch_engine import BatchAnalyzer
+        batch_analyzer = BatchAnalyzer(backend)
+
+        with ui.expansion(locale.BATCH_MENU, icon='batch_prediction').classes('w-full mb-4'):
+            with ui.column().classes('w-full gap-2 py-2'):
+                ui.label(locale.BATCH_CREATE_REVIEW).classes('text-xs font-semibold ' + Styles.TEXT_PRIMARY)
+                
+                # File Input
+                files_input = ui.input(placeholder=locale.BATCH_FILES_PLACEHOLDER).classes('w-full h-10 text-xs').props(f'outlined dense id={UI_IDS.INPUT_BATCH_FILES}')
+                
+                # Progress Area (Hidden by default)
+                progress_container = ui.column().classes('w-full gap-1 hidden ' + Styles.BATCH_CARD)
+                with progress_container:
+                    with ui.row().classes('items-center gap-2'):
+                        ui.spinner('dots', size='xs', color='blue')
+                        progress_label = ui.label('').classes('text-[10px] ' + Styles.TEXT_MUTED)
+                    progress_bar = ui.linear_progress(value=0, show_value=False).classes('w-full ' + Styles.BATCH_PROGRESS_BAR)
+                
+                async def start_batch():
+                    paths = [p.strip() for p in files_input.value.split(',') if p.strip()]
+                    if not paths:
+                        ui.notify("No files selected", color='warning')
+                        return
+                    
+                    # Resolve directory if single path
+                    if len(paths) == 1 and os.path.isdir(paths[0]):
+                        dir_path = Path(paths[0])
+                        paths = [str(f) for f in dir_path.glob('**/*') if f.is_file() and f.suffix in ('.py', '.txt', '.md', '.ipynb')]
+                        if not paths:
+                            ui.notify(f"No valid files found in {dir_path.name}", color='warning')
+                            return
+                    
+                    # UI Updates
+                    progress_container.classes(remove='hidden')
+                    batch_btn.disable()
+                    files_input.disable()
+                    
+                    def progress_cb(msg, pct):
+                        progress_label.set_text(msg)
+                        progress_bar.set_value(pct)
+                        # Randomized "Distraction" messages for engagement
+                        if random.random() < 0.2: # 20% chance to show a funny thinking message
+                            distraction = random.choice(locale.LOADING_THINKING)
+                            ui.notify(distraction, position='bottom', type='info', timeout=2000)
+                    
+                    try:
+                        result = await batch_analyzer.analyze_files(paths, on_progress=progress_cb)
+                        
+                        # Show success with "Open Folder" button
+                        with ui.notification(f"Batch Complete: {result['completed']} files analyzed!", color='positive', timeout=10000) as n:
+                            if paths:
+                                folder = str(Path(paths[0]).parent)
+                                ui.button('Open Folder', icon='folder', on_click=lambda f=folder: os.startfile(f)).props('flat color=white')
+                    except Exception as e:
+                        ui.notify(f"Batch Failed: {e}", color='negative')
+                    finally:
+                        batch_btn.enable()
+                        files_input.enable()
+
+                batch_btn = ui.button(locale.BATCH_ENQUEUE, icon='play_circle', on_click=start_batch).props(f'flat dense id={UI_IDS.BTN_BATCH_START}').classes('w-full ' + Styles.TEXT_ACCENT)
+                
+                with progress_container:
+                    ui.label('Progress').classes('text-[10px] font-bold uppercase tracking-wider')
+                    # References are scoped within start_batch via closures
         
         # ============================================================
         # SECTION 1: AI Model (Expandable) - With Rich Model Cards
@@ -984,9 +1100,62 @@ def setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_sta
                 
                 app_state['use_cot_swarm'] = use_cot
                 app_state['quiet_cot'] = quiet_cot
+                
+                # --- Swarm Dashboard (New) ---
+                def open_swarm_dashboard():
+                     ui.notify("opening Swarm Control Center...", color="info")
+                     # In a real implementation, this would navigate to a new page or open a dialog
+                     # For now, we'll open a dialog with the swarm status
+                     with ui.dialog() as swarm_dialog, ui.card().classes('w-96'):
+                         ui.label("🐝 Swarm Control Center").classes('text-xl font-bold mb-4')
+                         ui.label("Arbitrator Interface").classes('text-sm text-gray-500 mb-2')
+                         
+                         status = app_state.get('swarm_status', None)
+                         if status:
+                             ui.label(f"Status: {status.text}").classes('font-bold')
+                         
+                         ui.separator().classes('my-4')
+                         ui.button("Close", on_click=swarm_dialog.close).props('flat')
+                     swarm_dialog.open()
+
+                ui.button("Swarm Control", icon=Icons.HUB, on_click=open_swarm_dashboard).props(f'flat dense align=left id={UI_IDS.BTN_SWARM}').classes('w-full mt-2 ' + Styles.TEXT_PRIMARY)
+
+
+        # ============================================================
+        # SECTION 3: Labs (New)
+        # ============================================================
+        with ui.expansion("🔬 Labs", icon="science").classes('w-full mb-2'):
+            with ui.column().classes('w-full gap-2 py-2'):
+                 # Voice Lab
+                 def open_voice_lab():
+                     # Open the experimental voice lab in a new tab (served by simple HTTP usually)
+                     # Or we can integrate it via iframe if served
+                     ui.navigate.to('http://localhost:8002/voice/lab', new_tab=True)
+                 
+                 ui.button("Voice Lab", icon=Icons.RECORD, on_click=open_voice_lab).props('flat dense align=left').classes('w-full ' + Styles.TEXT_PRIMARY)
         
         # ============================================================
-        # SECTION 3: System Tools (Expandable)
+        # SECTION: Intelligence Judge (New)
+        # ============================================================
+        with ui.expansion("⚖️ Intelligence Judge", icon="balance").classes('w-full mb-2'):
+            with ui.column().classes('w-full gap-2 py-2 p-2'):
+                ui.label("Semantic quality & drift detection.").classes('text-[10px] text-gray-400 italic mb-1')
+                
+                async def open_judge():
+                    with ui.dialog().props('maximized') as judge_dialog:
+                        with ui.card().classes('w-full h-full p-0 overflow-hidden'):
+                            with ui.row().classes('w-full p-4 items-center justify-between border-b'):
+                                ui.label("ZenAI Judge").classes('text-xl font-bold')
+                                ui.button(icon=Icons.CLOSE, on_click=judge_dialog.close).props('flat round')
+                            
+                            with ui.scroll_area().classes('w-full flex-grow'):
+                                create_quality_tab()
+                    judge_dialog.open()
+                
+                ui.button("Run Evaluation", icon="analytics", on_click=open_judge).props(f'flat dense align=left id={UI_IDS.BTN_JUDGE}').classes('w-full ' + Styles.TEXT_PRIMARY)
+        
+        # ============================================================
+        # SECTION 4: System Tools (Expandable)
         # ============================================================
         with ui.expansion(locale.NAV_SYSTEM, icon='build').classes('w-full mb-2'):
             with ui.column().classes('w-full gap-2 py-2'):
@@ -1125,3 +1294,51 @@ def setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_sta
             ui.label('v1.0.0').classes(Styles.LABEL_MUTED + ' text-xs')
             
     return drawer
+
+# Removed over-engineered components (GlassCapsule, LivingLogo, SmartChips) in favor of minimalist UI.
+
+def setup_rag_dialog(app_state, ZENA_MODE, ZENA_CONFIG, locale, rag_system, ROOT_DIR, Styles):
+    """Setup the RAG dialog and its logic in a clean, modular way."""
+    rag_dialog = ui.dialog().classes('z-50')
+    app_state['open_rag_dialog'] = rag_dialog.open
+    
+    with rag_dialog, ui.card().classes('w-[500px] max-w-[95vw] p-6 rounded-2xl shadow-2xl bg-white dark:bg-slate-900'):
+        if ZENA_MODE:
+            ui.label(locale.RAG_SCAN_READ).classes(Styles.DIALOG_TITLE)
+            
+            # Mode selector
+            mode_select = ui.select([locale.RAG_WEBSITE, locale.RAG_LOCAL_DIRECTORY], value=locale.RAG_WEBSITE, label=locale.RAG_SOURCE_TYPE).props('outlined').classes('w-full mb-3')
+            
+            # Website inputs
+            website_input = ui.input(locale.RAG_WEBSITE_URL, value=ZENA_CONFIG.get('website_url', '')).props('outlined').classes('w-full mb-2')
+            pages_input = ui.input(locale.RAG_MAX_PAGES, value='50').props('outlined').classes('w-full mb-2')
+            
+            # Directory inputs (hidden by default)
+            dir_input = ui.input(locale.RAG_DIRECTORY_PATH, placeholder='C:/Users/YourName/Documents').props('outlined visible=false').classes('w-full mb-2')
+            files_input = ui.input(locale.RAG_MAX_FILES, value='1000').props('outlined visible=false').classes('w-full mb-2')
+            
+            # Toggle visibility based on mode
+            def on_mode_change():
+                is_website = mode_select.value == locale.RAG_WEBSITE
+                website_input.set_visibility(is_website)
+                pages_input.set_visibility(is_website)
+                dir_input.set_visibility(not is_website)
+                files_input.set_visibility(not is_website)
+            
+            mode_select.on('update:model-value', on_mode_change)
+            
+            # Progress indicators
+            progress_label = ui.label('').classes('text-md font-bold text-primary mb-2')
+            progress_bar = ui.linear_progress(value=0, show_value=False).props('visible=false color=primary')
+            
+            async def start_scan():
+                ui.notify("Starting RAG scan...", color='info')
+            
+            ui.button('Start Scan', on_click=start_scan).props('color=primary').classes('w-full')
+            ui.button('Cancel', on_click=rag_dialog.close).props('flat').classes('w-full mt-2')
+        else:
+            ui.label("RAG not enabled in Zena mode").classes('text-center text-gray-400')
+            ui.button('Close', on_click=rag_dialog.close).props('flat').classes('w-full mt-2')
+    
+    return rag_dialog
+
