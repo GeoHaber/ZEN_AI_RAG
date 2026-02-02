@@ -49,3 +49,4 @@ old/
 # Log files
 *_log.txt
 results_log.txt
+benchmark_results.json

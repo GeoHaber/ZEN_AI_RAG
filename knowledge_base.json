@@ -1,0 +1,324 @@
+{
+  "entries": [
+    {
+      "question": "How do I start the LLM?",
+      "answer": "Run `python start_llm.py` in your terminal. The LLM will start on port 8001.",
+      "category": "setup",
+      "confidence": 0.99,
+      "aliases": [
+        "start llm",
+        "launch model",
+        "run server"
+      ],
+      "tags": [
+        "getting_started"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.362482",
+      "updated": null
+    },
+    {
+      "question": "How do I start the UI?",
+      "answer": "Run `python zena_modern.py` to start the modern web UI on port 8080. Open http://localhost:8080 in your browser.",
+      "category": "setup",
+      "confidence": 0.99,
+      "aliases": [
+        "launch ui",
+        "start interface",
+        "open gui"
+      ],
+      "tags": [
+        "getting_started"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.385840",
+      "updated": null
+    },
+    {
+      "question": "What ports does ZEN AI RAG use?",
+      "answer": "Port 8001: Main LLM, Port 8002: Hub, Port 8003: Voice, Port 8080: Web UI, Port 8020: Traffic Controller (Phi-3-mini).",
+      "category": "setup",
+      "confidence": 0.99,
+      "aliases": [
+        "which ports",
+        "port numbers",
+        "network ports"
+      ],
+      "tags": [
+        "getting_started"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.397393",
+      "updated": null
+    },
+    {
+      "question": "How do I install dependencies?",
+      "answer": "Run `pip install -r requirements.txt` to install all required packages.",
+      "category": "setup",
+      "confidence": 0.99,
+      "aliases": [
+        "install packages",
+        "setup dependencies",
+        "pip install"
+      ],
+      "tags": [
+        "getting_started"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.406799",
+      "updated": null
+    },
+    {
+      "question": "What is SWARM_ENABLED?",
+      "answer": "SWARM_ENABLED controls multi-LLM consensus mode. Set to True in config.json to enable multiple LLMs voting on answers for better quality.",
+      "category": "config",
+      "confidence": 0.99,
+      "aliases": [
+        "swarm mode",
+        "consensus mode",
+        "multiple llms"
+      ],
+      "tags": [
+        "configuration"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.414639",
+      "updated": null
+    },
+    {
+      "question": "What is SWARM_SIZE?",
+      "answer": "SWARM_SIZE sets how many LLMs participate in consensus voting (default: 3). Only used when SWARM_ENABLED=True.",
+      "category": "config",
+      "confidence": 0.99,
+      "aliases": [
+        "number of llms",
+        "swarm count",
+        "llm count"
+      ],
+      "tags": [
+        "configuration"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.422514",
+      "updated": null
+    },
+    {
+      "question": "How do I enable traffic controller?",
+      "answer": "Set TRAFFIC_CONTROLLER_ENABLED=True in config.json. This activates intelligent query routing for cost optimization.",
+      "category": "config",
+      "confidence": 0.99,
+      "aliases": [
+        "enable routing",
+        "activate traffic controller",
+        "turn on smart routing"
+      ],
+      "tags": [
+        "configuration"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.429278",
+      "updated": null
+    },
+    {
+      "question": "Where is the configuration file?",
+      "answer": "Main configuration is in config.json at the root directory. You can also use settings.json for UI-specific settings.",
+      "category": "config",
+      "confidence": 0.99,
+      "aliases": [
+        "config location",
+        "settings file",
+        "where config"
+      ],
+      "tags": [
+        "configuration"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.436968",
+      "updated": null
+    },
+    {
+      "question": "How do I upload a document?",
+      "answer": "Click the 'Upload Document' button in the UI, select your file (PDF, TXT, MD, etc.), and it will be processed for RAG retrieval.",
+      "category": "usage",
+      "confidence": 0.99,
+      "aliases": [
+        "add document",
+        "upload file",
+        "ingest document"
+      ],
+      "tags": [
+        "how_to"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.444886",
+      "updated": null
+    },
+    {
+      "question": "How do I clear the chat history?",
+      "answer": "Click the 'Clear Chat' button in the UI sidebar, or use /clear command in the chat.",
+      "category": "usage",
+      "confidence": 0.99,
+      "aliases": [
+        "reset conversation",
+        "delete history",
+        "clear messages"
+      ],
+      "tags": [
+        "how_to"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.452806",
+      "updated": null
+    },
+    {
+      "question": "What file types are supported?",
+      "answer": "Supported: .txt, .md, .py, .js, .html, .css, .json, .xml, .csv, .log, .yaml, .yml, .pdf, and more. See config.py for full list.",
+      "category": "usage",
+      "confidence": 0.99,
+      "aliases": [
+        "file formats",
+        "document types",
+        "supported extensions"
+      ],
+      "tags": [
+        "how_to"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.461896",
+      "updated": null
+    },
+    {
+      "question": "LLM is not responding",
+      "answer": "Check if start_llm.py is running. Verify port 8001 is available. Check logs in the terminal for errors.",
+      "category": "troubleshoot",
+      "confidence": 0.99,
+      "aliases": [
+        "llm not working",
+        "model not responding",
+        "server down"
+      ],
+      "tags": [
+        "errors",
+        "debugging"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.468573",
+      "updated": null
+    },
+    {
+      "question": "UI shows connection error",
+      "answer": "Ensure the LLM is running on port 8001. Check if your firewall is blocking the connection. Restart both LLM and UI.",
+      "category": "troubleshoot",
+      "confidence": 0.99,
+      "aliases": [
+        "cannot connect",
+        "connection refused",
+        "network error"
+      ],
+      "tags": [
+        "errors",
+        "debugging"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.477288",
+      "updated": null
+    },
+    {
+      "question": "Out of memory error",
+      "answer": "Your system may not have enough RAM for the LLM. Try a smaller model, reduce context length, or close other applications.",
+      "category": "troubleshoot",
+      "confidence": 0.99,
+      "aliases": [
+        "memory error",
+        "oom",
+        "ram issue"
+      ],
+      "tags": [
+        "errors",
+        "debugging"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.485621",
+      "updated": null
+    },
+    {
+      "question": "What is ZEN AI RAG?",
+      "answer": "ZEN AI RAG is a local, privacy-focused AI assistant with Retrieval-Augmented Generation (RAG) and multi-LLM orchestration.",
+      "category": "faq",
+      "confidence": 0.99,
+      "aliases": [
+        "what is zen",
+        "about zen ai",
+        "what does zen do"
+      ],
+      "tags": [
+        "general"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.493133",
+      "updated": null
+    },
+    {
+      "question": "Is my data private?",
+      "answer": "Yes! Everything runs locally on your machine. No data is sent to external servers unless you explicitly configure external LLM APIs.",
+      "category": "faq",
+      "confidence": 0.99,
+      "aliases": [
+        "privacy",
+        "data security",
+        "confidential"
+      ],
+      "tags": [
+        "general"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.500315",
+      "updated": null
+    },
+    {
+      "question": "Can I use multiple LLMs?",
+      "answer": "Yes! Enable SWARM_ENABLED=True to use multi-LLM consensus for better quality, or use traffic controller for cost-optimal routing.",
+      "category": "faq",
+      "confidence": 0.99,
+      "aliases": [
+        "multiple models",
+        "several llms",
+        "model ensemble"
+      ],
+      "tags": [
+        "general"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.506651",
+      "updated": null
+    },
+    {
+      "question": "What is the traffic controller?",
+      "answer": "A fast classifier (Phi-3-mini) that routes easy queries to a fast LLM and hard queries to a powerful LLM, saving 60%+ cost.",
+      "category": "faq",
+      "confidence": 0.99,
+      "aliases": [
+        "query routing",
+        "smart routing",
+        "cost optimization"
+      ],
+      "tags": [
+        "general"
+      ],
+      "source": "curated",
+      "created": "2026-02-01T20:33:10.516622",
+      "updated": null
+    }
+  ],
+  "metadata": {
+    "total_entries": 18,
+    "categories": {
+      "setup": 4,
+      "config": 4,
+      "usage": 3,
+      "troubleshoot": 3,
+      "faq": 4
+    },
+    "last_updated": "2026-02-01T20:33:10.522191"
+  }
+}
