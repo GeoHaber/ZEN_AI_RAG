@@ -1,0 +1,12 @@
+Testing: What is ZenAI?...
+Status: 200
+First chunk: b'data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"Zen"}}],"created":1770046053,"id":"chatcmpl-mxZ01yZvC3aABILiVyVOWBxyA0JwRXY4","model":"local-model","system_fingerprint":"b4392-d283d02b","object":"chat.completion.chunk"}'
+--------------------
+Testing: How many experts can run in a swarm?...
+Status: 200
+First chunk: b'data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"The"}}],"created":1770046053,"id":"chatcmpl-0LLEvJVGLcIm6nfkznm5eZ0Qe06JTG5p","model":"local-model","system_fingerprint":"b4392-d283d02b","object":"chat.completion.chunk"}'
+--------------------
+Testing: What is RAG?...
+Status: 200
+First chunk: b'data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"R"}}],"created":1770046054,"id":"chatcmpl-MtHKsVbzUV6kgpwq0yJiPP9RV3gI1YRg","model":"local-model","system_fingerprint":"b4392-d283d02b","object":"chat.completion.chunk"}'
+--------------------

@@ -14,14 +14,17 @@ import os
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from swarm_arbitrator import (
-    SwarmArbitrator,
+from zena_mode.swarm_arbitrator import (
+    SwarmArbitrator, 
+    ArbitrationRequest, 
+    ExpertResponse,
+    TaskType,
+    get_arbitrator,
     AgentPerformanceTracker,
     ConsensusMethod,
-    ConsensusProtocol,
-    TaskType,
-    get_arbitrator
+    ConsensusProtocol
 )
+from config_system import config
 
 # ============================================================================
 # FIXTURES

@@ -283,6 +283,19 @@ class BaseLocale:
         "🌊 Hive mind activating...",
         "🏛️ Council in session...",
     ]
+
+    LOADING_DISTRACTIONS = [
+        "🤔 Hmm, scratching my head on this one...",
+        "🏃‍♂️ Running to the library to check a fact...",
+        "🍵 Brewing some digital tea while I think...",
+        "📚 Flipping through the encyclopedia...",
+        "✨ polishing the pixels...",
+        "🧙‍♂️ Consulting the ancient scrolls...",
+        "🤖 Beep boop... complex calculation in progress...",
+        "🧐 Examining the evidence closely...",
+        "🎭 Getting into character...",
+        "🌌 Staring into the void for inspiration...",
+    ]
     CHAT_LATEST_LLAMA = "Latest llama.cpp"
     CHAT_RUN_BENCHMARK = "Run Benchmark"
     CHAT_HELP = "Help"

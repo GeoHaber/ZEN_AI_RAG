@@ -11,6 +11,8 @@ graph TD
         Orchestrator -->|Feature: Coding| LoadCode[Load Code Expert]
         Orchestrator -->|Feature: Chat| LoadChat[Load Chat Expert]
         Orchestrator -->|Feature: Voice| LoadVoice[Load Audio Expert]
+        Orchestrator -->|Feature: Batch| BatchEngine[Batch Review Engine]
+        Orchestrator -->|Feature: Swarm| SwarmMgr[Swarm Manager]
     end
     
     subgraph "Expert Layer (Dynamic)"

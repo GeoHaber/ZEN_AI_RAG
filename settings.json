@@ -17,6 +17,92 @@
     ".js",
     ".html",
     ".css",
-    ".pdf"
-  ]
+    ".pdf",
+    ".json",
+    ".xml",
+    ".csv",
+    ".log",
+    ".yaml",
+    ".yml",
+    ".rst",
+    ".c",
+    ".cpp",
+    ".java"
+  ],
+  "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+  "context_size": 32768,
+  "batch_size": 512,
+  "ubatch_size": 512,
+  "threads": 4,
+  "gpu_layers": 0,
+  "temperature": 0.7,
+  "zena_mode_enabled": true,
+  "swarm_enabled": false,
+  "swarm_size": 3,
+  "voice_enabled": true,
+  "auto_update_enabled": true,
+  "dark_mode": false,
+  "language": {
+    "ui_language": "en"
+  },
+  "appearance": {
+    "dark_mode": false,
+    "font_size": "medium",
+    "chat_density": "comfortable",
+    "show_avatars": true,
+    "animate_messages": true
+  },
+  "ai_model": {
+    "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+    "temperature": 0.7,
+    "context_window": 32768,
+    "max_tokens": 2048,
+    "use_cot_swarm": false,
+    "quiet_cot": false
+  },
+  "external_llm": {
+    "enabled": false,
+    "anthropic_api_key": "",
+    "anthropic_model": "claude-3-5-sonnet-20241022",
+    "google_api_key": "",
+    "google_model": "gemini-pro",
+    "xai_api_key": "",
+    "xai_model": "grok-beta",
+    "use_consensus": false,
+    "cost_tracking_enabled": false,
+    "budget_limit": 50.0
+  },
+  "voice": {
+    "tts_enabled": false,
+    "voice_speed": 1.0,
+    "auto_speak_responses": false,
+    "recording_duration": 10
+  },
+  "rag": {
+    "enabled": true,
+    "chunk_size": 500,
+    "similarity_threshold": 0.5,
+    "max_results": 5,
+    "auto_index_on_startup": true
+  },
+  "chat": {
+    "show_timestamps": true,
+    "auto_scroll": true,
+    "stream_responses": true,
+    "show_token_count": true,
+    "save_conversations": true,
+    "history_days": 30
+  },
+  "system": {
+    "api_port": 8001,
+    "models_directory": "AI_Models",
+    "check_updates_on_startup": true,
+    "auto_start_backend": true,
+    "log_level": "INFO"
+  },
+  "MAX_CHAT_MESSAGES": 100,
+  "telegram_token": "",
+  "telegram_whitelist": [],
+  "whatsapp_port": 5001,
+  "whatsapp_whitelist": []
 }

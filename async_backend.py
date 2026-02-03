@@ -139,10 +139,16 @@ class AsyncZenAIBackend:
             return False
     
     async def __aenter__(self):
-        """Async context manager entry - creates HTTP client."""
+        """Async context manager entry - creates HTTP client with connection pooling."""
+        # Connection pooling for better performance under load
+        limits = httpx.Limits(
+            max_connections=100,
+            max_keepalive_connections=20,
+            keepalive_expiry=30.0
+        )
         # Increased timeout for large prompts/long responses (5 minutes)
-        self.client = httpx.AsyncClient(timeout=300.0)
-        logger.debug("[AsyncBackend] HTTP client created")
+        self.client = httpx.AsyncClient(timeout=300.0, limits=limits)
+        logger.debug("[AsyncBackend] HTTP client created with connection pooling")
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -151,6 +157,16 @@ class AsyncZenAIBackend:
             await self.client.aclose()
             logger.debug("[AsyncBackend] HTTP client closed")
     
+    def _sanitize_input(self, text: str) -> str:
+        """Sanitize input to prevent server crashes/400s."""
+        if not text: return ""
+        # Remove null bytes which cause C++ server hangs
+        text = text.replace("\x00", "")
+        # Remove non-characters (e.g. \uffff)
+        text = text.replace("\uffff", "").replace("\ufffe", "")
+        # Ensure valid UTF-8, ignore errors if necessary (though strings are unicode in Py3)
+        return text
+
     async def send_message_async(
         self, 
         text: str, 
@@ -162,17 +178,16 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
         cancellation_event: Optional[asyncio.Event] = None
     ) -> AsyncGenerator[str, None]:
         """
-        Send message to LLM with true async streaming.
-        
-        Args:
-            text: User message
-            system_prompt: System prompt for LLM
-            attachment_content: Optional file attachment content
-        
-        Yields:
-            Response chunks as they arrive (non-blocking)
+        Send message to LLM with stable requests-based streaming.
         """
-        # Build message with optional attachment
+        import requests
+        
+        # Sanitize inputs
+        text = self._sanitize_input(text)
+        system_prompt = self._sanitize_input(system_prompt)
+        if attachment_content:
+            attachment_content = self._sanitize_input(attachment_content)
+        
         user_message = text
         if attachment_content:
             user_message = f"{text}\n\n```\n{attachment_content}\n```"
@@ -185,50 +200,42 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
             ],
             "stream": True,
             "temperature": 0.7,
-            "max_tokens": 1024  # Reduced for stability against n_ctx=4096
+            "max_tokens": 1024
         }
         
         try:
-            if not self.client:
-                yield f"{EMOJI['error']} Backend not initialized. Use 'async with backend:'"
-                return
+            logger.info(f"[AsyncBackend] Sending stable requests POST to: {self.api_url}")
             
-            logger.info(f"[AsyncBackend] Sending POST request to: {self.api_url}")
-            # Robust diagnostic dump
-            try:
-                with open("tests/last_payload.json", "w", encoding="utf-8") as f:
-                    json.dump(payload, f, indent=2)
-            except: pass
+            # Run the synchronous requests call in a thread
+            def perform_request():
+                session = requests.Session()
+                return session.post(self.api_url, json=payload, stream=True, timeout=30.0)
 
-            async with self.client.stream('POST', self.api_url, json=payload) as response:
-                if response.status_code != 200:
-                    error_text = await response.aread()
-                    error_msg = f"{EMOJI['error']} Server returned {response.status_code}: {error_text.decode()}"
-                    logger.error(f"[AsyncBackend] Request Failed!")
-                    logger.error(f"  URL: {self.api_url}")
-                    logger.error(f"  Status: {response.status_code}")
-                    logger.error(f"  Response: {error_text.decode()}")
-                    yield error_msg
-                    return
+            response = await asyncio.to_thread(perform_request)
+
+            if response.status_code != 200:
+                error_text = response.text
+                error_msg = f"{EMOJI['error']} Server returned {response.status_code}: {error_text}"
+                logger.error(f"[AsyncBackend] Stable Request Failed! Status: {response.status_code}")
+                yield error_msg
+                return
+
+            chunk_count = 0
+            first_token_time = None
+            start_request_time = time.time()
+
+            # Iterate over the stream in the thread to avoid blocking the event loop
+            # But we can iterate over lines directly if we are careful
+            for line in response.iter_lines():
+                if cancellation_event and cancellation_event.is_set():
+                    logger.info("[AsyncBackend] Request cancelled by user")
+                    break
                 
-                chunk_count = 0
-                first_token_time = None
-                start_request_time = time.time()
-                
-                async for line in response.aiter_lines():
-                    # Check for cancellation
-                    if cancellation_event and cancellation_event.is_set():
-                        logger.info("[AsyncBackend] Request cancelled by user")
-                        break
-                        
-                    if line.startswith('data: '):
-                        json_str = line[6:]
+                if line:
+                    line_str = line.decode('utf-8', errors='replace')
+                    if line_str.startswith('data: '):
+                        json_str = line_str[6:]
                         if json_str.strip() == '[DONE]':
-                            total_generation_time = time.time() - (first_token_time or start_request_time)
-                            if total_generation_time > 0 and chunk_count > 0:
-                                tps = chunk_count / total_generation_time
-                                monitor.add_metric('llm_tps', tps)
-                            logger.info(f"[AsyncBackend] Stream complete: {chunk_count} chunks in {total_generation_time:.1f}s")
                             break
                         
                         try:
@@ -240,13 +247,18 @@ Be helpful, concise, and accurate. If asked about your identity, say you are Zen
                                     first_token_time = time.time()
                                     ttft_ms = (first_token_time - start_request_time) * 1000
                                     monitor.add_metric('llm_ttft', ttft_ms)
-                                    logger.info(f"[AsyncBackend] First token received in {ttft_ms:.1f}ms")
                                     
                                 chunk_count += 1
                                 yield content
-                        except (json.JSONDecodeError, KeyError, IndexError) as e:
-                            logger.debug(f"[AsyncBackend] Skipping malformed chunk: {e}")
-                            pass
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue
+            
+            total_generation_time = time.time() - (first_token_time or start_request_time)
+            logger.info(f"[AsyncBackend] Stable Stream complete: {chunk_count} chunks in {total_generation_time:.1f}s")
+
+        except Exception as e:
+            logger.error(f"[AsyncBackend] Stable Stream error: {type(e).__name__}: {e}")
+            yield f"{EMOJI['error']} Error: {str(e)}"
         
         except httpx.ConnectError:
             error_msg = f"{EMOJI['warning']} **Backend Offline**: Start backend to enable AI responses."

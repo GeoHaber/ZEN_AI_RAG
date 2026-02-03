@@ -1,55 +1,55 @@
 {
-    "timestamp": 1769627901.9416335,
-    "avg_quality_score": 0.25858816219260916,
-    "avg_latency": 2.5539725720882416,
+    "timestamp": 1770137750.9409568,
+    "avg_quality_score": 0.2937176646082662,
+    "avg_latency": 1.8490315079689026,
     "detailed_results": [
         {
             "question": "What is ZenAI?",
-            "response": "ZenAI is an intelligent assistant developed by Alibaba Cloud, leveraging the advanced natural language processing capabilities of the Qwen model to provide users with quick, efficient, and accurate information retrieval and assistance. It is designed to help users solve problems, answer questions, and perform tasks more effectively.",
-            "score": 0.832517147064209,
-            "duration": 4.643706321716309
+            "response": "I am ZenAI, an AI assistant powered by Qwen, designed to help answer questions, provide information, and assist with various tasks. How can I assist you today?",
+            "score": 0.7251884341239929,
+            "duration": 4.42521595954895
         },
         {
             "question": "How many experts can run in a swarm?",
             "response": "\u274c Server returned 400: ",
             "score": -0.008027935400605202,
-            "duration": 0.005233049392700195
+            "duration": 0.015738725662231445
         },
         {
             "question": "What is RAG?",
-            "response": "RAG stands for Retrieval-Augmented Generation. It's a method that combines information retrieval and generation to improve the quality of generated text. This approach uses a retriever to fetch relevant documents or passages from a large corpus based on a query, and then a generator to produce responses using these retrieved pieces. The goal is to leverage the strengths of both approaches: retrieval ensures relevance, while generation provides fluency and detail.",
-            "score": 0.6854251623153687,
-            "duration": 6.714018106460571
+            "response": "RAG stands for Retrieval-Augmented Generation. It is an approach used in natural language processing where a retrieval component is combined with a generation model to improve the quality of the generated text. The retrieval component retrieves relevant information from a large corpus, while the generation model uses this information to produce more informative and contextually appropriate responses. This method has been applied in various tasks such as question answering, dialogue systems, and text summarization.",
+            "score": 0.6622958779335022,
+            "duration": 7.880695819854736
         },
         {
             "question": "Who created Qwen?",
-            "response": "\u274c Server returned 400: ",
-            "score": 0.06544312089681625,
-            "duration": 0.0050792694091796875
+            "response": "Qwen was created by Alibaba Cloud's Qwen team.",
+            "score": 0.9957612752914429,
+            "duration": 2.3886730670928955
         },
         {
             "question": "If ZenAI 2.0 has 5 pillars and we finish 3, how many are left?",
             "response": "\u274c Server returned 400: ",
             "score": 0.0020847520790994167,
-            "duration": 0.0042552947998046875
+            "duration": 0.006888628005981445
         },
         {
             "question": "Which file handles the multi-LLM consensus logic?",
-            "response": "I'm sorry, but I don't have specific information on which file handles the multi-LLM consensus logic in any particular system or application. The structure of such systems can vary widely depending on their design and implementation.\n\nIf you're working with a specific software or framework that uses multi-LLM (Large Language Model) consensus, I would recommend checking the documentation for that software or reaching out to the maintainers for more detailed information.\n\nIf you provide more context or specify the system you're referring to, I might be able to offer more targeted assistance.",
-            "score": 0.48154908418655396,
-            "duration": 9.049433469772339
+            "response": "\u274c Server returned 400: ",
+            "score": -0.037275053560733795,
+            "duration": 0.006257295608520508
         },
         {
             "question": "Explain the benefit of latency-aware routing in one sentence.",
             "response": "\u274c Server returned 400: ",
             "score": 0.06147371232509613,
-            "duration": 0.006084918975830078
+            "duration": 0.005346059799194336
         },
         {
             "question": "What happens if an expert provides a response with low fact-check score?",
             "response": "\u274c Server returned 400: ",
             "score": -0.0517597459256649,
-            "duration": 0.003970146179199219
+            "duration": 0.06343650817871094
         }
     ]
 }

@@ -3,6 +3,7 @@
     "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
     "LLM_API_URL": "http://127.0.0.1:8001",
     "default_model": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+    "context_size": 32768,
     "zena_mode": {
         "enabled": true,
         "language": "auto",

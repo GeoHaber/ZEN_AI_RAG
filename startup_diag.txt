@@ -1,0 +1,24 @@
+21:30:57 === DIAGNOSTIC START ===
+21:30:57 CWD: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG
+21:30:57 Python: C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+21:30:57 ✅ config_system imported
+21:30:57 ❌ config_system import failed: 'AppConfig' object has no attribute 'to_json'
+21:30:57 ✅ security imported
+21:30:57 ✅ Server binary found: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\_bin\llama-server.exe
+21:30:59 info: Port 8001 is closed
+21:30:59 Testing LLM Server Launch (Dry Run)...
+21:30:59 ✅ LLM Server binary works (Help output received)
+21:30:59 === DIAGNOSTIC END ===
+12:40:07 === DIAGNOSTIC START ===
+12:40:07 CWD: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG
+12:40:07 Python: C:\Users\dvdze\AppData\Local\Programs\Python\Python312\python.exe
+12:40:07 ✅ config_system imported
+12:40:07 Config LLM Port: 8001
+12:40:07 Config Context Size: 8192
+12:40:07 Config Bin Dir: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\_bin
+12:40:07 ✅ Server binary found: C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\_bin\llama-server.exe
+12:40:07 ✅ psutil available
+12:40:08 ✅ nicegui available
+12:40:08 Testing LLM Server Launch (Dry Run)...
+12:40:08 ✅ LLM Server binary works (Help output received)
+12:40:08 === DIAGNOSTIC END ===

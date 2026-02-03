@@ -40,7 +40,12 @@ else:
 logger = logging.getLogger(LOG_NAME)
 
 def safe_print(*args, level: str = "info", **kwargs):
-    """Thread-safe and encoding-safe print with automatic flush."""
+    """Thread-safe and encoding-safe print with automatic flush.
+    
+    Handles:
+    - UnicodeEncodeError: strips non-ASCII chars on encoding failures
+    - OSError: silently skips print when no console is attached (Windows Explorer launch)
+    """
     kwargs['flush'] = kwargs.get('flush', True)
     sep = kwargs.get('sep', ' ')
     text = sep.join(str(a) for a in args)
@@ -48,15 +53,28 @@ def safe_print(*args, level: str = "info", **kwargs):
     try:
         print(text, **kwargs)
     except UnicodeEncodeError:
+        # Fallback: strip non-ASCII characters
         safe_args = [str(a).encode('ascii', 'ignore').decode('ascii') for a in args]
-        print(sep.join(safe_args), **kwargs)
+        try:
+            print(sep.join(safe_args), **kwargs)
+        except OSError:
+            pass  # No console attached, skip output
+    except OSError:
+        # No console attached (Windows "Open with Python" scenario)
+        pass
+    
+    try:
+        sys.stdout.flush()
+    except (OSError, AttributeError):
+        pass  # stdout may be None or invalid
 
-    # Forward to logger
+    # Forward to logger (always works, writes to file)
     lvl = level.lower()
     if lvl == "debug": logger.debug(text)
     elif lvl == "warning": logger.warning(text)
     elif lvl == "error": logger.error(text)
     else: logger.info(text)
+
 
 def sha256sum(path: Path) -> str:
     """Computes SHA256 hash of a file."""
@@ -94,13 +112,21 @@ class ProcessManager:
         target_ports = ports or [config.llm_port, config.mgmt_port, config.ui_port, config.voice_port]
         target_scripts = scripts or ["zena.py", "start_llm.py", "llama-server.exe"]
         
+        # Get current process and parent (to avoid killing launcher like py.exe)
+        current_pid = os.getpid()
+        try:
+            parent_pid = psutil.Process(current_pid).ppid()
+        except (psutil.NoSuchProcess, psutil.AccessDenied, OSError):
+            parent_pid = None
+        
         # 1. Port-based detection
         try:
             for conn in psutil.net_connections(kind='inet'):
                 if conn.laddr.port in target_ports and conn.status == 'LISTEN':
                     try:
                         p = psutil.Process(conn.pid)
-                        if conn.pid == os.getpid(): continue
+                        # Skip self and parent (py.exe launcher)
+                        if conn.pid in (current_pid, parent_pid): continue
                         zombies[conn.pid] = {
                             'type': 'Port Conflict',
                             'port': conn.laddr.port,
@@ -108,13 +134,14 @@ class ProcessManager:
                             'cmd': " ".join(p.cmdline()[:3])
                         }
                     except (psutil.NoSuchProcess, psutil.AccessDenied): continue
-        except: pass
+        except (psutil.AccessDenied, OSError): pass  # Connection iteration failed
         
         # 2. Script-based detection
         for p in psutil.process_iter(['pid', 'name', 'cmdline']):
             try:
                 pid = p.info['pid']
-                if pid == os.getpid() or pid in zombies: continue
+                # Skip self, parent, and already-detected
+                if pid in (current_pid, parent_pid) or pid in zombies: continue
                 cmd = p.info['cmdline'] or []
                 cmd_str = " ".join(cmd).lower()
                 for target in target_scripts:
@@ -129,6 +156,7 @@ class ProcessManager:
             except (psutil.NoSuchProcess, psutil.AccessDenied): continue
         return zombies
 
+
     @staticmethod
     def kill_tree(pid: int):
         """Safely terminates a process and all its children."""
@@ -137,9 +165,9 @@ class ProcessManager:
             parent = psutil.Process(pid)
             for child in parent.children(recursive=True):
                 try: child.terminate()
-                except: pass
+                except (psutil.NoSuchProcess, psutil.AccessDenied): pass
             parent.terminate()
-        except: pass
+        except (psutil.NoSuchProcess, psutil.AccessDenied, OSError): pass
 
     @staticmethod
     def prune(auto_confirm: bool = False, ports: List[int] = None, scripts: List[str] = None, **kwargs) -> bool:
@@ -166,7 +194,7 @@ class ProcessManager:
                     p.kill()
                 else: os.kill(pid, signal.SIGTERM)
                 safe_print(f"  {EMOJI['success']} Terminated PID {pid}")
-            except: pass
+            except (psutil.NoSuchProcess, psutil.AccessDenied, OSError): pass
         time.sleep(1)
         return True
 
@@ -190,7 +218,7 @@ class HardwareProfiler:
                         name = g.get("Name", "").upper()
                         if "NVIDIA" in name: profile['type'] = "NVIDIA"
                         elif "AMD" in name: profile['type'] = "AMD"
-        except: pass
+        except (subprocess.SubprocessError, ValueError, KeyError, OSError): pass  # Hardware detection optional
         logger.info(f"[Profiler] Detected: {profile['type']} | {profile['ram_gb']}GB RAM | {profile['threads']} Cores")
         return profile
 
@@ -239,7 +267,7 @@ def kill_process_by_name(name: str):
     for p in psutil.process_iter(['name']):
         if p.info['name'] == name:
             try: p.kill()
-            except: pass
+            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
 
 def kill_process_by_port(port: int):
     """Legacy shim."""
@@ -247,7 +275,7 @@ def kill_process_by_port(port: int):
     for conn in psutil.net_connections():
         if conn.laddr.port == port:
             try: psutil.Process(conn.pid).kill()
-            except: pass
+            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
 
 def trace_log(msg: str, level: str = "info"):
     """Legacy shim."""

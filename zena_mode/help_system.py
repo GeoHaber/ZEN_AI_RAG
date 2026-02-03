@@ -13,7 +13,8 @@ DOCS_TO_INDEX = [
     "zena_master_spec.md",
     "ARCHITECTURE_V2.md",
     "UI_REDESIGN_SPEC.md",
-    "INSTALL.md"
+    "INSTALL.md",
+    "RAG_VISUAL_GUIDE.md"
 ]
 
 _help_rag = None
@@ -44,8 +45,8 @@ def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
     
     docs_payload = []
     
-    # Check root and _Extra_files
-    search_paths = [root_dir, root_dir / "_Extra_files"]
+    # Check root, _docs, and _Extra_files
+    search_paths = [root_dir, root_dir / "_docs", root_dir / "_Extra_files"]
     
     for doc_name in DOCS_TO_INDEX:
         content = None

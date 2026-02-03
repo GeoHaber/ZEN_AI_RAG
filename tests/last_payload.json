@@ -1,0 +1,16 @@
+{
+  "model": "local-model",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are ZenAI, a helpful AI assistant powered by Qwen2.5-Coder.\nYou are NOT ChatGPT, NOT GPT-4, and NOT made by OpenAI.\nYou were created by Alibaba Cloud (Qwen team) and integrated into the ZenAI application.\nBe helpful, concise, and accurate. If asked about your identity, say you are ZenAI powered by Qwen."
+    },
+    {
+      "role": "user",
+      "content": "SOURCES:\nSource: Hospital\nWe have a cardiology department specialized in advanced heart surgeries and care.\n\nSource: Hospital\nThe hospital offers emergency services 24 hours a day for all patients in the area.\n\nSource: Hospital\nVisiting hours are 9am to 5pm daily except for holidays and emergency situations.\n\nUSER QUESTION: What happens if an expert provides a response with low fact-check score?\n\nANSWER:"
+    }
+  ],
+  "stream": true,
+  "temperature": 0.7,
+  "max_tokens": 1024
+}

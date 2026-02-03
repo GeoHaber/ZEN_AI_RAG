@@ -22,7 +22,7 @@ import hashlib
 import re
 import sqlite3
 from pathlib import Path
-from typing import List, AsyncGenerator, Dict, Optional, Tuple
+from typing import List, AsyncGenerator, Dict, Optional, Tuple, Any
 from enum import Enum
 from datetime import datetime
 
@@ -55,6 +55,19 @@ class TaskType(Enum):
     CODE = "code"
     CREATIVE = "creative"
     GENERAL = "general"
+
+from dataclasses import dataclass, field
+
+@dataclass
+class ArbitrationRequest:
+    """Request for swarm arbitration."""
+    id: str
+    query: str
+    task_type: str
+    timestamp: float = 0.0
+
+ExpertResponse = Dict[str, Any]
+
 
 # Default configuration
 DEFAULT_CONFIG = {
@@ -253,6 +266,73 @@ class CostTracker:
         return (tokens / 1000.0) * cost_per_1k
 
 # ============================================================================
+# RAGED SWARM STORAGE (Memory for Experts)
+# ============================================================================
+
+class RagedSwarmStorage:
+    """
+    Dedicated RAG storage for expert opinions to reduce hallucinations.
+    Stores query -> expert_consensus mappings.
+    """
+    def __init__(self, db_path: str = "swarm_memory.db"):
+        self.db_path = db_path
+        self._init_db()
+        # reusing sentence transformer from arbitrator if possible, or load own
+
+    def _init_db(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS swarm_memory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                query_hash TEXT,
+                query_text TEXT,
+                consensus_response TEXT,
+                contributing_experts TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # Simple FTS for retrieval for now
+        conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS swarm_fts USING fts5(query_text, consensus_response)")
+        conn.commit()
+        conn.close()
+
+    def store_consensus(self, query: str, response: str, experts: List[str]):
+        """Store a finalized consensus."""
+        conn = sqlite3.connect(self.db_path)
+        q_hash = hashlib.md5(query.encode()).hexdigest()
+        
+        try:
+            conn.execute("""
+                INSERT INTO swarm_memory (query_hash, query_text, consensus_response, contributing_experts)
+                VALUES (?, ?, ?, ?)
+            """, (q_hash, query, response, json.dumps(experts)))
+            conn.execute("INSERT INTO swarm_fts (query_text, consensus_response) VALUES (?, ?)", (query, response))
+            conn.commit()
+        except Exception as e:
+            logger.error(f"[SwarmMemory] Store failed: {e}")
+        finally:
+            conn.close()
+
+    def retrieve_similar(self, query: str, limit: int = 3) -> List[Dict]:
+        """Retrieve similar past swarm decisions."""
+        conn = sqlite3.connect(self.db_path)
+        try:
+            # Using FTS for basic similarity
+            cursor = conn.execute("""
+                SELECT query_text, consensus_response FROM swarm_fts 
+                WHERE swarm_fts MATCH ? ORDER BY rank LIMIT ?
+            """, (query, limit))
+            
+            results = []
+            for row in cursor:
+                results.append({"query": row[0], "response": row[1]})
+            return results
+        except Exception:
+            return []
+        finally:
+            conn.close()
+
+# ============================================================================
 # ENHANCED SWARM ARBITRATOR
 # ============================================================================
 
@@ -290,6 +370,9 @@ class SwarmArbitrator:
             self.performance_tracker = AgentPerformanceTracker()
         else:
             self.performance_tracker = None
+            
+        # RAGed Swarm Memory
+        self.swarm_memory = RagedSwarmStorage() if self.config.get("rag_swarm_enabled", True) else None
 
         # Lazy-loaded embedding model
         self._embedding_model = None
@@ -846,6 +929,63 @@ JSON:"""
         async with httpx.AsyncClient() as client:
             response = await self._query_model_with_timeout(client, endpoint, messages)
             return response['content']
+
+    # ========================================================================
+    # STRUCTURED DECISION (API MODE)
+    # ========================================================================
+
+    async def arbiter_decision(self, request: ArbitrationRequest) -> Dict:
+        """
+        Structured consensus decision (non-streaming) for API usage.
+        """
+        start_time = time.time()
+        
+        # 1. Discover
+        if not self.endpoints:
+            await self.discover_swarm()
+            
+        if not self.endpoints:
+            return {
+                "consensus_answer": "Error: No experts available.",
+                "individual_responses": [],
+                "method": "failure",
+                "confidence": 0.0,
+                "duration": 0.0
+            }
+
+        # 2. Query Experts (Parallel)
+        # Use simple system prompt for experts
+        sys_prompt = {"role": "system", "content": "You are a swarm expert. Answer concisely."}
+        messages = [sys_prompt, {"role": "user", "content": request.query}]
+        
+        async with httpx.AsyncClient() as client:
+            tasks = [self._query_model_with_timeout(client, ep, messages) for ep in self.endpoints]
+            results = await asyncio.gather(*tasks)
+            
+        valid_results = [r for r in results if not r.get("error")]
+        responses = [r['content'] for r in valid_results]
+        
+        # 3. Consensus
+        agreement = self._calculate_consensus(responses)
+        # Handle TaskType enumeration conversion if needed
+        # Assuming request.task_type is string compatible or Enum
+        t_type = request.task_type.value if hasattr(request.task_type, 'value') else str(request.task_type)
+        protocol = self.select_protocol(t_type)
+        
+        # 4. Referee Synthesis (Non-streaming)
+        # Use main model as referee
+        referee_endpoint = self.endpoints[0]
+        prompt = self._build_arbitrage_prompt(request.query, responses, agreement, protocol)
+        
+        final_answer = await self._get_answer(referee_endpoint, prompt, "You are the Swarm Referee.")
+        
+        return {
+            "consensus_answer": final_answer,
+            "individual_responses": valid_results,
+            "method": protocol.value,
+            "confidence": agreement,
+            "duration": time.time() - start_time
+        }
 
     # ========================================================================
     # MAIN CONSENSUS METHOD

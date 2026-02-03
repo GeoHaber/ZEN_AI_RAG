@@ -19,6 +19,26 @@ BASE_DIR: Path = Path(__file__).parent.resolve()
 CONFIG_JSON: Path = BASE_DIR / "config.json"
 SETTINGS_JSON: Path = BASE_DIR / "settings.json"
 
+# --- Environment Variable Helpers ---
+def _env_str(name: str, default: str = "") -> str:
+    """Read string from environment variable with fallback."""
+    return os.environ.get(name, default)
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    """Read boolean from environment variable."""
+    val = os.environ.get(name, "").lower()
+    if val in ("true", "1", "yes", "on"): return True
+    if val in ("false", "0", "no", "off"): return False
+    return default
+
+def _env_int(name: str, default: int = 0) -> int:
+    """Read integer from environment variable."""
+    try:
+        return int(os.environ.get(name, default))
+    except (ValueError, TypeError):
+        return default
+
+
 @dataclass
 class LanguageConfig:
     ui_language: str = "en"  # en, ro
@@ -42,16 +62,19 @@ class AIConfig:
 
 @dataclass
 class ExternalLLMConfig:
+    """External LLM configuration - API keys read from environment for security."""
     enabled: bool = False
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-3-5-sonnet-20241022"
-    google_api_key: str = ""
-    google_model: str = "gemini-pro"
-    xai_api_key: str = ""
-    xai_model: str = "grok-beta"
+    # API keys: read from env vars first, fall back to empty (settings.json can override)
+    anthropic_api_key: str = field(default_factory=lambda: _env_str("ZENAI_ANTHROPIC_API_KEY", ""))
+    anthropic_model: str = field(default_factory=lambda: _env_str("ZENAI_ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022"))
+    google_api_key: str = field(default_factory=lambda: _env_str("ZENAI_GOOGLE_API_KEY", ""))
+    google_model: str = field(default_factory=lambda: _env_str("ZENAI_GOOGLE_MODEL", "gemini-pro"))
+    xai_api_key: str = field(default_factory=lambda: _env_str("ZENAI_XAI_API_KEY", ""))
+    xai_model: str = field(default_factory=lambda: _env_str("ZENAI_XAI_MODEL", "grok-beta"))
     use_consensus: bool = False
     cost_tracking_enabled: bool = False
     budget_limit: float = 50.0
+
 
 @dataclass
 class VoiceConfig:
@@ -64,9 +87,23 @@ class VoiceConfig:
 class RAGConfig:
     enabled: bool = True
     chunk_size: int = 500
+    chunk_strategy: str = "semantic" # recursive, semantic
     similarity_threshold: float = 0.5
+    reranker_model: str = "BAAI/bge-reranker-base" # High performance reranker
     max_results: int = 5
     auto_index_on_startup: bool = True
+    embedding_model: str = "balanced"  # fast, balanced, accurate
+    use_gpu: bool = True
+
+@dataclass
+class EmbeddingConfig:
+    """Centralized embedding configuration."""
+    MODELS: Dict[str, str] = field(default_factory=lambda: {
+        "fast": "sentence-transformers/all-MiniLM-L6-v2",      # 384d
+        "balanced": "BAAI/bge-base-en-v1.5",                   # 768d
+        "accurate": "intfloat/e5-large-v2",                    # 1024d
+    })
+    fallback_model: str = "fast"
 
 @dataclass
 class ChatConfig:
@@ -107,7 +144,8 @@ class AppConfig:
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB HARD LIMIT
     ALLOWED_EXTENSIONS: list[str] = field(default_factory=lambda: [
         '.txt', '.md', '.py', '.js', '.html', '.css', '.json', '.xml',
-        '.csv', '.log', '.yaml', '.yml', '.rst', '.c', '.cpp', '.java', '.pdf'
+        '.csv', '.log', '.yaml', '.yml', '.rst', '.c', '.cpp', '.java', '.pdf',
+        '.png', '.jpg', '.jpeg'
     ])
     
     # 4. LLM & Performance Defaults
@@ -120,8 +158,9 @@ class AppConfig:
     temperature: float = 0.7
     
     # 5. Feature Flags
-    zena_mode_enabled: bool = False
+    zena_mode_enabled: bool = True
     swarm_enabled: bool = False
+    swarm_size: int = 3  # Max number of LLMs in swarm consensus
     voice_enabled: bool = True
     auto_update_enabled: bool = True
     
@@ -135,12 +174,18 @@ class AppConfig:
     rag: RAGConfig = field(default_factory=RAGConfig)
     chat: ChatConfig = field(default_factory=ChatConfig)
     system: SystemConfig = field(default_factory=SystemConfig)
+    embedding_config: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     
     MAX_CHAT_MESSAGES: int = 100
     
-    # 7. Integration Tokens
-    telegram_token: str = ""
+    # 7. Integration Tokens (read from env vars for security)
+    telegram_token: str = field(default_factory=lambda: _env_str("ZENAI_TELEGRAM_TOKEN", ""))
     telegram_whitelist: list = field(default_factory=list)
+
+    # 8. WhatsApp Integration
+    whatsapp_port: int = 5001
+    whatsapp_whitelist: list = field(default_factory=list)
+
     
     def __post_init__(self):
         """Path resolution and cleanup."""
@@ -160,10 +205,15 @@ class AppConfig:
              if not self.MODEL_DIR.exists() or not list(self.MODEL_DIR.glob("*.gguf")):
                  self.MODEL_DIR = central_store
                  logger.info(f"[Config] Redirected MODEL_DIR to store: {self.MODEL_DIR}")
+        
+        # Uppercase aliases for backward compatibility with tests and arbitrage
+        self.SWARM_ENABLED = self.swarm_enabled
+        self.SWARM_SIZE = self.swarm_size
             
     def get(self, key: str, default: Any = None) -> Any:
         """Legacy dictionary-like get for backward compatibility."""
         return getattr(self, key, default)
+
 
     def __getitem__(self, key: str) -> Any:
         """Legacy dictionary-like access."""
@@ -199,7 +249,7 @@ class AppConfig:
         # Load from config.json (Installer/System-level)
         if CONFIG_JSON.exists():
             try:
-                with open(CONFIG_JSON, 'r') as f:
+                with open(CONFIG_JSON, 'r', encoding='utf-8') as f:
                     merged_data.update(json.load(f))
             except Exception as e:
                 logger.error(f"Error reading config.json: {e}")
@@ -207,28 +257,62 @@ class AppConfig:
         # Load from settings.json (User preferences)
         if SETTINGS_JSON.exists():
             try:
-                with open(SETTINGS_JSON, 'r') as f:
+                with open(SETTINGS_JSON, 'r', encoding='utf-8') as f:
                     merged_data.update(json.load(f))
             except Exception as e:
                 logger.error(f"Error reading settings.json: {e}")
 
-        # Helper to convert dicts to dataclasses
         config_inst = cls()
         
-        def safe_instantiate(dc_cls, data_dict):
-            # Only use fields that exist in the dataclass
-            valid_fields = {k: v for k, v in data_dict.items() if k in dc_cls.__dataclass_fields__}
-            return dc_cls(**valid_fields)
-
+        from dataclasses import is_dataclass
+        from typing import get_type_hints
+        
+        # Get resolved type hints for the class
+        try:
+            type_hints = get_type_hints(cls)
+        except Exception:
+            type_hints = {k: f.type for k, f in cls.__dataclass_fields__.items()}
+        
         for k, v in merged_data.items():
             if k in cls.__dataclass_fields__:
-                # Support nested dataclasses
-                field_type = cls.__dataclass_fields__[k].type
-                if isinstance(v, dict) and hasattr(field_type, "__dataclass_fields__"):
-                     setattr(config_inst, k, safe_instantiate(field_type, v))
+                field_type = type_hints.get(k)
+                
+                # Handle nested dataclasses
+                if is_dataclass(field_type) and isinstance(v, dict):
+                    try:
+                        # Recursively instantiate nested dataclass
+                        # Get type hints for the sub-dataclass
+                        try:
+                            sub_hints = get_type_hints(field_type)
+                        except Exception:
+                            sub_hints = {sk: sf.type for sk, sf in field_type.__dataclass_fields__.items()}
+                        
+                        # Filter keys to match valid fields of the nested class
+                        valid_sub_fields = {}
+                        for sk, sv in v.items():
+                            if sk in field_type.__dataclass_fields__:
+                                # Optional: recursively handle deeper nests if needed
+                                # For now, one level is enough for our spec
+                                valid_sub_fields[sk] = sv
+                                
+                        setattr(config_inst, k, field_type(**valid_sub_fields))
+                    except Exception as e:
+                        logger.error(f"Failed to instantiate nested config {k}: {e}")
+                        # Fallback: keep default object from __init__
                 else:
-                    setattr(config_inst, k, v)
+                    # Simple value (only set if not none to avoid overwriting defaults with nulls)
+                    if v is not None:
+                        setattr(config_inst, k, v)
+                    
         return config_inst
+
+    def get_api_url(self) -> str:
+        """Centralized API URL resolution."""
+        return f"http://{self.host}:{self.llm_port}/v1/chat/completions"
+
+    def get_mgmt_url(self, endpoint: str = "") -> str:
+        """Centralized Management API URL resolution."""
+        return f"http://{self.host}:{self.mgmt_port}{endpoint}"
 
 # --- Global Accessors ---
 config = AppConfig.load()

@@ -115,11 +115,15 @@ def hub_server():
     """Start a lightweight Hub on 127.0.0.1:8002 that can scale experts for integration tests."""
     # Ensure config flags used by SwarmArbitrator are enabled during tests
     try:
-        import config as _config_mod
-        _config_mod.SWARM_ENABLED = True
-        _config_mod.SWARM_SIZE = 7
+        from config_system import config
+        config.swarm_enabled = True
+        config.swarm_size = 7
+        # Also set uppercase aliases for backward compatibility
+        config.SWARM_ENABLED = True
+        config.SWARM_SIZE = 7
     except Exception:
         pass
+
 
     hub = HTTPServer(('127.0.0.1', 8002), _HubHandler)
     th = threading.Thread(target=hub.serve_forever, daemon=True)

@@ -82,15 +82,13 @@ class WebsiteScraper:
         - Cookie banner removal
         - Multi-layer junk removal
         """
-        # 1. Try to find main content container first (prioritize actual content)
-        content_container = None
-        for selector in ['article', 'main', '[role="main"]', '.article-body', '.entry-content', '.post-content']:
-            content_container = soup.select_one(selector)
-            if content_container:
-                # Use this sub-tree instead of the whole body
-                soup = content_container
-                logger.debug(f"[Scraper] Using content container: {selector}")
-                break
+        # 1. (Removed aggressive container selection to ensure we catch all sections like "Meet the Team")
+        # Pre-process images to preserve ALT text
+        for img in soup.find_all('img', alt=True):
+            alt_text = img['alt'].strip()
+            if alt_text:
+                # Replace image with its "visual" description for the LLM
+                img.replace_with(f" [Image: {alt_text}] ")
 
         # 2. Remove unwanted tags
         for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe', 'form', 'button']):

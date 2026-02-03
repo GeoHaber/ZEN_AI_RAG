@@ -57,7 +57,12 @@ def whatsapp_webhook():
 def run_whatsapp_gateway():
     """Start the Flask server for WhatsApp webhooks."""
     port = getattr(config, "whatsapp_port", 5001)
+    # Ensure whitelist is refreshed from config
+    global ALLOWED_NUMBERS
+    ALLOWED_NUMBERS = getattr(config, "whatsapp_whitelist", [])
+    
     logger.info(f"🚀 WhatsApp Gateway (Webhook) is running on port {port}...")
+    logger.info(f"📋 Whitelist: {ALLOWED_NUMBERS}")
     app.run(port=port)
 
 if __name__ == "__main__":

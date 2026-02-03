@@ -112,17 +112,27 @@ class ModernChatMessage:
 
                     # Source item
                     with ui.card().classes(MT.Cards.BASE + ' p-3'):
-                        # Title
-                        if url.startswith('http'):
-                            ui.link(
-                                f'[{i}] {title}',
-                                url,
-                                new_tab=True
-                            ).classes(MT.TextColors.LINK + ' font-semibold')
-                        else:
-                            ui.label(f'[{i}] {title}').classes(
-                                MT.TextColors.PRIMARY + ' font-semibold'
-                            )
+                        # Properties
+                        is_cached = source.get('_is_cached', False)
+                        score = source.get('rerank_score') or source.get('fusion_score') or source.get('score', 0)
+                        score_label = f"{score:.2f}" if isinstance(score, float) else str(score)
+                        
+                        # Header Row
+                        with ui.row().classes('w-full items-center justify-between'):
+                            # Title Link
+                            if url.startswith('http'):
+                                ui.link(f'[{i}] {title}', url, new_tab=True).classes(MT.TextColors.LINK + ' font-semibold text-sm')
+                            else:
+                                ui.label(f'[{i}] {title}').classes(MT.TextColors.PRIMARY + ' font-semibold text-sm')
+                            
+                            # Badges
+                            with ui.row().classes('gap-1'):
+                                if is_cached:
+                                    ui.badge('⚡ MEMORY', color='purple').props('outline rounded').classes('text-[10px]')
+                                elif source.get('rerank_score'):
+                                    ui.badge(f'🎯 {score_label}', color='green').props('outline rounded').classes('text-[10px]')
+                                else:
+                                    ui.badge(f'🔍 {score_label}', color='grey').props('outline rounded').classes('text-[10px]')
 
                         # URL/Path
                         ui.label(f'Location: {url}').classes(

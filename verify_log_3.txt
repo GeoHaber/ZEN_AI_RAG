@@ -1,0 +1,48 @@
+INFO:RAG2.0_Verify:\U0001f680 Starting RAG 2.0 Verification
+INFO:RAG2.0_Verify:Target Model: BAAI/bge-base-en-v1.5
+INFO:RAG2.0_Verify:Chunk Strategy: semantic
+INFO:RAG2.0_Verify:Initializing LocalRAG (this may take time for model download)...
+INFO:zena_mode.rag_pipeline:[RAG] Lazy loading heavy dependencies (SentenceTransformers, Qdrant)...
+INFO:zena_mode.rag_pipeline:[RAG] Dependencies loaded.
+INFO:zena_mode.rag_pipeline:[RAG] Loading transformer: BAAI/bge-base-en-v1.5 (Target Device: cuda)
+WARNING:zena_mode.rag_pipeline:[RAG] GPU requested but not available. Falling back to CPU.
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: BAAI/bge-base-en-v1.5
+INFO:zena_mode.rag_pipeline:[RAG] Created Qdrant collection: zenai_knowledge_768
+INFO:VisionEngine:[Vision] YOLOv26 model 'yolo26n.pt' loaded successfully
+INFO:RAG2.0_Verify:Testing Semantic Chunking...
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00,  9.26it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00,  9.26it/s]
+INFO:RAG2.0_Verify:Chunk 0: Artificial Intelligence is a broad field. Machine ... (113 chars)
+INFO:RAG2.0_Verify:Chunk 1: The quick brown fox jumps over the lazy dog. Bakin... (85 chars)
+INFO:RAG2.0_Verify:\u2705 Semantic Chunking looks active (multiple chunks formed)
+INFO:RAG2.0_Verify:Testing Semantic Cache...
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 32.71it/s]
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 34.59it/s]
+INFO:zena_mode.rag_pipeline:[RAG] Manually added 2 chunks
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 43.43it/s]
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 45.49it/s]
+INFO:ZenAIProfiler:[Profiler] RAG Semantic Search took 50.6ms
+INFO:RAG2.0_Verify:Query 1 (Miss): 0.0506s
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 47.96it/s]
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 56.41it/s]
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|##########| 1/1 [00:00<00:00, 67.12it/s]
+INFO:ZenAIProfiler:[Profiler] RAG Semantic Search took 58.4ms
+INFO:RAG2.0_Verify:Cache entries: 2
+INFO:RAG2.0_Verify:\u2705 Semantic Cache populated
+INFO:RAG2.0_Verify:\u2705 RAG 2.0 Verification Complete

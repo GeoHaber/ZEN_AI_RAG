@@ -9,19 +9,36 @@ from pathlib import Path
 from typing import NoReturn
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import asyncio
+import mimetypes
 
 try:
     import websockets
 except ImportError:
     websockets = None
+
+try:
+    import sounddevice as sd
+    import numpy as np
+    import scipy.io.wavfile as wav
+except ImportError:
+    sd = None
+    np = None
+    wav = None
 # --- Shared Imports ---
 from utils import (
     logger, HardwareProfiler, ensure_package, safe_print, 
-    ProcessManager, is_port_active, kill_process_by_name
+    ProcessManager, is_port_active, kill_process_by_name,
+    kill_process_by_port
 )
 from config_system import config
 ensure_package("psutil")
 import psutil
+
+# --- Modular Handlers ---
+from zena_mode.handlers import (
+    BaseZenHandler, ModelHandler, VoiceHandler, StaticHandler, ChatHandler,
+    HealthHandler, OrchestrationHandler
+)
 
 
 # Global Variables (Derived from Config)
@@ -57,33 +74,146 @@ class LogRelay(threading.Thread):
                 try:
                     chunk = self.process.stdout.read(1024)
                 except (ValueError, AttributeError, OSError):
-                    break # Process closed
-                
-                if not chunk:
-                    # Check if process died
-                    try:
-                        if self.process.poll() is not None: break
-                    except AttributeError: break
-                    time.sleep(0.1)
-                    continue
+                    break # Process likely dead
 
-                # Simple decode and log
-                try:
-                    text = chunk.decode('utf-8', errors='replace').strip()
+                if not chunk: break
+
+                try: 
+                    # Decode and print
+                    text = chunk.decode('utf-8', errors='replace')
                     if text:
-                        # Log non-empty blocks
-                        for line in text.split('\n'):
-                            clean_line = line.strip()
-                            if clean_line:
-                                logger.info(f"{self.prefix} {clean_line}")
-                                with self.buffer_lock:
-                                    self.last_lines.append(clean_line)
-                                    if len(self.last_lines) > 10:
-                                        self.last_lines.pop(0)
-                except Exception:
+                        # Update Last Words
+                        with self.buffer_lock:
+                            self.last_lines.append(text.strip())
+                            if len(self.last_lines) > 20: self.last_lines.pop(0)
+                        
+                        # Print
+                        safe_print(f"{self.prefix} {text}", end="")
+                except:
                     pass
+        except:
+             pass
+
+# --- Swarm / Expert Management ---
+EXPERT_PROCESSES = {}  # {port: subprocess.Popen}
+
+class ZenAIOrchestrator(BaseHTTPRequestHandler):
+    """
+    Management API (Port 8002)
+    Handles:
+    - Model Swapping (Hot Swap)
+    - Swarm Expert Launching
+    - System Health & Telemetry
+    - Voice Transcription Relay
+    """
+    
+    def do_POST(self):
+        try:
+            length = int(self.headers.get('content-length', 0))
+            body = self.rfile.read(length).decode('utf-8')
+            data = json.loads(body) if body else {}
+
+            # Endpoint: /model/swap
+            if self.path == '/model/swap':
+                model_name = data.get('model')
+                if not model_name:
+                    self._send_json(400, {"error": "Missing model name"})
+                    return
+                
+                safe_print(f"🔄 Request to swap to: {model_name}")
+                global PENDING_MODEL_SWAP
+                PENDING_MODEL_SWAP = model_name
+                self._send_json(200, {"status": "swap_scheduled", "model": model_name})
+
+            # Endpoint: /swarm/launch (NEW)
+            elif self.path == '/swarm/launch':
+                model_name = data.get('model')
+                port = int(data.get('port', 8005))
+                
+                if not model_name:
+                    self._send_json(400, {"error": "Missing model name"})
+                    return
+                    
+                target_path = config.MODEL_DIR / model_name
+                if not target_path.exists():
+                     # Fallback to central store
+                     target_path = Path("C:/AI/Models") / model_name
+                     if not target_path.exists():
+                        self._send_json(404, {"error": f"Model {model_name} not found"})
+                        return
+
+                if port in EXPERT_PROCESSES and EXPERT_PROCESSES[port].poll() is None:
+                     self._send_json(200, {"status": "already_running", "port": port})
+                     return
+
+                safe_print(f"🚀 Launching Expert: {model_name} on Port {port}...")
+                
+                # Build command for expert (lighter resources)
+                cmd = build_llama_cmd(
+                    port=port,
+                    threads=4,          # Lower threads for experts
+                    ctx=2048,           # Smaller context
+                    batch=512,
+                    ubatch=512,
+                    model_path=target_path
+                )
+                
+                # Launch
+                proc = subprocess.Popen(
+                    cmd,
+                    cwd=str(config.BIN_DIR),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT
+                )
+                
+                # Track
+                EXPERT_PROCESSES[port] = proc
+                relay = LogRelay(proc, prefix=f"[Expert-{port}]")
+                relay.start()
+                
+                # Wait for bind
+                active = False
+                for _ in range(20):
+                    if is_port_active(port):
+                        active = True
+                        break
+                    time.sleep(1)
+                    
+                if active:
+                    self._send_json(200, {"status": "launched", "port": port, "pid": proc.pid})
+                else:
+                    self._send_json(500, {"error": "Expert process started but port unreachable"})
+
+            # Endpoint: /voice/transcribe
+            elif self.path == '/voice/transcribe':
+                # Simplified relay to Whisper usage or similar if strictly needed here
+                # For now just mock or log
+                self._send_json(200, {"text": "[Voice transcription placeholder]"})
+            
+            else:
+                self._send_json(404, {"error": "Unknown endpoint"})
 
         except Exception as e:
+            logger.error(f"API Error: {e}")
+            self._send_json(500, {"error": str(e)})
+
+    def do_GET(self):
+        if self.path == '/health':
+            status = "online" if SERVER_PROCESS and SERVER_PROCESS.poll() is None else "offline"
+            experts = {p: "running" if proc.poll() is None else "dead" for p, proc in EXPERT_PROCESSES.items()}
+            self._send_json(200, {
+                "status": status, 
+                "model": MODEL_PATH.name,
+                "experts": experts
+            })
+        else:
+            self._send_json(404, {"error": "Not found"})
+
+    def _send_json(self, code, data):
+        self.send_response(code)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode('utf-8'))ion as e:
             logger.error(f"{self.prefix} Log Relay Error: {e}")
         finally:
             try:
@@ -118,7 +248,7 @@ def validate_environment():
         return False
         
     # 3. Port Check (Self-Correction)
-    critical_ports = [PORTS["LLM_API"], PORTS["MGMT_API"]]
+    critical_ports = [config.llm_port, config.mgmt_port]
     for port in critical_ports:
         if is_port_active(port):
             safe_print(f"⚠️ Port {port} is ALREADY ACTIVE. Attempting cleanup...")
@@ -143,6 +273,8 @@ EXPERT_LOCK = threading.Lock()
 MONITORED_PROCESSES = {}  # {name: {"process": Popen, "critical": bool, ...}}
 PROCESS_LOCK = threading.Lock()
 MODEL_PATH_LOCK = threading.Lock()
+PENDING_MODEL_SWAP = None # Global flag for Hot Swap
+
 
 def register_process(name, process, critical=False):
     """Register a process for health monitoring."""
@@ -200,275 +332,32 @@ def get_cached_voice_service():
             raise ImportError("voice_service module not found")
     return _voice_service_cache
 
-class ZenAIOrchestrator(BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
-
-    def send_json_response(self, status_code: int, data: dict):
-        """Helper to standardize JSON responses."""
-        try:
-            body = json.dumps(data).encode()
-            self.send_response(status_code)
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        except Exception as e:
-            logger.error(f"Error sending JSON response: {e}")
-
+class ZenAIOrchestrator(BaseZenHandler):
     def do_GET(self):
-        if self.path == '/voice/lab':
-             # Serve index.html or redirect
-             lab_path = config.BASE_DIR / "experimental_voice_lab" / "templates" / "index.html"
-             if not lab_path.exists():
-                 self.send_json_response(404, {"error": "Voice Lab template not found"})
-                 return
-             with open(lab_path, 'r', encoding='utf-8') as f:
-                 html = f.read()
-             self.send_response(200)
-             self.send_header('Content-Type', 'text/html')
-             self.end_headers()
-             self.wfile.write(html.encode('utf-8'))
-             
-        elif self.path.startswith('/voice/static/'):
-             file_path = config.BASE_DIR / self.path.lstrip('/')
-             if file_path.exists() and file_path.is_file():
-                 self.send_response(200)
-                 self.send_header('Access-Control-Allow-Origin', '*')
-                 # Determine MIME type based on extension
-                 mime_type, _ = mimetypes.guess_type(file_path)
-                 if mime_type:
-                     self.send_header('Content-Type', mime_type)
-                 else:
-                     self.send_header('Content-Type', 'application/octet-stream') # Default
-                 self.end_headers()
-                 with open(file_path, 'rb') as f:
-                     self.wfile.write(f.read())
-             else:
-                 self.send_error(404, "Static file not found")
-             return
+        """Main GET routing entry point."""
+        # Delegate to Modular Handlers (priority order)
+        if HealthHandler.handle_get(self): return
+        if ModelHandler.handle_get(self): return
+        if VoiceHandler.handle_get(self): return
+        if StaticHandler.handle_get(self): return
 
-        # Handle /updates/check first
-        if self.path == '/updates/check':
-             self.do_GET_updates()
-             return
-             
-        if self.path == '/models/popular':
-            try:
-                mm = get_model_manager()
-                results = mm.list_available_models()
-                self.send_json_response(200, results)
-                return
-            except Exception as e:
-                logger.error(f"Popular Models Error: {e}")
-                self.send_json_response(500, {"error": str(e)})
-                return
-             
-        if self.path.startswith('/assets/'):
-             # Serve static assets (worker.js etc) with correct MIME types
-             file_path = BASE_DIR / self.path.lstrip('/')
-             if file_path.exists() and file_path.is_file():
-                 self.send_response(200)
-                 self.send_header('Access-Control-Allow-Origin', '*')
-                 if file_path.suffix == '.js':
-                     self.send_header('Content-Type', 'application/javascript')
-                 elif file_path.suffix == '.wasm':
-                     self.send_header('Content-Type', 'application/wasm')
-                 self.end_headers()
-                 with open(file_path, 'rb') as f:
-                     self.wfile.write(f.read())
-             else:
-                 self.send_error(404, "File not found")
-             return
+        # Default fallback
+        self.send_json_response(200, {"status": "ZenAI Hub Active", "path": self.path})
 
-        if self.path == '/list':
-            active_name = MODEL_PATH.name
-            models = []
-            if MODEL_DIR.exists():
-                for f in MODEL_DIR.glob("*.gguf"):
-                    models.append({"name": f.name, "active": f.name == active_name})
-            self.send_json_response(200, models)
-            
-        elif self.path == '/startup/progress':
-             try:
-                if not MODEL_PATH.exists():
-                     response_body = json.dumps({
-                        "stage": "manager_mode",
-                        "percent": 100, 
-                        "message": "Manager Mode Active",
-                        "eta_seconds": 0
-                    }).encode()
-                else:
-                    from startup_progress import get_startup_progress
-                    progress = get_startup_progress()
-                    response_body = json.dumps(progress).encode()
-             except ImportError:
-                response_body = json.dumps({
-                    "stage": "unknown",
-                    "percent": 0,
-                    "message": "Initializing...",
-                    "eta_seconds": 0
-                }).encode()
-             except Exception as e:
-                response_body = json.dumps({
-                    "stage": "error",
-                    "percent": 0,
-                    "message": f"Error: {str(e)}",
-                    "eta_seconds": 0
-                }).encode()
-             
-             self.send_response(200)
-             self.send_header('Access-Control-Allow-Origin', '*')
-             self.send_header('Content-Type', 'application/json')
-             self.send_header('Content-Length', str(len(response_body)))
-             self.end_headers()
-             self.wfile.write(response_body)
-
-        elif self.path == '/model/status':
-            info = {
-                "model": MODEL_PATH.name,
-                "loaded": bool(SERVER_PROCESS),
-                "engine_port": 8001
-            }
-            self.send_json_response(200, info)
-            return
-        elif self.path == '/models/available':
-            self.send_response(200)
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            try:
-                mm = get_model_manager()
-                installed = mm.get_installed_models()
-                model_names = [m['name'] for m in installed]
-                self.wfile.write(json.dumps(model_names).encode())
-            except Exception as e:
-                logger.error(f"Error listing models: {e}")
-                self.wfile.write(json.dumps([]).encode())
-
-        elif self.path.startswith('/models/progress/'):
-            try:
-                filename = self.path.split('/')[-1]
-                mm = get_model_manager()
-                progress = mm.get_download_progress(filename)
-                
-                if progress:
-                    body = json.dumps(progress).encode()
-                else:
-                    body = json.dumps({"status": "not_found"}).encode()
-
-                self.send_response(200)
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Content-Length', str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-            except Exception as e:
-                logger.error(f"Error getting progress: {e}")
-                self.send_json_response(500, {"error": str(e)})
-        else:
-            self.send_json_response(200, {"status": "ZenAI Hub Active"})
-
-    def do_GET_updates(self):
-        try:
-            import update_checker
-            report = update_checker.check_all()
-            self.send_json_response(200, report)
-        except Exception as e:
-            logger.error(f"Update check failed: {e}")
-            self.send_json_response(500, {"error": str(e)})
-            
     def do_POST(self):
-        if self.path == '/swap':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            params = json.loads(post_data)
-            model_name = params.get('model')
-            logger.info(f"[HUB] Swap requested: {model_name}")
-            
-            threading.Thread(target=restart_with_model, args=(model_name,)).start()
-            self.send_json_response(200, {"status": "accepted"})
+        """Main POST routing entry point."""
+        # Security: check request size (Phase 1 hardening)
+        if not self.check_request_size(): return
 
-        elif self.path == '/models/download':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            params = json.loads(post_data)
-            repo_id = params.get('repo_id') or params.get('repo')
-            filename = params.get('filename') or params.get('file')
-            
-            def safe_download_task(r_id, f_name):
-                try:
-                    mm = get_model_manager()
-                    mm.download_model(r_id, f_name)
-                except Exception as e:
-                    logger.error(f"[HUB] Download failed: {e}")
+        # Delegate to Modular Handlers (priority order)
+        if OrchestrationHandler.handle_post(self): return
+        if ModelHandler.handle_post(self): return
+        if VoiceHandler.handle_post(self): return
+        if ChatHandler.handle_post(self): return
 
-            if not repo_id or not filename:
-                 self.send_json_response(400, {"error": "Missing repo_id or filename"})
-                 return
+        # Default fallback
+        self.send_json_response(404, {"error": "Endpoint not found"})
 
-            threading.Thread(target=safe_download_task, args=(repo_id, filename)).start()
-            self.send_json_response(200, {"status": "started"})
-                
-        elif self.path == '/models/search':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            params = json.loads(post_data)
-            query = params.get('query', '')
-            try:
-                mm = get_model_manager()
-                results = mm.search_huggingface(query)
-                self.send_json_response(200, results)
-            except Exception as e:
-                self.send_json_response(500, {"error": str(e)})
-        
-        elif self.path == '/swarm/scale':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            params = json.loads(post_data)
-            count = params.get('count', 3)
-            threading.Thread(target=scale_swarm, args=(count,)).start()
-            self.send_json_response(200, {"status": "scaling", "target": count})
-
-        elif self.path == '/files/upload':
-            try:
-                content_length = int(self.headers.get('Content-Length', 0))
-                filename = os.path.basename(self.headers.get('X-Filename', 'upload.bin'))
-                UPLOAD_DIR = config.BASE_DIR / "uploads"
-                UPLOAD_DIR.mkdir(exist_ok=True)
-                with open(UPLOAD_DIR / filename, "wb") as f:
-                    f.write(self.rfile.read(content_length))
-                self.send_json_response(200, {"status": "success"})
-            except Exception as e:
-                self.send_json_response(500, {"error": str(e)})
-
-        elif self.path == '/voice/transcribe':
-            try:
-                content_length = int(self.headers.get('Content-Length', 0))
-                audio_data = self.rfile.read(content_length)
-                vs = get_cached_voice_service()
-                result = vs.transcribe_audio(io.BytesIO(audio_data))
-                self.send_json_response(200, result)
-            except Exception as e:
-                self.send_json_response(500, {"error": str(e)})
-
-        elif self.path == '/voice/tts':
-            try:
-                content_length = int(self.headers['Content-Length'])
-                params = json.loads(self.rfile.read(content_length))
-                vs = get_cached_voice_service()
-                audio_bytes = vs.synthesize_speech(params.get('text', ''))
-                self.send_response(200)
-                self.send_header('Content-Type', 'audio/wav')
-                self.end_headers()
-                self.wfile.write(audio_bytes)
-            except Exception as e:
-                self.send_json_response(500, {"error": str(e)})
 
 def env_int(name: str, default: int) -> int:
     """Read integer from environment variable with fallback to default."""
@@ -479,7 +368,7 @@ def env_int(name: str, default: int) -> int:
     except ValueError:
         return default
 
-def build_llama_cmd(port: int, threads: int, ctx: int = 4096, gpu_layers: int = 0, batch: int = 512, ubatch: int = 512, model_path: Path = None, timeout: int = -1, threads_batch: int = None) -> list:
+def build_llama_cmd(port: int, threads: int, ctx: int = 4096, gpu_layers: int = 0, batch: int = 512, ubatch: int = 512, model_path: Path = None, timeout: int = -1, threads_batch: int = None, parallel: int = 1) -> list:
     """Build llama-server.exe command arguments."""
     if model_path is None: model_path = MODEL_PATH
     if threads_batch is None: threads_batch = threads
@@ -488,7 +377,7 @@ def build_llama_cmd(port: int, threads: int, ctx: int = 4096, gpu_layers: int = 
         "--ctx-size", str(ctx), "--n-gpu-layers", str(gpu_layers), "--threads", str(threads),
         "--threads-batch", str(threads_batch), "--batch-size", str(batch), "--ubatch-size", str(ubatch),
         "--repeat-penalty", "1.1", "--repeat-last-n", "1024", "--min-p", "0.1",
-        "--alias", "local-model", "--no-warmup", "--timeout", str(timeout), "-np", "1"
+        "--alias", "local-model", "--no-warmup", "--timeout", str(timeout), "-np", str(parallel)
     ]
 
 # Use the implementation from `utils.kill_process_by_name` which is
@@ -496,27 +385,38 @@ def build_llama_cmd(port: int, threads: int, ctx: int = 4096, gpu_layers: int = 
 # delegating to `utils` ensures consistent, testable behavior.
 
 def restart_with_model(name):
-    """Restart engine with a new model using shared utils."""
-    from utils import restart_program, kill_process_by_name
+    """Signal the main loop to perform a Hot Swap."""
+    global PENDING_MODEL_SWAP, SERVER_PROCESS
     
-    kill_process_by_name("llama-server.exe")
-    # We rely on the caller/wrapper to handle the model change 
-    # (probably via an env var or a config update before restart)
-    # But for now, we just restart the program itself.
-    restart_program()
+    logger.info(f"[Orchestrator] Initiating Hot Swap to: {name}")
+    # Set the flag
+    PENDING_MODEL_SWAP = name
+    
+    # Kill the current engine to trigger the restart logic in the main loop
+    if SERVER_PROCESS:
+        SERVER_PROCESS.terminate()
+        # The main loop will wake up, see the exit code, check the flag, and re-launch.
+
 
 def launch_expert_process(port: int, threads: int, model_path: Path = None):
     """Cleanly launch an expert LLM instance."""
     env = os.environ.copy()
     env["LLM_PORT"] = str(port)
     env["LLM_THREADS"] = str(threads)
+    
+    # Fix Import Error: Add project root to PYTHONPATH
+    root_dir = str(config.BASE_DIR)
+    current_pp = env.get("PYTHONPATH", "")
+    sep = ";" if os.name == 'nt' else ":"
+    env["PYTHONPATH"] = f"{root_dir}{sep}{current_pp}" if current_pp else root_dir
+    
     script_path = os.path.abspath(__file__)
     cmd = [sys.executable, script_path, "--guard-bypass"]
     if model_path and model_path.exists(): cmd.extend(["--model", str(model_path)])
     elif MODEL_PATH.exists(): cmd.extend(["--model", str(MODEL_PATH)])
     
     # Experts run detached by default (subprocess.CREATE_NO_WINDOW)
-    p = subprocess.Popen(cmd, env=env, cwd=os.path.dirname(script_path), creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+    p = subprocess.Popen(cmd, env=env, cwd=root_dir, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     register_process(f"Expert-{port}", p)
     return p
 
@@ -538,15 +438,54 @@ def scale_swarm(target_count: int):
                 ProcessManager.kill_tree(proc.pid)
 
 def start_hub():
-    """Start the Management API (Hub)."""
+    """Start the Management API (Hub) - uses ASGI by default."""
+    use_asgi = os.environ.get("ZENAI_USE_ASGI", "1") == "1"
+    
+    if use_asgi:
+        try:
+            import uvicorn
+            from zena_mode.asgi_server import app
+            safe_print(f"[*] Starting ASGI Hub API on 127.0.0.1:{config.mgmt_port}...")
+            
+            # Run uvicorn in a background thread with its own event loop
+            # This avoids conflicts with asyncio.run() in start_llm.py
+            def run_uvicorn():
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                uvicorn_config = uvicorn.Config(
+                    app, 
+                    host="127.0.0.1", 
+                    port=config.mgmt_port, 
+                    log_level="warning",
+                    loop="asyncio"
+                )
+                server = uvicorn.Server(uvicorn_config)
+                loop.run_until_complete(server.serve())
+            
+            threading.Thread(target=run_uvicorn, daemon=True).start()
+            safe_print(f"[*] ASGI Hub API listening on 127.0.0.1:{config.mgmt_port}")
+        except Exception as e:
+            safe_print(f"⚠️ ASGI startup failed, falling back to sync server: {e}")
+            import traceback
+            traceback.print_exc()
+            _start_sync_hub()
+    else:
+        _start_sync_hub()
+
+
+
+def _start_sync_hub():
+    """Legacy sync HTTP server fallback."""
     try:
-        safe_print(f"[*] Attempting to start Hub API on port {config.mgmt_port}...")
+        safe_print(f"[*] Starting sync Hub API on port {config.mgmt_port}...")
         hub = ThreadingHTTPServer(('127.0.0.1', config.mgmt_port), ZenAIOrchestrator)
         threading.Thread(target=hub.serve_forever, daemon=True).start()
-        safe_print(f"[*] Hub API listening on Port {config.mgmt_port}")
+        safe_print(f"[*] Sync Hub API listening on 127.0.0.1:{config.mgmt_port}")
     except Exception as e:
         safe_print(f"❌ Hub Startup Failed: {e}")
         logger.error(f"Hub Startup Failed: {e}")
+
 
 class VoiceStreamHandler:
     def __init__(self): self.clients = set()
@@ -575,7 +514,7 @@ def start_voice_stream_server():
         threading.Thread(target=lambda: asyncio.run(run_ws_server()), daemon=True).start()
 
 def start_server() -> NoReturn:
-    global MODEL_PATH, SERVER_PROCESS, EXPERT_PROCESSES
+    global MODEL_PATH, SERVER_PROCESS, EXPERT_PROCESSES, PENDING_MODEL_SWAP
     relay = None
     # 1. Threading and Model Setup
     port = env_int("LLM_PORT", 8001)
@@ -613,8 +552,7 @@ def start_server() -> NoReturn:
     if "--n-gpu-layers" not in cmd and "--n_gpu_layers" not in cmd:
         cmd.extend(["--n-gpu-layers", str(gpu_layers)])
 
-    # Fix: --cache-reuse takes an integer (min chunk size)
-    cmd.extend(["--cache-reuse", "256"])
+    # Removed --cache-reuse as it can cause instability with parallel slots
     
     # Removed --flash-attn as it can cause crashes on unsupported hardware
     
@@ -707,6 +645,11 @@ def start_server() -> NoReturn:
         while True:
             crashed = check_processes()
             for name, code, critical in crashed:
+                # Override for Hot Swap
+                if name == "LLM-Server" and PENDING_MODEL_SWAP:
+                    safe_print(f"[Monitor] LLM-Server stopped for swap (code {code}). Proceeding to restart...")
+                    continue
+
                 safe_print(f"[!] {name} crashed (exit code {code})")
                 if critical:
                     if relay and relay.last_lines:
@@ -715,15 +658,75 @@ def start_server() -> NoReturn:
                         safe_print("🏁" * 15 + "\n")
                     safe_print(f"❌ Critical process {name} died. System shutdown initiated.")
                     sys.exit(1)
+
             
             if SERVER_PROCESS:
                 p_code = SERVER_PROCESS.poll()
                 if p_code is not None:
-                    safe_print(f"[*] Main Engine poll() returned {p_code}. Stopping orchestrator.")
-                    break
+                    # CHECK FOR HOT SWAP
+                    if PENDING_MODEL_SWAP:
+                        safe_print(f"🔄 Hot Swap Detected! Switching to {PENDING_MODEL_SWAP}...")
+                        
+                        # 1. Update Global Model Path
+                        new_model_path = config.MODEL_DIR / PENDING_MODEL_SWAP
+                        if not new_model_path.exists():
+                            safe_print(f"❌ Swap Error: Model {PENDING_MODEL_SWAP} not found! Reverting to default.")
+                            PENDING_MODEL_SWAP = None
+                            # Should probably restart old model or fail
+                        else:
+                            MODEL_PATH = new_model_path
+                        
+                        # 2. Re-launch Engine
+                        cmd = build_llama_cmd(
+                            port=port, 
+                            threads=threads, 
+                            ctx=config.context_size,
+                            batch=config.batch_size, 
+                            ubatch=config.ubatch_size,
+                            model_path=MODEL_PATH # Use updated path
+                        )
+                        # Add GPU layers if needed (reusing logic from above would be better, but this is patch)
+                        if "--n-gpu-layers" not in cmd: cmd.extend(["--n-gpu-layers", str(gpu_layers)])
+
+                        safe_print(f"[*] Re-launching Engine: {' '.join(cmd)}")
+                        try:
+                            SERVER_PROCESS = subprocess.Popen(
+                                cmd,
+                                env=os.environ,
+                                cwd=str(config.BIN_DIR),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                text=False,
+                                bufsize=-1
+                            )
+                            relay = LogRelay(SERVER_PROCESS)
+                            relay.start()
+                            register_process("LLM-Server", SERVER_PROCESS, critical=True)
+                            
+                            # Reset Flag
+                            PENDING_MODEL_SWAP = None
+                            
+                            # Wait for bind (briefly)
+                            safe_print(f"[*] Waiting for swap to complete (port {port})...")
+                            # We let the content loop handle the waiting naturally? 
+                            # No, we should probably block briefly to ensure stability before next loop
+                            time.sleep(2)
+                            continue # Skip the "break" that implies crash
+                            
+                        except Exception as e:
+                            safe_print(f"❌ Hot Swap Failed: {e}")
+                            sys.exit(1)
+
+                    safe_print(f"[*] Main Engine poll() returned {p_code}.")
+                    if relay and relay.last_lines:
+                        safe_print("\n" + "🏁" * 15 + "\n  ENGINE'S LAST WORDS:")
+                        for l in relay.last_lines: safe_print(f"  > {l}")
+                        safe_print("🏁" * 15 + "\n")
+                    break # Real crash
             else:
                 break
-            time.sleep(5)
+
+            time.sleep(2)
 
     except KeyboardInterrupt:
         safe_print("[*] Keyboard interrupt received. Cleaning up...")
@@ -745,6 +748,18 @@ def start_server() -> NoReturn:
 if __name__ == "__main__":
     try:
         # 0. Pre-flight
+        # Handle CLI overrides
+        if "--model" in sys.argv:
+            try:
+                m_arg_idx = sys.argv.index("--model") + 1
+                if m_arg_idx < len(sys.argv):
+                    custom_model = Path(sys.argv[m_arg_idx])
+                    if custom_model.exists():
+                        MODEL_PATH = custom_model
+                        logger.info(f"[Startup] Overriding model path to: {MODEL_PATH}")
+            except Exception as e:
+                logger.error(f"Failed to parse --model: {e}")
+
         validate_environment()
 
         # 1. Guard & Swarm

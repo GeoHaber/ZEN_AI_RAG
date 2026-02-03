@@ -36,10 +36,24 @@ async def run_benchmark():
         for question, reference in QA_PAIRS:
             logger.info(f"❓ Testing: {question}")
             
+            # --- RAG INJECTION ---
+            final_prompt = question
+            try:
+                # Use the same RAG logic as ui/handlers.py
+                logger.info(f"[RAG] Searching knowledge base for: '{question[:30]}...'")
+                relevant_chunks = rag.hybrid_search(question, k=5, alpha=0.5)
+                if relevant_chunks:
+                    logger.info(f"[RAG] Found {len(relevant_chunks)} chunks.")
+                    context_parts = [f"Source: {c.get('title', 'Unknown')}\n{c['text']}" for c in relevant_chunks]
+                    context = "\n\n".join(context_parts)
+                    final_prompt = f"SOURCES:\n{context}\n\nUSER QUESTION: {question}\n\nANSWER:"
+            except Exception as re:
+                logger.error(f"[RAG] Search failed: {re}")
+
             full_response = ""
             start_time = time.time()
             
-            async for chunk in backend.send_message_async(question):
+            async for chunk in backend.send_message_async(final_prompt):
                 full_response += chunk
             
             duration = time.time() - start_time

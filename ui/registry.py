@@ -13,6 +13,7 @@ class UI_IDS:
     BTN_EVAL_JUDGE = "ui-btn-eval-judge"
     SW_DARK_MODE = "ui-sw-dark-mode"
     EXP_RAG_SOURCES = "ui-exp-rag-sources"
+    BTN_START_TOUR = "ui-btn-start-tour"
     
     # --- Chat Input ---
     INPUT_CHAT = "ui-input-chat"
@@ -58,6 +59,7 @@ UI_METADATA = {
     UI_IDS.BTN_SWARM: "Open the Swarm Control Center.",
     UI_IDS.BTN_SCAN: "Manual trigger for RAG scanning.",
     UI_IDS.BTN_JUDGE: "Open the Intelligence Judge quality tab.",
+    UI_IDS.BTN_START_TOUR: "Start the interactive guided tour.",
 }
 
 # List of all IDs that should be "poked" during a monkey test

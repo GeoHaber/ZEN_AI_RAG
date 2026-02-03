@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import List, Dict, Generator, Optional, Set, FrozenSet
 from collections import Counter
+from functools import lru_cache
 from math import log2
 from .chunker import TextChunker, ChunkerConfig
 from .profiler import profile_execution, profile_async_execution
@@ -53,25 +54,159 @@ class DedupeConfig:
     BLACKLIST_KEYWORDS: Set[str] = ChunkerConfig.BLACKLIST_KEYWORDS
 
 
+
+# =============================================================================
+# Semantic Cache
+# =============================================================================
+class SemanticCache:
+    """Multi-tier cache using both exact match and cosine similarity."""
+    
+    def __init__(self, model, max_entries: int = 1000, ttl: int = 3600, threshold: float = 0.95):
+        self.model = model
+        self.max_entries = max_entries
+        self.ttl = ttl
+        self.threshold = threshold
+        
+        # Tier 1: Exact Match (Fastest) O(1)
+        # Use simple dict + separate eviction list for Python < 3.7 ordering safety, 
+        # though modern Python dicts are ordered. We use LRU approximation.
+        self._exact_cache = {} # key -> {results, timestamp}
+        
+        # Tier 2: Semantic (Slower but smart) O(N) but N is small (cache size)
+        # List of (embedding, normal_query, results, timestamp)
+        self._semantic_cache = [] 
+        
+        self._lock = threading.Lock()
+
+    def get(self, query: str) -> Optional[List[Dict]]:
+        """Retrieve results if query matches exact or semantic cache."""
+        with self._lock:
+            q_norm = query.strip().lower()
+            now = time.time()
+            
+            # Tier 1: Exact
+            if q_norm in self._exact_cache:
+                entry = self._exact_cache[q_norm]
+                if now - entry['timestamp'] < self.ttl:
+                    return entry['results']
+                else:
+                    del self._exact_cache[q_norm]
+            
+            # Tier 2: Semantic
+            # Generating embedding is costly, so we only do it if semantic cache has items
+            if not self._semantic_cache:
+                return None
+                
+            # Embed query
+            # Note: self.model is the SentenceTransformer instance
+            try:
+                q_vec = self.model.encode([query], normalize_embeddings=True)[0]
+                
+                for i, (emb, _, results, ts) in enumerate(self._semantic_cache):
+                    if now - ts > self.ttl: continue
+                    
+                    # Cosine sim for normalized vectors is just dot product
+                    score = np.dot(q_vec, emb)
+                    
+                    if score >= self.threshold:
+                        logger.debug(f"[Cache] Semantic Hit ({score:.2f}): '{query}' ~= '{_}'")
+                        return results
+            except Exception as e:
+                logger.warning(f"[Cache] Semantic check failed: {e}")
+                
+            return None
+
+    def set(self, query: str, results: List[Dict]):
+        """Store results in cache."""
+        with self._lock:
+            q_norm = query.strip().lower()
+            now = time.time()
+            
+            # 1. Exact
+            self._exact_cache[q_norm] = {"results": results, "timestamp": now}
+            
+            # Prune Exact
+            if len(self._exact_cache) > self.max_entries:
+                # Remove random/oldest (iter is roughly oldest insertion order)
+                del self._exact_cache[next(iter(self._exact_cache))]
+
+            # 2. Semantic (Store embedding)
+            try:
+                q_vec = self.model.encode([query], normalize_embeddings=True)[0]
+                self._semantic_cache.append((q_vec, q_norm, results, now))
+                
+                # Prune Semantic (Small buffer)
+                if len(self._semantic_cache) > (self.max_entries // 5): 
+                    self._semantic_cache.pop(0)
+            except: pass
+            
+    def clear(self):
+        with self._lock:
+            self._exact_cache.clear()
+            self._semantic_cache.clear()
+
+
 class LocalRAG:
     """
     Production-grade RAG system using Qdrant.
     Combines Qdrant's high-performance vector search with BM25 keyword search.
     """
     
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2", cache_dir: Optional[Path] = None):
+    def __init__(self, cache_dir: Optional[Path] = None):
         self.cache_dir = cache_dir or config.BASE_DIR / "rag_storage"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-        self.collection_name = "zenai_knowledge"
         self._lock = threading.Lock()
+        
         
         # Initialize Embedding Model
         self._lazy_load_deps()
         
-        logger.info(f"[RAG] Loading transformer: {model_name}")
-        self.model = SentenceTransformer(model_name)
+        # Resolve Model Name from Config
+        profile = config.rag.embedding_model # e.g. "balanced"
+        model_name = config.embedding_config.MODELS.get(profile)
+        if not model_name: 
+            logger.warning(f"[RAG] Unknown profile '{profile}', falling back to 'fast'")
+            model_name = config.embedding_config.MODELS['fast']
+
+        device = "cuda" if config.rag.use_gpu and hasattr(config.rag, "use_gpu") else "cpu"
+        # Since torch is lazy loaded, we check availability inside try block
+        
+        logger.info(f"[RAG] Loading transformer: {model_name} (Target Device: {device})")
+        
+        try:
+            # Check for GPU if requested
+            import torch
+            if device == "cuda" and not torch.cuda.is_available():
+                logger.warning("[RAG] GPU requested but not available. Falling back to CPU.")
+                device = "cpu"
+            
+            self.model = SentenceTransformer(model_name, device=device)
+        except Exception as e:
+            logger.error(f"[RAG] Failed to load {model_name}: {e}")
+            fallback = config.embedding_config.fallback_model
+            fallback_name = config.embedding_config.MODELS[fallback]
+            if model_name != fallback_name:
+                logger.info(f"[RAG] Attempting fallback to: {fallback_name}")
+                try:
+                    self.model = SentenceTransformer(fallback_name, device="cpu")
+                except Exception as ex:
+                     logger.critical(f"[RAG] Fallback failed: {ex}")
+                     raise ex
+            else:
+                raise e
+
+        # Enable Half Precision on GPU
+        if device == "cuda":
+            try:
+                self.model.half()
+                logger.info("[RAG] Enabled FP16 precision for embeddings.")
+            except: pass
+
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
+        
+        # Dynamic Collection Name (prevents dimension mismatch crashes)
+        self.collection_name = f"zenai_knowledge_{self.embedding_dim}"
         
         # Initialize Qdrant Client (100% Local)
         try:
@@ -93,6 +228,10 @@ class LocalRAG:
         self.bm25 = None
         self.cross_encoder = None # Lazy loaded
         self._tokenizer_pattern = re.compile(r'\w+')
+        
+        
+        # Initialize Semantic Cache (New)
+        self.cache = SemanticCache(self.model, max_entries=1000, ttl=3600)
         
         # Loader
         self._load_metadata()
@@ -172,6 +311,15 @@ class LocalRAG:
             collections = self.qdrant.get_collections().collections
             exists = any(c.name == self.collection_name for c in collections)
             
+            if exists:
+                # Check for dimension mismatch
+                info = self.qdrant.get_collection(self.collection_name)
+                current_dim = info.config.params.vectors.size
+                if current_dim != self.embedding_dim:
+                    logger.warning(f"[RAG] Dimension mismatch (Found {current_dim}, Expected {self.embedding_dim}). Recreating collection...")
+                    self.qdrant.delete_collection(self.collection_name)
+                    exists = False
+            
             if not exists:
                 self.qdrant.create_collection(
                     collection_name=self.collection_name,
@@ -186,6 +334,10 @@ class LocalRAG:
 
     def _load_metadata(self):
         """Load metadata from Qdrant to populate hash and BM25 buffers."""
+        if not self.qdrant:
+            logger.warning("[RAG] Storage locked: Metadata secondary buffers will be empty.")
+            return
+            
         try:
             points, _ = self.qdrant.scroll(
                 collection_name=self.collection_name,
@@ -276,7 +428,13 @@ class LocalRAG:
             if not content or not content.strip(): continue
             
             meta = {"url": doc.get("url"), "title": doc.get("title")}
-            doc_chunks = self.chunker.chunk_document(content, metadata=meta, strategy="recursive", filter_junk=filter_junk)
+            doc_chunks = self.chunker.chunk_document(
+                content, 
+                metadata=meta, 
+                strategy=config.rag.chunk_strategy, 
+                filter_junk=filter_junk,
+                model=self.model
+            )
             
             for c in doc_chunks:
                 chunk_text = c.text.strip()
@@ -298,6 +456,9 @@ class LocalRAG:
             return
 
         with self._lock:
+            # Invalidate search cache on index update
+            self.cache.clear()
+            
             start_time = time.time()
             threshold = dedup_threshold or DedupeConfig.SIMILARITY_THRESHOLD
             
@@ -407,23 +568,34 @@ class LocalRAG:
                 logger.info(f"[RAG] Manually added {len(points)} chunks")
 
     @profile_execution("RAG Semantic Search")
-    def search(self, query: str, k: int = 5) -> List[Dict]:
-        """Direct Semantic search using Qdrant."""
+    def search(self, query: str, k: int = 5, rerank: bool = True) -> List[Dict]:
+        """Direct Semantic search using Qdrant with result caching and optional reranking."""
         if not self.qdrant:
              # Fallback: If BM25 is available, use it, otherwise return empty
              if self.bm25:
                  logger.debug("[RAG] Qdrant offline, falling back to BM25 for search.")
-                 return self.hybrid_search(query, k, alpha=0.0)
+                 return self.hybrid_search(query, k, alpha=0.0, rerank=rerank)
              return []
+             
+        # Check Semantic Cache
+        cached = self.cache.get(query)
+        if cached:
+            # Inject cache flag for UI
+            for res in cached:
+                res['_is_cached'] = True
+            return cached
+
+        # Retrieval Limit: Fetch more if reranking is enabled
+        limit = k * 3 if rerank else k
 
         query_vec = self.model.encode([query], normalize_embeddings=True)[0].tolist()
         hits = self.qdrant.query_points(
             collection_name=self.collection_name,
             query=query_vec,
-            limit=k
+            limit=limit
         ).points
         
-        return [
+        results = [
             {
                 "text": hit.payload.get("text"),
                 "url": hit.payload.get("url"),
@@ -432,13 +604,22 @@ class LocalRAG:
             }
             for hit in hits
         ]
+        
+        # Apply Reranker
+        if rerank:
+            results = self.rerank(query, results, top_k=k)
+        
+        # Store in Semantic Cache
+        self.cache.set(query, results)
+        
+        return results
 
-    def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5) -> List[Dict]:
-        """Hybrid search combining Qdrant scores with BM25 via RRF."""
+    def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5, rerank: bool = True) -> List[Dict]:
+        """Hybrid search combining Qdrant scores with BM25 via RRF, optionally reranked."""
         if not self.chunks:
             return []
             
-        k_search = max(k * 5, 20)
+        k_search = max(k * 5, 50) # Retrieve more candidates for RRF/Reranking
         
         # 1. Semantic Search (Qdrant)
         hits = []
@@ -474,10 +655,17 @@ class LocalRAG:
             b_score = (1.0 / (K_RRF + b_ranks[idx])) if idx in b_ranks else 0.0
             fusion_scores[idx] = (alpha * f_score) + ((1.0 - alpha) * b_score)
             
-        sorted_indices = sorted(fusion_scores.keys(), key=lambda x: fusion_scores[x], reverse=True)[:k]
+        # Get Candidates (Top 2 * k or at least 20 for reranking)
+        k_candidates = k * 3 if rerank else k
+        sorted_indices = sorted(fusion_scores.keys(), key=lambda x: fusion_scores[x], reverse=True)[:k_candidates]
         results = [self.chunks[idx].copy() for idx in sorted_indices]
         for i, res in enumerate(results):
             res['fusion_score'] = fusion_scores[sorted_indices[i]]
+            
+        # 2. Reranking (optional)
+        if rerank:
+            results = self.rerank(query, results, top_k=k)
+            
         return results
 
     def rerank(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
@@ -489,9 +677,20 @@ class LocalRAG:
         
         try:
             if self.cross_encoder is None:
-                logger.info("[RAG] Loading CrossEncoder for Re-ranking...")
-                # Use a fast & effective re-ranker
-                self.cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+                from sentence_transformers import CrossEncoder
+                model_name = getattr(config.rag, "reranker_model", "BAAI/bge-reranker-base")
+                device = "cuda" if config.rag.use_gpu and hasattr(config.rag, "use_gpu") else "cpu"
+                
+                logger.info(f"[RAG] Loading Reranker: {model_name} (Device: {device})")
+                
+                # Check GPU availability
+                try:
+                    import torch
+                    if device == "cuda" and not torch.cuda.is_available():
+                         device = "cpu"
+                except: device = "cpu"
+
+                self.cross_encoder = CrossEncoder(model_name, device=device)
 
             # Prepare pairs [query, content]
             pairs = [[query, c['text']] for c in chunks]
@@ -564,3 +763,85 @@ def generate_rag_response(
     
     for chunk in llm_backend.send_message(prompt):
         yield chunk
+
+# =============================================================================
+# ASYNC WRAPPERS (Non-Blocking)
+# =============================================================================
+import asyncio
+
+class AsyncLocalRAG(LocalRAG):
+    """Async wrapper for LocalRAG to prevent blocking the event loop."""
+    
+    async def search_async(self, query: str, k: int = 5) -> List[Dict]:
+        return await asyncio.to_thread(self.search, query, k)
+        
+    async def hybrid_search_async(self, query: str, k: int = 5, alpha: float = 0.5) -> List[Dict]:
+        return await asyncio.to_thread(self.hybrid_search, query, k, alpha)
+        
+    async def rerank_async(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
+        return await asyncio.to_thread(self.rerank, query, chunks, top_k)
+        
+    async def build_index_async(self, documents: List[Dict], dedup_threshold: Optional[float] = None):
+        return await asyncio.to_thread(self.build_index, documents, dedup_threshold)
+
+    async def add_chunks_async(self, chunks: List[Dict], dedup_threshold: Optional[float] = None):
+        return await asyncio.to_thread(self.add_chunks, chunks, dedup_threshold)
+
+
+async def generate_rag_response_async(
+    query: str, 
+    rag: LocalRAG, 
+    llm_backend, 
+    use_hybrid: bool = True,
+    k: int = 5,
+    alpha: float = 0.6
+):
+    """
+    Async generator for RAG response.
+    """
+    if use_hybrid:
+        if hasattr(rag, 'hybrid_search_async'):
+             candidates = await rag.hybrid_search_async(query, k=k*3, alpha=alpha)
+        else:
+             candidates = await asyncio.to_thread(rag.hybrid_search, query, k=k*3, alpha=alpha)
+    else:
+        if hasattr(rag, 'search_async'):
+             candidates = await rag.search_async(query, k=k*3)
+        else:
+             candidates = await asyncio.to_thread(rag.search, query, k=k*3)
+    
+    # Apply Re-ranking
+    if hasattr(rag, 'rerank_async'):
+        context_chunks = await rag.rerank_async(query, candidates, top_k=k)
+    else:
+        context_chunks = await asyncio.to_thread(rag.rerank, query, candidates, top_k=k)
+    
+    if not context_chunks:
+        yield "I don't have enough information in my knowledge base."
+        return
+    
+    MAX_CTX_CHARS = 12000 
+    context_text = ""
+    for i, c in enumerate(context_chunks):
+        chunk_text = f"Source [{i+1}]: {c['text']}\n\n"
+        if len(context_text) + len(chunk_text) > MAX_CTX_CHARS:
+            break
+        context_text += chunk_text
+    
+    prompt = f"Context:\n{context_text}\n\nQuestion: {query}\n\nAnswer mentioning sources:"
+    
+    # LLM backend should ideally differ here or use run_in_executor if it's blocking
+    # Assuming send_message is synchronous generator:
+    # We can't easily await a sync generator loop, so we iterate in small chunks or use thread
+    # But since Python generators are stateful, we'll assume send_message_async exists OR use the sync one carefully.
+    
+    # Best practice: The backend usually has send_message_async.
+    if hasattr(llm_backend, 'send_message_async'):
+         async for chunk in llm_backend.send_message_async(prompt):
+             yield chunk
+    else:
+         # Fallback to sync generator in thread (tricky for streaming)
+         # Using iterator in thread is hard. For now, we assume backend handles its own sync/async.
+         # Actually, looking at async_backend.py, it likely has send_message_stream
+         for chunk in llm_backend.send_message(prompt):
+             yield chunk

@@ -20,9 +20,25 @@ def validate_path(user_path: str, allowed_roots: Optional[list[Path]] = None) ->
 
     p = Path(user_path).expanduser()
     try:
-        resolved = p.resolve(strict=False)
-    except Exception:
-        resolved = p
+        # Resolve symlinks explicitly. 'strict=True' raises FileNotFoundError if it doesn't exist,
+        # which is fine as we want to validate existing paths usually, OR we want to ensure
+        # the parent exists. But for RAG/Uploads, the file usually exists.
+        # However, to be safe against non-existent target paths (e.g. upload destination), 
+        # we resolve and then check parents.
+        # For existing files:
+        if p.exists():
+            resolved = p.resolve(strict=True)
+            # Check for Symlink explicitly if platform supports it
+            # (On Windows, resolve() follows symlinks, so we check if the resolved path is different 
+            # from absolute path, OR use is_symlink() before resolve)
+            if p.is_symlink():
+                 raise ValueError("Symlinks not allowed")
+        else:
+             # For new files, resolve parent
+             resolved = p.parent.resolve(strict=True) / p.name
+    except Exception as e:
+        # verification failed
+        raise ValueError(f"Invalid path resolution: {e}")
 
     # Default allowed roots
     if allowed_roots is None:
@@ -100,22 +116,49 @@ class FileValidator:
         return False
     
     @staticmethod
+    def validate_magic_numbers(content: bytes, filename: str) -> bool:
+        """
+        Validate file content against magic numbers (signatures) for common types.
+        A poor man's python-magic to avoid dependencies.
+        """
+        ext = Path(filename).suffix.lower()
+        
+        # Magic Signatures
+        # PDF: %PDF- (25 50 44 46 2D)
+        if ext == '.pdf':
+            return content.startswith(b'%PDF-')
+        
+        # PNG: .PNG (89 50 4E 47 0D 0A 1A 0A)
+        if ext == '.png':
+            return content.startswith(b'\x89PNG\r\n\x1a\n')
+            
+        # JPEG: FF D8 FF
+        if ext in ['.jpg', '.jpeg']:
+            return content.startswith(b'\xff\xd8\xff')
+            
+        # TXT / MD / JSON: Check for UTF-8 and no binary control chars (simple heuristic)
+        if ext in ['.txt', '.md', '.json', '.py', '.js', '.csv']:
+            try:
+                # Must be valid UTF-8
+                text = content.decode('utf-8')
+                # Check for excessive null bytes which might indicate binary
+                if text.count('\x00') > 0:
+                    return False
+                return True
+            except UnicodeDecodeError:
+                return False
+                
+        # For other types, we default to allowing if extension is consistent
+        # This is a baseline hardening; specific parsers should also validate.
+        return True
+
+    @staticmethod
     def validate_file(
         filename: str, 
         content: bytes
     ) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Validate uploaded file for security.
-        
-        Args:
-            filename: Name of the uploaded file
-            content: Raw bytes content
-        
-        Returns:
-            Tuple of (is_valid, error_message, decoded_content)
-            - is_valid: True if file passes all checks
-            - error_message: Error description if validation fails, None otherwise
-            - decoded_content: UTF-8 decoded string if valid, None otherwise
         """
         # Path traversal check
         if FileValidator.is_path_traversal(filename):
@@ -137,14 +180,22 @@ class FileValidator:
             error = f"File type '{file_ext}' not allowed"
             logger.warning(f"[Security] {error}: {filename}")
             return (False, error, None)
-        
-        # Encoding check - must be valid UTF-8
-        try:
-            decoded = content.decode('utf-8', errors='strict')
-        except UnicodeDecodeError as e:
-            error = "Invalid file encoding (must be UTF-8)"
-            logger.warning(f"[Security] {error}: {filename} - {e}")
+            
+        # MAGIC NUMBER CHECK (New)
+        if not FileValidator.validate_magic_numbers(content, filename):
+            error = f"File content does not match extension '{file_ext}'"
+            logger.warning(f"[Security] {error}: {filename}")
             return (False, error, None)
+        
+        # Encoding check - only if it claims to be text
+        decoded = None
+        if file_ext in ['.txt', '.md', '.json', '.csv', '.py', '.js']:
+            try:
+                decoded = content.decode('utf-8', errors='strict')
+            except UnicodeDecodeError as e:
+                error = "Invalid file encoding (must be UTF-8)"
+                logger.warning(f"[Security] {error}: {filename} - {e}")
+                return (False, error, None)
         
         # All checks passed
         logger.info(f"[Security] File validated: {filename} ({len(content)} bytes)")
@@ -152,16 +203,7 @@ class FileValidator:
     
     @staticmethod
     def sanitize_content(content: str, max_length: int = 100000) -> str:
-        """
-        Sanitize file content before passing to LLM.
-        
-        Args:
-            content: Raw file content
-            max_length: Maximum allowed length
-        
-        Returns:
-            Sanitized content
-        """
+        """Sanitize file content before passing to LLM."""
         # Truncate if too long
         if len(content) > max_length:
             logger.warning(f"[Security] Content truncated from {len(content)} to {max_length} chars")

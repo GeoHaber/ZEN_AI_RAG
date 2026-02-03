@@ -94,65 +94,104 @@ class TextChunker:
         
         return [chunk] + self.recursive_split(remaining, max_size, overlap_size)
 
-    def chunk_document(self, content: str, metadata: Dict = None, strategy: str = "recursive", filter_junk: bool = True) -> List[Chunk]:
+    def semantic_split(self, text: str, model, threshold: float = 0.75) -> List[Chunk]:
+        """
+        True semantic chunking using embedding similarity.
+        
+        Args:
+            text: Content to chunk
+            model: SentenceTransformer model instance (must have .encode method)
+            threshold: Cosine similarity threshold to break chunks
+        """
+        import numpy as np
+        
+        # 1. Split into sentences
+        sentences = re.split(self.SENTENCE_ENDINGS, text)
+        sentences = [s.strip() for s in sentences if s.strip()]
+        
+        if len(sentences) < 2:
+            return [Chunk(text=text, chunk_index=0)]
+            
+        # 2. Embed all sentences (Batch)
+        try:
+            embeddings = model.encode(sentences, normalize_embeddings=True)
+        except Exception:
+            # Fallback if model fails or is None
+            return self.chunk_document(text, strategy="recursive")
+            
+        chunks = []
+        current_chunk = [sentences[0]]
+        current_len = len(sentences[0])
+        idx = 0
+        
+        # 3. Iterate and check similarity gaps
+        for i in range(len(embeddings) - 1):
+            sent = sentences[i+1]
+            sent_len = len(sent)
+            
+            # Calculate cosine sim
+            score = np.dot(embeddings[i], embeddings[i+1])
+            
+            # Break if:
+            # A) Similarity drops below threshold (Topic Shift)
+            # B) Chunk gets too big (Hard Limit)
+            condition_topic_shift = score < threshold
+            condition_max_size = (current_len + sent_len) > self.config.CHUNK_SIZE * 2 # Allow semantic chunks to be larger
+            
+            if (condition_topic_shift or condition_max_size) and current_len >= self.config.MIN_CHUNK_LENGTH:
+                # Commit Chunk
+                chunk_text = " ".join(current_chunk)
+                if not self.is_junk(chunk_text):
+                    chunks.append(Chunk(text=chunk_text, chunk_index=idx))
+                    idx += 1
+                
+                # Start new
+                current_chunk = [sent]
+                current_len = sent_len
+            else:
+                current_chunk.append(sent)
+                current_len += sent_len
+                
+        # Final bit
+        if current_chunk:
+            chunk_text = " ".join(current_chunk)
+            if not self.is_junk(chunk_text):
+                chunks.append(Chunk(text=chunk_text, chunk_index=idx))
+                
+        return chunks
+
+    def chunk_document(self, content: str, metadata: Dict = None, strategy: str = "recursive", filter_junk: bool = True, model=None) -> List[Chunk]:
         """
         Divide a document into chunks.
         
         Args:
             content: The text to chunk.
             metadata: Base metadata for all chunks.
-            strategy: "recursive" (default) or "semantic" (sentence-level).
+            strategy: "recursive" or "semantic" (requires model).
             filter_junk: Whether to filter out junk chunks.
+            model: Embedding model for semantic strategy.
         """
         if not content:
             return []
             
         metadata = metadata or {}
-        chunks = []
         
-        if strategy == "semantic":
-            # Sentence-level semantic chunking
-            sentences = re.split(self.SENTENCE_ENDINGS, content)
-            sentences = [s.strip() for s in sentences if s.strip()]
+        if strategy == "semantic" and model:
+            chunks = self.semantic_split(content, model)
+            # Attach metadata
+            for c in chunks:
+                c.metadata = metadata.copy()
+            return chunks
             
-            current_sentences = []
-            current_length = 0
-            idx = 0
-            
-            for sentence in sentences:
-                sent_len = len(sentence)
-                if current_length + sent_len > self.config.CHUNK_SIZE and current_sentences:
-                    chunk_text = " ".join(current_sentences)
-                    # Respect junk filter
-                    if not filter_junk or not self.is_junk(chunk_text):
-                        chunks.append(Chunk(text=chunk_text, metadata=metadata.copy(), chunk_index=idx))
-                        idx += 1
-                    
-                    # Overlap handling
-                    overlap_sentences = []
-                    overlap_len = 0
-                    for s in reversed(current_sentences):
-                        if overlap_len + len(s) < self.config.CHUNK_OVERLAP:
-                            overlap_sentences.insert(0, s)
-                            overlap_len += len(s)
-                        else:
-                            break
-                    current_sentences = overlap_sentences
-                    current_length = overlap_len
-                
-                current_sentences.append(sentence)
-                current_length += sent_len
-            
-            if current_sentences:
-                chunk_text = " ".join(current_sentences)
-                if not filter_junk or not self.is_junk(chunk_text):
-                    chunks.append(Chunk(text=chunk_text, metadata=metadata.copy(), chunk_index=idx))
-        else:
-            # Standard recursive split
-            texts = self.recursive_split(content, self.config.CHUNK_SIZE, self.config.CHUNK_OVERLAP)
-            for i, text in enumerate(texts):
-                text = text.strip()
-                if not filter_junk or not self.is_junk(text):
-                    chunks.append(Chunk(text=text, metadata=metadata.copy(), chunk_index=i))
-                    
+        # Fallback / Default recursive
+        return self._recursive_chunk_wrapper(content, metadata, filter_junk)
+
+    def _recursive_chunk_wrapper(self, content: str, metadata: Dict, filter_junk: bool) -> List[Chunk]:
+        """Helper for standard recursive logic."""
+        chunks = []
+        texts = self.recursive_split(content, self.config.CHUNK_SIZE, self.config.CHUNK_OVERLAP)
+        for i, text in enumerate(texts):
+            text = text.strip()
+            if not filter_junk or not self.is_junk(text):
+                chunks.append(Chunk(text=text, metadata=metadata.copy(), chunk_index=i))
         return chunks
