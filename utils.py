@@ -31,11 +31,14 @@ BASE_DIR = config.BASE_DIR
 # --- Logging Setup ---
 proc_name = str(getattr(sys.modules.get("__main__"), "__file__", "unknown"))
 if "start_llm.py" in proc_name:
-    LOG_NAME = "ZenAIEngine"
+    CURRENT_LOG_FILE = BASE_DIR / "zenai_engine.log"
+    LOG_NAME = "ZenAIEngine" # Keep LOG_NAME for getLogger
 elif "zena.py" in proc_name:
-    LOG_NAME = "ZenAIUI"
+    CURRENT_LOG_FILE = BASE_DIR / "zenai_ui.log"
+    LOG_NAME = "ZenAIUI" # Keep LOG_NAME for getLogger
 else:
-    LOG_NAME = "ZenAIShared"
+    CURRENT_LOG_FILE = BASE_DIR / "zenai_shared.log"
+    LOG_NAME = "ZenAIShared" # Keep LOG_NAME for getLogger
 
 logger = logging.getLogger(LOG_NAME)
 
@@ -60,8 +63,12 @@ def safe_print(*args, level: str = "info", **kwargs):
         except OSError:
             pass  # No console attached, skip output
     except OSError:
-        # No console attached (Windows "Open with Python" scenario)
         pass
+    
+    # Aggressive Flush
+    try:
+        sys.stdout.flush()
+    except: pass
     
     try:
         sys.stdout.flush()
@@ -199,28 +206,16 @@ class ProcessManager:
         return True
 
 # --- Hardware Profiling ---
-class HardwareProfiler:
-    @staticmethod
-    def get_profile() -> dict:
-        """Cross-platform hardware detection."""
-        profile = {"type": "CPU", "ram_gb": 8.0, "vram_mb": 0, "threads": os.cpu_count() or 4}
-        try:
-            if psutil: profile['ram_gb'] = round(psutil.virtual_memory().total / (1024**3), 1)
-            
-            if sys.platform == "win32":
-                cmd = "powershell -NoProfile -Command \"Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json\""
-                out = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
-                if out:
-                    import json
-                    gpus = json.loads(out)
-                    if not isinstance(gpus, list): gpus = [gpus]
-                    for g in gpus:
-                        name = g.get("Name", "").upper()
-                        if "NVIDIA" in name: profile['type'] = "NVIDIA"
-                        elif "AMD" in name: profile['type'] = "AMD"
-        except (subprocess.SubprocessError, ValueError, KeyError, OSError): pass  # Hardware detection optional
-        logger.info(f"[Profiler] Detected: {profile['type']} | {profile['ram_gb']}GB RAM | {profile['threads']} Cores")
-        return profile
+# --- Hardware Profiling (Moved to zena_mode.resource_detect) ---
+try:
+    from zena_mode.resource_detect import HardwareProfiler
+except ImportError:
+    # Fallback to keep utils valid even if zena_mode path issues exist during dev
+    class HardwareProfiler: 
+        @staticmethod
+        def get_profile(): 
+            return {"type": "CPU", "ram_gb": 8.0, "vram_mb": 0, "free_vram_mb": 0, "threads": os.cpu_count() or 4}
+
 
 def ensure_package(import_name: str, install_name: str = None):
     """Guarantees a Python package is available."""

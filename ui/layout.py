@@ -23,6 +23,9 @@ def build_header(ui_state, drawer, locale, open_gallery=None):
                  ui_state.status_dot = ui.label('●').classes('text-green-500 animate-pulse text-[14px]').props('id=header-status-dot')
                  ui_state.status_indicator = ui.label('ONLINE').classes('text-[10px] font-black tracking-widest text-green-500').props('id=header-status-label')
              
+             # Voice status indicator (hidden by default, shown when recording)
+             ui_state.voice_status = ui.label('🎙️ REC').classes('text-[10px] font-black tracking-widest text-red-500 animate-pulse hidden').props('id=header-voice-label')
+             
              # Model Gallery Button (The "Cards")
              if open_gallery:
                  with ui.button(icon='smart_toy', on_click=open_gallery).props('flat round dense').classes(Styles.TEXT_MUTED + ' hover:text-purple-500 transition-colors'):
@@ -45,6 +48,8 @@ def build_footer(ui_state, handlers, locale):
                 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 '
                 'border border-blue-200 dark:border-blue-700'
             )
+            
+
             
             # === COMMAND CAPSULE ===
             # Floating pill-shaped input with shadow and modern styling
@@ -70,13 +75,39 @@ def build_footer(ui_state, handlers, locale):
                     ).classes('flex-1 text-base bg-transparent')
                     ui_state.user_input.on('keydown.enter.prevent', lambda: handlers.handle_send(ui_state.user_input.value))
                     
+                    # Voice button with device selector
+                    async def setup_voice_devices():
+                        """Initialize voice device selector."""
+                        try:
+                            import httpx
+                            async with httpx.AsyncClient() as client:
+                                response = await client.get('http://localhost:8001/voice/devices')
+                                if response.status_code == 200:
+                                    data = response.json()
+                                    input_devices = [d for d in data.get('devices', []) if d['is_input']]
+                                    device_options = {d['name']: d['id'] for d in input_devices}
+                                    if device_options:
+                                        ui_state.mic_device_select.set_options(device_options)
+                                        default_id = data.get('default_device')
+                                        if default_id is not None:
+                                            ui_state.mic_device_select.value = list(device_options.values())[0]
+                        except Exception as e:
+                            logger.warning(f"[Voice] Failed to load devices: {e}")
+                    
+                    # Device selector (initially hidden, shown on click)
+                    ui_state.mic_device_select = ui.select(
+                        {}, 
+                        label='🎤'
+                    ).props('dense outlined').classes('text-sm').style('max-width: 200px; display: none;')
+                    ui_state.mic_device_select.tooltip = 'Select microphone'
+                    
                     # Voice button
                     ui.button(
                         icon=Icons.RECORD, 
                         on_click=handlers.on_voice_click
                     ).props(f'flat round dense id={UI_IDS.BTN_VOICE}').classes(
                         'text-gray-400 hover:text-purple-500 transition-colors'
-                    )
+                    ).tooltip('Click to toggle voice recording')
                     
                     # Send button - prominent
                     ui.button(

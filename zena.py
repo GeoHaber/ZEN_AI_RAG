@@ -3,197 +3,91 @@
 zena.py - Zena AI Chat Interface
 Elegant, professional chatbot with RAG capabilities
 """
-import sys
-import subprocess
-import os
-from pathlib import Path
-import time
-import traceback
-
-# --- Global Crash Handler ---
-def handle_exception(exc_type, exc_value, exc_traceback):
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-    try:
-        with open("ui_fatal_crash.txt", "w", encoding='utf-8') as f:
-            f.write(f"Timestamp: {time.ctime()}\n")
-            traceback.print_exception(exc_type, exc_value, exc_traceback, file=f)
-    except (OSError, IOError):
-        pass  # Can't write crash log, silently continue
-
-sys.excepthook = handle_exception
-# -----------------------------
-
-from nicegui import ui, app
-import threading
-import time
-import logging
-import os
-import io
-import asyncio
-import json
-import requests
-import numpy as np
-from pathlib import Path
-
-# PDF Support
-try:
-    import pypdf
-except ImportError:
-    pypdf = None
-
-# Import configuration and security
-from config_system import config, EMOJI
-from mock_backend import MockAsyncBackend
-from security import FileValidator
-from utils import format_message_with_attachment, normalize_input, sanitize_prompt, is_port_active
-from locales import get_locale, L
-from ui import Styles, Icons, Formatters
-from ui.registry import UI_IDS
-from ui.examples import EXAMPLES
-from zena_mode.profiler import monitor
-from zena_mode.help_system import index_internal_docs
-from zena_mode.auto_updater import check_for_updates, get_local_version, ModelScout
-from zena_mode.gateway_telegram import run_gateway as run_telegram_gateway
-from zena_mode.gateway_whatsapp import run_whatsapp_gateway
-from zena_mode.tutorial import start_tutorial
-
-# Optional deps
-try:
-    import sounddevice as sd
-    import scipy.io.wavfile as wav
-    # import pyttsx3 # Removed - using Piper for TTS
-    from sentence_transformers import SentenceTransformer, util
-except ImportError:
-    sd = wav = SentenceTransformer = None
-pyttsx3 = None # Explicitly disabled
-
-# Logging - output to BOTH file and console
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[
-        logging.FileHandler('nebula_debug.log', mode='w', encoding='utf-8'),
-        logging.StreamHandler(sys.stdout)  # Also print to console
-    ]
-)
-logger = logging.getLogger("ZenAI")
 
 
+# Local_LLM core modules
+from Local_LLM.llama_cpp_manager import LlamaCppManager
+from Local_LLM.local_llm_manager import LocalLLMManager
+from Local_LLM.metrics import FIFO_Memory, start_metrics_server, set_fifo_depth, observe_inference
+from Local_LLM.verification_oracle import Evidence, EvidenceType
+from Local_LLM.trust_verify_supervisor import TrustScore, ConfidenceLevel
+from Local_LLM.model_card import ModelRegistry, ModelCard, ModelCategory
+from Local_LLM.enhanced_model_card import ModelMetadata
+from Local_LLM.install_checks import verify_python_native_compatibility
+from Local_LLM.cli_nonblocking import input_nonblocking, dedupe_preserve_order
 
-# API URLs resolved from config
-API_URL = config.get_api_url()
+# Initialize Local_LLM managers
+llama_manager = LlamaCppManager()
+local_llm_manager = LocalLLMManager()
+fifo_memory = FIFO_Memory()
+model_registry = ModelRegistry()
+start_metrics_server(port=8000)
 
-# Import async backend and arbitrator
-from async_backend import AsyncZenAIBackend as async_backend
-# Note: Legacy sync backend removed - all operations now async
+# Install-time check
+verify_python_native_compatibility(["llama_cpp"])
 
-# Load v3.1 Configuration Logic
-ZENA_MODE = config.zena_mode_enabled
-ZENA_CONFIG = {
-    'enabled': config.zena_mode_enabled,
-    'rag_enabled': True,
-    'rag_source': 'knowledge_base',
-    'swarm_enabled': config.swarm_enabled
-}
-logger.info(f"[Core] v3.1 Spec Initialization | Mode: {'Native' if ZENA_MODE else 'Legacy'} | Swarm: {config.swarm_enabled}")
-
-# Initialize RAG if Zena mode enabled
-rag_system = None
-if ZENA_MODE:
-    try:
-        from zena_mode import LocalRAG, WebsiteScraper
-        from zena_mode.universal_extractor import UniversalExtractor, DocumentType
-        
-        # Universal Extractor for PDF/Image OCR in chat
-        universal_extractor = UniversalExtractor()
-        logger.info("[RAG] Universal Extractor ready for OCR")
-
-        rag_cache = config.BASE_DIR / "rag_cache"
-        rag_cache.mkdir(exist_ok=True)
-
-        # RAG system initialization
-        rag_system = LocalRAG(cache_dir=rag_cache)
-        # Default RAG to enabled in config if not present
-        if 'rag_enabled' not in ZENA_CONFIG:
-            ZENA_CONFIG['rag_enabled'] = True
-        logger.info("[RAG] RAG system initialized")
-    except Exception as e:
-        logger.error(f"[RAG] Failed to initialize: {e}")
-
-# Initialize Conversation Memory (separate from knowledge RAG)
-conversation_memory = None
-try:
-    from zena_mode import ConversationMemory
-    from pathlib import Path
-    
-    conv_cache = config.BASE_DIR / "conversation_cache"
-    conv_cache.mkdir(exist_ok=True)
-    
-    conversation_memory = ConversationMemory(cache_dir=conv_cache)
-    logger.info("[Memory] Conversation memory initialized")
-except Exception as e:
-    logger.error(f"[Memory] Failed to initialize conversation memory: {e}")
-
-# Import state management
-from state_management import attachment_state, chat_history, handle_error
-
-# Import feature detection
-from feature_detection import get_feature_detector, is_feature_available
-
-# Initialize feature detector at startup
-feature_detector = get_feature_detector()
-logger.info("[Features] Feature detection complete")
-
-# Import cleanup policy
-from cleanup_policy import get_cleanup_policy
-
-# Initialize cleanup policy for uploads directory
-upload_cleanup = get_cleanup_policy(config.BASE_DIR / "uploads")
-logger.info("[Cleanup] Upload cleanup policy initialized")
-
-# Index internal documentation for Help System RAG
-# This allows users to ask "how do I use ZenAI?" and get answers from docs
-try:
-    if rag_system:
-        index_internal_docs(config.BASE_DIR, rag_system)
-        logger.info("[HelpSystem] Internal documentation indexed for user assistance")
-except Exception as e:
-    logger.warning(f"[HelpSystem] Failed to index internal docs: {e}")
+# Example: Model metadata and trust/verification
+def verify_and_score_response(response, worker_id="default", task_type="chat"):
+    # Evidence and trust scoring
+    evidence = Evidence(type=EvidenceType.DIRECT)
+    trust = TrustScore(worker_id=worker_id, task_type=task_type, confidence=ConfidenceLevel.CERTAIN.value, basis="LocalLLM")
+    return evidence, trust
 
 
-# --- Modular UI Imports ---
-from ui.state import UIState
-from ui.handlers import UIHandlers
-from ui.layout import build_page
-from ui_components import setup_app_theme, setup_common_dialogs, setup_drawer, setup_rag_dialog
+# --- Modular Setup ---
+def setup_app():
+    setup_crash_handler()
+    logger = setup_logging()
+    start_background_gateways()
+    services = initialize_services()
+    return {
+        'logger': logger,
+        'services': services,
+        'rag_system': services["rag_system"],
+        'universal_extractor': services["universal_extractor"],
+        'conversation_memory': services["conversation_memory"],
+        'upload_cleanup': services["upload_cleanup"],
+        'ZENA_CONFIG': services["ZENA_CONFIG"],
+        'ZENA_MODE': services["ZENA_MODE"]
+    }
 
-# Cleanup Policy
-from cleanup_policy import get_cleanup_policy
-upload_cleanup = get_cleanup_policy(config.BASE_DIR / "uploads")
+def mount_static():
+    import os
+    os.makedirs("_static/rag_images", exist_ok=True)
+    app.add_static_files('/rag_images', '_static/rag_images')
+
+def get_backend():
+    from async_backend import AsyncZenAIBackend
+    from mock_backend import MockAsyncBackend
+    return MockAsyncBackend() if "--mock" in sys.argv else AsyncZenAIBackend()
+
+app_state = setup_app()
+mount_static()
+backend = get_backend()
+logger = app_state['logger']
+services = app_state['services']
+rag_system = app_state['rag_system']
+universal_extractor = app_state['universal_extractor']
+conversation_memory = app_state['conversation_memory']
+upload_cleanup = app_state['upload_cleanup']
+ZENA_CONFIG = app_state['ZENA_CONFIG']
+ZENA_MODE = app_state['ZENA_MODE']
 
 @ui.page('/')
 async def nebula_page():
-    # 1. Initialize State
+    # --- Modern UI Layout ---
     ui_state = UIState()
-    import uuid
     ui_state.session_id = str(uuid.uuid4())[:8]
     logger.info(f"[Session] New client session: {ui_state.session_id}")
 
-    # 2. Setup Theme & App State
+    # Theme & App State
     setup_app_theme()
     app_state = {
         'rag_enabled': ZENA_CONFIG.get('rag_enabled', True) if ZENA_MODE else False,
         'open_rag_dialog': lambda: rag_dialog.open() if 'rag_dialog' in locals() else None
     }
 
-    # 3. Initialize Shared Services
-    from async_backend import AsyncZenAIBackend
-    backend = MockAsyncBackend() if "--mock" in sys.argv else AsyncZenAIBackend()
-    
-    # 4. Initialize Handlers
+    # Shared Services
     handlers = UIHandlers(
         ui_state=ui_state,
         app_state=app_state,
@@ -203,36 +97,43 @@ async def nebula_page():
         async_backend=backend
     )
 
-    # 5. Build Page
-    def on_language_change(code):
-        from settings import get_settings
-        ui.notify(f"Switching to {code}...", color='info')
-        get_settings().save()
-        ui.run_javascript('window.location.reload()')
+    # --- Layout ---
+    with ui.column().classes('w-full h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-6 gap-4'):  # Modern background
+        with ui.row().classes('w-full items-center justify-between mb-4'):
+            ui.label('ZEN_AI_RAG Chat').classes('text-2xl font-bold text-blue-700')
+            ui.button('Settings', on_click=lambda: handlers.open_settings()).classes('bg-blue-500 text-white rounded px-4 py-2')
 
-    # Factories for modular components
-    def dialog_factory():
-        return setup_common_dialogs(
-            backend, app_state, 
-            on_language_change=on_language_change,
-            on_dark_mode=lambda is_dark: update_theme(is_dark)
-        )
-    
-    dialogs = dialog_factory()
+        with ui.row().classes('w-full gap-4'):
+            ui.input('Ask anything...', on_change=handlers.handle_input).classes('w-2/3 bg-white rounded shadow')
+            ui.button('Send', on_click=handlers.handle_send).classes('bg-green-500 text-white rounded px-4 py-2')
+
+        with ui.column().classes('w-full bg-white rounded shadow p-4 mt-4'):
+            ui.label('Conversation').classes('text-lg font-semibold mb-2')
+            ui.list(handlers.get_conversation()).classes('w-full')
+
+        with ui.row().classes('w-full justify-end mt-4'):
+            ui.button('RAG Dialog', on_click=lambda: app_state['open_rag_dialog']()).classes('bg-purple-500 text-white rounded px-4 py-2')
+
+    # --- Async Error Handling ---
+    try:
+        await handlers.async_backend.check_health()
+    except Exception as e:
+        ui.notify(f"Backend error: {str(e)}", color='negative')
     
     def rag_dialog_factory():
         return setup_rag_dialog(app_state, ZENA_MODE, ZENA_CONFIG, get_locale(), rag_system, Styles)
     
     def drawer_factory():
+        # Note: config is imported from config_system
         return setup_drawer(backend, rag_system, config, dialogs, ZENA_MODE, EMOJI, app_state)
 
-    # Assemble Layout
-    from ui.layout import build_page
+    # 6. Assemble Layout
+    dialogs = dialog_factory()
     layout = build_page(ui_state, handlers, drawer_factory, rag_dialog_factory)
     header = layout['header']
     drawer = layout['drawer']
     
-    # 6. Initialize Dark Mode
+    # 7. Initialize Dark Mode
     from settings import is_dark_mode
     saved_dark_mode = is_dark_mode()
     dark_mode = ui.dark_mode(value=saved_dark_mode)
@@ -248,187 +149,54 @@ async def nebula_page():
 
     update_theme(saved_dark_mode)
 
-    # 7. Background Tasks (Per-Client)
+    # 8. Background Tasks (Per-Client)
+    # Check backend health periodically
+    import asyncio
     asyncio.create_task(handlers.check_backend_health())
 
     # Periodic cleanup
     ui.timer(10.0, lambda: upload_cleanup.cleanup(), once=True)
     ui.timer(6 * 3600, lambda: upload_cleanup.cleanup())
 
-
-# --- Background Workers Infrastructure ---
-def start_background_gateways():
-    """Launch messaging gateways in separate threads."""
-    zena_config = config.get('zena_mode', {})
-    if zena_config.get("telegram_token"):
-        threading.Thread(target=run_telegram_gateway, daemon=True, name="TelegramBot").start()
-    
-    if zena_config.get("whatsapp_whitelist"): # Enabled via whitelist (E.164 numbers)
-        threading.Thread(target=run_whatsapp_gateway, daemon=True, name="WhatsAppBot").start()
-
-async def run_system_checks():
-    """Perform background auto-update and model scout checks."""
-    zena_config = config.get('zena_mode', {})
-    if zena_config.get("auto_update_enabled", True):
-        local_tag = await get_local_version()
-        update_info = check_for_updates(current_tag=local_tag)
-        if update_info:
-            ui.notify(f"💎 Shiny new update available: {update_info['tag']}!", 
-                      color='info', position='bottom-right')
-        
-        # Scouting for "Best in Class" models
-        scout = ModelScout()
-        coding_models = scout.find_shiny_models("coding")
-        if coding_models:
-             logger.info(f"[ModelScout] Found {len(coding_models)} shiny models on HF.")
+# 4. Register Global Events
+register_test_endpoints()
+register_test_endpoints()
+# start_background_gateways() moved to top
 
 @app.on_startup
 async def on_startup():
-    """Global startup triggers."""
-    # Add hidden testing endpoint for Monkey Test
-    from fastapi import Response
-    @app.post("/test/click/{element_id}")
-    async def test_click_element(element_id: str):
-        """Simulate a click on a UI element for chaos testing."""
-        logger.info(f"[Test] Simulating click on: {element_id}")
-        try:
-            # Broadcast click to all connected clients
-            clients = app.clients
-            if callable(clients):
-                try: clients = clients()
-                except TypeError: pass  # Not callable
-            
-            # Support both dict and list-like clients
-            client_list = []
-            if isinstance(clients, dict):
-                client_list = list(clients.values())
-            elif clients:
-                try: client_list = list(clients)
-                except (TypeError, ValueError): client_list = []
-
-            for client in client_list:
-                try:
-                    client.run_javascript(f"document.getElementById('{element_id}')?.click()")
-                except Exception as e:
-                    logger.debug(f"[Test] Failed for client: {e}")
-                    continue
-            return Response(status_code=200)
-        except Exception as e:
-            logger.error(f"[Test] Click simulation failed: {e}")
-            return Response(content=str(e), status_code=500)
-
-    @app.get("/test/state")
-    async def test_get_ui_state():
-        """Retrieve a summary of the current UI state (text and visible components)."""
-        # This uses JS to scrape visible text and active notifications/dialogs
-        js_get_state = """
-        (() => {
-            const state = {
-                visible_text: document.body.innerText.substring(0, 1000),
-                active_dialogs: Array.from(document.querySelectorAll('.q-dialog--active')).length,
-                notifications: Array.from(document.querySelectorAll('.q-notification')).map(n => n.innerText),
-                current_url: window.location.href
-            };
-            return JSON.stringify(state);
-        })()
-        """
-        # Note: NiceGUI run_javascript is not easily awaitable for results in this version
-        # We will use a workaround: app.storage.client or just return a placeholder for now
-        # Actually, let's keep it simple: the LLM will focus on the Logic of the Registry Metadata first.
-        return {"active": True, "timestamp": time.time()}
-
-    @app.post("/test/send")
-    async def test_send_message(data: dict):
-        """Simulate typing and sending a message for automated testing."""
-        text = data.get("text", "")
-        logger.info(f"[Test] Simulating send: {text}")
-        try:
-            # Broadcast to all clients (Super Robust)
-            clients_obj = getattr(app, 'clients', None)
-            
-            client_list = []
-            if clients_obj:
-                if callable(clients_obj):
-                    try: clients_obj = clients_obj()
-                    except TypeError: pass  # Not callable
-                
-                if isinstance(clients_obj, dict):
-                    client_list = list(clients_obj.values())
-                elif isinstance(clients_obj, (list, set, tuple)):
-                    client_list = list(clients_obj)
-            
-            # Fallback to NiceGUI globals if app.clients failed
-            if not client_list:
-                try:
-                    from nicegui import globals as ng_globals
-                    client_list = list(ng_globals.clients.values())
-                except (ImportError, AttributeError, TypeError): pass  # NiceGUI internals unavailable
-
-            logger.info(f"[Test] Broadasting to {len(client_list)} clients")
-            
-            for client in client_list:
-                try:
-                    js = f"""
-                    (function() {{
-                        const input = document.getElementById('ui-input-chat');
-                        const btn = document.getElementById('ui-btn-send');
-                        if (input) {{
-                            input.value = {json.dumps(text)};
-                            input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                            console.log('[Test] Input set to:', input.value);
-                            if (btn) {{
-                                setTimeout(() => {{
-                                    console.log('[Test] Clicking send button');
-                                    btn.click();
-                                }}, 100);
-                            }}
-                        }}
-                    }})();
-                    """
-                    client.run_javascript(js)
-                except Exception as e:
-                    logger.debug(f"[Test] Send failed for client: {e}")
-            return {"status": "ok"}
-        except Exception as e:
-            logger.error(f"[Test] Send simulation failed: {e}")
-            return Response(content=str(e), status_code=500)
-
-    start_background_gateways()
+    import asyncio
     asyncio.create_task(run_system_checks())
     if ZENA_MODE and rag_system:
-        from config_system import config as sys_config # Resolve naming conflict
-        index_internal_docs(Path(sys_config.BASE_DIR), rag_system)
+        # Re-index if needed? bootstrap handled indexing.
+        pass
 
 def start_app():
     """Entry point for NiceGUI application."""
-    import sys
+    import os
     from config_system import is_dark_mode
     from utils import ProcessManager
     
     # --- Zombie & Conflict Protection ---
     ui_port = getattr(config, 'ui_port', 8080)
-    if is_port_active(ui_port):
-        logger.warning(f"[!] Port {ui_port} is already active. Pruning existing UI...")
-        if not ProcessManager.prune(ports=[ui_port], auto_confirm=True):
-             logger.error(f"[!] Could not clear port {ui_port}. Startup may fail.")
     
-    # Check for port conflicts and handle "Zombie junk"
+    # Skip port checks if launched from server (ZENA_SKIP_PRUNE is set)
     if not os.environ.get("ZENA_SKIP_PRUNE"):
+        from utils import is_port_active
+        if is_port_active(ui_port):
+            logger.warning(f"[!] Port {ui_port} is already active. Pruning existing UI...")
+            if not ProcessManager.prune(ports=[ui_port], auto_confirm=True):
+                 logger.error(f"[!] Could not clear port {ui_port}. Startup may fail.")
+        
+        # Check for port conflicts and handle "Zombie junk"
         if not ProcessManager.prune(auto_confirm=True):
             print("[!] Startup cancelled due to port conflict.")
             sys.exit(0)
     
-    # --- Fix 1: NICEGUI_SCREEN_TEST_PORT KeyError ---
     if 'NICEGUI_SCREEN_TEST_PORT' not in os.environ:
         os.environ['NICEGUI_SCREEN_TEST_PORT'] = '8081'
 
-    # --- Fix 2: pyttsx3 AttributeError on exit (Handled by removal) ---
-    pass
-
-    # Use saved dark mode preference
-    # Local Device Mode (Native window) enabled for speed and local testing
-    # DISABLED in --mock mode to allow headless testing/automated poking
-    is_mock = "--mock" in sys.argv
+    # Local Device Mode (Native window)
     ui.run(title='ZenAI', dark=is_dark_mode(), port=8080, reload=False, native=False)
 
 if __name__ == "__main__":
@@ -436,6 +204,7 @@ if __name__ == "__main__":
         start_app()
     except Exception as e:
         import traceback
+        import time
         # Use safe characters for terminal to avoid UnicodeEncodeError on Windows
         error_msg = f"\n[!] FATAL ZENA UI ERROR: {e}\n"
         try:
@@ -449,5 +218,5 @@ if __name__ == "__main__":
             traceback.print_exc(file=f)
             
         traceback.print_exc()
-        time.sleep(5) # Give user time to see error
+        time.sleep(5)
         sys.exit(1)

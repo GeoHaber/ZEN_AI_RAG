@@ -361,7 +361,8 @@ class SwarmArbitrator:
         self.host = host
 
         # Port discovery
-        self.scan_ports = ports or ([8001] + list(range(8005, 8013)))
+        # Exclude 8005 (Voice Server) to prevent protocol mismatch hangs
+        self.scan_ports = ports or ([8001] + list(range(8006, 8013)))
         self.ports = []
         self.endpoints = []
 
@@ -778,15 +779,21 @@ class SwarmArbitrator:
         fast_llm = self.endpoints[0]
         powerful_llm = self.endpoints[1]
 
-        # Step 1: Evaluate difficulty
-        yield "🚦 Evaluating query complexity...\n"
-        evaluation = await self._evaluate_query_difficulty(query)
+        if self.endpoints:
+            # Step 1: Evaluate difficulty using the first LLM (Fast/Local)
+            yield "🚦 Evaluating query complexity...\n"
+            evaluation = await self._evaluate_query_difficulty(query, evaluator_endpoint=fast_llm)
+        else:
+            # Fallback if no endpoints (unlikely here)
+            evaluation = {"difficulty": "medium", "confidence": 0.5}
 
-        difficulty = evaluation['difficulty']
-        confidence = evaluation['confidence']
+        difficulty = evaluation.get('difficulty', 'medium')
+        confidence = evaluation.get('confidence', 0.5)
+
+        threshold = self.config.get("traffic_controller_threshold", 0.8)
 
         # Step 2: Route based on evaluation
-        if difficulty == 'easy' and confidence > 0.8:
+        if difficulty == 'easy' and confidence > threshold:
             # Fast LLM handles it
             yield f"💨 **Fast response** ({difficulty}, confidence: {confidence:.0%})\n\n"
             async for chunk in self._stream_from_llm(fast_llm, query, system_prompt):
@@ -816,9 +823,13 @@ class SwarmArbitrator:
                 # Disagree - use powerful answer (safer)
                 yield powerful_answer
 
-    async def _evaluate_query_difficulty(self, query: str) -> Dict:
+    async def _evaluate_query_difficulty(self, query: str, evaluator_endpoint: str = None) -> Dict:
         """
         Use fast LLM to classify query difficulty.
+        
+        Args:
+            query: The user query
+            evaluator_endpoint: Endpoint to use for evaluation (defaults to self.endpoints[0])
 
         Returns:
             {
@@ -828,8 +839,14 @@ class SwarmArbitrator:
                 "reasoning": "brief explanation"
             }
         """
-        # Use traffic controller LLM (Phi-3-mini on port 8020)
-        controller_endpoint = f"http://{self.host}:8020/v1/chat/completions"
+        # Use provided endpoint or default to first available (Fast LLM)
+        if evaluator_endpoint:
+            controller_endpoint = evaluator_endpoint
+        elif self.endpoints:
+            controller_endpoint = self.endpoints[0] 
+        else:
+            # Fallback to hardcoded if state is really broken, but prefer config
+            controller_endpoint = f"http://{self.host}:8001/v1/chat/completions"
 
         eval_prompt = f"""Analyze this query and respond ONLY with JSON:
 

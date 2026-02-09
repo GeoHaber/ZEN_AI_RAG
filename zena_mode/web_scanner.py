@@ -8,6 +8,7 @@ import asyncio
 from urllib.robotparser import RobotFileParser
 from urllib.parse import urlparse, urljoin
 import logging
+import socket
 from bs4 import BeautifulSoup
 
 from utils import safe_print
@@ -155,6 +156,12 @@ class WebCrawlScanner:
                     if ack in html:
                         report.metadata[f"found_{ack.replace(' ', '_')}"] = True
 
+        except socket.gaierror:
+            report.can_crawl = False
+            report.reason = "Domain not found (Check for typos)"
+        except httpx.ConnectError:
+             report.can_crawl = False
+             report.reason = "Connection failed (Server offline or invalid URL)"
         except Exception as e:
             report.can_crawl = False
             report.reason = f"Connection error: {str(e)}"

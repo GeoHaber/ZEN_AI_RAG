@@ -23,6 +23,15 @@ class UIHandlers:
         self.universal_extractor = universal_extractor
         self.conversation_memory = conversation_memory
         self.async_backend = async_backend
+        
+        
+        # Register Global Event Listeners
+        # We use ui.on() for page-level custom events, as client.on() is deprecated/removed in this version
+        try:
+             # This listens for 'voice_data' emitted by emitEvent() in JS
+             ui.on('voice_data', self.handle_voice_data)
+        except Exception as e:
+            logger.warning(f"Failed to register voice_data listener: {e}")
         self.locale = get_locale()
 
     async def handle_send(self, text: str):
@@ -51,8 +60,15 @@ class UIHandlers:
         # 2. Trigger stream
         await self.stream_response(final_text)
 
-    def add_message(self, role: str, content: str):
-        """Add a message bubble to the chat log."""
+    def add_message(self, role: str, content: str, enable_tts: bool = True):
+        """
+        Add a message bubble to the chat log.
+        
+        Args:
+            role: 'user', 'assistant', 'assistant_rag', or 'system'
+            content: Message text
+            enable_tts: Enable "Read Response" button for assistant messages
+        """
         with self.ui_state.chat_log:
             with ui.row().classes(Styles.CHAT_ROW_USER if role == 'user' else Styles.CHAT_ROW_AI):
                 # Zena-style colors
@@ -77,6 +93,53 @@ class UIHandlers:
                     
                     bubble_color = Styles.CHAT_BUBBLE_RAG if role == 'assistant_rag' else color
                     ui.markdown(content).classes(f'{bubble_color} {Styles.CHAT_BUBBLE_BASE}')
+                    
+                    # Add TTS controls for assistant messages
+                    if role in ('assistant', 'assistant_rag') and enable_tts:
+                        async def on_read_click(text_to_read: str):
+                            """Generate and play TTS for message."""
+                            try:
+                                import httpx
+                                read_btn.enabled = False
+                                read_btn.props('loading')
+                                
+                                # Request TTS synthesis
+                                async with httpx.AsyncClient() as client:
+                                    response = await client.post(
+                                        'http://localhost:8001/voice/speak',
+                                        json={'text': text_to_read}
+                                    )
+                                    if response.status_code == 200:
+                                        data = response.json()
+                                        if data.get('success') and data.get('audio_url'):
+                                            # Create audio player
+                                            audio_html = f"""
+                                            <audio controls autoplay style="width: 100%; max-width: 300px; margin: 8px 0;">
+                                                <source src="{data['audio_url']}" type="audio/wav">
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                            """
+                                            ui.html(audio_html)
+                                            ui.notify('🔊 Playing response...', type='positive')
+                                        else:
+                                            ui.notify(f"TTS failed: {data.get('error', 'Unknown error')}", type='negative')
+                                    else:
+                                        ui.notify('TTS service unavailable', type='warning')
+                            except Exception as e:
+                                logger.error(f"TTS playback failed: {e}")
+                                ui.notify(f"Error: {str(e)}", type='negative')
+                            finally:
+                                read_btn.enabled = True
+                                read_btn.props(remove='loading')
+                        
+                        with ui.row().classes('items-center gap-1 mt-2'):
+                            read_btn = ui.button(
+                                icon='volume_up',
+                                on_click=lambda: on_read_click(content)
+                            ).props('flat dense small').classes('text-sm text-blue-500 hover:text-blue-700')
+                            read_btn.tooltip = 'Read response aloud'
+                            ui.label('Read', ).classes('text-xs text-gray-500')
+        
         # Auto-scroll to bottom
         self.ui_state.safe_scroll()
 
@@ -138,7 +201,25 @@ class UIHandlers:
         with msg_row:
             with ui.column().classes('w-full max-w-3xl'):
                 # Get appropriate loading message
-                use_rag = self.app_state.get('rag_enabled', False) and self.rag_system and self.rag_system.index
+                rag_flag = self.app_state.get('rag_enabled', False)
+                rag_sys = self.rag_system is not None
+                rag_idx = hasattr(self.rag_system, 'index') and self.rag_system.index
+                logger.info(f"[UI-DEBUG] RAG Flags: Enabled={rag_flag}, Sys={rag_sys}, Index={bool(rag_idx)}")
+                
+                # Smart RAG: Only trigger if meaningful
+                use_rag = rag_flag and rag_sys and rag_idx
+                
+                if use_rag:
+                    # Heuristic: Don't RAG on short conversational phrases ("Hi", "Thanks", "Good morning")
+                    # unless they explicitly ask for a search.
+                    words = prompt.split()
+                    is_short = len(words) < 4
+                    keywords = ['search', 'find', 'lookup', 'what is', 'who is', 'define', 'summary', 'analyze']
+                    has_keyword = any(k in prompt.lower() for k in keywords)
+                    
+                    if is_short and not has_keyword:
+                        logger.info(f"[RAG] Skipped (Smart Mode): Prompt '{prompt}' is too short/conversational.")
+                        use_rag = False
                 use_swarm = self.app_state.get('use_cot_swarm') and self.app_state['use_cot_swarm'].value
 
                 if use_swarm:
@@ -331,58 +412,151 @@ class UIHandlers:
             logger.error(f"[Upload] Error: {ex}")
             ui.notify(str(ex), color='negative')
 
-    async def on_voice_click(self):
-        """Handle voice recording trigger."""
+    async def handle_voice_data(self, e):
+        """
+        Direct Event Listener: Receives voice text directly from Client JS.
+        Bypasses DOM inputs for maximum reliability.
+        """
         try:
-            import sounddevice as sd
-            import scipy.io.wavfile as wav
-            from feature_detection import is_feature_available, get_feature_detector
-        except ImportError:
-            ui.notify("Voice dependencies missing", color='negative')
-            return
+            # e.args is the payload sent by emitEvent
+            # It might be a dict or a string depending on JS
+            text = e.args
+            if isinstance(text, dict): text = text.get('text', '')
+            
+            if not text: return
+            
+            logger.info(f"[VoiceEvent] Received: '{text}'")
+            
+            # Update State
+            current = self.ui_state.user_input.value or ""
+            self.ui_state.user_input.value = current + text
+            self.ui_state.user_input.update() # Force update
+            
+        except Exception as ex:
+            logger.error(f"[VoiceEvent] Error: {ex}")
 
-        if not is_feature_available('audio'):
-            ui.notify(f"{EMOJI['error']} Voice Recording Unavailable", color='negative')
-            return
+    async def on_voice_click(self):
+        """Toggle voice streaming (Client-Side)."""
+        # Inject JS - ALWAYS update the function definition to ensure latest logic
+        js_code = """
+        // 1. Ensure Global State Exists
+        if (typeof window.voiceGlobals === 'undefined') {
+            window.voiceGlobals = {
+                socket: null,
+                recorder: null,
+                stream: null,
+                context: null,
+                isRecording: false
+            };
+        }
+
+        // 2. Define the Toggle Function (DEBUG MODE)
+        window.toggleVoiceStream = async function() {
+            const btn = document.getElementById('ui-btn-voice');
+            const G = window.voiceGlobals;
             
-        self.ui_state.status_text.text = self.locale.CHAT_RECORDING
-        self.ui_state.status_text.classes(Styles.TEXT_ERROR + ' ' + Styles.LOADING_PULSE)
-        
-        fs = 16000
-        duration = 5 
-        
-        try:
-            def record():
-                recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
-                sd.wait()
-                return recording
+            console.log("[Voice] Clicked. Current recording state:", G.isRecording);
             
-            audio_data = await asyncio.to_thread(record)
-            self.ui_state.status_text.text = self.locale.CHAT_TRANSCRIBING
-            self.ui_state.status_text.classes(Styles.TEXT_WARNING)
-            
-            wav_buffer = io.BytesIO()
-            wav.write(wav_buffer, fs, audio_data)
-            wav_buffer.seek(0)
-            
-            # Send to Backend API
-            response = await asyncio.to_thread(requests.post, "http://127.0.0.1:8002/voice/transcribe", data=wav_buffer.read())
-            
-            if response.status_code == 200:
-                transcription = response.json().get('text', '')
-                if transcription:
-                    self.ui_state.user_input.value += transcription + " "
-                    ui.notify(self.locale.NOTIFY_TRANSCRIBED, color='green')
-                else:
-                    ui.notify(self.locale.NOTIFY_NO_SPEECH, color='orange')
-            else:
-                ui.notify(f"Transcription failed: {response.text}", color='red')
+            if (G.isRecording) {
+                // STOP LOGIC...
+                try {
+                    console.log("[Voice] Cleanup started...");
+                    if (G.socket) { G.socket.close(); G.socket = null; }
+                    if (G.stream) { G.stream.getTracks().forEach(t => t.stop()); G.stream = null; }
+                    if (G.context) { G.context.close(); G.context = null; }
+                    G.isRecording = false;
+                    if(btn) btn.classList.remove('text-red-500', 'animate-pulse');
+                    console.log("[Voice] Stopped fully.");
+                } catch(e) { console.error("Stop Error:", e); }
                 
-        except Exception as e:
-            ui.notify(f"Voice error: {e}", color='red')
-        finally:
-            self.ui_state.status_text.text = self.locale.CHAT_READY
-            self.ui_state.status_text.classes(remove=Styles.TEXT_ERROR + ' ' + Styles.LOADING_PULSE + ' ' + Styles.TEXT_WARNING)
+            } else {
+                // START LOGIC
+                try {
+                    console.log("[Voice] Requesting Mic...");
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    G.stream = stream;
+                    console.log("[Voice] Mic OK");
+                    
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    const audioContext = new AudioContext();
+                    await audioContext.resume();
+                    G.context = audioContext;
+                    console.log("[Voice] AudioContext OK. State:", audioContext.state);
+                    
+                    const source = audioContext.createMediaStreamSource(stream);
+                    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+                    
+                    console.log("[Voice] Connecting WebSocket...");
+                    const socket = new WebSocket('ws://127.0.0.1:8006');
+                    G.socket = socket;
+                    
+                    socket.onopen = () => {
+                        console.log('✅ Voice WS Connected (onopen fired)');
+                        source.connect(processor);
+                        processor.connect(audioContext.destination);
+                        
+                        G.isRecording = true;
+                        if(btn) btn.classList.add('text-red-500', 'animate-pulse');
+                        
+                        // TEST EMIT immediately to prove channel works
+                        try {
+                            if(window.emitEvent) window.emitEvent('voice_data', '[DEBUG] Handshake');
+                            else if(typeof emitEvent === 'function') emitEvent('voice_data', '[DEBUG] Handshake');
+                            else console.warn("❌ emitEvent not found in onopen");
+                        } catch(e) { console.error("Emit fail:", e); }
+                    };
+                    
+                    processor.onaudioprocess = (e) => {
+                         // Only send if OPEN (1)
+                        if (socket.readyState === 1) {
+                            const data = e.inputBuffer.getChannelData(0);
+                            const ratio = audioContext.sampleRate / 16000;
+                            const len = Math.floor(data.length / ratio);
+                            const pcm = new Int16Array(len);
+                            for(let i=0; i<len; i++) {
+                                let s = Math.max(-1, Math.min(1, data[Math.floor(i*ratio)]));
+                                pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                            }
+                            socket.send(pcm.buffer);
+                        }
+                    };
+                    
+                    socket.onmessage = (event) => {
+                        console.log("[Voice] Raw Message:", event.data);
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (data.text) {
+                                console.log("🗣️ TX:", data.text);
+                                
+                                if (window.emitEvent) window.emitEvent('voice_data', data.text);
+                                else if (typeof emitEvent === 'function') emitEvent('voice_data', data.text);
+                                else console.error("CRITICAL: emitEvent missing during receive");
+                            }
+                        } catch(e) { console.error("Parse Error:", e); }
+                    };
+                    
+                    socket.onerror = (e) => {
+                        console.error("❌ WS Error:", e);
+                        alert("WebSocket Failure. See Console.");
+                    };
+                    
+                    socket.onclose = (e) => {
+                        console.warn("⚠️ WS Closed:", e.code, e.reason);
+                        G.isRecording = false;
+                        if(btn) btn.classList.remove('text-red-500', 'animate-pulse');
+                    };
+                    
+               } catch (err) {
+                    console.error("Setup Error:", err);
+                    alert("Setup Error: " + err.message);
+               }
+            }
+        };
+        
+        // 3. Execute
+        window.toggleVoiceStream();
+        """
+        ui.run_javascript(js_code)
             
     async def handle_council_mode(self, prompt: str):
         """Handle Council (Swarm) execution flow with UI visualization."""
@@ -409,7 +583,7 @@ class UIHandlers:
                  try:
                      # Use swarm endpoint
                      payload = {"message": prompt, "mode": "council"}
-                     url = "http://127.0.0.1:8002/api/chat/swarm"
+                     url = config.get_mgmt_url("/api/chat/swarm")
                      
                      # Offload request to avoid blocking UI loop
                      resp = await asyncio.to_thread(requests.post, url, json=payload, timeout=120)

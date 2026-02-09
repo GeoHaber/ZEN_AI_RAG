@@ -1,8 +1,0 @@
-Timestamp: Tue Feb  3 12:29:34 2026
-Traceback (most recent call last):
-  File "C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\zena.py", line 170, in <module>
-    from ui.layout import build_page
-  File "C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\ui\layout.py", line 12, in <module>
-    from ui.gallery_component import create_model_gallery # Using alias if needed, or direct import
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-ModuleNotFoundError: No module named 'ui.gallery_component'

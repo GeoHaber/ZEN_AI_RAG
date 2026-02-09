@@ -88,7 +88,7 @@ Edit `config.json` to customize settings:
 
 **Common settings:**
 - `enabled: true` - Enable Zena healthcare mode
-- `enabled: false` - Standard Nebula developer mode
+- `enabled: false` - Standard ZenAI developer mode
 - `language: "en"` - English (also supports: es, fr, he, hu, ro)
 
 ---

@@ -68,15 +68,20 @@ def print_banner():
 
 def check_connection():
     """Verify ZenAI is running."""
-    try:
-        r = requests.get(BASE_URL, timeout=2)
-        if r.status_code == 200:
-            print("✅ ZenAI is running at", BASE_URL)
-            return True
-    except Exception as e:
-        print(f"❌ Cannot connect to ZenAI: {e}")
-        print("   Make sure ZenAI is running: python zena.py")
-        return False
+    print(f"⏳ Waiting for ZenAI at {BASE_URL}...")
+    for i in range(20): # Try for 40 seconds
+        try:
+            r = requests.get(BASE_URL, timeout=5)
+            if r.status_code == 200:
+                print("✅ ZenAI is running at", BASE_URL)
+                return True
+        except Exception:
+            pass
+        time.sleep(2)
+        if i % 2 == 0: print(f"   ... attempting connection ({i*2}s)")
+    
+    print("❌ Cannot connect to ZenAI (Timeout)")
+    return False
 
 
 def trigger_click(element_id):

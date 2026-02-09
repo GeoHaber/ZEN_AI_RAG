@@ -20,7 +20,8 @@ class SwarmChatHandler:
         self.arbitrator = SwarmArbitrator(config={
             "enabled": True,
             "size": 3,
-            "timeout_per_expert": 45.0
+            "min_experts": 1,
+            "timeout_per_expert": 15.0
         })
         
     async def initialize(self):
@@ -44,11 +45,12 @@ class SwarmChatHandler:
 
             logger.info(f"🧠 [Council] Convening for: {user_msg[:50]}...")
             
+            import uuid
             # Create Request
             request = ArbitrationRequest(
+                id=str(uuid.uuid4()),
                 query=user_msg,
-                task_type=TaskType.COMPLEX_REASONING,
-                context={}
+                task_type=TaskType.REASONING.value
             )
             
             # Execute Consensus

@@ -443,7 +443,8 @@ class LocalRAG:
                         "url": c.metadata.get("url"),
                         "title": c.metadata.get("title"),
                         "text": chunk_text,
-                        "chunk_index": c.chunk_index
+                        "chunk_index": c.chunk_index,
+                        "metadata": doc.get("metadata", {}) 
                     })
         return all_chunks
 
@@ -488,14 +489,17 @@ class LocalRAG:
                         
                         point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
                         
+                        payload = {
+                            "text": text,
+                            "url": chunk.get("url"),
+                            "title": chunk.get("title"),
+                            "metadata": chunk.get("metadata", {})
+                        }
+                        
                         points.append(PointStruct(
                             id=point_id,
                             vector=embedding.tolist(),
-                            payload={
-                                "text": text,
-                                "url": chunk.get("url"),
-                                "title": chunk.get("title")
-                            }
+                            payload=payload
                         ))
                         
                         self.chunk_hashes.add(text_hash)
@@ -543,14 +547,17 @@ class LocalRAG:
                 
                 point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
                 
+                payload = {
+                     "text": text,
+                     "url": chunk.get("url"),
+                     "title": chunk.get("title"),
+                     "metadata": chunk.get("metadata", {})
+                }
+                
                 points.append(PointStruct(
                     id=point_id,
                     vector=embedding.tolist(),
-                    payload={
-                        "text": text,
-                        "url": chunk.get("url"),
-                        "title": chunk.get("title")
-                    }
+                    payload=payload
                 ))
                 
                 self.chunk_hashes.add(text_hash)
@@ -600,6 +607,7 @@ class LocalRAG:
                 "text": hit.payload.get("text"),
                 "url": hit.payload.get("url"),
                 "title": hit.payload.get("title"),
+                "metadata": hit.payload.get("metadata", {}),
                 "score": hit.score
             }
             for hit in hits
@@ -759,7 +767,14 @@ def generate_rag_response(
             break
         context_text += chunk_text
     
-    prompt = f"Context:\n{context_text}\n\nQuestion: {query}\n\nAnswer mentioning sources:"
+    prompt = (
+        f"You are a precise assistant. Use ONLY the following Context to answer the Question.\n"
+        f"If the answer is not in the Context, say 'I don't have that information in my sources'.\n"
+        f"Do not use outside knowledge.\n\n"
+        f"Context:\n{context_text}\n\n"
+        f"Question: {query}\n\n"
+        f"Answer:"
+    )
     
     for chunk in llm_backend.send_message(prompt):
         yield chunk

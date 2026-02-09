@@ -114,8 +114,16 @@ class TestRealRAGBreaking:
         cache_dir = tmp_path / "rag_test"
         cache_dir.mkdir()
         
+        # Force CPU to avoid 'meta tensor' errors during test concurrency
+        from config_system import config
+        original_gpu = config.rag.use_gpu
+        config.rag.use_gpu = False
+        
         rag = LocalRAG(cache_dir=cache_dir)
         yield rag
+        
+        # Restore
+        config.rag.use_gpu = original_gpu
         
         # Cleanup
         rag.close()
@@ -234,7 +242,8 @@ class TestRealRAGBreaking:
         
         # Search (should cache)
         results1 = rag_instance.search("secret password", k=3)
-        initial_cache_size = len(rag_instance._search_cache)
+        # New cache system uses SemanticCache object
+        initial_cache_size = len(rag_instance.cache._exact_cache) + len(rag_instance.cache._semantic_cache)
         assert initial_cache_size > 0, "Search should populate cache"
         
         # Add different doc
@@ -246,7 +255,7 @@ class TestRealRAGBreaking:
         rag_instance.build_index([doc2])
         
         # Cache should be cleared after build_index
-        cache_after_build = len(rag_instance._search_cache)
+        cache_after_build = len(rag_instance.cache._exact_cache) + len(rag_instance.cache._semantic_cache)
         assert cache_after_build == 0, f"Cache should be cleared after build_index, got {cache_after_build}"
         
         # Search again - should find from fresh query
@@ -466,7 +475,65 @@ class TestDataPersistence:
 
 
 # =============================================================================
-# MAIN
+# 8. MULTI-MODAL BREAKING (New)
 # =============================================================================
+class TestMultiModalBreaking:
+    """Break the shiny new Multi-modal features."""
+    
+    @pytest.fixture
+    def chunker(self):
+        from zena_mode.chunker import TextChunker
+        return TextChunker()
+
+    def test_pdf_extractor_garbage_binary(self, tmp_path):
+        """Feed random binary garbage to PDF extractor."""
+        from zena_mode.universal_extractor import UniversalExtractor, DocumentType
+        
+        # Create garbage file
+        garbage_path = tmp_path / "garbage.pdf"
+        garbage_path.write_bytes(os.urandom(1024 * 10)) # 10KB random junk
+        
+        extractor = UniversalExtractor(vision_enabled=False)
+        try:
+            # Should not crash, just return empty or error log
+            chunks, stats = extractor.process(garbage_path, document_type=DocumentType.PDF)
+            assert isinstance(chunks, list)
+            # Typically expects empty list or stats indicating failure
+        except Exception as e:
+            # Should catch internal PDF errors
+            pytest.fail(f"Extractor crashed on garbage PDF: {e}")
+
+    def test_email_ingestor_malformed_mbox(self, tmp_path):
+        """Feed corrupted MBOX."""
+        from zena_mode.email_ingestor import EmailIngestor
+        
+        bad_mbox = tmp_path / "corrupt.mbox"
+        with open(bad_mbox, "w") as f:
+             f.write("From nobody Fri Jan 1 00:00:00 1990\n")
+             f.write("Invalid Headers Here\n")
+             f.write("Body without blank line\n")
+        
+        ingestor = EmailIngestor()
+        try:
+            docs = ingestor.ingest(str(bad_mbox))
+            assert isinstance(docs, list)
+        except Exception as e:
+             pytest.fail(f"Ingestor crashed on bad MBOX: {e}")
+
+    def test_massive_file_handling(self, tmp_path):
+        """Create a 'large' dummy file and ensure no MemoryError."""
+        # 10MB dummy file
+        large_file = tmp_path / "large_dummy.txt"
+        with open(large_file, "wb") as f:
+            f.write(b"0" * (10 * 1024 * 1024))
+            
+        from zena_mode.universal_extractor import UniversalExtractor
+        extractor = UniversalExtractor(vision_enabled=False)
+        
+        # Should process or reject gracefully
+        chunks, stats = extractor.process(large_file)
+        assert isinstance(chunks, list)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short", "-x"])

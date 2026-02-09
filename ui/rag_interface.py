@@ -77,8 +77,12 @@ def setup_rag_dialog(app_state, ZENA_MODE, ZENA_CONFIG, locale, rag_system, Styl
                     # Mode selector with clear tabs
                     with ui.tabs().classes('w-full mb-4') as mode_tabs:
                         web_tab = ui.tab('website', label='🌐 Website')
+                        email_tab = ui.tab('email', label='📧 Email Archive')
                         dir_tab = ui.tab('directory', label='📁 Local Files')
                     
+                    # Bind tab value to state for access in start_scan
+                    mode_tabs.bind_value(app_state, 'rag_mode')
+
                     with ui.tab_panels(mode_tabs, value='website').classes('w-full'):
                         # Website Panel
                         with ui.tab_panel('website'):
@@ -88,6 +92,12 @@ def setup_rag_dialog(app_state, ZENA_MODE, ZENA_CONFIG, locale, rag_system, Styl
                                     ui.number('Max Pages', value=50, min=1, max=500).props('outlined dense').classes('w-24').bind_value(app_state, 'rag_max_pages')
                                     ui.label('pages to scan').classes('text-sm text-gray-400 self-center')
                         
+                        # Email Panel
+                        with ui.tab_panel('email'):
+                            with ui.column().classes('w-full gap-3'):
+                                ui.input('Archive Path (.mbox, .pst)', placeholder='C:/Users/Me/backup.pst').props('outlined').classes('w-full').bind_value(app_state, 'rag_email_path')
+                                ui.label('Supports: legacy formats (MBOX, PST, OST) from Outlook/Thunderbird.').classes('text-xs text-gray-400')
+
                         # Directory Panel
                         with ui.tab_panel('directory'):
                             with ui.column().classes('w-full gap-3'):
@@ -117,59 +127,108 @@ def setup_rag_dialog(app_state, ZENA_MODE, ZENA_CONFIG, locale, rag_system, Styl
                 content_container.visible = True
                 summary_container.clear()
 
+            from zena_mode.scraper import WebsiteScraper
+            from zena_mode.email_ingestor import EmailIngestor
+
             async def start_scan():
                 # Reset UI
-                content_container.visible = True
+                content_container.visible = False
                 progress_bar.visible = True
                 progress_bar.value = 0
-                progress_label.text = "🔍 Starting scan..."
+                progress_label.text = "🔍 Initializing..."
                 stats_label.text = ""
                 summary_container.clear()
                 
                 start_time = time.time()
+                mode = app_state.get('rag_mode', 'website')
+                
+                docs = []
                 
                 try:
-                    # Simulate progress
-                    # TODO: Call actual rag_system scan stats
-                    total_steps = 15
-                    for i in range(total_steps):
-                        await asyncio.sleep(0.2)
-                        progress_bar.value = (i + 1) / total_steps
-                        progress_label.text = f"📄 Processing file {i+1}/{total_steps}..."
-                        if i == 5: progress_label.text = "🖼️ Extracting images..."
-                        if i == 10: progress_label.text = "🧠 Generating embeddings..."
+                    if mode == 'website':
+                        url = app_state.get('rag_url', '')
+                        max_pages = int(app_state.get('rag_max_pages', 50))
+                        
+                        if not url:
+                            raise Exception("Please enter a valid URL")
 
-                    # Generate rich stats for summary
+                        # 1. SCRAPE WEBSITE
+                        progress_label.text = f"🌐 Scanning {url}..."
+                        
+                        def run_scraper_thread():
+                            scraper = WebsiteScraper(url)
+                            return scraper.scrape(max_pages=max_pages, progress_callback=None)
+
+                        result = await asyncio.to_thread(run_scraper_thread)
+                        if not result['success']:
+                             raise Exception(result.get('error', 'Unknown scraping error'))
+                        docs = result['documents']
+                        if not docs:
+                            raise Exception("No content found on website")
+
+                    elif mode == 'email':
+                        path = app_state.get('rag_email_path', '')
+                        if not path:
+                            raise Exception("Please enter an archive path")
+                        
+                        # 1. SCAN EMAIL
+                        progress_label.text = f"📧 Parsing email archive: {path}..."
+                        
+                        def run_email_thread():
+                            ingestor = EmailIngestor()
+                            return ingestor.ingest(path)
+                            
+                        docs = await asyncio.to_thread(run_email_thread)
+                        if not docs:
+                            raise Exception("No emails found or format unsupported")
+                    
+                    elif mode == 'directory':
+                        # Placeholder for directory logic if needed, or raise error
+                        raise Exception("Directory scan not fully wired in this snippet")
+
+                    progress_bar.value = 0.5
+                    progress_label.text = f"🧠 Indexing {len(docs)} items..."
+                    
+                    # 2. INDEX
+                    # rag_system is closed over from setup_rag_dialog scope
+                    if hasattr(rag_system, 'build_index_async'):
+                        await rag_system.build_index_async(docs)
+                    else:
+                        await asyncio.to_thread(rag_system.build_index, docs)
+                    
+                    # 3. STATS
                     elapsed = time.time() - start_time
-                    mock_stats = {
-                        'files': 42,
-                        'chunks': 1250,
-                        'images': 8,
-                        'total_size': '15.4 MB',
+                    progress_bar.value = 1.0
+                    
+                    # Calc breakdown
+                    breakdown = {}
+                    images = 0 # Scraper v2 doesn't count images separately yet, assume 0 or parse text tags
+                    total_chars = sum(len(d['content']) for d in docs)
+                    total_size = f"{total_chars / 1024:.1f} KB"
+                    
+                    breakdown['Web Pages'] = len(docs)
+                    
+                    real_stats = {
+                        'files': len(docs),
+                        'chunks': rag_system.ntotal if hasattr(rag_system, 'ntotal') else len(docs)*5, # Approx
+                        'images': images,
+                        'total_size': total_size,
                         'time_taken': elapsed,
-                        'breakdown': {
-                            'PDF Documents': 12,
-                            'Markdown / Text': 20,
-                            'Source Code': 5,
-                            'Images': 5
-                        }
+                        'breakdown': breakdown
                     }
                     
                     # Hide progress, show summary
                     progress_section.visible = False
-                    content_container.visible = False # Hide inputs on success
+                    content_container.visible = False 
                     
-                    render_rag_summary(mock_stats, summary_container, on_reset=reset_view, on_close=rag_dialog.close)
-                    
-                    ui.notify("Knowledge base updated!", color='positive')
-                    
-                    if 'user_input' in app_state and app_state.get('send_handler'):
-                        await asyncio.sleep(2)
-                        pass 
+                    render_rag_summary(real_stats, summary_container, on_reset=reset_view, on_close=rag_dialog.close)
+                    ui.notify(f"Successfully indexed {len(docs)} pages!", color='positive')
 
                 except Exception as e:
-                    progress_label.text = f"❌ Error: {str(e)[:50]}"
-                    progress_bar.visible = False
+                    progress_label.text = f"❌ Error: {str(e)}"
+                    ui.notify(f"Scan failed: {str(e)}", color='negative')
+                    # Don't hide progress so user sees error
+                    progress_bar.color = 'red'
             
             # Buttons (Footer, fixed padding)
             with ui.column().classes('w-full p-6 pt-2 border-t dark:border-slate-800'):

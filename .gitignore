@@ -50,3 +50,19 @@ old/
 *_log.txt
 results_log.txt
 benchmark_results.json
+
+# === Added by pip_spy_max ===
+*.~py
+*.~md
+*.~ini
+*.bak
+.pytest_cache/
+_archive/
+
+# === Added by pip_spy_max ===
+*.~py
+*.~md
+*.~ini
+*.bak
+.pytest_cache/
+_archive/

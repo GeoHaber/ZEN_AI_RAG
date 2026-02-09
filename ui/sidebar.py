@@ -146,6 +146,24 @@ def render_models(locale, actions, app_state, dialogs):
             app_state['model_select'] = None
             ui.separator().classes('my-2')
             
+            # FIFO memory controls
+            try:
+                from Local_LLM.metrics import FIFO_Memory
+                fifo = FIFO_Memory()
+                ui.label(f"Current FIFO Depth: {fifo.depth()}").classes('text-xs text-blue-600')
+                ui.button("Clear FIFO Memory", icon='delete', on_click=fifo.clear).classes('w-full text-xs text-red-600')
+            except Exception:
+                pass
+
+            # Prometheus metrics info
+            ui.label("Prometheus metrics available at http://localhost:8000").classes('text-xs text-green-600')
+
+            # Non-blocking CLI prompt
+            try:
+                from Local_LLM.cli_nonblocking import input_nonblocking
+                ui.button("Prompt User (Non-blocking)", icon='keyboard', on_click=lambda: ui.notify(f"User input: {input_nonblocking('Enter value:', timeout=5.0)}")).classes('w-full text-xs text-purple-600')
+            except Exception:
+                pass
             # Download Section
             with ui.expansion('📥 ' + locale.MODEL_DOWNLOAD_NEW, icon=Icons.DOWNLOAD).classes('w-full'):
                 with ui.column().classes('w-full gap-2 py-2'):

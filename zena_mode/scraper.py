@@ -54,12 +54,15 @@ def get_headers():
     }
 
 
+from utils import normalize_input
+
 class WebsiteScraper:
     def __init__(self, base_url: str):
-        self.base_url = base_url
+        # Normalize: "example.com" -> "https://example.com"
+        self.base_url = normalize_input(base_url)
         self.visited = set()
         self.documents = []
-        self.domain = urlparse(base_url).netloc
+        self.domain = urlparse(self.base_url).netloc
 
         # Initialize web scanner for pre-flight checks
         if WEB_SCANNER_AVAILABLE:
@@ -83,12 +86,14 @@ class WebsiteScraper:
         - Multi-layer junk removal
         """
         # 1. (Removed aggressive container selection to ensure we catch all sections like "Meet the Team")
-        # Pre-process images to preserve ALT text
-        for img in soup.find_all('img', alt=True):
-            alt_text = img['alt'].strip()
-            if alt_text:
-                # Replace image with its "visual" description for the LLM
-                img.replace_with(f" [Image: {alt_text}] ")
+        # Pre-process images to preserve ALT text and SRC
+        for img in soup.find_all('img', src=True):
+            alt_text = img.get('alt', '').strip()
+            src = img['src']
+            # Convert to absolute URL if needed (using soup's base or logic if available, but here we might need to handle it later or rely on src being mostly valid)
+            # Better: let's rely on the scraper's URL joining if possible, but here we are in clean_html. 
+            # We'll just generic markdown.
+            img.replace_with(f" ![{alt_text}]({src}) ")
 
         # 2. Remove unwanted tags
         for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe', 'form', 'button']):

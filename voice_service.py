@@ -217,13 +217,14 @@ class VoiceService:
     def synthesize_speech(self, text: str, speed: float = 1.0) -> bytes:
         """
         Convert text to speech using Piper TTS.
+        Optimized to use float32 PCM directly (no int16 conversion overhead).
         
         Args:
             text: Text to speak
             speed: Speech speed multiplier (1.0 = normal)
         
         Returns:
-            WAV audio data as bytes
+            WAV audio data as bytes (float32 PCM format for faster synthesis)
         """
         self.load_tts_model()
         
@@ -234,15 +235,33 @@ class VoiceService:
         audio_stream = io.BytesIO()
         
         try:
-            # Piper generates raw PCM audio
+            import numpy as np
+            
+            # Piper synthesize returns AudioChunk objects with audio_float_array (float32)
+            # Keep in float32 format - no conversion needed, browser Web Audio API handles it
+            audio_chunks = []
+            sample_rate = 22050
+            
+            for chunk in self.tts_model.synthesize(text):
+                # Use float32 directly - faster than converting to int16
+                if hasattr(chunk, 'audio_float_array'):
+                    audio_chunks.append(chunk.audio_float_array.tobytes())
+                    
+                    if hasattr(chunk, 'sample_rate'):
+                        sample_rate = chunk.sample_rate
+            
+            if not audio_chunks:
+                raise RuntimeError("TTS synthesize produced no audio chunks")
+            
+            # Concatenate all chunks
+            pcm_data = b''.join(audio_chunks)
+            
+            # Wrap in WAV format with float32 instead of int16 (FASTER - no conversion!)
             with wave.open(audio_stream, 'wb') as wav_file:
                 wav_file.setnchannels(1)  # Mono
-                wav_file.setsampwidth(2)  # 16-bit
-                wav_file.setframerate(22050)  # Piper default sample rate
-                
-                # Synthesize (Piper outputs raw PCM)
-                audio_bytes = self.tts_model.synthesize(text, length_scale=1.0/speed)
-                wav_file.writeframes(audio_bytes)
+                wav_file.setsampwidth(4)  # 32-bit float instead of 16-bit int (FASTER!)
+                wav_file.setframerate(sample_rate)
+                wav_file.writeframes(pcm_data)
             
             audio_stream.seek(0)
             return audio_stream.read()

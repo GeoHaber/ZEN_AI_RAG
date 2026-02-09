@@ -22,13 +22,13 @@ from config import LOG_FILE, HOST, BASE_DIR
 proc_name = str(getattr(sys.modules.get("__main__"), "__file__", "unknown"))
 
 if "start_llm.py" in proc_name:
-    CURRENT_LOG_FILE = BASE_DIR / "nebula_engine.log"
+    CURRENT_LOG_FILE = BASE_DIR / "zenai_engine.log"
     LOG_NAME = "ZenAIEngine"
 elif "Test_Chat.py" in proc_name:
-    CURRENT_LOG_FILE = BASE_DIR / "nebula_ui.log"
+    CURRENT_LOG_FILE = BASE_DIR / "zenai_ui.log"
     LOG_NAME = "ZenAIUI"
-elif "nebula_desktop.py" in proc_name:
-    CURRENT_LOG_FILE = BASE_DIR / "nebula_desktop.log"
+elif "zenai_desktop.py" in proc_name:
+    CURRENT_LOG_FILE = BASE_DIR / "zenai_desktop.log"
     LOG_NAME = "ZenAIDesktop"
 else:
     CURRENT_LOG_FILE = LOG_FILE
@@ -74,7 +74,7 @@ def safe_print(*args, level: str = "info", to_logger_when_debug: bool = True, **
         print(" ".join(safe_args), **kwargs)
 
     # 3. Optional Forwarding to Logger (Debug Mode Only)
-    debug_mode = os.environ.get("NEBULA_DEBUG", "") == "1"
+    debug_mode = os.environ.get("ZENAI_DEBUG", "") == "1"
     try:
         # Check config module if available
         from config import DEBUG as CONFIG_DEBUG

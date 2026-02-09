@@ -646,7 +646,7 @@ class UniversalExtractor:
         open_args = {"filename": str(input_data)} if isinstance(input_data, (str, Path)) else {"stream": input_data, "filetype": "pdf"}
         with fitz.open(**open_args) as doc:
             for page_num in range(len(doc)):
-                result = self._process_pdf_page(doc[page_num], page_num)
+                result = self._process_pdf_page(doc[page_num], page_num, doc)
                 if result:
                     results.append(result)
         return results
@@ -678,12 +678,12 @@ class UniversalExtractor:
             open_args = {"filename": str(input_data)} if isinstance(input_data, (str, Path)) else {"stream": input_data, "filetype": "pdf"}
             with fitz.open(**open_args) as doc:
                 page = doc.load_page(page_num)
-                return self._process_pdf_page(page, page_num)
+                return self._process_pdf_page(page, page_num, doc)
         except Exception as e:
             logger.warning(f"Worker error on page {page_num}: {e}")
             return None
 
-    def _process_pdf_page(self, page, page_num: int) -> Optional[Dict]:
+    def _process_pdf_page(self, page, page_num: int, doc) -> Optional[Dict]:
         """Core PDF page processing."""
         # 1. Try to find tables (Layout-Aware)
         table_markdown = ""
@@ -750,9 +750,42 @@ class UniversalExtractor:
             if table_markdown:
                 cleaned += table_markdown
             
+            # 3.5 Extract Images (Multi-modal RAG)
+            image_markdown = ""
+            try:
+                # Create output directory if it doesn't exist
+                # Note: We rely on the caller or zena.py to have created _static/rag_images, but safety first
+                img_dir = Path("_static/rag_images")
+                img_dir.mkdir(parents=True, exist_ok=True)
+
+                images = page.get_images(full=True)
+                for img_index, img in enumerate(images):
+                    xref = img[0]
+                    base_image = doc.extract_image(xref)
+                    image_bytes = base_image["image"]
+                    ext = base_image["ext"]
+                    
+                    # Deduplicate images by hash
+                    img_hash = hashlib.md5(image_bytes).hexdigest()
+                    img_filename = f"{img_hash}.{ext}"
+                    local_path = img_dir / img_filename
+                    
+                    # Save if new
+                    if not local_path.exists():
+                        with open(local_path, "wb") as f:
+                            f.write(image_bytes)
+                    
+                    # Skip extremely small icons/lines
+                    if len(image_bytes) > 2048: # > 2KB
+                        image_markdown += f"\n\n![PDF Image {img_index+1}](/rag_images/{img_filename})\n"
+                        self.stats.increment('image_files')
+
+            except Exception as e:
+                logger.debug(f"Image extraction failed on page {page_num}: {e}")
+
             return {
                 'page_num': page_num + 1,
-                'text': cleaned,
+                'text': cleaned + image_markdown,
                 'is_ocr': needs_ocr
             }
             

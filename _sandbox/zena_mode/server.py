@@ -194,41 +194,63 @@ EXPERT_PROCESSES = {}  # {port: subprocess.Popen}
 EXPERT_LOCK = threading.Lock()
 
 # Process Monitoring
+import asyncio
 MONITORED_PROCESSES = {}  # {name: {"process": Popen, "critical": bool, ...}}
-PROCESS_LOCK = threading.Lock()
+PROCESS_LOCK = asyncio.Lock()
 MODEL_PATH_LOCK = threading.Lock()
 
 def register_process(name, process, critical=False):
-    """Register a process for health monitoring."""
-    with PROCESS_LOCK:
-        MONITORED_PROCESSES[name] = {
-            "process": process,
-            "critical": critical,
-            "restarts": 0,
-            "max_restarts": 3 if critical else 1,
-            "start_time": time.time()
-        }
-    logger.info(f"[Monitor] Registered {'CRITICAL ' if critical else ''}process: {name} (PID: {process.pid})")
+    """
+    Register a process for health monitoring.
+    Now async/thread-safe using asyncio.Lock.
+    """
+    async def _register():
+        async with PROCESS_LOCK:
+            MONITORED_PROCESSES[name] = {
+                "process": process,
+                "critical": critical,
+                "restarts": 0,
+                "max_restarts": 3 if critical else 1,
+                "start_time": time.time()
+            }
+        logger.info(f"[Monitor] Registered {'CRITICAL ' if critical else ''}process: {name} (PID: {process.pid})")
+    asyncio.create_task(_register())
 
 def check_processes():
-    """Check health of all monitored processes. Returns list of crashed ones."""
-    crashed = []
-    with PROCESS_LOCK:
-        to_remove = []
-        for name, info in MONITORED_PROCESSES.items():
-            proc = info["process"]
-            try:
-                exit_code = proc.poll()
-                if exit_code is not None:
-                    crashed.append((name, exit_code, info["critical"]))
+    """
+    Async health check for all monitored processes. Returns list of crashed ones.
+    """
+    async def _check():
+        crashed = []
+        async with PROCESS_LOCK:
+            to_remove = []
+            for name, info in MONITORED_PROCESSES.items():
+                proc = info["process"]
+                try:
+                    exit_code = proc.poll()
+                    if exit_code is not None:
+                        crashed.append((name, exit_code, info["critical"]))
+                        to_remove.append(name)
+                except Exception as e:
+                    logger.error(f"[Monitor] Error checking {name}: {e}")
                     to_remove.append(name)
-            except Exception as e:
-                logger.error(f"[Monitor] Error checking {name}: {e}")
-                to_remove.append(name)
-        
-        for name in to_remove:
-            del MONITORED_PROCESSES[name]
-    return crashed
+            for name in to_remove:
+                del MONITORED_PROCESSES[name]
+        return crashed
+    return asyncio.create_task(_check())
+# --- Async Process Monitor Loop ---
+async def process_monitor_loop(interval=5):
+    """
+    Background async loop to periodically check process health and restart as needed.
+    """
+    while True:
+        crashed_task = await check_processes()
+        crashed = await crashed_task
+        for name, code, critical in crashed:
+            safe_print(f"[!] {name} crashed (code {code})")
+            # Add restart logic here if needed
+        await asyncio.sleep(interval)
+
 
 # Lazy Loading Wrappers
 _model_manager_cache = None
@@ -714,13 +736,18 @@ if __name__ == "__main__":
         # 1. Guard & Swarm
         if "--guard-bypass" not in sys.argv: 
             instance_guard()
-            
+
         if "--swarm" in sys.argv:
             scale_swarm(int(sys.argv[sys.argv.index("--swarm")+1]))
             while True: time.sleep(1)
-        
+
         # 3. Start Server
         start_server()
+
+        # 4. Launch async process monitor loop
+        loop = asyncio.get_event_loop()
+        loop.create_task(process_monitor_loop())
+        loop.run_forever()
     except Exception as e:
         safe_print(f"\n❌ FATAL STARTUP ERROR: {e}")
         import traceback

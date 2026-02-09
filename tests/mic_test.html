@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ZenAI Microphone Diagnostic</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .meter {
+            width: 100%;
+            height: 50px;
+            background: #333;
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .bar {
+            width: 0%;
+            height: 100%;
+            background: #00ff00;
+            transition: width 0.1s;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        #log {
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎤 Mic Diagnostic</h1>
+    <p>This test runs 100% in your browser. It checks if the browser can actually "hear" you.</p>
+
+    <select id="devices"></select>
+    <button onclick="start()">Start Test</button>
+
+    <div class="meter">
+        <div id="bar" class="bar"></div>
+    </div>
+    <div id="status">Status: Idle</div>
+    <div id="log"></div>
+
+    <script>
+        const log = (msg) => document.getElementById('log').innerText += msg + '\n';
+
+        async function getDevices() {
+            try {
+                const devs = await navigator.mediaDevices.enumerateDevices();
+                const sel = document.getElementById('devices');
+                devs.filter(d => d.kind === 'audioinput').forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.deviceId;
+                    opt.text = d.label || `Mic ${d.deviceId.slice(0, 5)}...`;
+                    sel.appendChild(opt);
+                });
+                log(`Found ${sel.options.length} microphones.`);
+            } catch (e) { log('Error listing devices: ' + e); }
+        }
+        getDevices();
+
+        async function start() {
+            try {
+                const deviceId = document.getElementById('devices').value;
+                const constraints = { audio: { deviceId: deviceId ? { exact: deviceId } : undefined } };
+
+                log('Requesting access...');
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                log('Access granted! Stream active.');
+                document.getElementById('status').innerText = 'Status: Listening... SPEAK NOW!';
+
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+                const analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                analyser.fftSize = 256;
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                function update() {
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                    const average = sum / dataArray.length;
+
+                    const pct = Math.min(100, average * 2); // Amplify for visibility
+                    document.getElementById('bar').style.width = pct + '%';
+
+                    requestAnimationFrame(update);
+                }
+                update();
+
+            } catch (e) {
+                log('CRITICAL ERROR: ' + e);
+                alert(e);
+            }
+        }
+    </script>
+</body>
+
+</html>

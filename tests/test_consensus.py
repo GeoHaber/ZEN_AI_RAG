@@ -36,27 +36,31 @@ def start_server():
         except:
             pass
         time.sleep(1)
-        print(".", end="", flush=True)
     return False
 
 def launch_expert():
     logger.info("🚀 Launching Expert (TinyLlama)...")
     try:
-        requests.post(SWARM_LAUNCH_URL, json={
+        resp = requests.post(SWARM_LAUNCH_URL, json={
             "model": "tinyllama-1.1b-chat.Q4_K_M.gguf", 
             "port": 8005
-        }, timeout=5)
-    except:
-        pass # Might already be running or accepted
+        }, timeout=10) # Increased timeout
+        logger.info(f"Launch Response: {resp.status_code} - {resp.text}")
+        if resp.status_code != 200:
+            return False
+    except Exception as e:
+        logger.error(f"❌ Launch Request Failed: {e}")
+        return False
     
     # Wait for ready
     import time
     for _ in range(60): # Increased timeout for expert launch
         try:
-            if requests.get(HEALTH_URL, timeout=1).status_code == 200:
+            if requests.get(HEALTH_URL, timeout=5).status_code == 200:
                 logger.info("✅ Expert Online")
                 return True
-        except:
+        except Exception as e:
+            if _ % 5 == 0: logger.warning(f"Health check failed: {e}")
             pass
         time.sleep(1)
         print("x", end="", flush=True)

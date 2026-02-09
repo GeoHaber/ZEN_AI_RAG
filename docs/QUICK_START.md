@@ -163,7 +163,7 @@ PRE-FLIGHT VALIDATION
 [*] Launching optimized llama.cpp...
     Layers: 0 | Threads: 8 | Ubatch: 512 | Port: 8001
 [*] Engine Active (PID: 12345)
-[*] Nebula Hub API listening on Port 8002
+[*] ZenAI Hub API listening on Port 8002
 [*] Launching Zena AI (NiceGUI)...
 ```
 

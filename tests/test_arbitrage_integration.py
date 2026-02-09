@@ -19,11 +19,14 @@ class TestArbitrageIntegration:
     """Test enhanced arbitrage maintains backward compatibility."""
 
     @pytest.fixture
-    def mock_config(self):
-        """Mock config_system.config."""
+    def mock_config(self, tmp_path):
+        """Mock config_system.config with proper DB path."""
         with patch('zena_mode.arbitrage.config') as mock_cfg:
             mock_cfg.SWARM_ENABLED = True
             mock_cfg.SWARM_SIZE = 4
+            mock_cfg.llm_port = 8001
+            mock_cfg.host = "127.0.0.1"
+            mock_cfg.BASE_DIR = tmp_path  # Fixes DB Init Error
             yield mock_cfg
 
     def test_get_arbitrator_factory(self, mock_config):
@@ -161,11 +164,14 @@ class TestDiscoveryCompatibility:
     """Test discovery_swarm backward compatibility."""
 
     @pytest.fixture
-    def mock_config_disabled(self):
+    def mock_config_disabled(self, tmp_path):
         """Mock config with swarm disabled."""
         with patch('zena_mode.arbitrage.config') as mock_cfg:
             mock_cfg.SWARM_ENABLED = False
             mock_cfg.SWARM_SIZE = 0
+            mock_cfg.llm_port = 8001
+            mock_cfg.host = "127.0.0.1"
+            mock_cfg.BASE_DIR = tmp_path
             yield mock_cfg
 
     def test_discover_swarm_when_disabled(self, mock_config_disabled):
@@ -175,11 +181,14 @@ class TestDiscoveryCompatibility:
         assert len(arb.endpoints) == 1
 
     @pytest.fixture
-    def mock_config_enabled(self):
+    def mock_config_enabled(self, tmp_path):
         """Mock config with swarm enabled."""
         with patch('zena_mode.arbitrage.config') as mock_cfg:
             mock_cfg.SWARM_ENABLED = True
             mock_cfg.SWARM_SIZE = 4
+            mock_cfg.llm_port = 8001
+            mock_cfg.host = "127.0.0.1"
+            mock_cfg.BASE_DIR = tmp_path
             yield mock_cfg
 
     @pytest.mark.asyncio

@@ -1,4 +1,94 @@
 # -*- coding: utf-8 -*-
+# This is a new section for auto-install and self-check logic
+
+import subprocess
+import sys
+import os
+
+def check_and_install_requirements(requirements_path):
+    """Ensure all requirements are installed before app startup."""
+    try:
+        # Check if pip is available
+        subprocess.run([sys.executable, '-m', 'pip', '--version'], check=True, stdout=subprocess.DEVNULL)
+    except Exception:
+        print("❌ FATAL: pip not found. Please install pip.")
+        sys.exit(1)
+
+    print(f"🔍 Checking and installing dependencies from {requirements_path}...")
+    try:
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', requirements_path], check=True)
+        print("✅ Dependencies are up to date.")
+    except subprocess.CalledProcessError:
+        print("❌ FATAL: Failed to install dependencies from requirements.txt.")
+        sys.exit(1)
+# Find requirements.txt (prefer _sandbox/requirements.txt)
+def find_requirements_file():
+    candidates = [
+        os.path.join(os.path.dirname(__file__), 'requirements.txt'),
+        os.path.join(os.path.dirname(__file__), '_sandbox', 'requirements.txt'),
+        os.path.join(os.path.dirname(__file__), '_legacy_audit', 'requirements.txt'),
+        os.path.join(os.path.dirname(__file__), 'docs', 'requirements.txt'),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    print("❌ FATAL: requirements.txt not found.")
+    sys.exit(1)
+
+# Run self-check before app startup
+from zena_mode.resource_detect import HardwareProfiler
+profile = HardwareProfiler.get_profile()
+print(f"[Hardware] Detected: {profile['type']} | RAM: {profile['ram_gb']}GB | VRAM: {profile['vram_mb']}MB | Threads: {profile['threads']}")
+
+# Select requirements file or patch requirements for hardware
+requirements_path = find_requirements_file()
+
+# Patch requirements for GPU/CPU-specific libraries
+def patch_requirements_for_hardware(req_path, hw_type):
+    with open(req_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    patched = []
+    for line in lines:
+        pkg = line.strip().lower()
+        # Remove irrelevant GPU/NPU packages
+        if hw_type == 'AMD':
+            if 'cuda' in pkg or 'nvidia' in pkg:
+                continue
+        elif hw_type == 'NVIDIA':
+            if 'rocm' in pkg or 'amd' in pkg:
+                continue
+        elif hw_type == 'CPU':
+            if 'cuda' in pkg or 'nvidia' in pkg or 'rocm' in pkg or 'amd' in pkg or 'directml' in pkg:
+                continue
+        patched.append(line)
+
+    # Add best acceleration library for detected hardware
+    accel_libs = []
+    if hw_type == 'NVIDIA':
+        accel_libs = ['onnxruntime-gpu', 'torch', 'torchvision', 'torchaudio']
+    elif hw_type == 'AMD':
+        accel_libs = ['onnxruntime-rocm', 'torch', 'torchvision', 'torchaudio']
+    elif hw_type == 'CPU':
+        accel_libs = ['onnxruntime', 'torch', 'torchvision', 'torchaudio']
+    # DirectML: Windows, any GPU/NPU
+    if sys.platform == 'win32' and hw_type in ['NVIDIA', 'AMD', 'CPU']:
+        accel_libs.append('onnxruntime-directml')
+
+    # Avoid duplicates
+    patched_pkgs = set([l.strip().lower() for l in patched if l.strip() and not l.strip().startswith('#')])
+    for lib in accel_libs:
+        if lib not in patched_pkgs:
+            patched.append(lib + '\n')
+
+    # Write patched requirements to a temp file
+    patched_path = req_path + '.patched'
+    with open(patched_path, 'w', encoding='utf-8') as f:
+        f.writelines(patched)
+    return patched_path
+
+patched_requirements = patch_requirements_for_hardware(requirements_path, profile['type'])
+check_and_install_requirements(patched_requirements)
+# -*- coding: utf-8 -*-
 """
 start_llm.py - ZenAI Orchestrator
 =================================
@@ -96,29 +186,11 @@ def atomic_update_check():
             if not exe_path.exists() and bak_path.exists():
                 os.rename(bak_path, exe_path)
 
-def tune_hardware():
-    """Profiles hardware and sets optimal engine parameters."""
-    safe_print(f"{EMOJI['search']} Profiling hardware for optimal performance...")
-    profile = HardwareProfiler.get_profile()
-    
-    # Logic: 4 threads min, Cores-2 if plentiful. 
-    # Nitro Mode: Increase batch if AVX2/AVX512 (handled by llama-server natively, but we logs it)
-    config.threads = max(4, profile['threads'] - 2)
-    
-    # GPU Offloading
-    if profile['type'] == "NVIDIA":
-        config.gpu_layers = 33 # Full offload for 7B on most modern cards
-        safe_print(f"{EMOJI['robot']} NVIDIA GPU Detected. Enabling hardware acceleration.")
-    elif profile['type'] == "AMD":
-        config.gpu_layers = 1 # Minimal offload for stability
-        safe_print(f"{EMOJI['robot']} AMD GPU Detected. Using Vulkan/ROCm fallback.")
-    else:
-        config.gpu_layers = 0
-        safe_print(f"{EMOJI['robot']} CPU-only mode. Threads optimized to {config.threads}.")
+# Hardware tuning moved to zena_mode.heart_and_brain.ZenHeart
 
 async def main():
     try:
-        safe_print(f"\n{EMOJI['sparkles']} ZenAI v3.1 Orchestrator Starting...")
+        safe_print(f"\n{EMOJI['sparkles']} ZenAI v3.1 Orchestrator Starting...\n")
         
         # 1. Clean up "Zombies"
         try:
@@ -135,8 +207,7 @@ async def main():
         # 3. Update Engine if needed
         atomic_update_check()
         
-        # 4. Tune Hardware
-        tune_hardware()
+        # 4. Tune Hardware (Handled by ZenHeart)
         
         # 5. Launch Backend Engine
         from zena_mode import server
@@ -151,7 +222,15 @@ async def main():
         if se.code != 0:
             safe_print(f"{EMOJI['error']} System Exit with code {se.code}")
             time.sleep(5)
-            input("Press Enter to exit...")
+            # Keep the window open if running in a standalone terminal
+            if sys.stdin and sys.stdin.isatty():
+                try:
+                    input("Press Enter to exit...")
+                except (EOFError, KeyboardInterrupt):
+                    pass
+            else:
+                # If no terminal (e.g. background process), just log and exit
+                logger.info("Non-interactive mode detected, exiting.")
         sys.exit(se.code)
     except Exception as e:
         logger.error(f"Orchestrator Fatal Error: {e}", exc_info=True)
@@ -167,6 +246,9 @@ async def main():
         safe_print(f"{EMOJI['info']} Cleaning up processes...")
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
+    
     import asyncio
     try:
         asyncio.run(main())
