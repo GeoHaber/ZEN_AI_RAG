@@ -66,3 +66,8 @@ _archive/
 *.bak
 .pytest_cache/
 _archive/
+_docs/
+_Extra_files/
+_legacy_audit/
+_sandbox/
+docs/

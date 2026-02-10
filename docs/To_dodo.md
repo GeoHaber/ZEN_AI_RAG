@@ -1,6 +1,0 @@
-Add  a menu Batch bach job think about the implementation Create a prompt " read anlyze and code review these file " and then add a list of files pick and plus or a directory .. all teh analisis tehn is writen to a file filename _zena_analisis
-Scan the library of models and llama.cpp in the backround as start to chek if newer versions exist and get them and also in the backround research on hugungface and other placed what new amazing models exist for diferent tasks. Categorize model experize so thet we can create a group of experts in a fiels for swarm decisions plus RAged swarm storage to lower halucinations for this mabe think about similarity of reponses from the varuious experts when comparing results .. just leke people when giving opinions sometimes say teh same thing in diferent ways
-it important to have Expets in various fields" predefined 
-the local small model the dispacher  with local RAg somehoe have to colaborate and be extremly fast
-lets enhance teh mesages from Claude to distract teh user and give proff or work and a keep teh user engaged .. important for ui
-Create animation for ZEna when thinking face scratching head and a few more cool distractions with short mesages i am thinkig yes a few more minutes etcc makethem language depandent ..
