@@ -18,6 +18,31 @@ from utils import (
 )
 from config_system import config
 
+# --- Core Architecture (optional — graceful fallback) ---
+try:
+    from Core import (
+        QueryRequest, QueryResponse, StatusResponse,
+        ResponseStatus, ZenAIError, ConfigurationError,
+    )
+    from Core.services import LLMService, RAGService
+    _CORE_AVAILABLE = True
+except ImportError:
+    _CORE_AVAILABLE = False
+
+# --- Adapter Layer (optional) ---
+try:
+    from adapter_factory import create_adapter
+    _ADAPTERS_AVAILABLE = True
+except ImportError:
+    _ADAPTERS_AVAILABLE = False
+
+# --- RAG Integration (optional) ---
+try:
+    from rag_integration import get_rag
+    _RAG_AVAILABLE = True
+except ImportError:
+    _RAG_AVAILABLE = False
+
 # --- Core Modules ---
 from zena_mode.heart_and_brain import zen_heart
 from zena_mode.handlers import (
