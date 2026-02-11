@@ -1,0 +1,28 @@
+# ZenAI Core — Compiled Distribution
+#
+# Build:
+#     python dist_build/build_wheel.py
+#
+# This produces:
+#     dist_build/dist/zenai_core-1.0.0-cp3XX-win_amd64.whl
+#
+# Collaborators install with:
+#     pip install zenai_core-1.0.0-cp311-cp311-win_amd64.whl[full]
+#
+# What's inside the wheel:
+#     rag_core/       → Compiled RAG engine (.pyd, not .py)
+#     local_llm/      → Compiled LLM management (.pyd)
+#     Core/           → Compiled models + services (.pyd)
+#     zenai_adapters/ → Compiled adapter layer (.pyd)
+#
+# No source code is distributed. Only __init__.py stubs
+# (for package discovery) and native .pyd/.so binaries.
+#
+# Prerequisites for building (not for installing):
+#     pip install cython setuptools wheel
+#     Visual Studio Build Tools (C++ desktop workload)
+#
+# Optional runtime deps (install as extras):
+#     pip install zenai_core[full]     # everything
+#     pip install zenai_core[rag]      # RAG only
+#     pip install zenai_core[llm]      # LLM only

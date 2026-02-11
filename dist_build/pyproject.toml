@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "cython>=3.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zenai_core"
+version = "1.0.0"
+description = "ZenAI Core Libraries — RAG engine, LLM adapters, model management (compiled)"
+readme = "README"
+requires-python = ">=3.10"
+
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+full = [
+    "sentence-transformers>=3.0.0",
+    "rank-bm25>=0.2.2",
+    "torch>=2.0",
+    "qdrant-client>=1.7",
+    "psutil>=5.9",
+    "httpx>=0.24",
+]
+rag = [
+    "sentence-transformers>=3.0.0",
+    "rank-bm25>=0.2.2",
+    "qdrant-client>=1.7",
+]
+llm = [
+    "psutil>=5.9",
+    "httpx>=0.24",
+]
