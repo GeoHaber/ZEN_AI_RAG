@@ -158,13 +158,15 @@ To use audio injection in the UI:
    
    class InjectableVoiceManager(VoiceManager):
        def record_audio(self, duration=3.0, **kwargs):
-           if self.inject_audio:  # Test mode
-               return RecordingResult(
-                   success=True,
-                   audio_data=self.inject_audio,
-                   duration=duration,
-                   sample_rate=16000
-               )
+           if not self.inject_audio:
+               return
+
+           return RecordingResult(
+               success=True,
+               audio_data=self.inject_audio,
+               duration=duration,
+               sample_rate=16000
+           )
            return super().record_audio(duration, **kwargs)
    ```
 

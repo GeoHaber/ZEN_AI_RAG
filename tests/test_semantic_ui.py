@@ -7,6 +7,7 @@ from ui.registry import UI_METADATA
 
 @pytest.mark.asyncio
 async def test_semantic_audit_logic():
+    """Test semantic audit logic."""
     # Setup mock backend
     mock_backend = MagicMock()
     

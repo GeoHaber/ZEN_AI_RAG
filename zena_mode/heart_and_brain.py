@@ -5,16 +5,13 @@ heart_and_brain.py - The Core Logic of ZenAI
 The "Heart" manages the Engine's pulse (Life, Restart, Recovery).
 The "Brain" manages the Model's logic (Paths, Swarm, Experts).
 """
-import os
 import sys
 import time
-import asyncio
 import logging
-import psutil
 import requests
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 
 # Internal Imports
 from config_system import config, EMOJI
@@ -34,6 +31,7 @@ class LogRelay(threading.Thread):
     Hardened: Uses chunk-based reading.
     """
     def __init__(self, process, prefix="[Engine]", chunk_size=1024):
+        """Initialize instance."""
         super().__init__(daemon=True)
         self.process = process
         self.prefix = prefix
@@ -43,6 +41,7 @@ class LogRelay(threading.Thread):
         self.buffer_lock = threading.Lock()
 
     def run(self):
+        """Run."""
         try:
             while not self._stop_event.is_set():
                 if not self.process: break
@@ -60,8 +59,8 @@ class LogRelay(threading.Thread):
                             self.last_lines.append(text.strip())
                             if len(self.last_lines) > 20: self.last_lines.pop(0)
                         safe_print(f"{self.prefix} {text}", end="")
-                except: pass
-        except: pass
+                except Exception: pass
+        except Exception: pass
 
 class ZenHeart:
     """
@@ -72,6 +71,7 @@ class ZenHeart:
     - Blood Pressure: Manage Hardware/VRAM
     """
     def __init__(self):
+        """Initialize instance."""
         self.server_process: Optional[subprocess.Popen] = None
         self.server_relay: Optional[LogRelay] = None
         self.monitored_pids: Dict[int, str] = {}
@@ -126,52 +126,77 @@ class ZenHeart:
             
             time.sleep(2)
 
+def _do_do_ignite_setup_setup():
+    """Helper: setup phase for _do_ignite_setup."""
+
+
+    # 1. Sense Hardware
+    profile = HardwareProfiler.get_profile()
+    config.host = "127.0.0.1" # Always bind all for docker/local friendliness
+
+    # 2. Tune Hardware (VRAM Governor)
+    gpu_layers = config.gpu_layers
+    if profile['type'] == "NVIDIA" and config.gpu_layers == -1:
+        # Iron-Clad Governor: Free VRAM - 500MB
+        safe_vram = max(0, profile['free_vram_mb'] - 500)
+        if safe_vram < 500:
+            gpu_layers = 0 
+        else:
+            gpu_layers = min(99, int(safe_vram / 120))
+        safe_print(f"{EMOJI['hardware']} Nvidia Governor: {profile['free_vram_mb']}MB Free -> {gpu_layers} layers safe.")
+
+    elif profile['type'] == "AMD" and config.gpu_layers == -1:
+         # Standard Governor: 70% of Total VRAM
+         safe_vram = int(profile['vram_mb'] * 0.70)
+         gpu_layers = max(0, int(safe_vram / 120))
+         safe_print(f"{EMOJI['hardware']} AMD Governor: {profile['vram_mb']}MB Total -> {gpu_layers} layers (est).")
+
+    # 3. CPU Threading
+    threads = max(1, profile['threads'] - 1)
+
+    # 4. Construct Command
+    model_path = config.MODEL_DIR / config.default_model
+    cmd = [
+        str(config.BIN_DIR / "llama-server.exe"),
+        "--model", str(model_path),
+        "--host", config.host,
+        "--port", str(config.llm_port),
+        "--n-gpu-layers", str(gpu_layers),
+        "--threads", str(threads),
+        "--ctx-size", str(config.context_size),
+        "--batch-size", str(config.batch_size),
+        "--parallel", str(getattr(config, 'parallel', 1)), # Safe fallback
+        "--log-disable", # We handle logs via pipe
+    ]
+
+    logger.info(f"Igniting Engine: {' '.join(cmd)}")
+
+    return cmd
+
+    return cmd
+
+
+def _do_ignite_setup_part1():
+    """Do ignite setup part 1."""
+
+
+    def flatline(self):
+        """Kill the engine (Process Death)."""
+        if self.server_process:
+            ProcessManager.kill_tree(self.server_process.pid)
+            self.server_process = None
+
+
+def _do_ignite_setup():
+    """Helper: setup phase for ignite."""
+    _do_do_ignite_setup_setup()
+
     def ignite(self):
         """
         Starts the llama-server engine with optimal hardware settings.
         Replaces the logic formerly in start_llm.py
         """
-        # 1. Sense Hardware
-        profile = HardwareProfiler.get_profile()
-        config.host = "0.0.0.0" # Always bind all for docker/local friendliness
-        
-        # 2. Tune Hardware (VRAM Governor)
-        gpu_layers = config.gpu_layers
-        if profile['type'] == "NVIDIA" and config.gpu_layers == -1:
-            # Iron-Clad Governor: Free VRAM - 500MB
-            safe_vram = max(0, profile['free_vram_mb'] - 500)
-            if safe_vram < 500:
-                gpu_layers = 0 
-            else:
-                gpu_layers = min(99, int(safe_vram / 120))
-            safe_print(f"{EMOJI['hardware']} Nvidia Governor: {profile['free_vram_mb']}MB Free -> {gpu_layers} layers safe.")
-
-        elif profile['type'] == "AMD" and config.gpu_layers == -1:
-             # Standard Governor: 70% of Total VRAM
-             safe_vram = int(profile['vram_mb'] * 0.70)
-             gpu_layers = max(0, int(safe_vram / 120))
-             safe_print(f"{EMOJI['hardware']} AMD Governor: {profile['vram_mb']}MB Total -> {gpu_layers} layers (est).")
-        
-        # 3. CPU Threading
-        threads = max(1, profile['threads'] - 1)
-        
-        # 4. Construct Command
-        model_path = config.MODEL_DIR / config.default_model
-        cmd = [
-            str(config.BIN_DIR / "llama-server.exe"),
-            "--model", str(model_path),
-            "--host", config.host,
-            "--port", str(config.llm_port),
-            "--n-gpu-layers", str(gpu_layers),
-            "--threads", str(threads),
-            "--ctx-size", str(config.context_size),
-            "--batch-size", str(config.batch_size),
-            "--parallel", str(getattr(config, 'parallel', 1)), # Safe fallback
-            "--log-disable", # We handle logs via pipe
-        ]
-
-        logger.info(f"Igniting Engine: {' '.join(cmd)}")
-        
+        cmd = _do_ignite_setup()
         # 5. Guard: Clean port
         if is_port_active(config.llm_port):
              ProcessManager.prune(ports=[config.llm_port], auto_confirm=True)
@@ -218,12 +243,7 @@ class ZenHeart:
         
         self.health_checks_failed += 1
         return False
-
-    def flatline(self):
-        """Kill the engine (Process Death)."""
-        if self.server_process:
-            ProcessManager.kill_tree(self.server_process.pid)
-            self.server_process = None
+    _do_ignite_setup_part1()
 
 # Global Singleton
 zen_heart = ZenHeart()

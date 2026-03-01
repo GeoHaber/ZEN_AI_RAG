@@ -14,6 +14,7 @@ HEALTH_URL = "http://127.0.0.1:8005/health"
 SERVER_PROC = None
 
 def start_server():
+    """Start server."""
     global SERVER_PROC
     import subprocess
     import sys
@@ -33,12 +34,13 @@ def start_server():
             if requests.get("http://127.0.0.1:8002/health", timeout=1).status_code == 200:
                 logger.info("✅ Server Online")
                 return True
-        except:
+        except Exception:
             pass
         time.sleep(1)
     return False
 
 def launch_expert():
+    """Launch expert."""
     logger.info("🚀 Launching Expert (TinyLlama)...")
     try:
         resp = requests.post(SWARM_LAUNCH_URL, json={
@@ -67,6 +69,7 @@ def launch_expert():
     return False
 
 def test_consensus():
+    """Test consensus."""
     if not start_server():
         logger.error("❌ Failed to start server in time")
         if SERVER_PROC: SERVER_PROC.kill()

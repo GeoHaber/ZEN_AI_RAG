@@ -230,8 +230,9 @@ def test_element_contrast(element: Dict, mode: str) -> Dict:
         'issue': issue
     }
 
-def run_contrast_tests():
-    """Run contrast tests on all elements in both modes."""
+def _do_run_contrast_tests_setup():
+    """Helper: setup phase for run_contrast_tests."""
+
     print("=" * 80)
     print("VISUAL CONTRAST & VISIBILITY TESTING")
     print("=" * 80)
@@ -281,6 +282,12 @@ def run_contrast_tests():
     print()
     print("=" * 80)
 
+    return results
+
+
+def run_contrast_tests():
+    """Run contrast tests on all elements in both modes."""
+    results = _do_run_contrast_tests_setup()
     # Summary
     light_fail = [r for r in results['light'] if r['status'] == 'FAIL']
     dark_fail = [r for r in results['dark'] if r['status'] == 'FAIL']

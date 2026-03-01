@@ -31,6 +31,65 @@ class RealWorldTester:
         self.results = []
         self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+def _test_site_part1_part2_part4(self):
+    """Test site part1 part2 part 4."""
+
+
+    scan_matches_expected = (
+        result.get("scan", {}).get("can_crawl") == expected_crawlable
+    )
+
+    if scan_matches_expected:
+        print(f"   ✅ Scanner prediction CORRECT")
+        result["evaluation"] = "correct"
+    else:
+        print(f"   ⚠️  Scanner prediction UNEXPECTED")
+        result["evaluation"] = "unexpected"
+
+    # User guidance
+    print(f"\n💡 User Guidance")
+    print("-" * 40)
+
+    if not result.get("scan", {}).get("can_crawl", True):
+        reason = result.get("scan", {}).get("reason", "")
+        protection = result.get("scan", {}).get("bot_protection")
+
+        if "robots.txt" in reason:
+            print("   📋 This site blocks automated access via robots.txt")
+            print("   💡 Recommendation: Use manual copy-paste or API access")
+        elif protection == "Cloudflare":
+            print("   🛡️  Cloudflare protection detected")
+            print("   💡 Recommendation: Use browser automation (Playwright/Selenium)")
+        elif protection and "LinkedIn" in protection:
+            print("   🛡️  LinkedIn high-precision filtering")
+            print("   💡 Recommendation: Use LinkedIn API or export data manually")
+        elif "403" in reason or "Forbidden" in reason:
+            print("   🚫 Site returns 403 Forbidden")
+            print("   💡 Recommendation: Check if login is required or use alternative source")
+        elif "429" in reason or "Rate" in reason:
+            print("   ⏱️  Rate limit detected")
+            print("   💡 Recommendation: Try again later or slow down requests")
+        else:
+            print(f"   ⚠️  Blocked: {reason}")
+            print("   💡 Recommendation: Manual content extraction or authenticated access")
+
+    elif result.get("scrape", {}).get("success"):
+        print("   ✅ Site successfully scraped!")
+        print("   💡 Content indexed and ready for RAG queries")
+    else:
+        print("   ⚠️  Scraping encountered issues")
+        if result.get("scrape", {}).get("warning"):
+            print(f"   Warning: {result['scrape']['warning']}")
+
+    self.results.append(result)
+    return result
+
+
+def _test_site_part1_part2(self, url):
+    """Test site part1 part 2."""
+
+
+
     async def test_site(self, url: str, expected_crawlable: bool, category: str):
         """
         Test a single site and document results.
@@ -87,103 +146,13 @@ class RealWorldTester:
         # Phase 2: Actual scraping attempt (only if scan passed or we want to test anyway)
         print(f"\n📝 Phase 2: Scraping Attempt")
         print("-" * 40)
+        _test_site_part1(self, url)
+    _test_site_part1_part2_part4(self)
 
-        if scan_report and not scan_report.can_crawl:
-            print(f"   ⏭️  SKIPPED - Pre-flight scan blocked")
-            result["scrape"] = {"skipped": True, "reason": "pre-flight_blocked"}
-        else:
-            scraper = WebsiteScraper(url)
-            try:
-                scrape_result = scraper.scrape(max_pages=3)  # Just 3 pages for testing
 
-                result["scrape"] = {
-                    "success": scrape_result["success"],
-                    "documents_count": len(scrape_result.get("documents", [])),
-                    "stats": scrape_result.get("stats", {}),
-                    "error": scrape_result.get("error"),
-                    "warning": scrape_result.get("warning"),
-                    "failed_urls_count": len(scrape_result.get("failed_urls", []))
-                }
+def _test_site_part1_part3(self):
+    """Test site part1 part 3."""
 
-                if scrape_result["success"]:
-                    stats = scrape_result["stats"]
-                    print(f"   ✅ SUCCESS")
-                    print(f"   📄 Pages Saved: {stats['total_saved']}/{stats['total_visited']}")
-                    print(f"   ⏱️  Total Time: {stats['total_time']:.2f}s")
-                    print(f"   ⚡ Avg/Page: {stats['avg_time_per_page']:.2f}s")
-
-                    if scrape_result.get("warning"):
-                        print(f"   ⚠️  Warning: {scrape_result['warning']}")
-
-                    # Show sample content
-                    if scrape_result["documents"]:
-                        first_doc = scrape_result["documents"][0]
-                        content_preview = first_doc["content"][:200]
-                        print(f"\n   📄 Sample Content:")
-                        print(f"      Title: {first_doc.get('title', 'N/A')}")
-                        print(f"      Preview: {content_preview}...")
-                else:
-                    print(f"   ❌ FAILED")
-                    print(f"   Reason: {scrape_result.get('error', 'Unknown')}")
-                    if scrape_result.get("protection"):
-                        print(f"   🛡️  Protection: {scrape_result['protection']}")
-
-            except Exception as e:
-                print(f"   ❌ Scraping exception: {e}")
-                result["scrape"] = {"error": str(e)}
-
-        # Evaluation
-        print(f"\n📊 Evaluation")
-        print("-" * 40)
-
-        scan_matches_expected = (
-            result.get("scan", {}).get("can_crawl") == expected_crawlable
-        )
-
-        if scan_matches_expected:
-            print(f"   ✅ Scanner prediction CORRECT")
-            result["evaluation"] = "correct"
-        else:
-            print(f"   ⚠️  Scanner prediction UNEXPECTED")
-            result["evaluation"] = "unexpected"
-
-        # User guidance
-        print(f"\n💡 User Guidance")
-        print("-" * 40)
-
-        if not result.get("scan", {}).get("can_crawl", True):
-            reason = result.get("scan", {}).get("reason", "")
-            protection = result.get("scan", {}).get("bot_protection")
-
-            if "robots.txt" in reason:
-                print("   📋 This site blocks automated access via robots.txt")
-                print("   💡 Recommendation: Use manual copy-paste or API access")
-            elif protection == "Cloudflare":
-                print("   🛡️  Cloudflare protection detected")
-                print("   💡 Recommendation: Use browser automation (Playwright/Selenium)")
-            elif protection and "LinkedIn" in protection:
-                print("   🛡️  LinkedIn high-precision filtering")
-                print("   💡 Recommendation: Use LinkedIn API or export data manually")
-            elif "403" in reason or "Forbidden" in reason:
-                print("   🚫 Site returns 403 Forbidden")
-                print("   💡 Recommendation: Check if login is required or use alternative source")
-            elif "429" in reason or "Rate" in reason:
-                print("   ⏱️  Rate limit detected")
-                print("   💡 Recommendation: Try again later or slow down requests")
-            else:
-                print(f"   ⚠️  Blocked: {reason}")
-                print("   💡 Recommendation: Manual content extraction or authenticated access")
-
-        elif result.get("scrape", {}).get("success"):
-            print("   ✅ Site successfully scraped!")
-            print("   💡 Content indexed and ready for RAG queries")
-        else:
-            print("   ⚠️  Scraping encountered issues")
-            if result.get("scrape", {}).get("warning"):
-                print(f"   Warning: {result['scrape']['warning']}")
-
-        self.results.append(result)
-        return result
 
     def generate_report(self):
         """Generate comprehensive test report."""
@@ -250,6 +219,61 @@ class RealWorldTester:
         print(f"\n💾 Full results saved to: {report_file}")
 
         return self.results
+
+
+def _test_site_part1(self, url):
+    """Test site part 1."""
+
+
+    if scan_report and not scan_report.can_crawl:
+        print(f"   ⏭️  SKIPPED - Pre-flight scan blocked")
+        result["scrape"] = {"skipped": True, "reason": "pre-flight_blocked"}
+    else:
+        scraper = WebsiteScraper(url)
+        try:
+            scrape_result = scraper.scrape(max_pages=3)  # Just 3 pages for testing
+
+            result["scrape"] = {
+                "success": scrape_result["success"],
+                "documents_count": len(scrape_result.get("documents", [])),
+                "stats": scrape_result.get("stats", {}),
+                "error": scrape_result.get("error"),
+                "warning": scrape_result.get("warning"),
+                "failed_urls_count": len(scrape_result.get("failed_urls", []))
+            }
+
+            if scrape_result["success"]:
+                stats = scrape_result["stats"]
+                print(f"   ✅ SUCCESS")
+                print(f"   📄 Pages Saved: {stats['total_saved']}/{stats['total_visited']}")
+                print(f"   ⏱️  Total Time: {stats['total_time']:.2f}s")
+                print(f"   ⚡ Avg/Page: {stats['avg_time_per_page']:.2f}s")
+
+                if scrape_result.get("warning"):
+                    print(f"   ⚠️  Warning: {scrape_result['warning']}")
+
+                # Show sample content
+                if scrape_result["documents"]:
+                    first_doc = scrape_result["documents"][0]
+                    content_preview = first_doc["content"][:200]
+                    print(f"\n   📄 Sample Content:")
+                    print(f"      Title: {first_doc.get('title', 'N/A')}")
+                    print(f"      Preview: {content_preview}...")
+            else:
+                print(f"   ❌ FAILED")
+                print(f"   Reason: {scrape_result.get('error', 'Unknown')}")
+                if scrape_result.get("protection"):
+                    print(f"   🛡️  Protection: {scrape_result['protection']}")
+
+        except Exception as e:
+            print(f"   ❌ Scraping exception: {e}")
+            result["scrape"] = {"error": str(e)}
+
+    # Evaluation
+    print(f"\n📊 Evaluation")
+    print("-" * 40)
+    _test_site_part1_part2(self, url)
+    _test_site_part1_part3(self)
 
 
 async def main():

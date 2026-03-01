@@ -11,6 +11,7 @@ class QualityDashboard:
     The 'Judge' View: Visualizes semantic quality scores and system drift.
     """
     def __init__(self, model_info=None):
+        """Initialize instance."""
         self.report_path = Path("tests/quality_report.json")
         self.history_path = Path("tests/quality_history.json")
         self.status_label = None
@@ -24,6 +25,7 @@ class QualityDashboard:
         return None
 
     def _save_to_history(self, report):
+        """Save to history."""
         history = []
         if self.history_path.exists():
             with open(self.history_path, "r") as f:
@@ -41,6 +43,7 @@ class QualityDashboard:
             json.dump(history, f, indent=4)
 
     async def run_judge(self):
+        """Run judge."""
         self.status_label.set_text("⚖️ The Judge is deliberating... (Benchmarking)")
         self.status_label.classes('text-blue-500 animate-pulse')
         
@@ -60,6 +63,7 @@ class QualityDashboard:
             self.status_label.classes(replace='text-red-500')
 
     def update_view(self, report=None):
+        """Update view."""
         if report is None:
             report = self._load_report()
             if not report: return
@@ -68,21 +72,20 @@ class QualityDashboard:
         
         with self.results_container:
             # Courtroom Context Card
-            with ui.card().classes('w-full mb-4 bg-slate-50 dark:bg-slate-800 border-l-4 border-indigo-500'):
-                with ui.row().classes('w-full items-center justify-between'):
-                    with ui.row().classes('items-center gap-4'):
-                        ui.icon('gavel', size='32px').classes('text-indigo-500')
-                        with ui.column().classes('gap-0'):
-                            ui.label('Courtroom Context').classes('text-xs font-bold text-gray-500 uppercase')
-                            ui.label(f"Defendant: {self.model_info.get('id', 'Unknown')}").classes('text-lg font-bold text-indigo-700 dark:text-indigo-300')
-                            ui.label('Judge: ZenAI Automated Evaluation Protocol (Self-Correction)').classes('text-xs italic text-gray-400')
-                    
-                    with ui.column().classes('items-end gap-0'):
-                        ui.badge('Evaluation Protocol v2.1', color='indigo').props('outline')
+            with ui.card().classes('w-full mb-4 bg-slate-50 dark:bg-slate-800 border-l-4 border-indigo-500'), ui.row().classes('w-full items-center justify-between'), ui.row().classes('items-center gap-4'):
+                ui.icon('gavel', size='32px').classes('text-indigo-500')
+                with ui.column().classes('gap-0'):
+                    ui.label('Courtroom Context').classes('text-xs font-bold text-gray-500 uppercase')
+                    ui.label(f"Defendant: {self.model_info.get('id', 'Unknown')}").classes('text-lg font-bold text-indigo-700 dark:text-indigo-300')
+                    ui.label('Judge: ZenAI Automated Evaluation Protocol (Self-Correction)').classes('text-xs italic text-gray-400')
+
+                with ui.column().classes('items-end gap-0'):
+                    ui.badge('Evaluation Protocol v2.1', color='indigo').props('outline')
 
             # Summary Metrics
             with ui.grid(columns=4).classes('w-full gap-4 mb-4'):
                 def metric_box(label, value, color, icon):
+                    """Metric box."""
                     with ui.card().classes(f'p-3 items-center justify-center bg-{color}-50 dark:bg-{color}-900/10 border-{color}-200'):
                         ui.icon(icon).classes(f'text-{color}-500 mb-1')
                         ui.label(value).classes(f'text-2xl font-bold text-{color}-700 dark:text-{color}-400')
@@ -98,7 +101,7 @@ class QualityDashboard:
             if self.history_path.exists():
                 with open(self.history_path, "r") as f:
                     try: history = json.load(f)
-                    except: pass
+                    except Exception: pass
             
             if len(history) > 1:
                 prev_score = history[-2]['score']
@@ -112,24 +115,22 @@ class QualityDashboard:
             # Detailed results
             ui.label('Evidence & Testimony').classes('text-lg font-bold mt-2 mb-2 ' + Styles.TEXT_PRIMARY)
             for res in report['detailed_results']:
-                with ui.expansion(res['question'], icon='question_answer').classes('w-full mb-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg'):
-                    with ui.card().classes('w-full bg-transparent no-shadow'):
-                        ui.markdown(f"**Answer:**\n{res['response']}").classes('text-sm text-gray-600 dark:text-gray-300')
-                        with ui.row().classes('mt-2 justify-end'):
-                            score_color = 'green' if res['score'] > 0.8 else 'orange'
-                            ui.badge(f"Relevance: {res['score']:.2f}", color=score_color)
+                with ui.expansion(res['question'], icon='question_answer').classes('w-full mb-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg'), ui.card().classes('w-full bg-transparent no-shadow'):
+                    ui.markdown(f"**Answer:**\n{res['response']}").classes('text-sm text-gray-600 dark:text-gray-300')
+                    with ui.row().classes('mt-2 justify-end'):
+                        score_color = 'green' if res['score'] > 0.8 else 'orange'
+                        ui.badge(f"Relevance: {res['score']:.2f}", color=score_color)
 
     def build(self):
-        with ui.column().classes('w-full p-4 max-w-5xl mx-auto'):
-            with ui.row().classes('w-full items-center justify-between mb-6'):
-                with ui.row().classes('items-center gap-3'):
-                    ui.avatar('rate_review', color='primary', text_color='white')
-                    with ui.column().classes('gap-0'):
-                        ui.label('ZenAI Intelligence Judge').classes('text-2xl font-bold ' + Styles.TEXT_PRIMARY)
-                        ui.label('Automated Quality Assurance System').classes('text-sm text-gray-500')
-                
-                ui.button('Run Benchmark', icon='play_circle', on_click=self.run_judge).props('unelevated rounded color=primary')
-            
+        """Build."""
+        with ui.column().classes('w-full p-4 max-w-5xl mx-auto'), ui.row().classes('w-full items-center justify-between mb-6'), ui.row().classes('items-center gap-3'):
+            ui.avatar('rate_review', color='primary', text_color='white')
+            with ui.column().classes('gap-0'):
+                ui.label('ZenAI Intelligence Judge').classes('text-2xl font-bold ' + Styles.TEXT_PRIMARY)
+                ui.label('Automated Quality Assurance System').classes('text-sm text-gray-500')
+
+            ui.button('Run Benchmark', icon='play_circle', on_click=self.run_judge).props('unelevated rounded color=primary')
+
             self.status_label = ui.label('Ready to evaluate system quality.').classes('text-sm font-medium text-gray-500 mb-4')
             
             self.results_container = ui.column().classes('w-full animate-fade-in')

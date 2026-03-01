@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 zena_module = None
 
 def get_zena_module():
+    """Get zena module."""
     global zena_module
     if zena_module:
         return zena_module

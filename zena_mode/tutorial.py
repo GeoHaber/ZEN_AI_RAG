@@ -5,7 +5,6 @@ Provides step-by-step UI guidance with robust dialog management.
 """
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
 from nicegui import ui
 from ui.registry import UI_IDS
 
@@ -15,6 +14,7 @@ class UITutorial:
     """Manages the interactive guided tour sequence."""
     
     def __init__(self, client):
+        """Initialize instance."""
         self.client = client
         self.current_step = 0
         self.is_running = False
@@ -51,15 +51,14 @@ class UITutorial:
 
     def _setup_dialog(self):
         """Creates the persistent dialog structure within the client context."""
-        with ui.dialog().props('persistent') as self.dialog:
-            with ui.card().classes('w-80 shadow-24 p-4 rounded-xl'):
-                self.title_label = ui.label("Tour").classes('text-h6 font-bold text-primary')
-                self.message_label = ui.label("Message").classes('text-body2 py-2 text-gray-600 dark:text-gray-300')
-                
-                with ui.row().classes('w-full justify-end mt-4 gap-2'):
-                    ui.button('Skip', on_click=self.stop).props('flat color=grey')
-                    self.btn_next = ui.button('Next', on_click=self.next_step).props('unelevated color=primary')
-        
+        with ui.dialog().props('persistent') as self.dialog, ui.card().classes('w-80 shadow-24 p-4 rounded-xl'):
+            self.title_label = ui.label("Tour").classes('text-h6 font-bold text-primary')
+            self.message_label = ui.label("Message").classes('text-body2 py-2 text-gray-600 dark:text-gray-300')
+
+            with ui.row().classes('w-full justify-end mt-4 gap-2'):
+                ui.button('Skip', on_click=self.stop).props('flat color=grey')
+                self.btn_next = ui.button('Next', on_click=self.next_step).props('unelevated color=primary')
+
     async def next_step(self):
         """Advance to the next step."""
         self.current_step += 1
@@ -82,7 +81,7 @@ class UITutorial:
                 if self.dialog:
                     self.dialog.close()
                 ui.notify("Tutorial completed!", color='positive', icon='check')
-        except: pass
+        except Exception: pass
         logger.info("[Tutorial] Tour ended.")
 
     async def _run_step(self):

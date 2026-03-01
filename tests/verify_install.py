@@ -57,18 +57,20 @@ def check_file(filepath: str, display_name: str, optional: bool = False) -> bool
     return exists
 
 
-def main():
-    """Run verification checks."""
+def _do_do_main_setup_setup():
+    """Helper: setup phase for _do_main_setup."""
+
+
     print("\n" + "="*85)
     print(f"{BOLD}{CYAN}ZEN_AI_RAG Installation Verification{RESET}")
     print("="*85 + "\n")
-    
+
     results = {
         'required': {'passed': 0, 'failed': 0},
         'optional': {'passed': 0, 'failed': 0},
         'files': {'passed': 0, 'failed': 0},
     }
-    
+
     # Core dependencies (required)
     print(f"{BOLD}Core Dependencies (REQUIRED):{RESET}")
     core_packages = [
@@ -84,7 +86,7 @@ def main():
         else:
             results['required']['failed'] += 1
     print()
-    
+
     # LLM & RAG (required)
     print(f"{BOLD}LLM & RAG Integration (REQUIRED):{RESET}")
     rag_packages = [
@@ -98,7 +100,13 @@ def main():
         else:
             results['required']['failed'] += 1
     print()
-    
+
+    return display_name, import_name, results
+
+
+def _do_main_setup():
+    """Helper: setup phase for main."""
+    display_name, import_name, results = _do_do_main_setup_setup()
     # Document Processing (required)
     print(f"{BOLD}Document Processing (REQUIRED):{RESET}")
     doc_packages = [
@@ -112,7 +120,7 @@ def main():
         else:
             results['required']['failed'] += 1
     print()
-    
+
     # Audio (required for voice)
     print(f"{BOLD}Audio Processing (REQUIRED for Voice):{RESET}")
     audio_packages = [
@@ -126,7 +134,14 @@ def main():
         else:
             results['required']['failed'] += 1
     print()
-    
+
+    return display_name, import_name, results
+
+
+def _do_main_init():
+    """Helper: setup phase for main."""
+
+    display_name, import_name, results = _do_main_setup()
     # ML & Utilities (required)
     print(f"{BOLD}ML & Utilities (REQUIRED):{RESET}")
     util_packages = [
@@ -141,7 +156,7 @@ def main():
         else:
             results['required']['failed'] += 1
     print()
-    
+
     # Testing (optional)
     print(f"{BOLD}Testing Tools (OPTIONAL):{RESET}")
     test_packages = [
@@ -154,7 +169,7 @@ def main():
         else:
             results['optional']['failed'] += 1
     print()
-    
+
     # Vision (optional)
     print(f"{BOLD}Vision Tools (OPTIONAL):{RESET}")
     vision_packages = [
@@ -167,7 +182,13 @@ def main():
         else:
             results['optional']['failed'] += 1
     print()
-    
+
+    return display_name, results
+
+
+def main():
+    """Run verification checks."""
+    display_name, results = _do_main_init()
     # Directory structure
     print(f"{BOLD}Directory Structure:{RESET}")
     dirs = [
@@ -190,7 +211,7 @@ def main():
     print("="*85)
     
     required_ok = results['required']['failed'] == 0
-    optional_ok = results['optional']['failed'] == 0
+    results['optional']['failed'] == 0
     
     print(f"\n  Required Packages: {GREEN}{results['required']['passed']}{RESET} passed, {RED}{results['required']['failed']}{RESET} failed")
     print(f"  Optional Packages: {GREEN}{results['optional']['passed']}{RESET} passed, {YELLOW}{results['optional']['failed']}{RESET} warnings")

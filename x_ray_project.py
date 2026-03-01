@@ -433,6 +433,7 @@ VERSION = "3.0.0"
 SCRIPT_NAME = "x_ray_project"
 
 def parse_args():
+    """Parse args."""
     p = argparse.ArgumentParser(
         prog=SCRIPT_NAME,
         description="Universal Python dependency analyzer & requirements generator.",
@@ -533,7 +534,7 @@ def collect_py_files(root, args):
 # --- Import parsing -----------------------------------------------------------
 
 
-import concurrent.futures
+# import concurrent.futures
 
 # --- Import parsing -----------------------------------------------------------
 
@@ -555,11 +556,12 @@ def _parse_file(fpath):
                 
                 # Check for syntax warnings (like invalid escape sequences)
                 for warning in w:
-                    if issubclass(warning.category, SyntaxWarning):
-                        # Format: "file.py:123: SyntaxWarning: message"
-                        msg = f"Line {warning.lineno}: {warning.message}"
-                        error = (str(fpath), f"SyntaxWarning: {msg}")
-                        break  # Report first warning
+                    if not issubclass(warning.category, SyntaxWarning):
+                        continue
+                    # Format: "file.py:123: SyntaxWarning: message"
+                    msg = f"Line {warning.lineno}: {warning.message}"
+                    error = (str(fpath), f"SyntaxWarning: {msg}")
+                    break  # Report first warning
         except Exception as warn_err:
             # If warnings capture fails, log but continue
             logger.debug(f"Warning capture failed for {fpath}: {warn_err}")
@@ -612,6 +614,53 @@ def parse_imports(py_files):
 
 # --- Local module detection ---------------------------------------------------
 
+
+
+def _find_local_modules_continued(root, py_files, local):
+    """Continue find_local_modules logic."""
+    for f in py_files:
+        try:
+            rel = f.relative_to(root)
+        except ValueError:
+            continue
+        if len(rel.parts) > 1:
+            top = rel.parts[0]
+            if top.isidentifier() and not top.startswith("."):
+                local.add(top)
+
+    # 3. ALL directory names and .py file stems in the entire project tree.
+    #    If someone does 'from models import Foo' and models/ exists anywhere
+    #    in the project, it's a local module — not a PyPI package.
+    #    Exception: names that are known PyPI packages (in PYPI_MAP values or
+    #    have an installed distribution) are kept as third-party.
+    known_pypi = set(PYPI_MAP.keys()) | set(PYPI_MAP.values())
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Skip irrelevant directories
+        rel_dir = os.path.relpath(dirpath, root)
+        base_dir = rel_dir.split(os.sep)[0] if rel_dir != "." else ""
+        if base_dir in _ALWAYS_SKIP:
+            dirnames.clear()
+            continue
+        for d in dirnames:
+            if d.isidentifier() and not d.startswith(".") and d in _ALWAYS_SKIP:
+                continue
+            if d in known_pypi:
+                continue    # don't shadow a real PyPI package
+            # Only add if the directory has python files
+            dpath = Path(dirpath) / d
+            if (dpath / "__init__.py").exists() or any(dpath.glob("*.py")):
+                local.add(d)
+        for fn in filenames:
+            if not fn.endswith(".py"):
+                continue
+            stem = fn[:-3]
+            if stem.isidentifier() and not stem.startswith("_"):
+                if stem not in known_pypi:
+                    local.add(stem)
+
+    return frozenset(local)
+
+
 def find_local_modules(root, py_files):
     """Detect names that are local project modules/packages, not third-party.
     
@@ -641,45 +690,7 @@ def find_local_modules(root, py_files):
                     local.add(name)
     
     # 2. Any top-level directory name that scanned .py files live under
-    for f in py_files:
-        try:
-            rel = f.relative_to(root)
-        except ValueError:
-            continue
-        if len(rel.parts) > 1:
-            top = rel.parts[0]
-            if top.isidentifier() and not top.startswith("."):
-                local.add(top)
-    
-    # 3. ALL directory names and .py file stems in the entire project tree.
-    #    If someone does 'from models import Foo' and models/ exists anywhere
-    #    in the project, it's a local module — not a PyPI package.
-    #    Exception: names that are known PyPI packages (in PYPI_MAP values or
-    #    have an installed distribution) are kept as third-party.
-    known_pypi = set(PYPI_MAP.keys()) | set(PYPI_MAP.values())
-    for dirpath, dirnames, filenames in os.walk(root):
-        # Skip irrelevant directories
-        rel_dir = os.path.relpath(dirpath, root)
-        base_dir = rel_dir.split(os.sep)[0] if rel_dir != "." else ""
-        if base_dir in _ALWAYS_SKIP:
-            dirnames.clear()
-            continue
-        for d in dirnames:
-            if d.isidentifier() and not d.startswith(".") and d not in _ALWAYS_SKIP:
-                if d in known_pypi:
-                    continue    # don't shadow a real PyPI package
-                # Only add if the directory has python files
-                dpath = Path(dirpath) / d
-                if (dpath / "__init__.py").exists() or any(dpath.glob("*.py")):
-                    local.add(d)
-        for fn in filenames:
-            if fn.endswith(".py"):
-                stem = fn[:-3]
-                if stem.isidentifier() and not stem.startswith("_"):
-                    if stem not in known_pypi:
-                        local.add(stem)
-    
-    return frozenset(local)
+    return _find_local_modules_continued(root, py_files, local)
 
 
 # --- Filtering ----------------------------------------------------------------
@@ -733,10 +744,12 @@ def get_installed_version(pkg):
 
 def format_requirement(pkg, pin=True):
     """Return a requirements line like 'package==1.2.3' or just 'package'."""
-    if pin:
-        ver = get_installed_version(pkg)
-        if ver:
-            return f"{pkg}=={ver}"
+    if not pin:
+        return
+
+    ver = get_installed_version(pkg)
+    if ver:
+        return f"{pkg}=={ver}"
     return pkg
 
 
@@ -773,9 +786,10 @@ def merge_with_existing(new_lines, merge_path):
             merged.append(line)
     # Add anything from the old file that we didn't emit
     for key, old_line in existing_pkgs.items():
-        if key not in seen:
-            merged.append(old_line)
-            seen.add(key)
+        if key in seen:
+            continue
+        merged.append(old_line)
+        seen.add(key)
     return sorted(merged, key=lambda l: l.lstrip("#").strip().lower())
 
 
@@ -803,16 +817,18 @@ def interactive_review(pkgs):
 # --- Pycache cleanup ----------------------------------------------------------
 
 def clean_pycache(root):
+    """Clean pycache."""
     count = 0
     for dirpath, dirnames, _ in os.walk(root):
         for d in list(dirnames):
-            if d == "__pycache__":
-                target = Path(dirpath) / d
-                try:
-                    shutil.rmtree(target)
-                    count += 1
-                except OSError:
-                    pass
+            if d != "__pycache__":
+                continue
+            target = Path(dirpath) / d
+            try:
+                shutil.rmtree(target)
+                count += 1
+            except OSError:
+                pass
     return count
 
 
@@ -873,6 +889,7 @@ def find_orphans(root, py_files, import_locs, custom_entrypoints=None):
 
 
 def write_graph(third_party, root):
+    """Write graph."""
     dot_path = root / "import_graph.dot"
     with open(dot_path, "w", encoding="utf-8") as f:
         f.write("digraph imports {\n  rankdir=LR;\n  node [shape=box];\n")
@@ -904,6 +921,7 @@ def write_interactive_graph(third_party, root):
     
     # Helper to get/create node ID
     def get_id(label, group):
+        """Get id."""
         nonlocal next_id
         if label not in node_ids:
             node_ids[label] = next_id
@@ -930,7 +948,7 @@ def write_interactive_graph(third_party, root):
                 if short not in file_metrics:
                     try:
                         size = Path(fpath).stat().st_size
-                    except:
+                    except Exception:
                         size = 0
                     file_metrics[short] = {"size": size, "imports": set()}
                 file_metrics[short]["imports"].add(pkg)
@@ -1318,11 +1336,12 @@ def check_essentials(root, third_party_names=None):
         else:
             # Check alternatives
             for alt in info["alts"]:
-                if (root / alt).exists():
-                    found = True
-                    found_as = alt
-                    break
-        
+                if not (root / alt).exists():
+                    continue
+                found = True
+                found_as = alt
+                break
+
         if found:
             present.append((name, found_as))
         else:
@@ -1382,13 +1401,14 @@ def find_misplaced_files(root):
         
         for fn in filenames:
             for rule in _PLACEMENT_RULES:
-                if rule["check"](rel_dir, fn):
-                    if top_dir not in rule["expected_dirs"]:
-                        rel_file = os.path.join(rel_dir, fn) if rel_dir != "." else fn
-                        expected = " or ".join(sorted(rule["expected_dirs"] - {"."})) or "project root"
-                        misplaced.append((rel_file, rule["description"], expected))
-                    break  # only match first rule per file
-    
+                if not rule["check"](rel_dir, fn):
+                    continue
+                if top_dir not in rule["expected_dirs"]:
+                    rel_file = os.path.join(rel_dir, fn) if rel_dir != "." else fn
+                    expected = " or ".join(sorted(rule["expected_dirs"] - {"."})) or "project root"
+                    misplaced.append((rel_file, rule["description"], expected))
+                break  # only match first rule per file
+
     return misplaced
 
 
@@ -1486,12 +1506,13 @@ def analyze_structure(root, py_files, third_party):
     
     # ── Check: very large files ──
     for fpath, lines in largest_files[:5]:
-        if lines > 1000:
-            report["issues"].append(
-                f"LARGE FILE: {fpath} has {lines:,} lines. Consider splitting into modules."
-            )
-            report["score"] -= 3
-    
+        if lines <= 1000:
+            continue
+        report["issues"].append(
+            f"LARGE FILE: {fpath} has {lines:,} lines. Consider splitting into modules."
+        )
+        report["score"] -= 3
+
     # ── Check: __init__.py presence in packages ──
     for dirpath, dirnames, filenames in os.walk(root):
         rel = os.path.relpath(dirpath, root)
@@ -1715,7 +1736,126 @@ def print_health_report(root, py_files, third_party, third_party_names):
 #  Main
 # =============================================================================
 
+
+
+def _main_continued(args, counter, desc, import_locs, line, n, not_installed, out_filename, output_lines, pkg, py_files, root, third_party, unique, ver):
+    """Continue main logic."""
+    out_path = Path(out_filename)
+    if not out_path.is_absolute():
+        out_path = root / out_filename
+
+    # Append mode for toml if merging? No, complex. Overwrite for now.
+    with open(out_path, "w", encoding="utf-8", newline="\n") as f:
+        for line in output_lines:
+            f.write(line + "\n")
+    print(f"\n  Written -> {out_path}  ({len(unique)} packages)")
+
+    if args.format == "txt" and 'not_installed' in locals() and not_installed:
+        print(f"  WARNING: {len(not_installed)} package(s) not installed locally (no version pin):")
+        for p in not_installed:
+            print(f"       - {p}")
+
+    # -- Optional outputs --
+    if args.graph:
+        write_graph(third_party, root)
+
+    if args.interactive_graph:
+        write_interactive_graph(third_party, root)
+
+    if args.stats:
+        print("\n  Package usage frequency:")
+        for mod, count in counter.most_common():
+            print(f"       {resolve_name(mod):30s} {count:4d} imports")
+
+    if args.verbose:
+        print(f"\n  Detailed import report ({len(unique)} packages):")
+        for mod in unique:
+            pkg = resolve_name(mod)
+            print(f"\n  {pkg}  ({counter[mod]} import{'s' if counter[mod]>1 else ''}):")
+            for fpath, lineno in third_party[mod]:
+                short = os.path.relpath(fpath, root)
+                print(f"    {short}:{lineno}")
+    elif args.summary:
+        print(f"\n  Third-party packages:")
+        for mod in unique:
+            pkg = resolve_name(mod)
+            ver = get_installed_version(pkg)
+            desc = LIB_DESCRIPTIONS.get(pkg, "")
+            ver_str = f"  v{ver}" if ver else "  (not installed)"
+            desc_str = f"  -- {desc}" if desc else ""
+            print(f"       {pkg:30s}{ver_str}{desc_str}")
+
+    # -- Orphan detection --
+    if args.find_orphans:
+        orphans = find_orphans(root, py_files, import_locs, args.entrypoints)
+        if orphans:
+            print(f"\n  {len(orphans)} potentially orphaned file(s):")
+            for o in orphans:
+                short = os.path.relpath(o, root)
+                print(f"       {short}")
+        else:
+            print("\n  No orphaned files detected.")
+
+    # -- CI mode --
+    if args.ci:
+        approved_path = root / "approved.txt"
+        approved = set()
+        if approved_path.exists():
+            approved = {
+                l.strip().lower()
+                for l in approved_path.read_text(encoding="utf-8").splitlines()
+                if l.strip() and not l.startswith("#")
+            }
+        detected = {resolve_name(m).lower() for m in unique}
+        unapproved = detected - approved
+        if unapproved:
+            print(f"\n  CI FAIL -- {len(unapproved)} unapproved package(s):")
+            for p in sorted(unapproved):
+                print(f"       {p}")
+            sys.exit(1)
+        else:
+            print("\n  CI PASS -- all packages approved.")
+
+    # -- Health checks --
+    third_party_names = {resolve_name(m) for m in unique}
+    if args.health:
+        print_health_report(root, py_files, third_party, third_party_names)
+    else:
+        if getattr(args, 'check_structure', False):
+            report = analyze_structure(root)
+            print(f"\n  Structure Score: {report['score']}/100  ({report['grade']})")
+        if getattr(args, 'check_junk', False):
+            junk_files, junk_dirs = find_junk_files(root)
+            if junk_files or junk_dirs:
+                print(f"\n  Junk: {len(junk_files)} file(s), {len(junk_dirs)} cached dir(s)")
+                for f_name in junk_files[:10]:
+                    print(f"       {f_name}")
+            else:
+                print("\n  No junk files detected.")
+        if getattr(args, 'check_essentials', False):
+            present, missing = check_essentials(root, third_party_names)
+            if missing:
+                print(f"\n  Missing essentials: {len(missing)}")
+                for name, why, priority in missing:
+                    print(f"       [{priority}] {name}: {why}")
+            else:
+                print("\n  All essential files present.")
+        if getattr(args, 'check_misplaced', False):
+            misplaced = find_misplaced_files(root)
+            if misplaced:
+                print(f"\n  Misplaced files: {len(misplaced)}")
+                for fpath, desc, expected in misplaced[:10]:
+                    print(f"       {fpath} -> {expected}")
+            else:
+                print("\n  No misplaced files detected.")
+    if getattr(args, 'fix_gitignore', False):
+        generate_gitignore(root)
+
+    print(f"\n{'='*60}\n")
+
+
 def main():
+    """Main."""
     args = parse_args()
     root = Path(args.path).resolve() if args.path else Path(__file__).parent.resolve()
 
@@ -1827,118 +1967,7 @@ def main():
     else:
         out_filename = "pyproject.toml" if args.format == "toml" else "requirements.txt"
         
-    out_path = Path(out_filename)
-    if not out_path.is_absolute():
-        out_path = root / out_filename
-        
-    # Append mode for toml if merging? No, complex. Overwrite for now.
-    with open(out_path, "w", encoding="utf-8", newline="\n") as f:
-        for line in output_lines:
-            f.write(line + "\n")
-    print(f"\n  Written -> {out_path}  ({len(unique)} packages)")
-
-    if args.format == "txt" and 'not_installed' in locals() and not_installed:
-        print(f"  WARNING: {len(not_installed)} package(s) not installed locally (no version pin):")
-        for p in not_installed:
-            print(f"       - {p}")
-
-    # -- Optional outputs --
-    if args.graph:
-        write_graph(third_party, root)
-        
-    if args.interactive_graph:
-        write_interactive_graph(third_party, root)
-
-    if args.stats:
-        print("\n  Package usage frequency:")
-        for mod, count in counter.most_common():
-            print(f"       {resolve_name(mod):30s} {count:4d} imports")
-
-    if args.verbose:
-        print(f"\n  Detailed import report ({len(unique)} packages):")
-        for mod in unique:
-            pkg = resolve_name(mod)
-            print(f"\n  {pkg}  ({counter[mod]} import{'s' if counter[mod]>1 else ''}):")
-            for fpath, lineno in third_party[mod]:
-                short = os.path.relpath(fpath, root)
-                print(f"    {short}:{lineno}")
-    elif args.summary:
-        print(f"\n  Third-party packages:")
-        for mod in unique:
-            pkg = resolve_name(mod)
-            ver = get_installed_version(pkg)
-            desc = LIB_DESCRIPTIONS.get(pkg, "")
-            ver_str = f"  v{ver}" if ver else "  (not installed)"
-            desc_str = f"  -- {desc}" if desc else ""
-            print(f"       {pkg:30s}{ver_str}{desc_str}")
-
-    # -- Orphan detection --
-    if args.find_orphans:
-        orphans = find_orphans(root, py_files, import_locs, args.entrypoints)
-        if orphans:
-            print(f"\n  {len(orphans)} potentially orphaned file(s):")
-            for o in orphans:
-                short = os.path.relpath(o, root)
-                print(f"       {short}")
-        else:
-            print("\n  No orphaned files detected.")
-
-    # -- CI mode --
-    if args.ci:
-        approved_path = root / "approved.txt"
-        approved = set()
-        if approved_path.exists():
-            approved = {
-                l.strip().lower()
-                for l in approved_path.read_text(encoding="utf-8").splitlines()
-                if l.strip() and not l.startswith("#")
-            }
-        detected = {resolve_name(m).lower() for m in unique}
-        unapproved = detected - approved
-        if unapproved:
-            print(f"\n  CI FAIL -- {len(unapproved)} unapproved package(s):")
-            for p in sorted(unapproved):
-                print(f"       {p}")
-            sys.exit(1)
-        else:
-            print("\n  CI PASS -- all packages approved.")
-
-    # -- Health checks --
-    third_party_names = {resolve_name(m) for m in unique}
-    if args.health:
-        print_health_report(root, py_files, third_party, third_party_names)
-    else:
-        if getattr(args, 'check_structure', False):
-            report = analyze_structure(root)
-            print(f"\n  Structure Score: {report['score']}/100  ({report['grade']})")
-        if getattr(args, 'check_junk', False):
-            junk_files, junk_dirs = find_junk_files(root)
-            if junk_files or junk_dirs:
-                print(f"\n  Junk: {len(junk_files)} file(s), {len(junk_dirs)} cached dir(s)")
-                for f_name in junk_files[:10]:
-                    print(f"       {f_name}")
-            else:
-                print("\n  No junk files detected.")
-        if getattr(args, 'check_essentials', False):
-            present, missing = check_essentials(root, third_party_names)
-            if missing:
-                print(f"\n  Missing essentials: {len(missing)}")
-                for name, why, priority in missing:
-                    print(f"       [{priority}] {name}: {why}")
-            else:
-                print("\n  All essential files present.")
-        if getattr(args, 'check_misplaced', False):
-            misplaced = find_misplaced_files(root)
-            if misplaced:
-                print(f"\n  Misplaced files: {len(misplaced)}")
-                for fpath, desc, expected in misplaced[:10]:
-                    print(f"       {fpath} -> {expected}")
-            else:
-                print("\n  No misplaced files detected.")
-    if getattr(args, 'fix_gitignore', False):
-        generate_gitignore(root)
-
-    print(f"\n{'='*60}\n")
+    _main_continued(args, counter, desc, import_locs, line, n, not_installed, out_filename, output_lines, pkg, py_files, root, third_party, unique, ver)
 
 
 if __name__ == "__main__":

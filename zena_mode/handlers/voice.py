@@ -1,4 +1,3 @@
-import json
 import logging
 from zena_mode.handlers.base import BaseZenHandler
 from zena_mode.voice_manager import get_voice_manager

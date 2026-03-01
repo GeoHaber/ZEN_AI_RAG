@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import format_message_with_attachment
 
 class TestFileUploadScenarios(unittest.TestCase):
+    """TestFileUploadScenarios class."""
     
     def test_text_file_formatting(self):
         """Scenario 1: Upload small text file and ask to explain."""

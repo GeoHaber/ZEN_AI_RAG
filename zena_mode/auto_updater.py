@@ -3,7 +3,7 @@ import logging
 import httpx
 import re
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict
 from config_system import config
 from huggingface_hub import HfApi
 
@@ -14,6 +14,7 @@ class ModelScout:
     Intelligence layer to discover high-performing GGUF models on Hugging Face.
     """
     def __init__(self):
+        """Initialize instance."""
         self.api = HfApi()
         self.categories = {
             "coding": ["qwen", "codellama", "deepseek-coder"],
@@ -120,7 +121,6 @@ def perform_swap(target_path: str, new_path: str):
 
 async def get_local_version() -> str:
     """Attempt to get local llama-server version using --version."""
-    import subprocess
     import asyncio
     
     bin_path = Path(config.bin_dir) / "llama-server.exe"

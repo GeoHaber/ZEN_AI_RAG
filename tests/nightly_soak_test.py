@@ -32,7 +32,9 @@ PROMPTS = [
 ]
 
 class SoakTester:
+    """SoakTester class."""
     def __init__(self, hours=12):
+        """Initialize instance."""
         self.target_duration = hours * 3600
         self.start_time = time.time()
         self.models = self._scan_models()
@@ -45,6 +47,7 @@ class SoakTester:
             raise FileNotFoundError(f"CLI binary not found at {CLI_EXE}")
             
     def log(self, msg):
+        """Log."""
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         line = f"[{ts}] {msg}"
         print(line)
@@ -105,6 +108,7 @@ class SoakTester:
             return {"worker_id": worker_id + 1, "success": False, "error": str(e), "model": model.name}
 
     def run(self):
+        """Run."""
         self.log(f"--- STARTING NIGHTLY SOAK TEST (Target: {self.target_duration/3600:.1f} hours) ---")
         self.log(f"Models Available: {len(self.models)}")
         
@@ -119,7 +123,7 @@ class SoakTester:
             futures = []
             results = []
             
-            cycle_start = time.time()
+            time.time()
             
             # Launch Workers
             with ThreadPoolExecutor(max_workers=N) as executor:

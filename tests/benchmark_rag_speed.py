@@ -34,6 +34,7 @@ def generate_synthetic_data(num_docs, length):
     return docs
 
 def run_benchmark():
+    """Run benchmark."""
     # Setup
     if TEST_DIR.exists():
         shutil.rmtree(TEST_DIR)

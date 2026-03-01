@@ -4,7 +4,6 @@ ZenAI Voice Manager - Unified Voice System
 Manages microphone enumeration, recording, and TTS with proper device handling.
 """
 
-import json
 import logging
 import io
 from pathlib import Path
@@ -180,6 +179,123 @@ class VoiceManager:
             logger.error(f"[VoiceManager] Failed to get default device: {e}")
             return None
     
+def _record_audio_part1_part2(self):
+    """Record audio part1 part 2."""
+
+
+    def transcribe(self, audio_data: bytes, language: str = "en") -> Dict[str, Any]:
+        """
+        Transcribe audio to text using Whisper.
+
+        Args:
+            audio_data: WAV audio bytes
+            language: Language code (default: "en")
+
+        Returns:
+            Dict with 'text' (transcribed text) and 'success'
+        """
+        vs = self.get_voice_service()
+        if not vs:
+            return {'success': False, 'error': 'VoiceService not available'}
+
+        try:
+            logger.info(f"[VoiceManager] Transcribing {len(audio_data)} bytes")
+            result = vs.transcribe_audio(io.BytesIO(audio_data), language=language)
+            logger.info(f"[VoiceManager] Transcription: {result.get('text', '')[:50]}...")
+            return result
+        except Exception as e:
+            logger.error(f"[VoiceManager] Transcription failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def synthesize(self, text: str, use_cache: bool = True) -> Dict[str, Any]:
+        """
+        Synthesize text to speech with optional caching.
+
+        Args:
+            text: Text to speak
+            use_cache: Use cached audio if available (default: True)
+
+        Returns:
+            Dict with:
+            - 'success': bool
+            - 'audio_data': base64-encoded WAV bytes
+            - 'audio_url': data URL for HTML5 audio tag
+            - 'text': original text
+            - 'duration': estimated duration in seconds
+            - 'error': error message if failed
+        """
+        vs = self.get_voice_service()
+        if not vs:
+            return {'success': False, 'error': 'VoiceService not available'}
+
+        try:
+            # Check cache first
+            if use_cache and text in self._tts_cache:
+                audio_data = self._tts_cache[text]
+                logger.info(f"[VoiceManager] Using cached TTS: {text[:50]}...")
+            else:
+                logger.info(f"[VoiceManager] Synthesizing: {text[:50]}...")
+
+                with self._service_lock:
+                    # Use the synthesize_speech method which properly wraps audio in WAV
+                    audio_data = vs.synthesize_speech(text)
+
+                # Cache result
+                if use_cache:
+                    self._tts_cache[text] = audio_data
+
+                logger.info(f"[VoiceManager] Generated {len(audio_data)} bytes")
+
+            if not audio_data:
+                return {'success': False, 'error': 'TTS generated empty audio'}
+
+            # Convert to base64 for JSON/HTML5 compatibility
+            import base64
+            audio_b64 = base64.b64encode(audio_data).decode('utf-8')
+            audio_url = f"data:audio/wav;base64,{audio_b64}"
+
+            # Estimate duration (rough: ~100 chars per second)
+            estimated_duration = max(1.0, len(text) / 100.0)
+
+            logger.info(f"[VoiceManager] Synthesis complete ({len(audio_data)} bytes)")
+            return {
+                'success': True,
+                'audio_data': audio_b64,
+                'audio_url': audio_url,
+                'text': text,
+                'duration': estimated_duration
+            }
+        except Exception as e:
+            logger.error(f"[VoiceManager] Synthesis failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+
+def _record_audio_part1_part3(self):
+    """Record audio part1 part 3."""
+
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get comprehensive voice system status."""
+        return {
+            'voice_available': HAS_VOICE_SERVICE,
+            'audio_capture_available': HAS_AUDIO_CAPTURE,
+            'stt_model': self.stt_model,
+            'tts_voice': self.tts_voice,
+            'default_input_device': self.get_default_input_device(),
+            'devices': [d.to_dict() for d in self.enumerate_devices()]
+        }
+
+
+def _record_audio_part1(self):
+    """Record audio part 1."""
+
+    # All devices failed
+    return RecordingResult(
+        success=False,
+        error=f"Recording failed on all {len(devices_to_try)} devices. Last error: {last_error}"
+    )
+
+
     def record_audio(
         self, 
         duration: float = 3.0, 
@@ -225,7 +341,6 @@ class VoiceManager:
                     devices_to_try.append(dev.id)
         
         # Try each device in order
-        last_error = None
         for attempt, dev_id in enumerate(devices_to_try, 1):
             try:
                 logger.info(f"[VoiceManager] Recording {duration}s from device {dev_id} (attempt {attempt}/{len(devices_to_try)})")
@@ -257,114 +372,15 @@ class VoiceManager:
                 return result
             
             except Exception as e:
-                last_error = str(e)
+                str(e)
                 logger.warning(f"[VoiceManager] Recording failed on device {dev_id}: {e}")
                 if attempt == len(devices_to_try):
                     # Last device failed
                     logger.error(f"[VoiceManager] All {attempt} devices failed")
         
-        # All devices failed
-        return RecordingResult(
-            success=False,
-            error=f"Recording failed on all {len(devices_to_try)} devices. Last error: {last_error}"
-        )
-    
-    def transcribe(self, audio_data: bytes, language: str = "en") -> Dict[str, Any]:
-        """
-        Transcribe audio to text using Whisper.
-        
-        Args:
-            audio_data: WAV audio bytes
-            language: Language code (default: "en")
-        
-        Returns:
-            Dict with 'text' (transcribed text) and 'success'
-        """
-        vs = self.get_voice_service()
-        if not vs:
-            return {'success': False, 'error': 'VoiceService not available'}
-        
-        try:
-            logger.info(f"[VoiceManager] Transcribing {len(audio_data)} bytes")
-            result = vs.transcribe_audio(io.BytesIO(audio_data), language=language)
-            logger.info(f"[VoiceManager] Transcription: {result.get('text', '')[:50]}...")
-            return result
-        except Exception as e:
-            logger.error(f"[VoiceManager] Transcription failed: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def synthesize(self, text: str, use_cache: bool = True) -> Dict[str, Any]:
-        """
-        Synthesize text to speech with optional caching.
-        
-        Args:
-            text: Text to speak
-            use_cache: Use cached audio if available (default: True)
-        
-        Returns:
-            Dict with:
-            - 'success': bool
-            - 'audio_data': base64-encoded WAV bytes
-            - 'audio_url': data URL for HTML5 audio tag
-            - 'text': original text
-            - 'duration': estimated duration in seconds
-            - 'error': error message if failed
-        """
-        vs = self.get_voice_service()
-        if not vs:
-            return {'success': False, 'error': 'VoiceService not available'}
-        
-        try:
-            # Check cache first
-            if use_cache and text in self._tts_cache:
-                audio_data = self._tts_cache[text]
-                logger.info(f"[VoiceManager] Using cached TTS: {text[:50]}...")
-            else:
-                logger.info(f"[VoiceManager] Synthesizing: {text[:50]}...")
-                
-                with self._service_lock:
-                    # Use the synthesize_speech method which properly wraps audio in WAV
-                    audio_data = vs.synthesize_speech(text)
-                
-                # Cache result
-                if use_cache:
-                    self._tts_cache[text] = audio_data
-                
-                logger.info(f"[VoiceManager] Generated {len(audio_data)} bytes")
-            
-            if not audio_data:
-                return {'success': False, 'error': 'TTS generated empty audio'}
-            
-            # Convert to base64 for JSON/HTML5 compatibility
-            import base64
-            audio_b64 = base64.b64encode(audio_data).decode('utf-8')
-            audio_url = f"data:audio/wav;base64,{audio_b64}"
-            
-            # Estimate duration (rough: ~100 chars per second)
-            estimated_duration = max(1.0, len(text) / 100.0)
-            
-            logger.info(f"[VoiceManager] Synthesis complete ({len(audio_data)} bytes)")
-            return {
-                'success': True,
-                'audio_data': audio_b64,
-                'audio_url': audio_url,
-                'text': text,
-                'duration': estimated_duration
-            }
-        except Exception as e:
-            logger.error(f"[VoiceManager] Synthesis failed: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Get comprehensive voice system status."""
-        return {
-            'voice_available': HAS_VOICE_SERVICE,
-            'audio_capture_available': HAS_AUDIO_CAPTURE,
-            'stt_model': self.stt_model,
-            'tts_voice': self.tts_voice,
-            'default_input_device': self.get_default_input_device(),
-            'devices': [d.to_dict() for d in self.enumerate_devices()]
-        }
+        _record_audio_part1(self)
+    _record_audio_part1_part2(self)
+    _record_audio_part1_part3(self)
 
 
 # Global singleton instance

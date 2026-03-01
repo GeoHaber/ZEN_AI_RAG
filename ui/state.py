@@ -7,6 +7,7 @@ logger = logging.getLogger("ZenAI.UI.State")
 class UIState:
     """Container for per-client UI element references."""
     def __init__(self):
+        """Initialize instance."""
         self.chat_log = None
         self.scroll_container = None
         self.status_text = None

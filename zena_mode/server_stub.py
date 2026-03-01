@@ -21,7 +21,9 @@ except Exception:
 
 
 class _SimpleHandler(BaseHTTPRequestHandler):
+    """_SimpleHandler class."""
     def do_OPTIONS(self):
+        """Do options."""
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -29,6 +31,7 @@ class _SimpleHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        """Do get."""
         # Minimal routes used by the test-suite
         if self.path == "/":
             self.send_response(200)

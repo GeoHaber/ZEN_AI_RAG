@@ -22,6 +22,7 @@ class TestLLMChaos:
         if not config.BIN_DIR.exists(): pytest.skip("No engine binary found")
         
         async def send_request(session, i):
+            """Send request."""
             try:
                 payload = {
                     "prompt": f"Test request {i}",
@@ -73,10 +74,11 @@ class TestLLMChaos:
         # 2. Find the PID
         target_pid = None
         for p in psutil.process_iter(['pid', 'name', 'cmdline']):
-            if "llama-server" in p.info['name'].lower():
-                target_pid = p.info['pid']
-                break
-        
+            if "llama-server" not in p.info['name'].lower():
+                continue
+            target_pid = p.info['pid']
+            break
+
         if not target_pid:
             pytest.skip("Could not find llama-server process to kill")
 

@@ -7,6 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("LinkedInDiagnose")
 
 def diagnose_url(url):
+    """Diagnose url."""
     print(f"\n🔍 Diagnosing URL: {url}")
     print("-" * 50)
     

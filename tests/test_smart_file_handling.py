@@ -2,6 +2,7 @@ import unittest
 from utils import format_message_with_attachment
 
 class TestSmartFileHandling(unittest.TestCase):
+    """TestSmartFileHandling class."""
     def test_python_file_trigger(self):
         """Python files should trigger a code review/analysis prompt."""
         query = "What does this do?"

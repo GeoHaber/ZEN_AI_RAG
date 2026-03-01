@@ -22,6 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger("VerifyRAG")
 
 async def run_verification():
+    """Run verification."""
     print("="*60)
     print("🕷️  WEBSITE RAG VERIFICATION START")
     print("="*60)

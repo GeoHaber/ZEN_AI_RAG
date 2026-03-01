@@ -4,8 +4,10 @@ from unittest.mock import MagicMock, patch, AsyncMock
 from async_backend import AsyncZenAIBackend
 
 class TestAsyncRefactor:
+    """TestAsyncRefactor class."""
     @pytest.mark.asyncio
     async def test_get_models_success(self):
+        """Test get models success."""
         backend = AsyncZenAIBackend()
         
         # Mock httpx response
@@ -26,6 +28,7 @@ class TestAsyncRefactor:
 
     @pytest.mark.asyncio
     async def test_get_models_failure_fallback(self):
+        """Test get models failure fallback."""
         backend = AsyncZenAIBackend()
         
         # Mock httpx failure
@@ -42,6 +45,7 @@ class TestAsyncRefactor:
         
     @pytest.mark.asyncio
     async def test_download_model(self):
+        """Test download model."""
         backend = AsyncZenAIBackend()
         
         mock_response = MagicMock()
@@ -64,6 +68,7 @@ class TestAsyncRefactor:
 
     @pytest.mark.asyncio
     async def test_set_active_model(self):
+        """Test set active model."""
         backend = AsyncZenAIBackend()
         
         mock_response = MagicMock()

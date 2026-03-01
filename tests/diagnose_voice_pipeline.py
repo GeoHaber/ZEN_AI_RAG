@@ -24,6 +24,7 @@ async def generate_sine_wave(duration_sec=3, frequency=440, sample_rate=16000):
     return bytes(audio_data)
 
 async def test_backend_direct():
+    """Test backend direct."""
     uri = "ws://127.0.0.1:8005"
     logger.info(f"Connecting to Voice Server at {uri}...")
     

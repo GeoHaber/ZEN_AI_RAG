@@ -165,6 +165,7 @@ class MonkeyStateTracker:
     """Track app state during monkey testing."""
     
     def __init__(self):
+        """Initialize instance."""
         self.actions = []
         self.errors = []
         self.crashes = []
@@ -172,6 +173,7 @@ class MonkeyStateTracker:
         self.start_time = time.time()
     
     def log_action(self, action_type, target, result="OK"):
+        """Log action."""
         self.actions.append({
             'time': time.time() - self.start_time,
             'type': action_type,
@@ -180,6 +182,7 @@ class MonkeyStateTracker:
         })
     
     def log_error(self, action, error):
+        """Log error."""
         self.errors.append({
             'time': time.time() - self.start_time,
             'action': action,
@@ -187,6 +190,7 @@ class MonkeyStateTracker:
         })
     
     def log_crash(self, action, exception):
+        """Log crash."""
         self.crashes.append({
             'time': time.time() - self.start_time,
             'action': action,
@@ -195,6 +199,7 @@ class MonkeyStateTracker:
         })
     
     def get_report(self):
+        """Get report."""
         return {
             'duration': time.time() - self.start_time,
             'total_actions': len(self.actions),
@@ -212,6 +217,7 @@ class MockUIHandler:
     """Simulates UI responses for testing without actual UI."""
     
     def __init__(self, llm_online=True):
+        """Initialize instance."""
         self.llm_online = llm_online
         self.chat_history = []
         self.settings = {
@@ -280,9 +286,11 @@ class MockUIHandler:
         return "Dialog closed"
     
     def _save_settings(self):
-        if 'settings' not in self.dialogs_open:
-            # Clicking save without settings open - weird but OK
-            pass
+        if 'settings' in self.dialogs_open:
+            return
+
+        # Clicking save without settings open - weird but OK
+        pass
         return "Settings saved"
     
     def _reset_settings(self):
@@ -294,6 +302,7 @@ class MockUIHandler:
         return "Settings reset"
     
     def _send_message(self):
+        """Send message."""
         msg = getattr(self, '_pending_message', '')
         if not msg.strip():
             return "Empty message - ignored"
@@ -311,9 +320,11 @@ class MockUIHandler:
             raise ConnectionError("LLM is offline")
     
     def _voice_input(self):
-        if not self.llm_online:
-            # Voice still works offline (local transcription)
-            pass
+        if self.llm_online:
+            return
+
+        # Voice still works offline (local transcription)
+        pass
         return "Voice recording started"
     
     def _start_batch(self):
@@ -322,6 +333,7 @@ class MockUIHandler:
         return "Batch job started"
     
     def get_state(self):
+        """Get state."""
         return {
             'chat_messages': len(self.chat_history),
             'settings': self.settings.copy(),
@@ -481,6 +493,7 @@ class TestMonkeyChaos:
         errors = []
         
         def monkey_thread(thread_id):
+            """Monkey thread."""
             for i in range(50):
                 try:
                     action = random.choice(['click', 'toggle', 'type'])

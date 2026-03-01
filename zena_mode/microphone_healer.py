@@ -5,9 +5,7 @@ Comprehensive diagnostics + auto-recovery for ZEN_AI audio
 """
 import io
 import time
-import threading
 import numpy as np
-from pathlib import Path
 from typing import Dict, Any, Optional
 from scipy.io import wavfile
 import sounddevice as sd
@@ -29,6 +27,7 @@ class MicrophoneHealer:
     """
     
     def __init__(self):
+        """Initialize instance."""
         self.test_results = {}
         self.device_status = {}
         self.locked_devices = set()
@@ -224,6 +223,68 @@ class MicrophoneHealer:
                 'error': str(e)
             }
     
+def _full_diagnostic_part3_part4(self):
+    """Full diagnostic part3 part 4."""
+
+
+    if not avail['available']:
+        results['recommendations'].append(
+            f"Device is locked: {avail['reason']}. "
+            "Close other apps using this microphone."
+        )
+
+    # Test 2: Audio Level
+    print(f"  [2/3] Testing audio level (2 seconds, speak now!)...")
+    level = self.audio_level_check(device_id, duration=2)
+    results['tests']['audio_level'] = level
+    print(f"    ✓ Level: {level['level']:.4f} ({level['quality']})")
+
+    if level['quality'] == 'SILENT':
+        results['recommendations'].append(
+            "Microphone is capturing silence. "
+            "Check Windows Volume Mixer - increase microphone volume."
+        )
+    elif level['quality'] == 'LOW':
+        results['recommendations'].append(
+            "Audio level is very low. Increase microphone volume in system settings."
+        )
+
+    # Test 3: Loopback
+    print(f"  [3/3] Testing loopback (play beep and record)...")
+    loopback = self.loopback_test(device_id, timeout=3)
+    results['tests']['loopback'] = loopback
+
+    if loopback['success']:
+        if loopback['beep_detected']:
+            print(f"    ✓ Beep detected at {loopback['frequency']:.0f}Hz")
+        else:
+            print(f"    ⚠️ No beep detected (audio level: {loopback['audio_level']:.4f})")
+            results['recommendations'].append(
+                "Loopback test failed - microphone may be muted or disconnected."
+            )
+    else:
+        print(f"    ✗ Loopback failed: {loopback['error'][:50]}")
+        results['recommendations'].append(
+            f"Loopback test error: {loopback['error'][:100]}"
+        )
+    _full_diagnostic_part3(self)
+
+
+def _full_diagnostic_part3(self):
+    """Full diagnostic part 3."""
+
+
+    # Determine overall status
+    if avail['available'] and level['quality'] in ('EXCELLENT', 'GOOD'):
+        results['overall_status'] = 'OK'
+    elif avail['available'] and level['quality'] in ('LOW',):
+        results['overall_status'] = 'DEGRADED'
+    else:
+        results['overall_status'] = 'FAILED'
+
+    return results
+
+
     def full_diagnostic(self, device_id: Optional[int] = None) -> Dict[str, Any]:
         """
         Run full microphone diagnostic.
@@ -258,58 +319,103 @@ class MicrophoneHealer:
         avail = self.test_device_availability(device_id)
         results['tests']['availability'] = avail
         print(f"    {'✓' if avail['available'] else '✗'} {avail['reason']}")
-        
-        if not avail['available']:
-            results['recommendations'].append(
-                f"Device is locked: {avail['reason']}. "
-                "Close other apps using this microphone."
-            )
-        
-        # Test 2: Audio Level
-        print(f"  [2/3] Testing audio level (2 seconds, speak now!)...")
-        level = self.audio_level_check(device_id, duration=2)
-        results['tests']['audio_level'] = level
-        print(f"    ✓ Level: {level['level']:.4f} ({level['quality']})")
-        
-        if level['quality'] == 'SILENT':
-            results['recommendations'].append(
-                "Microphone is capturing silence. "
-                "Check Windows Volume Mixer - increase microphone volume."
-            )
-        elif level['quality'] == 'LOW':
-            results['recommendations'].append(
-                "Audio level is very low. Increase microphone volume in system settings."
-            )
-        
-        # Test 3: Loopback
-        print(f"  [3/3] Testing loopback (play beep and record)...")
-        loopback = self.loopback_test(device_id, timeout=3)
-        results['tests']['loopback'] = loopback
-        
-        if loopback['success']:
-            if loopback['beep_detected']:
-                print(f"    ✓ Beep detected at {loopback['frequency']:.0f}Hz")
-            else:
-                print(f"    ⚠️ No beep detected (audio level: {loopback['audio_level']:.4f})")
-                results['recommendations'].append(
-                    "Loopback test failed - microphone may be muted or disconnected."
-                )
-        else:
-            print(f"    ✗ Loopback failed: {loopback['error'][:50]}")
-            results['recommendations'].append(
-                f"Loopback test error: {loopback['error'][:100]}"
-            )
-        
-        # Determine overall status
-        if avail['available'] and level['quality'] in ('EXCELLENT', 'GOOD'):
-            results['overall_status'] = 'OK'
-        elif avail['available'] and level['quality'] in ('LOW',):
-            results['overall_status'] = 'DEGRADED'
-        else:
-            results['overall_status'] = 'FAILED'
-        
-        return results
+    _full_diagnostic_part3_part4(self)
     
+def _auto_heal_part1_part2(self):
+    """Auto heal part1 part 2."""
+
+
+    print("\n🔧 AUTO-HEALING MICROPHONE SYSTEM")
+    print("=" * 60)
+
+    # Step 1: Get all input devices
+    print("\n[1] Discovering audio devices...")
+    devices = sd.query_devices()
+    input_devices = [i for i, d in enumerate(devices) 
+                    if d['max_input_channels'] > 0]
+    print(f"  ✓ Found {len(input_devices)} input device(s)")
+    actions.append(f"Discovered {len(input_devices)} input devices")
+
+    # Step 2: Check default device first
+    default_dev = sd.default.device[0]
+    print(f"\n[2] Testing default device (#{default_dev})...")
+    diag = self.full_diagnostic(default_dev)
+
+    if diag['overall_status'] == 'OK':
+        print(f"  ✓ Default device is OK!")
+        return {
+            'healed': True,
+            'working_device': default_dev,
+            'actions_taken': actions + ["Default device is healthy"],
+            'status': 'OK'
+        }
+
+    actions.append(f"Default device status: {diag['overall_status']}")
+
+    # Step 3: Try other Logi webcam devices
+    print(f"\n[3] Trying alternate Logi devices...")
+    logi_devices = [i for i in input_devices 
+                   if 'logi' in devices[i]['name'].lower()]
+
+    for dev_id in logi_devices:
+        if dev_id == default_dev:
+            continue
+
+        print(f"  Trying device #{dev_id}: {devices[dev_id]['name']}")
+        avail = self.test_device_availability(dev_id)
+
+        if avail['available']:
+            level = self.audio_level_check(dev_id, duration=1)
+            if level['quality'] in ('EXCELLENT', 'GOOD'):
+                print(f"  ✓ Found working device!")
+                actions.append(f"Switched to device #{dev_id}")
+                return {
+                    'healed': True,
+                    'working_device': dev_id,
+                    'actions_taken': actions,
+                    'status': 'RECOVERED'
+                }
+
+    actions.append("Could not find alternate working device")
+    _auto_heal_part1(self)
+
+
+def _auto_heal_part1(self):
+    """Auto heal part 1."""
+
+
+    # Step 4: Try all remaining devices
+    print(f"\n[4] Trying all other input devices...")
+    for dev_id in input_devices:
+        if dev_id in logi_devices or dev_id == default_dev:
+            continue
+
+        avail = self.test_device_availability(dev_id)
+        if avail['available']:
+            level = self.audio_level_check(dev_id, duration=1)
+            if level['quality'] in ('EXCELLENT', 'GOOD'):
+                print(f"  ✓ Found working device: {avail['device_name']}")
+                actions.append(f"Fallback to device #{dev_id}")
+                return {
+                    'healed': True,
+                    'working_device': dev_id,
+                    'actions_taken': actions,
+                    'status': 'FALLBACK'
+                }
+
+    # Step 5: Print recommendations
+    print(f"\n[5] Healing failed. Recommendations:")
+    for rec in diag['recommendations']:
+        print(f"  • {rec}")
+
+    return {
+        'healed': False,
+        'working_device': None,
+        'actions_taken': actions,
+        'status': 'FAILED - See recommendations'
+    }
+
+
     def auto_heal(self) -> Dict[str, Any]:
         """
         Automatically diagnose and heal microphone issues.
@@ -322,91 +428,7 @@ class MicrophoneHealer:
                 'status': str
             }
         """
-        actions = []
-        
-        print("\n🔧 AUTO-HEALING MICROPHONE SYSTEM")
-        print("=" * 60)
-        
-        # Step 1: Get all input devices
-        print("\n[1] Discovering audio devices...")
-        devices = sd.query_devices()
-        input_devices = [i for i, d in enumerate(devices) 
-                        if d['max_input_channels'] > 0]
-        print(f"  ✓ Found {len(input_devices)} input device(s)")
-        actions.append(f"Discovered {len(input_devices)} input devices")
-        
-        # Step 2: Check default device first
-        default_dev = sd.default.device[0]
-        print(f"\n[2] Testing default device (#{default_dev})...")
-        diag = self.full_diagnostic(default_dev)
-        
-        if diag['overall_status'] == 'OK':
-            print(f"  ✓ Default device is OK!")
-            return {
-                'healed': True,
-                'working_device': default_dev,
-                'actions_taken': actions + ["Default device is healthy"],
-                'status': 'OK'
-            }
-        
-        actions.append(f"Default device status: {diag['overall_status']}")
-        
-        # Step 3: Try other Logi webcam devices
-        print(f"\n[3] Trying alternate Logi devices...")
-        logi_devices = [i for i in input_devices 
-                       if 'logi' in devices[i]['name'].lower()]
-        
-        for dev_id in logi_devices:
-            if dev_id == default_dev:
-                continue
-            
-            print(f"  Trying device #{dev_id}: {devices[dev_id]['name']}")
-            avail = self.test_device_availability(dev_id)
-            
-            if avail['available']:
-                level = self.audio_level_check(dev_id, duration=1)
-                if level['quality'] in ('EXCELLENT', 'GOOD'):
-                    print(f"  ✓ Found working device!")
-                    actions.append(f"Switched to device #{dev_id}")
-                    return {
-                        'healed': True,
-                        'working_device': dev_id,
-                        'actions_taken': actions,
-                        'status': 'RECOVERED'
-                    }
-        
-        actions.append("Could not find alternate working device")
-        
-        # Step 4: Try all remaining devices
-        print(f"\n[4] Trying all other input devices...")
-        for dev_id in input_devices:
-            if dev_id in logi_devices or dev_id == default_dev:
-                continue
-            
-            avail = self.test_device_availability(dev_id)
-            if avail['available']:
-                level = self.audio_level_check(dev_id, duration=1)
-                if level['quality'] in ('EXCELLENT', 'GOOD'):
-                    print(f"  ✓ Found working device: {avail['device_name']}")
-                    actions.append(f"Fallback to device #{dev_id}")
-                    return {
-                        'healed': True,
-                        'working_device': dev_id,
-                        'actions_taken': actions,
-                        'status': 'FALLBACK'
-                    }
-        
-        # Step 5: Print recommendations
-        print(f"\n[5] Healing failed. Recommendations:")
-        for rec in diag['recommendations']:
-            print(f"  • {rec}")
-        
-        return {
-            'healed': False,
-            'working_device': None,
-            'actions_taken': actions,
-            'status': 'FAILED - See recommendations'
-        }
+    _auto_heal_part1_part2(self)
 
 
 # Test script

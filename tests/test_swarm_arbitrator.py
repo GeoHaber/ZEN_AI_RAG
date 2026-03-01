@@ -91,7 +91,7 @@ class TestAgentPerformanceTracker:
 
     def test_init_creates_database(self, temp_db):
         """Test database initialization."""
-        tracker = AgentPerformanceTracker(db_path=temp_db)
+        AgentPerformanceTracker(db_path=temp_db)
 
         # Check database exists
         assert Path(temp_db).exists()
@@ -411,6 +411,7 @@ class TestTimeoutHandling:
 
         # Mock successful response
         async def mock_query(client, endpoint, messages):
+            """Mock query."""
             await asyncio.sleep(0.1)  # Fast response
             return {
                 "content": "Test response",
@@ -553,7 +554,9 @@ class TestIntegration:
 
         # Mock streaming referee response
         async def mock_stream(*args, **kwargs):
+            """Mock stream."""
             class MockStream:
+                """MockStream class."""
                 async def __aenter__(self):
                     return self
                 async def __aexit__(self, *args):

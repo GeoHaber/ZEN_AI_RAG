@@ -4,8 +4,7 @@ model_orchestrator.py - Intelligent Traffic Control for ZenAI V2
 Routes user requests to specialized expert models based on intent and resources.
 """
 import logging
-import asyncio
-from typing import Dict, Optional, AsyncGenerator
+from typing import Optional, AsyncGenerator
 from .resource_manager import resource_manager
 
 logger = logging.getLogger("Orchestrator")
@@ -19,6 +18,7 @@ class ModelOrchestrator:
     """
     
     def __init__(self, backend):
+        """Initialize instance."""
         self.backend = backend
         self.current_model = None
         self.router_model = "qwen2.5-3b-instruct-q5_k_m.gguf" # Lightweight Router

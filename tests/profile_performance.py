@@ -24,39 +24,41 @@ def measure(name: str, func):
         print(f"❌ {name}: FAILED after {elapsed:.1f}ms - {e}")
         return None, elapsed
 
-def main():
+def _do_main_setup():
+    """Helper: setup phase for main."""
+
     print("\n" + "="*60)
     print("  ZenAI Performance Profiler")
     print("="*60 + "\n")
-    
+
     results = {}
-    
+
     # 1. Config System Load
     results['config'], _ = measure("Config System Import", lambda: __import__('config_system'))
-    
+
     # 2. Heavy Module Imports
     print("\n--- Heavy Imports ---")
     results['sentence_tf'], results['sentence_tf_time'] = measure(
         "SentenceTransformers", 
         lambda: __import__('sentence_transformers')
     )
-    
+
     results['faiss'], _ = measure("FAISS", lambda: __import__('faiss'))
     results['nicegui'], _ = measure("NiceGUI", lambda: __import__('nicegui'))
-    
+
     # 3. RAG Pipeline Init
     print("\n--- RAG Pipeline ---")
     from zena_mode.rag_pipeline import LocalRAG
     import tempfile
-    
+
     temp_dir = tempfile.mkdtemp()
-    
+
     rag_instance, rag_init_time = measure(
         "RAG Init (cold)", 
         lambda: LocalRAG(cache_dir=temp_dir)
     )
     results['rag_init'] = rag_init_time
-    
+
     # 4. RAG Indexing (small batch)
     print("\n--- RAG Indexing ---")
     test_docs = [
@@ -64,13 +66,19 @@ def main():
          "url": f"http://test.com/{i}", "title": f"Doc {i}"}
         for i in range(10)
     ]
-    
+
     _, index_time = measure(
         "Index 10 Documents",
         lambda: rag_instance.build_index(test_docs)
     )
     results['rag_index_10'] = index_time
-    
+
+    return rag_instance, results, temp_dir
+
+
+def main():
+    """Main."""
+    rag_instance, results, temp_dir = _do_main_setup()
     # 5. RAG Search (cold + warm)
     print("\n--- RAG Search ---")
     _, search_cold = measure(

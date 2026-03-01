@@ -6,7 +6,6 @@ This provides true async/await, middleware support, and better error handling.
 """
 import logging
 import threading
-from typing import Optional
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -90,18 +89,22 @@ async def api_key_auth(request: Request, call_next):
 
 # --- Pydantic Models ---
 class SwapRequest(BaseModel):
+    """SwapRequest class."""
     model: str
 
 
 class ScaleRequest(BaseModel):
+    """ScaleRequest class."""
     count: int = 3
 
 
 class ChatRequest(BaseModel):
+    """ChatRequest class."""
     message: str
     mode: str = "fast"  # "fast", "deep_thinking", "council"
 
 class DownloadRequest(BaseModel):
+    """DownloadRequest class."""
     repo_id: str
     filename: str
 
@@ -128,6 +131,7 @@ async def chat_swarm(request: Request):
     
     # Simple adapter for BaseZenHandler compatibility
     class AsyncAdapter:
+        """AsyncAdapter class."""
         def __init__(self, req, body): 
             self.req = req
             self.body = body
@@ -329,6 +333,7 @@ async def scale_swarm(req: ScaleRequest):
 
 
 class LaunchRequest(BaseModel):
+    """LaunchRequest class."""
     model: str
     port: int
 

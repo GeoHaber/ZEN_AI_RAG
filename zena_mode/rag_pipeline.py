@@ -7,12 +7,9 @@ import logging
 import threading
 import re
 from pathlib import Path
-from typing import List, Dict, Generator, Optional, Set, FrozenSet
-from collections import Counter
-from functools import lru_cache
-from math import log2
+from typing import List, Dict, Generator, Optional, Set
 from .chunker import TextChunker, ChunkerConfig
-from .profiler import profile_execution, profile_async_execution
+from .profiler import profile_execution
 from config_system import config
 
 logger = logging.getLogger(__name__)
@@ -62,6 +59,7 @@ class SemanticCache:
     """Multi-tier cache using both exact match and cosine similarity."""
     
     def __init__(self, model, max_entries: int = 1000, ttl: int = 3600, threshold: float = 0.95):
+        """Initialize instance."""
         self.model = model
         self.max_entries = max_entries
         self.ttl = ttl
@@ -138,7 +136,7 @@ class SemanticCache:
                 # Prune Semantic (Small buffer)
                 if len(self._semantic_cache) > (self.max_entries // 5): 
                     self._semantic_cache.pop(0)
-            except: pass
+            except Exception: pass
             
     def clear(self):
         with self._lock:
@@ -146,68 +144,81 @@ class SemanticCache:
             self._semantic_cache.clear()
 
 
-class LocalRAG:
-    """
-    Production-grade RAG system using Qdrant.
-    Combines Qdrant's high-performance vector search with BM25 keyword search.
-    """
-    
+class _LocalRAGBase:
+    """Base methods for LocalRAG."""
+
+def _do_do_init___setup_setup(cache_dir):
+    """Helper: setup phase for _do_init___setup."""
+
+
+    self.cache_dir = cache_dir or config.BASE_DIR / "rag_storage"
+    self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+    self._lock = threading.Lock()
+
+
+    # Initialize Embedding Model
+    self._lazy_load_deps()
+
+    # Resolve Model Name from Config
+    profile = config.rag.embedding_model # e.g. "balanced"
+    model_name = config.embedding_config.MODELS.get(profile)
+    if not model_name: 
+        logger.warning(f"[RAG] Unknown profile '{profile}', falling back to 'fast'")
+        model_name = config.embedding_config.MODELS['fast']
+
+    device = "cuda" if config.rag.use_gpu and hasattr(config.rag, "use_gpu") else "cpu"
+    # Since torch is lazy loaded, we check availability inside try block
+
+    logger.info(f"[RAG] Loading transformer: {model_name} (Target Device: {device})")
+
+    try:
+        # Check for GPU if requested
+        import torch
+        if device == "cuda" and not torch.cuda.is_available():
+            logger.warning("[RAG] GPU requested but not available. Falling back to CPU.")
+            device = "cpu"
+
+        self.model = SentenceTransformer(model_name, device=device)
+    except Exception as e:
+        logger.error(f"[RAG] Failed to load {model_name}: {e}")
+        fallback = config.embedding_config.fallback_model
+        fallback_name = config.embedding_config.MODELS[fallback]
+        if model_name != fallback_name:
+            logger.info(f"[RAG] Attempting fallback to: {fallback_name}")
+            try:
+                self.model = SentenceTransformer(fallback_name, device="cpu")
+            except Exception as ex:
+                 logger.critical(f"[RAG] Fallback failed: {ex}")
+                 raise ex
+        else:
+            raise e
+
+    return device
+
+    return device
+
+
+def _do_do_init___setup_init(cache_dir):
+    """Helper: setup phase for _do_init___setup."""
+
+    _do_do_init___setup_setup(cache_dir)
+
     def __init__(self, cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or config.BASE_DIR / "rag_storage"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
-        self._lock = threading.Lock()
-        
-        
-        # Initialize Embedding Model
-        self._lazy_load_deps()
-        
-        # Resolve Model Name from Config
-        profile = config.rag.embedding_model # e.g. "balanced"
-        model_name = config.embedding_config.MODELS.get(profile)
-        if not model_name: 
-            logger.warning(f"[RAG] Unknown profile '{profile}', falling back to 'fast'")
-            model_name = config.embedding_config.MODELS['fast']
-
-        device = "cuda" if config.rag.use_gpu and hasattr(config.rag, "use_gpu") else "cpu"
-        # Since torch is lazy loaded, we check availability inside try block
-        
-        logger.info(f"[RAG] Loading transformer: {model_name} (Target Device: {device})")
-        
-        try:
-            # Check for GPU if requested
-            import torch
-            if device == "cuda" and not torch.cuda.is_available():
-                logger.warning("[RAG] GPU requested but not available. Falling back to CPU.")
-                device = "cpu"
-            
-            self.model = SentenceTransformer(model_name, device=device)
-        except Exception as e:
-            logger.error(f"[RAG] Failed to load {model_name}: {e}")
-            fallback = config.embedding_config.fallback_model
-            fallback_name = config.embedding_config.MODELS[fallback]
-            if model_name != fallback_name:
-                logger.info(f"[RAG] Attempting fallback to: {fallback_name}")
-                try:
-                    self.model = SentenceTransformer(fallback_name, device="cpu")
-                except Exception as ex:
-                     logger.critical(f"[RAG] Fallback failed: {ex}")
-                     raise ex
-            else:
-                raise e
-
+        """Initialize instance."""
+        device = _do_init___setup(cache_dir)
         # Enable Half Precision on GPU
         if device == "cuda":
             try:
                 self.model.half()
                 logger.info("[RAG] Enabled FP16 precision for embeddings.")
-            except: pass
+            except Exception: pass
 
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
-        
+
         # Dynamic Collection Name (prevents dimension mismatch crashes)
         self.collection_name = f"zenai_knowledge_{self.embedding_dim}"
-        
+
         # Initialize Qdrant Client (100% Local)
         try:
             self.qdrant = QdrantClient(path=str(self.cache_dir))
@@ -221,27 +232,27 @@ class LocalRAG:
             else:
                 logger.error(f"[RAG] ❌ Failed to initialize Qdrant: {e}")
                 raise
-        
+
         # Standard In-memory buffers for quick lookups and BM25
         self.chunks = []         # Metadata cache for BM25 mapping
         self.chunk_hashes = set() # For O(1) exact duplicate check
         self.bm25 = None
         self.cross_encoder = None # Lazy loaded
         self._tokenizer_pattern = re.compile(r'\w+')
-        
-        
+
+
         # Initialize Semantic Cache (New)
         self.cache = SemanticCache(self.model, max_entries=1000, ttl=3600)
-        
+
         # Loader
         self._load_metadata()
-        
+
         # Initialize Chunker
         self.chunker = TextChunker()
-        
+
         # --- COMPATIBILITY SHIM FOR LEGACY TESTS ---
         self.index = self # Alias for old tests (allows rag.index.ntotal)
-        
+
         # Initialize Advanced Extractor
         try:
             from .universal_extractor import UniversalExtractor
@@ -252,9 +263,9 @@ class LocalRAG:
     def _lazy_load_deps(self):
         """Lazy load heavy dependencies to prevent startup freeze."""
         global SentenceTransformer, CrossEncoder, QdrantClient, Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, np, DEPS_AVAILABLE
-        
+
         if SentenceTransformer is not None: return
-        
+
         try:
              logger.info("[RAG] Lazy loading heavy dependencies (SentenceTransformers, Qdrant)...")
              from sentence_transformers import SentenceTransformer, CrossEncoder
@@ -273,12 +284,12 @@ class LocalRAG:
         logger.info("[RAG] Warming up models...")
         # 1. Warmup Embedding Model
         _ = self.model.encode(["warmup"], normalize_embeddings=True)
-        
+
         # 2. Warmup Cross-Encoder (New)
         if self.cross_encoder is None:
             self.cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
             _ = self.cross_encoder.predict([["warmup query", "warmup doc"]])
-            
+
         logger.info("[RAG] Models warmed up and ready.")
 
     @property
@@ -286,8 +297,38 @@ class LocalRAG:
         """Compatibility shim for legacy FAISS tests."""
         try:
             return self.qdrant.get_collection(self.collection_name).points_count
-        except:
+        except Exception:
             return 0
+
+
+def _do_init___setup_part1():
+    """Do init   setup part 1."""
+
+
+    def close(self):
+        """Explicitly close the Qdrant client to release storage locks."""
+        try:
+            if hasattr(self, 'qdrant'):
+                del self.qdrant
+        except Exception:
+            pass
+
+    def _rebuild_bm25(self):
+        """Rebuild BM25 index for keyword search."""
+        if not BM25_AVAILABLE or not self.chunks:
+            return
+
+        try:
+            tokenized_corpus = [self._tokenize(c['text']) for c in self.chunks]
+            self.bm25 = BM25Okapi(tokenized_corpus)
+            logger.debug(f"[RAG] BM25 Index rebuilt with {len(self.chunks)} items")
+        except Exception as e:
+            logger.error(f"[RAG] BM25 rebuild failed: {e}")
+
+
+def _do_init___setup(cache_dir):
+    """Helper: setup phase for __init__."""
+    _do_do_init___setup_init(cache_dir)
 
     def close(self):
         """Explicitly close the Qdrant client to release storage locks."""
@@ -299,7 +340,7 @@ class LocalRAG:
                 elif hasattr(self.qdrant, '_client') and hasattr(self.qdrant._client, 'close'):
                     self.qdrant._client.close()
                 del self.qdrant
-        except:
+        except Exception:
             pass
 
     def __del__(self):
@@ -373,26 +414,15 @@ class LocalRAG:
     def _tokenize(self, text: str) -> List[str]:
         """Standard tokenizer for BM25 and processing."""
         return self._tokenizer_pattern.findall(text.lower())
+    _do_init___setup_part1()
 
-    def close(self):
-        """Explicitly close the Qdrant client to release storage locks."""
-        try:
-            if hasattr(self, 'qdrant'):
-                del self.qdrant
-        except:
-            pass
 
-    def _rebuild_bm25(self):
-        """Rebuild BM25 index for keyword search."""
-        if not BM25_AVAILABLE or not self.chunks:
-            return
-        
-        try:
-            tokenized_corpus = [self._tokenize(c['text']) for c in self.chunks]
-            self.bm25 = BM25Okapi(tokenized_corpus)
-            logger.debug(f"[RAG] BM25 Index rebuilt with {len(self.chunks)} items")
-        except Exception as e:
-            logger.error(f"[RAG] BM25 rebuild failed: {e}")
+class LocalRAG(_LocalRAGBase):
+    """
+    Production-grade RAG system using Qdrant.
+    Combines Qdrant's high-performance vector search with BM25 keyword search.
+    """
+    
 
     def _calculate_entropy(self, text: str) -> float:
         """Compatibility delegator for tests."""
@@ -412,7 +442,7 @@ class LocalRAG:
                 score_threshold=threshold
             ).points
             return len(results) > 0
-        except:
+        except Exception:
             return False
 
     def chunk_documents(self, documents: List[Dict], chunk_size: int = 500, 
@@ -487,7 +517,7 @@ class LocalRAG:
                         if self._find_near_duplicate(embedding, threshold):
                             continue
                         
-                        point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
+                        point_id = int(hashlib.sha256(text_hash.encode()).hexdigest()[:16], 16)
                         
                         payload = {
                             "text": text,
@@ -545,7 +575,7 @@ class LocalRAG:
                 embedding = self.model.encode([text], normalize_embeddings=True)[0]
                 if self._find_near_duplicate(embedding, threshold): continue
                 
-                point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
+                point_id = int(hashlib.sha256(text_hash.encode()).hexdigest()[:16], 16)
                 
                 payload = {
                      "text": text,
@@ -696,7 +726,7 @@ class LocalRAG:
                     import torch
                     if device == "cuda" and not torch.cuda.is_available():
                          device = "cpu"
-                except: device = "cpu"
+                except Exception: device = "cpu"
 
                 self.cross_encoder = CrossEncoder(model_name, device=device)
 
@@ -725,12 +755,13 @@ class LocalRAG:
         return True
 
     def get_stats(self) -> Dict:
+        """Get stats."""
         if not self.qdrant:
             return {"points_count": len(self.chunks), "status": "degraded"}
         try:
             info = self.qdrant.get_collection(self.collection_name)
             return {"total_chunks": info.points_count, "collection": self.collection_name}
-        except:
+        except Exception:
             return {"error": "Collection not available"}
 
 

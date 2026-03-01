@@ -51,6 +51,7 @@ class TestAttachmentState:
         errors = []
         
         def set_attachment(i):
+            """Set attachment."""
             try:
                 state.set(f"file{i}.txt", f"content{i}", f"preview{i}")
                 time.sleep(0.001)  # Simulate some work

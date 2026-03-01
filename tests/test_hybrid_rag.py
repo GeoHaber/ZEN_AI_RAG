@@ -18,7 +18,7 @@ def temp_rag(tmp_path):
     if test_dir.exists():
         try:
             shutil.rmtree(test_dir, ignore_errors=True)
-        except:
+        except Exception:
             pass
 
 def test_hybrid_search_precision(temp_rag):

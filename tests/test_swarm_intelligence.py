@@ -33,7 +33,6 @@ async def test_latency_sorting(arbitrator, mocker):
 def test_hallucination_penalty_logic(arbitrator):
     """Verify that the verification score affects selection logic."""
     # Mock a verification result
-    verification = {"score": 0.2, "reason": "Unsupported claims"}
     # The logic should eventually use this to penalize the agent's reliability
     pass
 

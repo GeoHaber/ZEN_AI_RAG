@@ -3,6 +3,7 @@ from zena_mode.rag_manager import RAGManager
 
 
 def test_update_and_read_consistency():
+    """Test update and read consistency."""
     mgr = RAGManager()
 
     def writer(i):
@@ -11,6 +12,7 @@ def test_update_and_read_consistency():
         mgr.update_documents(docs, paths)
 
     def reader():
+        """Reader."""
         d = mgr.documents
         p = mgr.file_paths
         # Ensure lengths match
@@ -25,6 +27,7 @@ def test_update_and_read_consistency():
 
 
 def test_clear_documents():
+    """Test clear documents."""
     mgr = RAGManager()
     mgr.update_documents(['a', 'b'], ['p1', 'p2'])
     mgr.clear_documents()

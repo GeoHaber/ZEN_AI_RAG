@@ -18,39 +18,39 @@ class DialogsFactory:
         dialogs = {}
         
         # 1. Custom Model Download Dialog
-        with ui.dialog() as model_dialog:
-            with ui.card().classes('w-full max-w-lg p-6 bg-white dark:bg-slate-800'):
-                ui.label(locale.MODEL_CUSTOM_DOWNLOAD).classes('text-lg font-bold mb-4 ' + Styles.TEXT_PRIMARY)
-                
-                repo_input = ui.input('HuggingFace Repo', placeholder='TheBloke/Llama-2-7B-Chat-GGUF').classes('w-full mb-2').props('outlined dense')
-                file_input = ui.input('Filename', placeholder='llama-2-7b-chat.Q4_K_M.gguf').classes('w-full mb-4').props('outlined dense')
-                
-                async def download_custom():
-                    repo = repo_input.value.strip()
-                    filename = file_input.value.strip()
-                    if not repo or not filename:
-                        ui.notify("Please fill in both fields", color='warning')
-                        return
-                        
-                    model_dialog.close()
-                    # Trigger download via backend API (Action logic moved here for simplicity or delegate)
-                    import asyncio
-                    import requests
-                    ui.notify(f"⬇️ Requesting: {filename}...", color='info')
-                    try:
-                        response = await asyncio.to_thread(requests.post, "http://127.0.0.1:8002/models/download", 
-                                                         json={"repo_id": repo, "filename": filename}, timeout=5)
-                        if response.status_code == 200:
-                            ui.notify("✅ Download started!", color='positive')
-                        else:
-                            ui.notify(f"❌ Failed: {response.text}", color='negative')
-                    except Exception as e:
-                        ui.notify(f"❌ Error: {e}", color='negative')
+        with ui.dialog() as model_dialog, ui.card().classes('w-full max-w-lg p-6 bg-white dark:bg-slate-800'):
+            ui.label(locale.MODEL_CUSTOM_DOWNLOAD).classes('text-lg font-bold mb-4 ' + Styles.TEXT_PRIMARY)
 
-                with ui.row().classes('w-full justify-end gap-2'):
-                    ui.button(locale.BTN_CANCEL, on_click=model_dialog.close).props('flat color=grey')
-                    ui.button(locale.BTN_DOWNLOAD, on_click=download_custom).props('unelevated color=primary')
-        
+            repo_input = ui.input('HuggingFace Repo', placeholder='TheBloke/Llama-2-7B-Chat-GGUF').classes('w-full mb-2').props('outlined dense')
+            file_input = ui.input('Filename', placeholder='llama-2-7b-chat.Q4_K_M.gguf').classes('w-full mb-4').props('outlined dense')
+
+            async def download_custom():
+                """Download custom."""
+                repo = repo_input.value.strip()
+                filename = file_input.value.strip()
+                if not repo or not filename:
+                    ui.notify("Please fill in both fields", color='warning')
+                    return
+
+                model_dialog.close()
+                # Trigger download via backend API (Action logic moved here for simplicity or delegate)
+                import asyncio
+                import requests
+                ui.notify(f"⬇️ Requesting: {filename}...", color='info')
+                try:
+                    response = await asyncio.to_thread(requests.post, "http://127.0.0.1:8002/models/download", 
+                                                     json={"repo_id": repo, "filename": filename}, timeout=5)
+                    if response.status_code == 200:
+                        ui.notify("✅ Download started!", color='positive')
+                    else:
+                        ui.notify(f"❌ Failed: {response.text}", color='negative')
+                except Exception as e:
+                    ui.notify(f"❌ Error: {e}", color='negative')
+
+            with ui.row().classes('w-full justify-end gap-2'):
+                ui.button(locale.BTN_CANCEL, on_click=model_dialog.close).props('flat color=grey')
+                ui.button(locale.BTN_DOWNLOAD, on_click=download_custom).props('unelevated color=primary')
+
         dialogs['model'] = model_dialog
 
         # 2. Settings Dialog
@@ -66,6 +66,7 @@ class DialogsFactory:
                 info_label = ui.label("Checking version...").classes('text-sm text-gray-500 mb-4')
                 
                 async def run_update():
+                    """Run update."""
                     info_label.text = "Updating..."
                     # Mock update
                     import asyncio

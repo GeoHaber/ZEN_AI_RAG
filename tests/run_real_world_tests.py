@@ -11,6 +11,61 @@ from zena_mode.scraper import WebsiteScraper
 from zena_mode.web_scanner import WebCrawlScanner
 
 
+def _test_all_sites_part1():
+    """Test all sites part 1."""
+
+    # Summary
+    print("\n" + "="*80)
+    print("SUMMARY")
+    print("="*80)
+
+    total = len(results)
+    passed = sum(1 for r in results if r.get("test_status") == "PASS")
+    unexpected = sum(1 for r in results if r.get("test_status") == "UNEXPECTED")
+    errors = sum(1 for r in results if r.get("test_status") == "ERROR")
+
+    print(f"\nTotal Sites Tested: {total}")
+    print(f"Passed (Matched Expectation): {passed}")
+    print(f"Unexpected Results: {unexpected}")
+    print(f"Errors: {errors}")
+
+    crawlable = sum(1 for r in results if r.get("can_crawl"))
+    blocked = sum(1 for r in results if not r.get("can_crawl") and r.get("test_status") != "ERROR")
+
+    print(f"\nCrawlability:")
+    print(f"  Allowed: {crawlable}/{total}")
+    print(f"  Blocked: {blocked}/{total}")
+
+    # Protection types detected
+    protections = {}
+    for r in results:
+        prot = r.get("bot_protection")
+        if prot:
+            protections[prot] = protections.get(prot, 0) + 1
+
+    if protections:
+        print(f"\nBot Protections Detected:")
+        for prot, count in protections.items():
+            print(f"  {prot}: {count} site(s)")
+
+    # Save results
+    output_file = "test_results_real_world.json"
+    with open(output_file, "w") as f:
+        json.dump({
+            "timestamp": datetime.now().isoformat(),
+            "summary": {
+                "total": total,
+                "passed": passed,
+                "unexpected": unexpected,
+                "errors": errors,
+                "crawlable": crawlable,
+                "blocked": blocked
+            },
+            "protections_detected": protections,
+            "results": results
+        }, f, indent=2)
+
+
 async def test_all_sites():
     """Test all real-world sites."""
     scanner = WebCrawlScanner()
@@ -93,56 +148,7 @@ async def test_all_sites():
                 "test_status": "ERROR"
             })
 
-    # Summary
-    print("\n" + "="*80)
-    print("SUMMARY")
-    print("="*80)
-
-    total = len(results)
-    passed = sum(1 for r in results if r.get("test_status") == "PASS")
-    unexpected = sum(1 for r in results if r.get("test_status") == "UNEXPECTED")
-    errors = sum(1 for r in results if r.get("test_status") == "ERROR")
-
-    print(f"\nTotal Sites Tested: {total}")
-    print(f"Passed (Matched Expectation): {passed}")
-    print(f"Unexpected Results: {unexpected}")
-    print(f"Errors: {errors}")
-
-    crawlable = sum(1 for r in results if r.get("can_crawl"))
-    blocked = sum(1 for r in results if not r.get("can_crawl") and r.get("test_status") != "ERROR")
-
-    print(f"\nCrawlability:")
-    print(f"  Allowed: {crawlable}/{total}")
-    print(f"  Blocked: {blocked}/{total}")
-
-    # Protection types detected
-    protections = {}
-    for r in results:
-        prot = r.get("bot_protection")
-        if prot:
-            protections[prot] = protections.get(prot, 0) + 1
-
-    if protections:
-        print(f"\nBot Protections Detected:")
-        for prot, count in protections.items():
-            print(f"  {prot}: {count} site(s)")
-
-    # Save results
-    output_file = "test_results_real_world.json"
-    with open(output_file, "w") as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "summary": {
-                "total": total,
-                "passed": passed,
-                "unexpected": unexpected,
-                "errors": errors,
-                "crawlable": crawlable,
-                "blocked": blocked
-            },
-            "protections_detected": protections,
-            "results": results
-        }, f, indent=2)
+    _test_all_sites_part1()
 
     print(f"\nFull results saved to: {output_file}")
 

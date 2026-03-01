@@ -82,7 +82,7 @@ class ModernChatMessage:
 
                 # Message bubble with appropriate styling
                 bubble_class = MT.get_chat_bubble(self.role, self.rag_enhanced)
-                message_ui = ui.markdown(self.content).classes(
+                ui.markdown(self.content).classes(
                     bubble_class + ' markdown-content'
                 )
 
@@ -288,11 +288,13 @@ class ModernInputBar:
 
     async def _handle_send(self, e=None):
         """Handle send button click."""
-        if self.on_send and self.input_field:
-            message = self.input_field.value.strip()
-            if message:
-                await self.on_send(message)
-                self.input_field.value = ''
+        if not (self.on_send and self.input_field):
+            return
+
+        message = self.input_field.value.strip()
+        if message:
+            await self.on_send(message)
+            self.input_field.value = ''
 
     def show_attachment(self, filename: str, size: int):
         """Show attachment preview."""

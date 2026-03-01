@@ -28,6 +28,7 @@ verify_python_native_compatibility(["llama_cpp"])
 
 # Example: Model metadata and trust/verification
 def verify_and_score_response(response, worker_id="default", task_type="chat"):
+    """Verify and score response."""
     # Evidence and trust scoring
     evidence = Evidence(type=EvidenceType.DIRECT)
     trust = TrustScore(worker_id=worker_id, task_type=task_type, confidence=ConfidenceLevel.CERTAIN.value, basis="LocalLLM")
@@ -36,6 +37,7 @@ def verify_and_score_response(response, worker_id="default", task_type="chat"):
 
 # --- Modular Setup ---
 def setup_app():
+    """Setup app."""
     setup_crash_handler()
     logger = setup_logging()
     start_background_gateways()
@@ -74,7 +76,9 @@ ZENA_CONFIG = app_state['ZENA_CONFIG']
 ZENA_MODE = app_state['ZENA_MODE']
 
 @ui.page('/')
-async def nebula_page():
+def _do_nebula_page_setup():
+    """Helper: setup phase for nebula_page."""
+
     # --- Modern UI Layout ---
     ui_state = UIState()
     ui_state.session_id = str(uuid.uuid4())[:8]
@@ -114,6 +118,12 @@ async def nebula_page():
         with ui.row().classes('w-full justify-end mt-4'):
             ui.button('RAG Dialog', on_click=lambda: app_state['open_rag_dialog']()).classes('bg-purple-500 text-white rounded px-4 py-2')
 
+    return app_state, handlers, ui_state
+
+
+async def nebula_page():
+    """Nebula page."""
+    app_state, handlers, ui_state = _do_nebula_page_setup()
     # --- Async Error Handling ---
     try:
         await handlers.async_backend.check_health()
@@ -136,9 +146,10 @@ async def nebula_page():
     # 7. Initialize Dark Mode
     from settings import is_dark_mode
     saved_dark_mode = is_dark_mode()
-    dark_mode = ui.dark_mode(value=saved_dark_mode)
+    ui.dark_mode(value=saved_dark_mode)
 
     def update_theme(is_dark: bool):
+        """Update theme."""
         if is_dark:
             header.props('dark'); drawer.props('dark')
             ui.query('body').classes(remove='bg-gray-50 text-gray-900', add='bg-slate-900 text-white')
@@ -165,6 +176,7 @@ register_test_endpoints()
 
 @app.on_startup
 async def on_startup():
+    """On startup."""
     import asyncio
     asyncio.create_task(run_system_checks())
     if ZENA_MODE and rag_system:

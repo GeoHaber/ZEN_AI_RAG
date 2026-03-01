@@ -12,10 +12,11 @@ def test_request_size_limit():
     test_port = 9010
     
     def run_server():
+        """Run server."""
         try:
             server = ThreadingHTTPServer(('127.0.0.1', test_port), ZenAIOrchestrator)
             server.serve_forever()
-        except:
+        except Exception:
             pass
 
     t = threading.Thread(target=run_server, daemon=True)
@@ -29,7 +30,7 @@ def test_request_size_limit():
     
     try:
         url = f"http://127.0.0.1:{test_port}/api/chat"
-        resp = requests.post(url, data=json.dumps({"message": large_data}), timeout=5)
+        resp = requests.post(url, data=json.dumps({"message": large_data}, timeout=30), timeout=5)
         assert resp.status_code == 413, f"Expected 413 for large payload, got {resp.status_code}"
     except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError):
         # This is also a success: the server rejected the large payload by dropping the connection
@@ -55,16 +56,17 @@ def test_invalid_json_handling():
     """Verify that malformed JSON doesn't crash the orchestrator."""
     test_port = 9011
     def run_server():
+        """Run server."""
         try:
             server = ThreadingHTTPServer(('127.0.0.1', test_port), ZenAIOrchestrator)
             server.serve_forever()
-        except: pass
+        except Exception: pass
     t = threading.Thread(target=run_server, daemon=True)
     t.start()
     time.sleep(1)
 
     url = f"http://127.0.0.1:{test_port}/api/chat"
-    resp = requests.post(url, data="{invalid json...", headers={"Content-Type": "application/json"})
+    resp = requests.post(url, data="{invalid json...", headers={"Content-Type": "application/json"}, timeout=30)
     # BaseZenHandler.parse_json_body returns {} on failure, and handler returns 404 because path check might fail or return {}
     # But it shouldn't be a 500 CRASH.
     assert resp.status_code != 500

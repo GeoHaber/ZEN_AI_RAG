@@ -36,88 +36,9 @@ class UploadCleanupPolicy:
         self.max_size_mb = max_size_mb
         self._lock = threading.Lock()
 
-    def cleanup(self) -> dict:
-        """
-        Run cleanup based on policy.
+def _cleanup_part1_part2(self):
+    """Cleanup part1 part 2."""
 
-        Returns:
-            dict with cleanup stats: {'deleted': int, 'freed_mb': float}
-        """
-        with self._lock:
-            if not self.upload_dir.exists():
-                logger.debug(f"[Cleanup] Upload directory does not exist: {self.upload_dir}")
-                return {'deleted': 0, 'freed_mb': 0.0}
-
-            files = list(self.upload_dir.glob('*'))
-            if not files:
-                return {'deleted': 0, 'freed_mb': 0.0}
-
-            deleted_count = 0
-            freed_bytes = 0
-
-            # Step 1: Delete files older than max_age_hours
-            current_time = time.time()
-            max_age_seconds = self.max_age_hours * 3600
-
-            for file_path in files:
-                if file_path.is_file():
-                    file_age = current_time - file_path.stat().st_mtime
-                    if file_age > max_age_seconds:
-                        try:
-                            size = file_path.stat().st_size
-                            file_path.unlink()
-                            deleted_count += 1
-                            freed_bytes += size
-                            logger.info(f"[Cleanup] Deleted old file: {file_path.name} (age: {file_age / 3600:.1f}h)")
-                        except Exception as e:
-                            logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
-
-            # Refresh file list after age-based cleanup
-            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
-
-            # Step 2: If still too many files, delete oldest until under limit
-            if len(files) > self.max_files:
-                # Sort by modification time (oldest first)
-                files_by_time = sorted(files, key=lambda f: f.stat().st_mtime)
-                files_to_delete = len(files) - self.max_files
-
-                for file_path in files_by_time[:files_to_delete]:
-                    try:
-                        size = file_path.stat().st_size
-                        file_path.unlink()
-                        deleted_count += 1
-                        freed_bytes += size
-                        logger.info(f"[Cleanup] Deleted excess file: {file_path.name}")
-                    except Exception as e:
-                        logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
-
-            # Step 3: If total size exceeds limit, delete oldest until under size limit
-            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
-            total_size_mb = sum(f.stat().st_size for f in files) / (1024 * 1024)
-
-            if total_size_mb > self.max_size_mb:
-                # Sort by modification time (oldest first)
-                files_by_time = sorted(files, key=lambda f: f.stat().st_mtime)
-
-                for file_path in files_by_time:
-                    if total_size_mb <= self.max_size_mb:
-                        break
-
-                    try:
-                        size = file_path.stat().st_size
-                        file_path.unlink()
-                        deleted_count += 1
-                        freed_bytes += size
-                        total_size_mb -= size / (1024 * 1024)
-                        logger.info(f"[Cleanup] Deleted oversized file: {file_path.name}")
-                    except Exception as e:
-                        logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
-
-            freed_mb = freed_bytes / (1024 * 1024)
-            if deleted_count > 0:
-                logger.info(f"[Cleanup] Completed: {deleted_count} files deleted, {freed_mb:.2f} MB freed")
-
-            return {'deleted': deleted_count, 'freed_mb': round(freed_mb, 2)}
 
     def get_stats(self) -> dict:
         """
@@ -143,6 +64,105 @@ class UploadCleanupPolicy:
                 'size_mb': round(total_size / (1024 * 1024), 2),
                 'oldest_hours': round(oldest_hours, 1)
             }
+
+
+
+
+def _cleanup_part1_continued(self, files_by_time, freed_mb, size):
+    """Continue _cleanup_part1 logic."""
+    def cleanup(self) -> dict:
+        """
+        Run cleanup based on policy.
+
+        Returns:
+            dict with cleanup stats: {'deleted': int, 'freed_mb': float}
+        """
+        with self._lock:
+            if not self.upload_dir.exists():
+                logger.debug(f"[Cleanup] Upload directory does not exist: {self.upload_dir}")
+                return {'deleted': 0, 'freed_mb': 0.0}
+
+            files = list(self.upload_dir.glob('*'))
+            if not files:
+                return {'deleted': 0, 'freed_mb': 0.0}
+
+            deleted_count = 0
+            freed_bytes = 0
+
+            # Step 1: Delete files older than max_age_hours
+            current_time = time.time()
+            max_age_seconds = self.max_age_hours * 3600
+
+            for file_path in files:
+                if not file_path.is_file():
+                    continue
+                file_age = current_time - file_path.stat().st_mtime
+                if file_age > max_age_seconds:
+                    try:
+                        size = file_path.stat().st_size
+                        file_path.unlink()
+                        deleted_count += 1
+                        freed_bytes += size
+                        logger.info(f"[Cleanup] Deleted old file: {file_path.name} (age: {file_age / 3600:.1f}h)")
+                    except Exception as e:
+                        logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
+
+            # Refresh file list after age-based cleanup
+            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
+
+            # Step 2: If still too many files, delete oldest until under limit
+            if len(files) > self.max_files:
+                # Sort by modification time (oldest first)
+                files_by_time = sorted(files, key=lambda f: f.stat().st_mtime)
+                files_to_delete = len(files) - self.max_files
+
+                for file_path in files_by_time[:files_to_delete]:
+                    try:
+                        size = file_path.stat().st_size
+                        file_path.unlink()
+                        deleted_count += 1
+                        freed_bytes += size
+                        logger.info(f"[Cleanup] Deleted excess file: {file_path.name}")
+                    except Exception as e:
+                        logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
+
+            # Step 3: If total size exceeds limit, delete oldest until under size limit
+            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
+            sum(f.stat().st_size for f in files) / (1024 * 1024)
+        _cleanup_part1(self)
+    _cleanup_part1_part2(self)
+
+
+def _cleanup_part1(self):
+    """Cleanup part 1."""
+
+
+    if total_size_mb > self.max_size_mb:
+        # Sort by modification time (oldest first)
+        files_by_time = sorted(files, key=lambda f: f.stat().st_mtime)
+
+        for file_path in files_by_time:
+            if total_size_mb <= self.max_size_mb:
+                break
+
+            try:
+                size = file_path.stat().st_size
+                file_path.unlink()
+                deleted_count += 1
+                freed_bytes += size
+                total_size_mb -= size / (1024 * 1024)
+                logger.info(f"[Cleanup] Deleted oversized file: {file_path.name}")
+            except Exception as e:
+                logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
+
+    freed_mb = freed_bytes / (1024 * 1024)
+    if deleted_count > 0:
+        logger.info(f"[Cleanup] Completed: {deleted_count} files deleted, {freed_mb:.2f} MB freed")
+
+    return {'deleted': deleted_count, 'freed_mb': round(freed_mb, 2)}
+
+
+    return _cleanup_part1_continued(self, files_by_time, freed_mb, size)
 
 
 # Global instance

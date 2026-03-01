@@ -20,8 +20,10 @@ from zena_mode.rag_pipeline import LocalRAG
 from zena_mode.arbitrage import SwarmArbitrator
 
 class TestRAGPrecision(unittest.TestCase):
+    """TestRAGPrecision class."""
     
     def setUp(self):
+        """Setup."""
         # Reset mocks
         sys.modules['sentence_transformers'].reset_mock()
         sys.modules['qdrant_client'].reset_mock()
@@ -62,6 +64,7 @@ class TestRAGPrecision(unittest.TestCase):
         
         # Define side_effect to score based on content relevance to "Capital of France"
         def predict_side_effect(pairs):
+            """Predict side effect."""
             scores = []
             for query, text in pairs:
                 if "Paris" in text:
@@ -86,6 +89,23 @@ class TestRAGPrecision(unittest.TestCase):
         self.assertEqual(reranked[2]['text'], 'The capital of Texas is Austin.')
         self.assertTrue(reranked[0]['rerank_score'] > reranked[1]['rerank_score'])
 
+def _test_hallucination_verification_mixed_part1(self):
+    """Test hallucination verification mixed part 1."""
+
+
+    # Response has 2 distinct sentences
+    response = "Apples are red. Bananas are purple."
+
+    result = self.arbitrator.verify_hallucination(response, context_chunks)
+
+    print(f"DEBUG RESULT: {result}", file=sys.stderr, flush=True)
+
+    # Should be 0.5 because "Apples are red" is supported, "Bananas are purple" is not
+    self.assertAlmostEqual(result['score'], 0.5)
+    self.assertEqual(len(result['unsupported']), 1)
+    self.assertIn("purple", result['unsupported'][0])
+
+
     def test_hallucination_verification_mixed(self):
         """
         Test verification with a mixed response (partially supported).
@@ -103,6 +123,7 @@ class TestRAGPrecision(unittest.TestCase):
         # Pairs are [ [chunk, sentence], ... ]
         # We need to return logits [Contradiction, Entailment, Neutral]
         def nli_side_effect(pairs):
+            """Nli side effect."""
             # We predict for a BATCH of pairs (one sentence vs all chunks)
             # We check if ANY chunk entails the sentence
             
@@ -135,22 +156,7 @@ class TestRAGPrecision(unittest.TestCase):
         
         mock_nli.predict.side_effect = nli_side_effect
         
-        context_chunks = [
-            "Apples are red.",
-            "Bananas are yellow."
-        ]
-        
-        # Response has 2 distinct sentences
-        response = "Apples are red. Bananas are purple."
-        
-        result = self.arbitrator.verify_hallucination(response, context_chunks)
-        
-        print(f"DEBUG RESULT: {result}", file=sys.stderr, flush=True)
-        
-        # Should be 0.5 because "Apples are red" is supported, "Bananas are purple" is not
-        self.assertAlmostEqual(result['score'], 0.5)
-        self.assertEqual(len(result['unsupported']), 1)
-        self.assertIn("purple", result['unsupported'][0])
+        _test_hallucination_verification_mixed_part1(self)
 
     def test_hallucination_verification_perfect(self):
         """
@@ -161,7 +167,8 @@ class TestRAGPrecision(unittest.TestCase):
         mock_nli = MockCrossEncoder.return_value
         
         def nli_side_effect(pairs):
-            sentence = pairs[0][1]
+            """Nli side effect."""
+            pairs[0][1]
             batch_logits = []
             for chunk, _ in pairs:
                 # Always entail for this test

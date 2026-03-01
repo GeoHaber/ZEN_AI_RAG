@@ -15,10 +15,12 @@ from zena_mode.arbitrage import SwarmArbitrator
 from config_system import AppConfig
 
 class TestArbitratorScaling(unittest.TestCase):
+    """TestArbitratorScaling class."""
     def test_arbitrator_discovers_scaled_swarm(self):
         """Verify that arbitrator finds the correct number of experts after scaling."""
         # Mock Hub scale response and LLM health endpoints to make the test hermetic
         class _MockResp:
+            """_MockResp class."""
             def __init__(self, status_code=200, text=''):
                 self.status_code = status_code
                 self.text = text

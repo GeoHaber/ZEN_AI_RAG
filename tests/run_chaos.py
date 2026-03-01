@@ -5,6 +5,7 @@ import time
 from playwright.sync_api import sync_playwright
 
 def run_chaos():
+    """Run chaos."""
     port = os.environ.get("NICEGUI_SCREEN_TEST_PORT", "8080")
     url = f"http://localhost:{port}"
     print(f"🐒 Unleashing Chaos Monkey on {url}...")
@@ -57,7 +58,7 @@ def run_chaos():
                         target.fill(text, timeout=200)
                     else:
                         target.click(timeout=200, no_wait_after=True)
-                except:
+                except Exception:
                     pass
                 
                 # Check crash

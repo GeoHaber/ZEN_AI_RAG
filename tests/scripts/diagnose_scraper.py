@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ScraperDiagnose")
 
 async def diagnose_url(url):
+    """Diagnose url."""
     print(f"\n--- Diagnosing URL: {url} ---")
     try:
         from zena_mode.async_scraper import SafeAsyncScraper

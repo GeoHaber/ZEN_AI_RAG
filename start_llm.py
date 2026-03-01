@@ -23,6 +23,7 @@ def check_and_install_requirements(requirements_path):
         sys.exit(1)
 # Find requirements.txt (prefer _sandbox/requirements.txt)
 def find_requirements_file():
+    """Find requirements file."""
     candidates = [
         os.path.join(os.path.dirname(__file__), 'requirements.txt'),
         os.path.join(os.path.dirname(__file__), '_sandbox', 'requirements.txt'),
@@ -45,6 +46,7 @@ requirements_path = find_requirements_file()
 
 # Patch requirements for GPU/CPU-specific libraries
 def patch_requirements_for_hardware(req_path, hw_type):
+    """Patch requirements for hardware."""
     with open(req_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     patched = []
@@ -100,10 +102,10 @@ The master control script for ZenAI. Responsibilities:
 
 Strictly follows zena_master_spec.md v3.1.
 """
-import os
-import sys
+# import os
+# import sys
 import time
-import subprocess
+# import subprocess
 import logging
 from pathlib import Path
 
@@ -125,6 +127,7 @@ sys.stdout.flush()
 
 
 def catch_import_errors():
+    """Catch import errors."""
     try:
         from config_system import config, EMOJI
         from utils import (
@@ -189,6 +192,7 @@ def atomic_update_check():
 # Hardware tuning moved to zena_mode.heart_and_brain.ZenHeart
 
 async def main():
+    """Main."""
     try:
         safe_print(f"\n{EMOJI['sparkles']} ZenAI v3.1 Orchestrator Starting...\n")
         

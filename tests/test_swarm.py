@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch, MagicMock, AsyncMock
 from zena_mode.arbitrage import SwarmArbitrator, ConsensusMethod
 
 class TestSwarmArbitrator:
+    """TestSwarmArbitrator class."""
     @pytest.mark.asyncio
     @patch('httpx.AsyncClient')
     async def test_discover_swarm_enabled(self, mock_client_class):
@@ -15,6 +16,7 @@ class TestSwarmArbitrator:
         mock_client_class.return_value.__aenter__.return_value = mock_client
         
         async def mock_get(url, timeout=None):
+            """Mock get."""
             mock_resp = Mock()
             if "8001/health" in url or "8006/health" in url:
                 mock_resp.status_code = 200
@@ -113,15 +115,18 @@ class TestSwarmArbitrator:
         
         with patch.object(arb, '_query_model_with_timeout', side_effect=responses):
             class MockResp:
+                """MockResp class."""
                 async def aiter_lines(self):
                     yield 'data: {"choices": [{"delta": {"content": "Final Result"}}]}'
                     yield 'data: [DONE]'
 
             class MockContext:
+                """MockContext class."""
                 async def __aenter__(self): return MockResp()
                 async def __aexit__(self, *args, **kwargs): pass
 
             class MockClient:
+                """MockClient class."""
                 async def __aenter__(self): return self
                 async def __aexit__(self, *args, **kwargs): pass
                 def stream(self, *args, **kwargs): return MockContext()

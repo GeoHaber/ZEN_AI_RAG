@@ -10,12 +10,14 @@ import logging
 import threading
 import numpy as np
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
 class RAGDatabase:
+    """RAGDatabase class."""
     def __init__(self, db_path: Path):
+        """Initialize instance."""
         self.db_path = db_path
         self.conn = None
         self._lock = threading.RLock()  # Thread-safe access
@@ -172,11 +174,10 @@ class RAGDatabase:
             3. Reset autoincrement counters
             - Thread-safe with lock
         """
-        with self._lock:
-            with self.conn:
-                self.conn.execute("DELETE FROM chunks")
-                self.conn.execute("DELETE FROM documents")
-                # Reset autoincrement
-                self.conn.execute("DELETE FROM sqlite_sequence WHERE name='chunks'")
-                self.conn.execute("DELETE FROM sqlite_sequence WHERE name='documents'")
-                logger.info("[DB] All documents and chunks cleared")
+        with self._lock, self.conn:
+            self.conn.execute("DELETE FROM chunks")
+            self.conn.execute("DELETE FROM documents")
+            # Reset autoincrement
+            self.conn.execute("DELETE FROM sqlite_sequence WHERE name='chunks'")
+            self.conn.execute("DELETE FROM sqlite_sequence WHERE name='documents'")
+            logger.info("[DB] All documents and chunks cleared")

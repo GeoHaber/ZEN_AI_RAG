@@ -93,6 +93,7 @@ class TestConcurrentStress:
         errors = []
         
         def worker(thread_id):
+            """Worker."""
             try:
                 for _ in range(50):
                     _ = config.llm_port
@@ -117,6 +118,7 @@ class TestConcurrentStress:
         errors = []
         
         def mutator(thread_id):
+            """Mutator."""
             try:
                 for i in range(100):
                     key = f"key_{thread_id}_{i % 10}"
@@ -186,6 +188,7 @@ class TestTimeoutAndDeadlock:
         acquired = []
         
         def try_acquire(thread_id):
+            """Try acquire."""
             got_lock = lock.acquire(timeout=0.1)
             acquired.append((thread_id, got_lock))
             if got_lock:
@@ -230,6 +233,7 @@ class TestErrorRecovery:
             raise ValueError("Intentional test error")
         
         def catching_worker():
+            """Catching worker."""
             try:
                 failing_worker()
             except ValueError as e:
@@ -338,6 +342,7 @@ class TestRealWorldFailures:
         results = []
         
         def reader():
+            """Reader."""
             for _ in range(100):
                 try:
                     _ = config.llm_port
@@ -361,6 +366,7 @@ class TestRealWorldFailures:
         lock = threading.Lock()
         
         def modifier():
+            """Modifier."""
             for i in range(100):
                 with lock:
                     state["count"] = i

@@ -42,7 +42,9 @@ def mock_hub_api():
         yield respx_mock
 
 class _SimpleExpertHandler(BaseHTTPRequestHandler):
+    """_SimpleExpertHandler class."""
     def do_GET(self):
+        """Do get."""
         if self.path == '/health':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -57,10 +59,12 @@ class _SimpleExpertHandler(BaseHTTPRequestHandler):
 
 
 class _HubHandler(BaseHTTPRequestHandler):
+    """_HubHandler class."""
     # Shared state will be injected by the fixture
     servers: Dict[int, HTTPServer] = {}
 
     def do_POST(self):
+        """Do post."""
         if self.path == '/swarm/scale':
             length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(length)
@@ -96,6 +100,7 @@ class _HubHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_GET(self):
+        """Do get."""
         if self.path == '/swarm/list':
             ports = list(_HubHandler.servers.keys())
             self.send_response(200)

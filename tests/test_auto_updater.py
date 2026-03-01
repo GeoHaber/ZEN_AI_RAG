@@ -8,6 +8,7 @@ from pathlib import Path
 # but for the test design, we mock the behavior.
 
 class TestAutoUpdater(unittest.TestCase):
+    """TestAutoUpdater class."""
     def setUp(self):
         self.current_version = "b4000"
         self.new_version = "b4100"

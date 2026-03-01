@@ -73,6 +73,7 @@ def add_microphone_permission_check(ui, container):
         
         # Check button
         async def check_microphone():
+            """Check microphone."""
             status_label.text = "🔄 Checking microphone access..."
             status_label.update()
             
@@ -107,58 +108,57 @@ def add_advanced_microphone_panel(ui, backend, container):
         container: Parent container
     """
     
-    with container:
-        with ui.column().classes('gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'):
-            ui.label('🎤 Microphone Diagnostics').classes('font-bold')
-            
-            # Browser status
-            with ui.row().classes('gap-2 items-center'):
-                browser_status = ui.label('🔄 Checking browser...')
-                
-                async def check_browser():
-                    browser_status.text = "✓ Browser OK"
-                    browser_status.classes('text-green-600')
-            
-            ui.timer(0.5, check_browser, once=True)
-            
-            # Backend status
-            with ui.row().classes('gap-2 items-center'):
-                backend_status = ui.label('🔄 Checking backend...')
-                
-                async def check_backend():
-                    try:
-                        if hasattr(backend, 'get_status'):
-                            response = await backend.get_status()
-                            if response and response.get('status') == 'online':
-                                backend_status.text = "✓ Backend OK"
-                                backend_status.classes('text-green-600')
-                            else:
-                                backend_status.text = "❌ Backend offline"
-                                backend_status.classes('text-red-600')
+    with container, ui.column().classes('gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'):
+        ui.label('🎤 Microphone Diagnostics').classes('font-bold')
+
+        # Browser status
+        with ui.row().classes('gap-2 items-center'):
+            browser_status = ui.label('🔄 Checking browser...')
+
+            async def check_browser():
+                browser_status.text = "✓ Browser OK"
+                browser_status.classes('text-green-600')
+
+        ui.timer(0.5, check_browser, once=True)
+
+        # Backend status
+        with ui.row().classes('gap-2 items-center'):
+            backend_status = ui.label('🔄 Checking backend...')
+
+            async def check_backend():
+                """Check backend."""
+                try:
+                    if hasattr(backend, 'get_status'):
+                        response = await backend.get_status()
+                        if response and response.get('status') == 'online':
+                            backend_status.text = "✓ Backend OK"
+                            backend_status.classes('text-green-600')
                         else:
-                            backend_status.text = "⚠️ Cannot check backend"
-                            backend_status.classes('text-yellow-600')
-                    except Exception as e:
-                        backend_status.text = f"❌ Error: {str(e)[:30]}"
-                        backend_status.classes('text-red-600')
-            
-            ui.timer(1.0, check_backend, once=True)
-            
-            # Troubleshooting tips
-            with ui.expansion('Troubleshooting Guide').classes('w-full'):
-                tips = [
-                    ('🔇 No microphone found', 'Connect a microphone or webcam with audio'),
-                    ('🔒 Permission denied', 'Allow microphone access when browser prompts'),
-                    ('🔴 Another app using mic', 'Close other apps using the microphone'),
-                    ('🌐 HTTPS required', 'Only localhost works without HTTPS'),
-                    ('🔊 Audio too quiet', 'Increase microphone volume in system settings'),
-                ]
-                
-                for issue, solution in tips:
-                    with ui.row().classes('gap-2 p-2 border-l-4 border-amber-300 bg-amber-50'):
-                        with ui.column().classes('gap-1'):
-                            ui.label(issue).classes('font-medium text-sm')
-                            ui.label(solution).classes('text-xs text-gray-600')
+                            backend_status.text = "❌ Backend offline"
+                            backend_status.classes('text-red-600')
+                    else:
+                        backend_status.text = "⚠️ Cannot check backend"
+                        backend_status.classes('text-yellow-600')
+                except Exception as e:
+                    backend_status.text = f"❌ Error: {str(e)[:30]}"
+                    backend_status.classes('text-red-600')
+
+        ui.timer(1.0, check_backend, once=True)
+
+        # Troubleshooting tips
+        with ui.expansion('Troubleshooting Guide').classes('w-full'):
+            tips = [
+                ('🔇 No microphone found', 'Connect a microphone or webcam with audio'),
+                ('🔒 Permission denied', 'Allow microphone access when browser prompts'),
+                ('🔴 Another app using mic', 'Close other apps using the microphone'),
+                ('🌐 HTTPS required', 'Only localhost works without HTTPS'),
+                ('🔊 Audio too quiet', 'Increase microphone volume in system settings'),
+            ]
+
+            for issue, solution in tips:
+                with ui.row().classes('gap-2 p-2 border-l-4 border-amber-300 bg-amber-50'), ui.column().classes('gap-1'):
+                    ui.label(issue).classes('font-medium text-sm')
+                    ui.label(solution).classes('text-xs text-gray-600')
 
 
 # Example usage in a NiceGUI page:

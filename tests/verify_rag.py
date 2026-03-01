@@ -8,6 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RAGVerify")
 
 def test_rag():
+    """Test rag."""
     try:
         from config_system import config
         from zena_mode.rag_pipeline import LocalRAG

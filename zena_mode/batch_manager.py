@@ -20,6 +20,7 @@ class BatchManager:
     """
 
     def __init__(self, path: Path = None):
+        """Initialize instance."""
         self._lock = threading.RLock()
         self.path = path or (config.BASE_DIR / 'jobs.json')
         self._jobs: Dict[str, Dict[str, Any]] = {}
@@ -45,6 +46,7 @@ class BatchManager:
             logger.error(f"Failed to save jobs: {e}")
 
     def enqueue(self, job_type: str, params: Dict[str, Any]) -> str:
+        """Enqueue."""
         with self._lock:
             jid = str(uuid.uuid4())
             job = {
@@ -71,6 +73,7 @@ class BatchManager:
         return self._jobs.get(jid)
 
     def start_job(self, jid: str):
+        """Start job."""
         job = self._jobs.get(jid)
         if not job:
             return
@@ -78,6 +81,7 @@ class BatchManager:
             return
 
         def _run():
+            """Run."""
             try:
                 job['status'] = 'running'
                 job['updated_at'] = time.time()

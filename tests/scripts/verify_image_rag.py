@@ -6,6 +6,7 @@ from zena_mode.scraper import WebsiteScraper
 from bs4 import BeautifulSoup
 
 def mock_html_with_images():
+    """Mock html with images."""
     return """
     <html>
         <head><title>Test Page with Images</title></head>
@@ -21,6 +22,7 @@ def mock_html_with_images():
     """
 
 async def verify_image_extraction():
+    """Verify image extraction."""
     print("🔍 Starting Image Extraction Verification...")
     
     scraper = WebsiteScraper("https://mock.test")

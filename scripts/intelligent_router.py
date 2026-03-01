@@ -96,6 +96,7 @@ class RoutingDecision:
     error_msg: str = ""
 
     def to_dict(self) -> Dict:
+        """To dict."""
         return {
             "query_hash": self.query_hash,
             "tier": self.tier.value,
@@ -174,6 +175,7 @@ class IntelligentRouter:
         config: Optional[RouterConfig] = None,
         swarm_arbitrator: Optional[object] = None
     ):
+        """Initialize instance."""
         self.config = config or RouterConfig()
         self.swarm = swarm_arbitrator  # Reference to SwarmArbitrator
 
@@ -206,6 +208,123 @@ class IntelligentRouter:
     # =========================================================================
     # Main Routing Method
     # =========================================================================
+
+def _route_part1_part2(self, query):
+    """Route part1 part 2."""
+
+
+    # =========================================================================
+    # Helper Methods
+    # =========================================================================
+
+    def _hash_query(self, query: str) -> str:
+        """Generate hash of query."""
+        import hashlib
+        normalized = ' '.join(query.lower().strip().split())
+        return hashlib.sha256(normalized.encode()).hexdigest()[:16]
+
+    def _record_decision(self, decision: RoutingDecision):
+        """Record routing decision."""
+        self.stats.record(decision)
+        self.routing_history.append(decision)
+
+        if self.config.log_routing_decisions:
+            logger.info(
+                f"[Router] {decision.tier.value.upper()}: "
+                f"{decision.latency_ms:.1f}ms, "
+                f"${decision.cost_usd:.6f}, "
+                f"{decision.confidence:.0%} confidence"
+            )
+
+    def get_stats(self) -> Dict:
+        """Get router statistics."""
+        stats = self.stats.get_summary()
+
+        # Add tier-specific stats
+        if self.cache:
+            stats["cache_stats"] = self.cache.get_stats()
+
+        if self.mini_rag:
+            stats["mini_rag_stats"] = self.mini_rag.get_stats()
+
+        return stats
+
+    def export_history(self, filepath: Path):
+        """Export routing history to JSON."""
+        try:
+            data = {
+                "summary": self.get_stats(),
+                "history": [d.to_dict() for d in self.routing_history[-1000:]],  # Last 1000
+                "timestamp": datetime.now().isoformat()
+            }
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+
+            logger.info(f"[Router] Exported history to {filepath}")
+
+        except Exception as e:
+            logger.error(f"[Router] Failed to export history: {e}")
+
+
+def _route_part1_part3(self):
+    """Route part1 part 3."""
+
+
+    def print_performance_report(self):
+        """Print detailed performance report."""
+        stats = self.get_stats()
+
+        print("\n" + "="*70)
+        print("INTELLIGENT ROUTER PERFORMANCE REPORT")
+        print("="*70)
+
+        print(f"\n📊 Overall Statistics:")
+        print(f"  Total Queries:    {stats['total_queries']}")
+        print(f"  Avg Latency:      {stats.get('avg_latency_ms', 0):.1f}ms")
+        print(f"  Avg Cost:         ${stats.get('avg_cost_usd', 0):.6f}")
+        print(f"  Total Cost:       ${stats.get('total_cost_usd', 0):.4f}")
+        print(f"  Error Rate:       {stats.get('error_rate', '0%')}")
+        print(f"  Cost Savings:     {stats.get('cost_savings_vs_all_powerful', '0%')}")
+
+        print(f"\n🎯 Tier Distribution:")
+        for tier, percentage in stats.get('tier_distribution', {}).items():
+            print(f"  {tier:20s}: {percentage}")
+
+        if 'cache_stats' in stats:
+            cache_stats = stats['cache_stats']
+            print(f"\n⚡ Cache Performance:")
+            print(f"  Hit Rate:         {cache_stats.get('hit_rate', '0%')}")
+            print(f"  Total Entries:    {cache_stats.get('total_entries', 0)}")
+            print(f"  Exact Matches:    {cache_stats.get('exact_matches', 0)}")
+            print(f"  Semantic Matches: {cache_stats.get('semantic_matches', 0)}")
+
+        if 'mini_rag_stats' in stats:
+            rag_stats = stats['mini_rag_stats']
+            print(f"\n📚 Mini RAG Performance:")
+            print(f"  Hit Rate:         {rag_stats.get('hit_rate', '0%')}")
+            print(f"  Total Entries:    {rag_stats.get('total_entries', 0)}")
+            print(f"  High Conf Hits:   {rag_stats.get('high_confidence_hits', 0)}")
+
+        print("\n" + "="*70)
+
+
+def _route_part1(self, query):
+    """Route part 1."""
+
+
+    decision = RoutingDecision(
+        query=query[:100],
+        query_hash=query_hash,
+        tier=RoutingTier.ERROR,
+        latency_ms=(time.time() - start_time) * 1000,
+        cost_usd=0.0,
+        confidence=0.0,
+        success=False,
+        error_msg=str(e)
+    )
+    self._record_decision(decision)
+
 
     async def route(
         self,
@@ -349,108 +468,9 @@ class IntelligentRouter:
         except Exception as e:
             logger.error(f"[Router] Error routing query: {e}")
             yield f"❌ **Error:** {str(e)}\n"
-
-            decision = RoutingDecision(
-                query=query[:100],
-                query_hash=query_hash,
-                tier=RoutingTier.ERROR,
-                latency_ms=(time.time() - start_time) * 1000,
-                cost_usd=0.0,
-                confidence=0.0,
-                success=False,
-                error_msg=str(e)
-            )
-            self._record_decision(decision)
-
-    # =========================================================================
-    # Helper Methods
-    # =========================================================================
-
-    def _hash_query(self, query: str) -> str:
-        """Generate hash of query."""
-        import hashlib
-        normalized = ' '.join(query.lower().strip().split())
-        return hashlib.sha256(normalized.encode()).hexdigest()[:16]
-
-    def _record_decision(self, decision: RoutingDecision):
-        """Record routing decision."""
-        self.stats.record(decision)
-        self.routing_history.append(decision)
-
-        if self.config.log_routing_decisions:
-            logger.info(
-                f"[Router] {decision.tier.value.upper()}: "
-                f"{decision.latency_ms:.1f}ms, "
-                f"${decision.cost_usd:.6f}, "
-                f"{decision.confidence:.0%} confidence"
-            )
-
-    def get_stats(self) -> Dict:
-        """Get router statistics."""
-        stats = self.stats.get_summary()
-
-        # Add tier-specific stats
-        if self.cache:
-            stats["cache_stats"] = self.cache.get_stats()
-
-        if self.mini_rag:
-            stats["mini_rag_stats"] = self.mini_rag.get_stats()
-
-        return stats
-
-    def export_history(self, filepath: Path):
-        """Export routing history to JSON."""
-        try:
-            data = {
-                "summary": self.get_stats(),
-                "history": [d.to_dict() for d in self.routing_history[-1000:]],  # Last 1000
-                "timestamp": datetime.now().isoformat()
-            }
-
-            with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
-
-            logger.info(f"[Router] Exported history to {filepath}")
-
-        except Exception as e:
-            logger.error(f"[Router] Failed to export history: {e}")
-
-    def print_performance_report(self):
-        """Print detailed performance report."""
-        stats = self.get_stats()
-
-        print("\n" + "="*70)
-        print("INTELLIGENT ROUTER PERFORMANCE REPORT")
-        print("="*70)
-
-        print(f"\n📊 Overall Statistics:")
-        print(f"  Total Queries:    {stats['total_queries']}")
-        print(f"  Avg Latency:      {stats.get('avg_latency_ms', 0):.1f}ms")
-        print(f"  Avg Cost:         ${stats.get('avg_cost_usd', 0):.6f}")
-        print(f"  Total Cost:       ${stats.get('total_cost_usd', 0):.4f}")
-        print(f"  Error Rate:       {stats.get('error_rate', '0%')}")
-        print(f"  Cost Savings:     {stats.get('cost_savings_vs_all_powerful', '0%')}")
-
-        print(f"\n🎯 Tier Distribution:")
-        for tier, percentage in stats.get('tier_distribution', {}).items():
-            print(f"  {tier:20s}: {percentage}")
-
-        if 'cache_stats' in stats:
-            cache_stats = stats['cache_stats']
-            print(f"\n⚡ Cache Performance:")
-            print(f"  Hit Rate:         {cache_stats.get('hit_rate', '0%')}")
-            print(f"  Total Entries:    {cache_stats.get('total_entries', 0)}")
-            print(f"  Exact Matches:    {cache_stats.get('exact_matches', 0)}")
-            print(f"  Semantic Matches: {cache_stats.get('semantic_matches', 0)}")
-
-        if 'mini_rag_stats' in stats:
-            rag_stats = stats['mini_rag_stats']
-            print(f"\n📚 Mini RAG Performance:")
-            print(f"  Hit Rate:         {rag_stats.get('hit_rate', '0%')}")
-            print(f"  Total Entries:    {rag_stats.get('total_entries', 0)}")
-            print(f"  High Conf Hits:   {rag_stats.get('high_confidence_hits', 0)}")
-
-        print("\n" + "="*70)
+        _route_part1(self, query)
+    _route_part1_part2(self, query)
+    _route_part1_part3(self)
 
 
 # =============================================================================
@@ -476,6 +496,7 @@ if __name__ == "__main__":
 
     # Test queries
     async def test_router():
+        """Test router."""
         test_queries = [
             "How do I start the LLM?",
             "What is SWARM_ENABLED?",

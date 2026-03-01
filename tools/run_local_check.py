@@ -1,9 +1,12 @@
-import threading, time, json
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import requests
 
 class SimpleExpert(BaseHTTPRequestHandler):
+    """SimpleExpert class."""
     def do_GET(self):
+        """Do get."""
         if self.path=='/health':
             self.send_response(200)
             self.end_headers()

@@ -21,10 +21,8 @@ import time
 import hashlib
 import re
 import sqlite3
-from pathlib import Path
-from typing import List, AsyncGenerator, Dict, Optional, Tuple, Any
+from typing import List, AsyncGenerator, Dict, Optional, Any
 from enum import Enum
-from datetime import datetime
 
 # Will integrate with existing code
 logger = logging.getLogger("SwarmArbitrator")
@@ -56,7 +54,7 @@ class TaskType(Enum):
     CREATIVE = "creative"
     GENERAL = "general"
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 @dataclass
 class ArbitrationRequest:
@@ -225,9 +223,10 @@ class CostTracker:
 
         cost_per_1k = 0.0
         for m, c in self.COSTS.items():
-            if m in model.lower():
-                cost_per_1k = c
-                break
+            if m not in model.lower():
+                continue
+            cost_per_1k = c
+            break
 
         cost = (tokens / 1000.0) * cost_per_1k
         self.total_cost += cost
@@ -259,9 +258,10 @@ class CostTracker:
         """
         cost_per_1k = 0.0
         for m, c in self.COSTS.items():
-            if m in model.lower():
-                cost_per_1k = c
-                break
+            if m not in model.lower():
+                continue
+            cost_per_1k = c
+            break
 
         return (tokens / 1000.0) * cost_per_1k
 
@@ -280,6 +280,7 @@ class RagedSwarmStorage:
         # reusing sentence transformer from arbitrator if possible, or load own
 
     def _init_db(self):
+        """Init db."""
         conn = sqlite3.connect(self.db_path)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS swarm_memory (
@@ -299,7 +300,7 @@ class RagedSwarmStorage:
     def store_consensus(self, query: str, response: str, experts: List[str]):
         """Store a finalized consensus."""
         conn = sqlite3.connect(self.db_path)
-        q_hash = hashlib.md5(query.encode()).hexdigest()
+        q_hash = hashlib.sha256(query.encode()).hexdigest()
         
         try:
             conn.execute("""
@@ -336,19 +337,8 @@ class RagedSwarmStorage:
 # ENHANCED SWARM ARBITRATOR
 # ============================================================================
 
-class SwarmArbitrator:
-    """
-    Enhanced multi-LLM consensus system with research-backed improvements.
-
-    Features:
-    - Async parallel dispatch
-    - Semantic consensus
-    - Confidence extraction
-    - Weighted voting
-    - Task-based protocol routing
-    - Agent performance tracking
-    - Adaptive round selection
-    """
+class _SwarmArbitratorBase:
+    """Base methods for SwarmArbitrator."""
 
     def __init__(
         self,
@@ -356,6 +346,7 @@ class SwarmArbitrator:
         host: str = "127.0.0.1",
         config: Optional[Dict] = None
     ):
+        """Initialize instance."""
         # Configuration
         self.config = {**DEFAULT_CONFIG, **(config or {})}
         self.host = host
@@ -424,7 +415,7 @@ class SwarmArbitrator:
                 timeout=1.0
             )
             return resp.status_code in [200, 503]  # 503 = UP but loading
-        except:
+        except Exception:
             return False
 
     # ========================================================================
@@ -708,6 +699,22 @@ class SwarmArbitrator:
             logger.warning("[Arbitrator] sentence-transformers not available, falling back to word-set")
             return self._calculate_consensus_wordset(responses)
 
+
+class SwarmArbitrator(_SwarmArbitratorBase):
+    """
+    Enhanced multi-LLM consensus system with research-backed improvements.
+
+    Features:
+    - Async parallel dispatch
+    - Semantic consensus
+    - Confidence extraction
+    - Weighted voting
+    - Task-based protocol routing
+    - Agent performance tracking
+    - Adaptive round selection
+    """
+
+
     # ========================================================================
     # PROTOCOL ROUTING (IMPROVEMENT #6)
     # ========================================================================
@@ -919,17 +926,18 @@ JSON:"""
         async with httpx.AsyncClient() as client:
             async with client.stream('POST', endpoint, json=payload, timeout=120.0) as response:
                 async for line in response.aiter_lines():
-                    if line.startswith('data: '):
-                        json_str = line[6:]
-                        if json_str.strip() == '[DONE]':
-                            break
-                        try:
-                            data = json.loads(json_str)
-                            content = data['choices'][0]['delta'].get('content', '')
-                            if content:
-                                yield content
-                        except:
-                            pass
+                    if not line.startswith('data: '):
+                        continue
+                    json_str = line[6:]
+                    if json_str.strip() == '[DONE]':
+                        break
+                    try:
+                        data = json.loads(json_str)
+                        content = data['choices'][0]['delta'].get('content', '')
+                        if content:
+                            yield content
+                    except Exception:
+                        pass
 
     async def _get_answer(
         self,
@@ -1008,72 +1016,10 @@ JSON:"""
     # MAIN CONSENSUS METHOD
     # ========================================================================
 
-    async def get_consensus(
-        self,
-        text: str,
-        system_prompt: str = "You are a helpful AI assistant.",
-        task_type: str = "general",
-        verbose: bool = False
-    ) -> AsyncGenerator[str, None]:
-        """
-        Get consensus answer from expert swarm.
 
-        Process:
-        1. Discover available experts
-        2. Parallel query all experts
-        3. Calculate consensus score
-        4. (Optional) Round 2 cross-critique
-        5. Referee synthesis
-        6. Track performance
-        """
-        # Ensure experts discovered
-        if not self.endpoints:
-            await self.discover_swarm()
 
-        num_llms = len(self.endpoints)
-
-        if num_llms == 0:
-            yield "❌ **Error:** No experts available.\n"
-            return
-
-        # Route based on swarm size
-        elif num_llms == 1:
-            # Single LLM mode - direct routing (no consensus needed)
-            logger.info("[Arbitrator] Single LLM mode")
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ]
-            async with httpx.AsyncClient() as client:
-                response = await self._query_model_with_timeout(
-                    client,
-                    self.endpoints[0],
-                    messages
-                )
-                yield response['content']
-            return
-
-        elif num_llms == 2:
-            # NEW: Traffic controller mode
-            logger.info("[Arbitrator] Traffic controller mode (2 LLMs)")
-            async for chunk in self._traffic_controller_mode(text, system_prompt):
-                yield chunk
-            return
-
-        # 3+ LLMs: Full consensus mode (existing code below)
-        logger.info(f"[Arbitrator] Consensus mode ({num_llms} LLMs)")
-
-        # Build messages
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text}
-        ]
-
-        # Select protocol
-        protocol = self.select_protocol(task_type)
-
-        yield f"🔄 **Analyzing...** ({len(self.endpoints)} experts, {protocol.value} protocol)\n\n"
-
+    async def _get_consensus_continued(self, messages, protocol, response):
+        """Continue get_consensus logic."""
         async with httpx.AsyncClient() as client:
             # ROUND 1: Parallel expert queries
             logger.info(f"[Arbitrator] Round 1: Querying {len(self.endpoints)} experts...")
@@ -1170,18 +1116,19 @@ JSON:"""
             try:
                 async with client.stream('POST', referee_endpoint, json=payload, timeout=120.0) as response:
                     async for line in response.aiter_lines():
-                        if line.startswith('data: '):
-                            json_str = line[6:]
-                            if json_str.strip() == '[DONE]':
-                                break
-                            try:
-                                data = json.loads(json_str)
-                                content = data['choices'][0]['delta'].get('content', '')
-                                if content:
-                                    full_answer += content
-                                    yield content
-                            except:
-                                pass
+                        if not line.startswith('data: '):
+                            continue
+                        json_str = line[6:]
+                        if json_str.strip() == '[DONE]':
+                            break
+                        try:
+                            data = json.loads(json_str)
+                            content = data['choices'][0]['delta'].get('content', '')
+                            if content:
+                                full_answer += content
+                                yield content
+                        except Exception:
+                            pass
             except Exception as e:
                 yield f"\n\n❌ **Synthesis failed:** {e}\n"
                 return
@@ -1190,7 +1137,7 @@ JSON:"""
 
             # IMPROVEMENT #5: Track performance
             if self.performance_tracker:
-                query_hash = hashlib.md5(text.encode()).hexdigest()
+                query_hash = hashlib.sha256(text.encode()).hexdigest()
                 for i, r in enumerate(valid_results):
                     self.performance_tracker.record_response(
                         agent_id=r['model'],
@@ -1206,6 +1153,75 @@ JSON:"""
             # Final metrics
             yield f"\n\n---\n📊 **Swarm Metrics:** Consensus **{agreement:.1%}** | "
             yield f"Experts **{len(valid_results)}** | Synthesis **{synthesis_time:.1f}s** | Protocol **{protocol.value}**\n"
+
+
+    async def get_consensus(
+        self,
+        text: str,
+        system_prompt: str = "You are a helpful AI assistant.",
+        task_type: str = "general",
+        verbose: bool = False
+    ) -> AsyncGenerator[str, None]:
+        """
+        Get consensus answer from expert swarm.
+
+        Process:
+        1. Discover available experts
+        2. Parallel query all experts
+        3. Calculate consensus score
+        4. (Optional) Round 2 cross-critique
+        5. Referee synthesis
+        6. Track performance
+        """
+        # Ensure experts discovered
+        if not self.endpoints:
+            await self.discover_swarm()
+
+        num_llms = len(self.endpoints)
+
+        if num_llms == 0:
+            yield "❌ **Error:** No experts available.\n"
+            return
+
+        # Route based on swarm size
+        elif num_llms == 1:
+            # Single LLM mode - direct routing (no consensus needed)
+            logger.info("[Arbitrator] Single LLM mode")
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text}
+            ]
+            async with httpx.AsyncClient() as client:
+                response = await self._query_model_with_timeout(
+                    client,
+                    self.endpoints[0],
+                    messages
+                )
+                yield response['content']
+            return
+
+        elif num_llms == 2:
+            # NEW: Traffic controller mode
+            logger.info("[Arbitrator] Traffic controller mode (2 LLMs)")
+            async for chunk in self._traffic_controller_mode(text, system_prompt):
+                yield chunk
+            return
+
+        # 3+ LLMs: Full consensus mode (existing code below)
+        logger.info(f"[Arbitrator] Consensus mode ({num_llms} LLMs)")
+
+        # Build messages
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+
+        # Select protocol
+        protocol = self.select_protocol(task_type)
+
+        yield f"🔄 **Analyzing...** ({len(self.endpoints)} experts, {protocol.value} protocol)\n\n"
+
+        await _get_consensus_continued(self, messages, protocol, response)
 
     def _build_critique_prompt(self, original: str, others: List[str], question: str) -> List[Dict]:
         """Build prompt for cross-critique round."""
@@ -1280,7 +1296,6 @@ def get_arbitrator(config: Optional[Dict] = None) -> SwarmArbitrator:
 # ============================================================================
 
 if __name__ == "__main__":
-    import sys
 
     async def test_arbitrator():
         """Quick test of arbitrator functionality."""

@@ -237,9 +237,8 @@ class TestLazyLoading:
                 return MagicMock()
 
             # Using a more targetted patch or refined side_effect
-            with patch('builtins.__import__', side_effect=mocked_import):
-                with pytest.raises(ImportError, match="model_manager module not found"):
-                    engine_server.get_model_manager()
+            with patch('builtins.__import__', side_effect=mocked_import), pytest.raises(ImportError, match="model_manager module not found"):
+                engine_server.get_model_manager()
 
     def test_get_cached_voice_service_caches_import(self):
         """Test get_cached_voice_service() caches the module."""
@@ -283,7 +282,6 @@ class TestConfiguration:
              patch('zena_mode.server.subprocess.Popen'), \
              patch('zena_mode.server.os._exit'):
             
-            original_path = engine_server.MODEL_PATH
             test_model = "test-model.gguf"
             
             # Since restart_with_model calls os._exit, we should mock it

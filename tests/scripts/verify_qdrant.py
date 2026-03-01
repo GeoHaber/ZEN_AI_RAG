@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def test_qdrant_flow():
+    """Test qdrant flow."""
     test_dir = Path("./test_qdrant_db")
     if test_dir.exists():
         import shutil

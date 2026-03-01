@@ -1,10 +1,6 @@
 
 import logging
-import time
-import asyncio
-from typing import Dict, Any
 from zena_mode.handlers.base import BaseZenHandler
-from config_system import config
 from zena_mode.swarm_arbitrator import SwarmArbitrator, ArbitrationRequest, TaskType
 
 logger = logging.getLogger("ZenAI.Handler.SwarmChat")
@@ -16,6 +12,7 @@ class SwarmChatHandler:
     """
     
     def __init__(self):
+        """Initialize instance."""
         # Initialize Arbitrator with discovery enabled
         self.arbitrator = SwarmArbitrator(config={
             "enabled": True,
@@ -79,6 +76,7 @@ class SwarmChatHandler:
 _swarm_handler = None
 
 async def get_swarm_handler():
+    """Get swarm handler."""
     global _swarm_handler
     if _swarm_handler is None:
         _swarm_handler = SwarmChatHandler()

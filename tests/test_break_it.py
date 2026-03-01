@@ -61,6 +61,7 @@ class TestRealConfigBreaking:
         errors = []
         
         def writer():
+            """Writer."""
             for i in range(50):
                 try:
                     data = {"test": i, "nested": {"value": i * 2}}
@@ -69,6 +70,7 @@ class TestRealConfigBreaking:
                     errors.append(f"write: {e}")
         
         def reader():
+            """Reader."""
             for _ in range(50):
                 try:
                     if settings_file.exists():
@@ -199,6 +201,7 @@ class TestRealRAGBreaking:
         errors = []
         
         def indexer():
+            """Indexer."""
             for i in range(20):
                 try:
                     doc = {
@@ -211,6 +214,7 @@ class TestRealRAGBreaking:
                     errors.append(f"index: {e}")
         
         def searcher():
+            """Searcher."""
             for _ in range(20):
                 try:
                     rag_instance.search("document topic", k=3)
@@ -241,7 +245,7 @@ class TestRealRAGBreaking:
         rag_instance.build_index([doc1])
         
         # Search (should cache)
-        results1 = rag_instance.search("secret password", k=3)
+        rag_instance.search("secret password", k=3)
         # New cache system uses SemanticCache object
         initial_cache_size = len(rag_instance.cache._exact_cache) + len(rag_instance.cache._semantic_cache)
         assert initial_cache_size > 0, "Search should populate cache"
@@ -375,7 +379,7 @@ class TestAPIBreaking:
             pytest.skip("API_KEY not set, skipping auth tests")
         
         # Various header attacks
-        bad_headers = [
+        [
             {"X-API-Key": ""},
             {"X-API-Key": "wrong"},
             {"X-API-Key": "' OR '1'='1"},
@@ -419,7 +423,7 @@ class TestProcessManagement:
             loop = asyncio.new_event_loop()
             loop.run_until_complete(ProcessManager.prune())
             loop.close()
-        except Exception as e:
+        except Exception:
             # Some exceptions are expected (no zombies to prune)
             pass
 

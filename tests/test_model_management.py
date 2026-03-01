@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from async_backend import AsyncZenAIBackend
 
 class TestModelManagement:
+    """TestModelManagement class."""
     
     @pytest.mark.asyncio
     async def test_get_models_from_hub_api(self):

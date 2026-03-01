@@ -8,6 +8,7 @@ sys.path.append(os.getcwd())
 from zena_mode.arbitrage import SwarmArbitrator
 
 async def run_trust_proof():
+    """Run trust proof."""
     print("\n" + "#"*80)
     print("      🛡️  SWARM TRUST & INTEGRITY PROOF (Phase 21)")
     print("#"*80 + "\n")

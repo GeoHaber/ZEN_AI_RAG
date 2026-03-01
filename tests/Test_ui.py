@@ -33,6 +33,7 @@ LIGHT_BG = '#ffffff'  # White
 
 # ============= STATE =============
 class TestState:
+    """TestState class."""
     is_dark = True
     tts_on = False
     rag_on = False
@@ -72,7 +73,7 @@ def log(action: str, api_call: str = "", response: str = ""):
     
     try:
         log_panel.refresh()
-    except:
+    except Exception:
         pass
 
 # ============= PROPER DARK MODE API =============
@@ -88,7 +89,6 @@ def update_theme():
         
     # Python-side state propagation to Quasar props
     # This is the clean, framework-intended way
-    mode = 'dark' if state.is_dark else 'bisque' # Dummy value to remove 'dark'
     
     if state.is_dark:
         header_panel.props('dark')
@@ -120,7 +120,7 @@ def set_dark_mode(enable: bool):
     # Refresh content
     try:
         drawer_content.refresh()
-    except:
+    except Exception:
         pass
 
 def toggle_dark_mode():
@@ -139,6 +139,7 @@ def select_model(m: str):
     log("MODEL", f"select('{m}')", "OK")
 
 def send_message(text: str):
+    """Send message."""
     if not text.strip():
         return
     log("USER_MSG", f"send('{text[:30]}...')" if len(text) > 30 else f"send('{text}')", "Queued")
@@ -160,7 +161,7 @@ def send_message(text: str):
     
     try:
         chat_panel.refresh()
-    except:
+    except Exception:
         pass
 
 def menu_click(item: str):
@@ -170,11 +171,12 @@ def voice_click():
     log("VOICE", "button.click()", "Recording mock")
 
 def clear_chat():
+    """Clear chat."""
     state.messages = []
     log("CLEAR", "messages.clear()", "OK")
     try:
         chat_panel.refresh()
-    except:
+    except Exception:
         pass
 
 def toggle_drawer():
@@ -284,10 +286,11 @@ async def run_stress_test():
             
             start_time = time.time()
             while (time.time() - start_time) < phase["duration"]:
-                if not state.stress_running:
-                    log("STRESS", "Stopped by user", "ABORT")
-                    return
-                
+                if state.stress_running:
+                    continue
+                log("STRESS", "Stopped by user", "ABORT")
+                return
+
                 # Pick random action
                 action_name, action_fn = random.choice(ALL_ACTIONS)
                 try:
@@ -369,6 +372,7 @@ def drawer_content():
 
 # ============= STRESS TEST DIALOG =============
 def create_stress_dialog():
+    """Create stress dialog."""
     with ui.dialog() as dialog, ui.card().classes('p-6 w-[500px]'):
         ui.label('🧪 UI Stress Test').classes('text-2xl font-bold mb-4')
         
@@ -396,58 +400,64 @@ def create_stress_dialog():
 
 # ============= MAIN UI =============
 # ============= MAIN UI =============
-def build_ui():
-    """Build the professional test UI."""
+def _do_build_ui_setup():
+    """Helper: setup phase for build_ui."""
+
     global dark_mode_ctrl, header_panel, drawer_panel, footer_panel
-    
+
     # Create dark mode controller FIRST
     dark_mode_ctrl = ui.dark_mode(True)  # Start in dark mode
-    
+
     stress_dialog = create_stress_dialog()
-    
+
     # --- HEADER (matches zena.py) ---
     header_panel = ui.header().classes('p-3 shadow-sm transition-all duration-300')
     header_panel.classes('bg-white dark:bg-slate-800 text-gray-800 dark:text-white border-b border-gray-200 dark:border-slate-700')
-    
-    with header_panel:
-        with ui.row().classes('w-full items-center justify-between'):
-            # Left: Menu toggle (actually toggles drawer)
-            ui.button(icon='menu', on_click=lambda: drawer_panel.toggle()).props('flat').classes('text-gray-700 dark:text-white')
-            
-            # Dark mode toggle (single button)
-            ui.button(icon='dark_mode', on_click=toggle_dark_mode).props('flat').classes('text-gray-700 dark:text-white').tooltip('Toggle Dark/Light')
-            
-            # Center title
-            ui.label('ZenAI').classes('text-xl font-bold text-gray-800 dark:text-white')
-            
-            # Right: TTS + RAG + Scan Button + Stress Test
-            with ui.row().classes('gap-2 items-center'):
-                ui.button(icon='volume_up', on_click=toggle_tts).props('flat').classes('text-gray-700 dark:text-white').tooltip('TTS')
-                
-                # Scan Button (hidden by default, shown when RAG enabled)
-                scan_button = ui.button('Start Scanning', icon='book', on_click=scan_action).props('flat').classes('text-blue-600 dark:text-blue-400')
-                scan_button.visible = False
-                
-                # RAG Toggle (shows/hides scan button)
-                def on_rag_toggle(e):
-                    state.rag_on = e.value
-                    scan_button.visible = e.value
-                    status = "enabled" if e.value else "disabled"
-                    ui.notify(f"RAG mode {status}", color="positive" if e.value else "info")
-                    log("RAG", f"toggle({e.value})", f"scan_button.visible={e.value}")
-                
-                ui.switch('Scan & Learn', value=False, on_change=on_rag_toggle).props('color=cyan keep-color').classes('text-gray-700 dark:text-white')
-                
-                ui.button('🧪 STRESS', on_click=stress_dialog.open).props('color=warning dense')
-    
+
+    with header_panel, ui.row().classes('w-full items-center justify-between'):
+        # Left: Menu toggle (actually toggles drawer)
+        ui.button(icon='menu', on_click=lambda: drawer_panel.toggle()).props('flat').classes('text-gray-700 dark:text-white')
+
+        # Dark mode toggle (single button)
+        ui.button(icon='dark_mode', on_click=toggle_dark_mode).props('flat').classes('text-gray-700 dark:text-white').tooltip('Toggle Dark/Light')
+
+        # Center title
+        ui.label('ZenAI').classes('text-xl font-bold text-gray-800 dark:text-white')
+
+        # Right: TTS + RAG + Scan Button + Stress Test
+        with ui.row().classes('gap-2 items-center'):
+            ui.button(icon='volume_up', on_click=toggle_tts).props('flat').classes('text-gray-700 dark:text-white').tooltip('TTS')
+
+            # Scan Button (hidden by default, shown when RAG enabled)
+            scan_button = ui.button('Start Scanning', icon='book', on_click=scan_action).props('flat').classes('text-blue-600 dark:text-blue-400')
+            scan_button.visible = False
+
+            # RAG Toggle (shows/hides scan button)
+            def on_rag_toggle(e):
+                """On rag toggle."""
+                state.rag_on = e.value
+                scan_button.visible = e.value
+                status = "enabled" if e.value else "disabled"
+                ui.notify(f"RAG mode {status}", color="positive" if e.value else "info")
+                log("RAG", f"toggle({e.value})", f"scan_button.visible={e.value}")
+
+            ui.switch('Scan & Learn', value=False, on_change=on_rag_toggle).props('color=cyan keep-color').classes('text-gray-700 dark:text-white')
+
+            ui.button('🧪 STRESS', on_click=stress_dialog.open).props('color=warning dense')
+
     # --- LEFT DRAWER (with dark mode colors) ---
     drawer_panel = ui.left_drawer(value=True).classes('p-4 transition-all duration-300')
     drawer_panel.classes('bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white')
-    
+
     with drawer_panel:
         drawer_content()
-    
+
     # --- MAIN CONTENT ---
+
+
+def build_ui():
+    """Build the professional test UI."""
+    _do_build_ui_setup()
     # Added 'main-content-row' class for JS targeting
     with ui.row().classes('w-full flex-grow p-4 gap-4 main-content-row'):
         # LEFT: Chat
@@ -472,20 +482,19 @@ def build_ui():
     # --- FOOTER (with dark mode colors) ---
     footer_panel = ui.footer().classes('p-3 transition-all duration-300')
     footer_panel.classes('bg-white dark:bg-slate-800 text-gray-800 dark:text-white border-t border-gray-200 dark:border-slate-700')
-    with footer_panel:
-        with ui.row().classes('w-full items-center gap-2'):
-            ui.button(icon='mic', on_click=voice_click).props('round color=primary')
-            msg_input = ui.input(placeholder='Type a message...').classes('flex-grow bg-white dark:bg-slate-900 rounded').props('outlined dense')
-            
-            def do_send():
-                if msg_input.value:
-                    send_message(msg_input.value)
-                    msg_input.value = ''
-            
-            msg_input.on('keydown.enter', do_send)
-            ui.button(icon='send', on_click=do_send).props('round color=primary')
-            ui.button('Clear', on_click=clear_chat).props('flat color=grey')
-    
+    with footer_panel, ui.row().classes('w-full items-center gap-2'):
+        ui.button(icon='mic', on_click=voice_click).props('round color=primary')
+        msg_input = ui.input(placeholder='Type a message...').classes('flex-grow bg-white dark:bg-slate-900 rounded').props('outlined dense')
+
+        def do_send():
+            if msg_input.value:
+                send_message(msg_input.value)
+                msg_input.value = ''
+
+        msg_input.on('keydown.enter', do_send)
+        ui.button(icon='send', on_click=do_send).props('round color=primary')
+        ui.button('Clear', on_click=clear_chat).props('flat color=grey')
+
     # Apply initial dark mode
     set_dark_mode(True)
     update_theme() # Ensure props are set
@@ -597,13 +606,14 @@ async def run_random_quick():
         name, fn = random.choice(ALL_ACTIONS)
         try:
             fn()
-        except:
+        except Exception:
             pass
         await asyncio.sleep(0.3)
     log("QUICK", "=== Done ===", "")
 
 # ============= MAIN =============
 def main():
+    """Main."""
     @ui.page('/')
     async def index():
         build_ui()

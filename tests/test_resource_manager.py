@@ -6,6 +6,7 @@ from zena_mode.resource_manager import ResourceManager
 
 
 def test_run_in_thread_future_success(loop=None):
+    """Test run in thread future success."""
     rm = ResourceManager()
 
     async def runner():
@@ -17,6 +18,7 @@ def test_run_in_thread_future_success(loop=None):
 
 
 def test_run_in_thread_future_exception():
+    """Test run in thread future exception."""
     rm = ResourceManager()
 
     def raise_exc():
@@ -31,6 +33,7 @@ def test_run_in_thread_future_exception():
 
 
 def test_max_workers_enforced():
+    """Test max workers enforced."""
     rm = ResourceManager()
 
     # create a slow function
@@ -39,6 +42,7 @@ def test_max_workers_enforced():
         return 1
 
     async def runner():
+        """Runner."""
         # start several futures with max_workers=1 to force rejection
         fut1 = rm.run_in_thread_future(slow, max_workers=1)
         # second should raise at submission time

@@ -40,152 +40,10 @@ from ui.modern_chat import (
 # DEMO PAGE
 # ==========================================================================
 
-@ui.page('/')
-def demo_page():
-    """Modern UI Demo Page"""
 
-    # Add custom CSS
-    add_modern_css(None)
 
-    # Dark mode toggle
-    dark_mode = ui.dark_mode(value=False)
-
-    # Header
-    with ui.header().classes(MT.Layout.HEADER):
-        ui.button(icon='menu').props('flat').classes(MT.Buttons.ICON)
-
-        ui.label('Modern UI Demo').classes(
-            MT.combine(MT.TEXT_XL, MT.FONT_SEMIBOLD, MT.TextColors.PRIMARY)
-        )
-
-        ui.space()
-
-        # Dark mode toggle
-        def toggle_dark():
-            if dark_mode.value:
-                dark_mode.disable()
-            else:
-                dark_mode.enable()
-
-        ui.button(
-            icon='dark_mode' if not dark_mode.value else 'light_mode',
-            on_click=toggle_dark
-        ).props('flat').classes(MT.Buttons.ICON)
-
-    # Main content area
-    scroll_area = ui.scroll_area().classes('w-full').style(
-        'height: calc(100vh - 200px); min-height: 300px;'
-    )
-
-    with scroll_area:
-        chat_container = ui.column().classes(MT.Layout.CHAT_CONTAINER)
-
-    # Welcome Message
-    welcome = ModernWelcomeMessage(
-        app_name='ZenAI',
-        features=[
-            'Beautiful Claude-inspired UI',
-            'Smooth animations & transitions',
-            'Purple accent colors',
-            'Modern typography'
-        ],
-        custom_message='Experience the new modern interface'
-    )
-    welcome.render(chat_container)
-
-    # Quick Action Chips
-    actions = [
-        {'label': 'Show User Message', 'value': 'user'},
-        {'label': 'Show AI Response', 'value': 'ai'},
-        {'label': 'Show RAG Message', 'value': 'rag'},
-        {'label': 'Show Typing', 'value': 'typing'},
-    ]
-
-    async def handle_chip_click(value):
-        """Handle quick action clicks"""
-        if value == 'user':
-            msg = ModernChatMessage(
-                role='user',
-                content='Hello! This is a user message with **markdown** support.',
-                avatar_text='U'
-            )
-            msg.render(chat_container)
-        elif value == 'ai':
-            msg = ModernChatMessage(
-                role='assistant',
-                content='''This is an AI response! I can help you with:
-
-1. Answering questions
-2. Generating code
-3. Explaining concepts
-4. And much more!
-
-**Note:** I support *Markdown* formatting!''',
-                avatar_text='Z'
-            )
-            msg.render(chat_container)
-        elif value == 'rag':
-            msg = ModernChatMessage(
-                role='assistant',
-                content='This response is enhanced with RAG! I found relevant information from your knowledge base.',
-                avatar_text='Z',
-                rag_enhanced=True,
-                sources=[
-                    {
-                        'title': 'ZenAI Documentation',
-                        'url': 'https://example.com/docs',
-                        'text': 'ZenAI is a powerful local AI assistant with multi-LLM consensus capabilities...'
-                    },
-                    {
-                        'title': 'User Guide',
-                        'url': 'docs/USER_GUIDE.md',
-                        'text': 'To get started with ZenAI, first install the dependencies and download a model...'
-                    }
-                ]
-            )
-            msg.render(chat_container)
-        elif value == 'typing':
-            indicator = ModernTypingIndicator()
-            indicator.render(chat_container)
-
-            # Remove after 2 seconds
-            import asyncio
-            await asyncio.sleep(2)
-            indicator.remove()
-
-            # Show AI response
-            msg = ModernChatMessage(
-                role='assistant',
-                content='Typing indicator disappeared! This is the response.',
-                avatar_text='Z'
-            )
-            msg.render(chat_container)
-
-        # Scroll to bottom
-        scroll_area.scroll_to(percent=1.0)
-
-    chips = ModernActionChips(actions=actions, on_click=handle_chip_click)
-    chips.render(chat_container)
-
-    # Sample Messages
-    ui.label('Sample Messages').classes(
-        MT.combine(
-            MT.TEXT_LG,
-            MT.FONT_SEMIBOLD,
-            MT.TextColors.PRIMARY,
-            'mt-8 mb-4'
-        )
-    ).move(chat_container)
-
-    # User message
-    msg1 = ModernChatMessage(
-        role='user',
-        content='What can you tell me about the new UI?',
-        avatar_text='U'
-    )
-    msg1.render(chat_container)
-
-    # AI response
+def _demo_page_continued(avatar_text, chat_container, content, features, icon, indicator, on_click, rag_enhanced, role, scroll_area, sources):
+    """Continue demo_page logic."""
     msg2 = ModernChatMessage(
         role='assistant',
         content='''The new UI features a **Claude-inspired design** with:
@@ -331,6 +189,156 @@ All components are **separate from the backend**, making them easy to integrate 
             icon='info',
             on_click=info_dialog.open
         ).props('flat').classes(MT.Buttons.ICON)
+
+
+@ui.page('/')
+def demo_page():
+    """Modern UI Demo Page"""
+
+    # Add custom CSS
+    add_modern_css(None)
+
+    # Dark mode toggle
+    dark_mode = ui.dark_mode(value=False)
+
+    # Header
+    with ui.header().classes(MT.Layout.HEADER):
+        ui.button(icon='menu').props('flat').classes(MT.Buttons.ICON)
+
+        ui.label('Modern UI Demo').classes(
+            MT.combine(MT.TEXT_XL, MT.FONT_SEMIBOLD, MT.TextColors.PRIMARY)
+        )
+
+        ui.space()
+
+        # Dark mode toggle
+        def toggle_dark():
+            """Toggle dark."""
+            if dark_mode.value:
+                dark_mode.disable()
+            else:
+                dark_mode.enable()
+
+        ui.button(
+            icon='dark_mode' if not dark_mode.value else 'light_mode',
+            on_click=toggle_dark
+        ).props('flat').classes(MT.Buttons.ICON)
+
+    # Main content area
+    scroll_area = ui.scroll_area().classes('w-full').style(
+        'height: calc(100vh - 200px); min-height: 300px;'
+    )
+
+    with scroll_area:
+        chat_container = ui.column().classes(MT.Layout.CHAT_CONTAINER)
+
+    # Welcome Message
+    welcome = ModernWelcomeMessage(
+        app_name='ZenAI',
+        features=[
+            'Beautiful Claude-inspired UI',
+            'Smooth animations & transitions',
+            'Purple accent colors',
+            'Modern typography'
+        ],
+        custom_message='Experience the new modern interface'
+    )
+    welcome.render(chat_container)
+
+    # Quick Action Chips
+    actions = [
+        {'label': 'Show User Message', 'value': 'user'},
+        {'label': 'Show AI Response', 'value': 'ai'},
+        {'label': 'Show RAG Message', 'value': 'rag'},
+        {'label': 'Show Typing', 'value': 'typing'},
+    ]
+
+    async def handle_chip_click(value):
+        """Handle quick action clicks"""
+        if value == 'user':
+            msg = ModernChatMessage(
+                role='user',
+                content='Hello! This is a user message with **markdown** support.',
+                avatar_text='U'
+            )
+            msg.render(chat_container)
+        elif value == 'ai':
+            msg = ModernChatMessage(
+                role='assistant',
+                content='''This is an AI response! I can help you with:
+
+1. Answering questions
+2. Generating code
+3. Explaining concepts
+4. And much more!
+
+**Note:** I support *Markdown* formatting!''',
+                avatar_text='Z'
+            )
+            msg.render(chat_container)
+        elif value == 'rag':
+            msg = ModernChatMessage(
+                role='assistant',
+                content='This response is enhanced with RAG! I found relevant information from your knowledge base.',
+                avatar_text='Z',
+                rag_enhanced=True,
+                sources=[
+                    {
+                        'title': 'ZenAI Documentation',
+                        'url': 'https://example.com/docs',
+                        'text': 'ZenAI is a powerful local AI assistant with multi-LLM consensus capabilities...'
+                    },
+                    {
+                        'title': 'User Guide',
+                        'url': 'docs/USER_GUIDE.md',
+                        'text': 'To get started with ZenAI, first install the dependencies and download a model...'
+                    }
+                ]
+            )
+            msg.render(chat_container)
+        elif value == 'typing':
+            indicator = ModernTypingIndicator()
+            indicator.render(chat_container)
+
+            # Remove after 2 seconds
+            import asyncio
+            await asyncio.sleep(2)
+            indicator.remove()
+
+            # Show AI response
+            msg = ModernChatMessage(
+                role='assistant',
+                content='Typing indicator disappeared! This is the response.',
+                avatar_text='Z'
+            )
+            msg.render(chat_container)
+
+        # Scroll to bottom
+        scroll_area.scroll_to(percent=1.0)
+
+    chips = ModernActionChips(actions=actions, on_click=handle_chip_click)
+    chips.render(chat_container)
+
+    # Sample Messages
+    ui.label('Sample Messages').classes(
+        MT.combine(
+            MT.TEXT_LG,
+            MT.FONT_SEMIBOLD,
+            MT.TextColors.PRIMARY,
+            'mt-8 mb-4'
+        )
+    ).move(chat_container)
+
+    # User message
+    msg1 = ModernChatMessage(
+        role='user',
+        content='What can you tell me about the new UI?',
+        avatar_text='U'
+    )
+    msg1.render(chat_container)
+
+    # AI response
+    _demo_page_continued(avatar_text, chat_container, content, features, icon, indicator, on_click, rag_enhanced, role, scroll_area, sources)
 
 
 # ==========================================================================

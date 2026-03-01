@@ -6,6 +6,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_feature_menu_items():
+    """Test feature menu items."""
     port = "8080"
     url = f"http://localhost:{port}"
     
@@ -21,7 +22,7 @@ async def test_feature_menu_items():
                     await page.goto(url, timeout=3000)
                     connected = True
                     break
-                except:
+                except Exception:
                     print(f"Waiting for server... ({i+1}/10)")
                     await asyncio.sleep(2)
             

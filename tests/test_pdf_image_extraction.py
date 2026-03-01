@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from zena_mode.universal_extractor import UniversalExtractor
 
 class TestPDFImageExtraction:
+    """TestPDFImageExtraction class."""
 
     @pytest.fixture
     def extractor(self):
@@ -20,6 +21,7 @@ class TestPDFImageExtraction:
     @patch("pathlib.Path.mkdir")
     @patch("zena_mode.universal_extractor.pytesseract.image_to_string")
     def test_pdf_image_extraction(self, mock_ocr, mock_mkdir, mock_file, mock_fitz, extractor):
+        """Test pdf image extraction."""
         mock_ocr.return_value = "Page text content."
         # Mock PDF Document and Page
         mock_doc = MagicMock()
@@ -37,6 +39,7 @@ class TestPDFImageExtraction:
         
         # Mock Page Text and Blocks
         def get_text_side_effect(arg):
+            """Get text side effect."""
             if arg == "text":
                 return "Page text content."
             elif arg == "blocks":
@@ -72,7 +75,7 @@ class TestPDFImageExtraction:
         # Check for Markdown Image Link
         # Filename should be md5 of bytes.ext
         import hashlib
-        expected_hash = hashlib.md5(b"fake_image_bytes_larger_than_2kb" * 100).hexdigest()
+        expected_hash = hashlib.sha256(b"fake_image_bytes_larger_than_2kb" * 100).hexdigest()
         expected_link = f"![PDF Image 1](/rag_images/{expected_hash}.png)"
         
         assert expected_link in result['text']
@@ -83,6 +86,7 @@ class TestPDFImageExtraction:
         
     @patch("zena_mode.universal_extractor.fitz.open")
     def test_pdf_small_image_skipped(self, mock_fitz, extractor):
+        """Test pdf small image skipped."""
         # Test that small icons are ignored
         mock_doc = MagicMock()
         mock_page = MagicMock()

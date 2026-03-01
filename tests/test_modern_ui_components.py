@@ -57,8 +57,8 @@ def chat_components():
 # THEME TESTS
 # ==========================================================================
 
-class TestModernTheme:
-    """Test ModernTheme color palette and utilities."""
+class _TestModernThemeBase:
+    """Base methods for TestModernTheme."""
 
     def test_purple_primary_color(self, modern_theme):
         """Test that primary purple color is Claude-inspired."""
@@ -112,6 +112,11 @@ class TestModernTheme:
         assert modern_theme.ChatBubbles.USER in result
         assert "bg-purple-600" in result
         assert "text-white" in result
+
+
+class TestModernTheme(_TestModernThemeBase):
+    """Test ModernTheme color palette and utilities."""
+
 
     def test_get_chat_bubble_assistant(self, modern_theme):
         """Test getting AI chat bubble style."""

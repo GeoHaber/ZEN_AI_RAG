@@ -60,6 +60,7 @@ class ChatHistory:
     """Manage chat history with pagination to prevent memory leaks."""
     
     def __init__(self, max_messages: int = None):
+        """Initialize instance."""
         self.max_messages = max_messages or config.MAX_CHAT_MESSAGES
         self.messages: List[ChatMessage] = []
         self._lock = threading.Lock()

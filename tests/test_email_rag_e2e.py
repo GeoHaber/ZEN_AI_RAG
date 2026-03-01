@@ -14,6 +14,7 @@ from zena_mode.email_ingestor import EmailIngestor
 from zena_mode.rag_pipeline import LocalRAG
 
 class TestEmailRAGE2E:
+    """TestEmailRAGE2E class."""
 
     @pytest.fixture
     def rag_environment(self, tmp_path):
@@ -25,6 +26,7 @@ class TestEmailRAGE2E:
         rag.close()
 
     def test_email_retrieval_flow(self, rag_environment):
+        """Test email retrieval flow."""
         rag, tmp_path = rag_environment
         mbox_path = tmp_path / "legacy_archive.mbox"
         
@@ -71,9 +73,10 @@ class TestEmailRAGE2E:
         # Check if correct email is in top results (ranking varies by model)
         found = False
         for res in results:
-            if "admin@zenacorp.com" in res['metadata']['sender']:
-                found = True
-                break
+            if "admin@zenacorp.com" not in res['metadata']['sender']:
+                continue
+            found = True
+            break
         assert found, f"Did not find admin email in results: {results}"
 
 if __name__ == "__main__":

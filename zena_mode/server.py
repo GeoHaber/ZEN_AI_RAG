@@ -1,10 +1,8 @@
 import os
 import sys
-import json
-import time
 import threading
 import subprocess
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer
 import asyncio
 
 try:
@@ -14,7 +12,7 @@ except ImportError:
 
 # --- Shared Imports ---
 from utils import (
-    logger, safe_print, is_port_active, ensure_package
+    safe_print
 )
 from config_system import config
 
@@ -70,6 +68,7 @@ def start_hub():
             safe_print(f"[*] Starting ASGI Hub API on 127.0.0.1:{config.mgmt_port}...")
             
             def run_uvicorn():
+                """Run uvicorn."""
                 import asyncio
                 # Set loop for this thread to avoid MainThread conflicts
                 loop = asyncio.new_event_loop()
@@ -107,6 +106,7 @@ try:
 except ImportError:
     # Stub for bootstrap/dev where file might not exist yet
     class VoiceStreamHandler:
+        """VoiceStreamHandler class."""
         def __init__(self): pass
         async def handle_client(self, ws): pass
 
@@ -114,20 +114,25 @@ except ImportError:
 voice_stream_handler = VoiceStreamHandler()
 
 async def run_ws_server():
-    if websockets:
-        try:
-            # Serve using the instance's handle_client method
-            async with websockets.serve(voice_stream_handler.handle_client, "0.0.0.0", 8006):
-                safe_print("[*] Voice Stream Server listening on Port 8006")
-                await asyncio.Future()
-        except OSError:
-            safe_print(f"⚠️ Voice Port 8006 busy. Voice features limited.")
-        except Exception as e:
-            safe_print(f"Voice Server Error: {e}")
+    """Run ws server."""
+    if not websockets:
+        return
+
+    try:
+        # Serve using the instance's handle_client method
+        async with websockets.serve(voice_stream_handler.handle_client, "127.0.0.1", 8006):
+            safe_print("[*] Voice Stream Server listening on Port 8006")
+            await asyncio.Future()
+    except OSError:
+        safe_print(f"⚠️ Voice Port 8006 busy. Voice features limited.")
+    except Exception as e:
+        safe_print(f"Voice Server Error: {e}")
 
 def start_voice_stream_server():
-    if websockets:
-        threading.Thread(target=lambda: asyncio.run(run_ws_server()), daemon=True).start()
+    if not websockets:
+        return
+
+    threading.Thread(target=lambda: asyncio.run(run_ws_server()), daemon=True).start()
 
 # --- Main Entry Point (Called by start_llm.py) ---
 def start_server():

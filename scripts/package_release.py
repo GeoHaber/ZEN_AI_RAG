@@ -4,16 +4,18 @@ import zipfile
 import shutil
 from pathlib import Path
 
-def create_dist_zip():
+def _do_create_dist_zip_setup():
+    """Helper: setup phase for create_dist_zip."""
+
     print("📦 Packing ZenAI for Release...")
-    
+
     # Define root
     ROOT_DIR = Path(os.getcwd())
     DIST_DIR = ROOT_DIR / "dist"
     DIST_DIR.mkdir(exist_ok=True)
-    
+
     ZIP_NAME = DIST_DIR / "ZenAI_Dist.zip"
-    
+
     # Define what to include
     INCLUDES = [
         "zena.py",
@@ -36,7 +38,13 @@ def create_dist_zip():
         "experimental_voice_lab", # Folder
         "tests"            # Include tests for verification
     ]
-    
+
+    return INCLUDES, ROOT_DIR, ZIP_NAME
+
+
+def create_dist_zip():
+    """Create dist zip."""
+    INCLUDES, ROOT_DIR, ZIP_NAME = _do_create_dist_zip_setup()
     # Create Zip
     with zipfile.ZipFile(ZIP_NAME, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for item in INCLUDES:

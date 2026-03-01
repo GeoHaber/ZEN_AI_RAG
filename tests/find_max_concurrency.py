@@ -22,7 +22,9 @@ PROMPT = "Write a short poem about the concept of infinity."
 # For CPU bound testing, different models is the main variable.
 
 class MaxConcurrencyTester:
+    """MaxConcurrencyTester class."""
     def __init__(self, max_cap=16):
+        """Initialize instance."""
         self.max_cap = max_cap
         self.models = self._scan_models()
         self.baseline_latency = 0
@@ -38,6 +40,7 @@ class MaxConcurrencyTester:
         return sorted(list(MODELS_DIR.glob("*.gguf")), key=lambda p: p.stat().st_size)
 
     def run_single(self, index, model, prompt):
+        """Run single."""
         start_t = time.time()
         cmd = [
             str(CLI_EXE),
@@ -80,6 +83,7 @@ class MaxConcurrencyTester:
             return {"index": index, "model": model.name, "success": False, "duration": 0, "error": str(e)}
 
     def run(self):
+        """Run."""
         print(f"--- THOUGHPUT TEST: SEQUENTIAL VS PARALLEL (Models: {len(self.models)}) ---")
         
         # Header

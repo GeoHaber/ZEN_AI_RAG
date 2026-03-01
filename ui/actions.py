@@ -13,13 +13,11 @@ from locales import get_locale
 
 logger = logging.getLogger("UI.Actions")
 
-class UIActions:
-    """
-    Centralized logic controller for UI actions.
-    Decouples business logic from UI layout code.
-    """
-    
+class _UIActionsBase:
+    """Base methods for UIActions."""
+
     def __init__(self, backend, rag_system, app_state, dialogs, config):
+        """Initialize instance."""
         self.backend = backend
         self.rag_system = rag_system
         self.app_state = app_state
@@ -100,6 +98,7 @@ class UIActions:
         files_input.disable()
         
         def progress_cb(msg, pct):
+            """Progress cb."""
             progress_label.set_text(msg)
             progress_bar.set_value(pct)
             # Randomized "Distraction" messages
@@ -112,7 +111,7 @@ class UIActions:
             result = await batch_analyzer.analyze_files(paths, on_progress=progress_cb)
             
             # Show success with "Open Folder" button
-            with ui.notification(f"Batch Complete: {result['completed']} files analyzed!", color='positive', timeout=10000) as n:
+            with ui.notification(f"Batch Complete: {result['completed']} files analyzed!", color='positive', timeout=10000):
                 if paths:
                     folder = str(Path(paths[0]).parent)
                     ui.button('Open Folder', icon='folder', on_click=lambda f=folder: os.startfile(f)).props('flat color=white')
@@ -121,6 +120,14 @@ class UIActions:
         finally:
             batch_btn.enable()
             files_input.enable()
+
+
+class UIActions(_UIActionsBase):
+    """
+    Centralized logic controller for UI actions.
+    Decouples business logic from UI layout code.
+    """
+    
 
     def get_model_info(self, filename, MODEL_INFO):
         """Get model info or generate smart defaults."""
@@ -207,11 +214,10 @@ class UIActions:
     def open_voice_lab(self):
         """Open Voice Lab in maximized dialog."""
         with ui.dialog().props('maximized') as lab_dialog:
-             with ui.card().classes('w-full h-full p-0 no-shadow'):
-                 with ui.row().classes('w-full p-2 bg-gray-100 dark:bg-slate-800 items-center justify-between border-b'):
-                     ui.label("🎙️ Voice Lab").classes('text-lg font-bold ml-2')
-                     ui.button(icon=Icons.CLOSE, on_click=lab_dialog.close).props('flat round dense')
-                 
+             with ui.card().classes('w-full h-full p-0 no-shadow'), ui.row().classes('w-full p-2 bg-gray-100 dark:bg-slate-800 items-center justify-between border-b'):
+                 ui.label("🎙️ Voice Lab").classes('text-lg font-bold ml-2')
+                 ui.button(icon=Icons.CLOSE, on_click=lab_dialog.close).props('flat round dense')
+
                  ui.html('<iframe src="http://localhost:8002/voice/lab" style="width:100%; height:calc(100% - 50px); border:none;"></iframe>', sanitize=False).classes('w-full h-full')
         lab_dialog.open()
 
@@ -234,14 +240,12 @@ class UIActions:
         except Exception as e:
             logger.warning(f"Failed to fetch model info for judge: {e}")
 
-        with ui.dialog().props('maximized') as judge_dialog:
-            with ui.card().classes('w-full h-full p-0 overflow-hidden'):
-                with ui.row().classes('w-full p-4 items-center justify-between border-b'):
-                    ui.label("ZenAI Judge").classes('text-xl font-bold')
-                    ui.button(icon=Icons.CLOSE, on_click=judge_dialog.close).props('flat round')
-                
-                with ui.scroll_area().classes('w-full flex-grow'):
-                    create_quality_tab(model_info)
+        with ui.dialog().props('maximized') as judge_dialog, ui.card().classes('w-full h-full p-0 overflow-hidden'), ui.row().classes('w-full p-4 items-center justify-between border-b'):
+            ui.label("ZenAI Judge").classes('text-xl font-bold')
+            ui.button(icon=Icons.CLOSE, on_click=judge_dialog.close).props('flat round')
+
+            with ui.scroll_area().classes('w-full flex-grow'):
+                create_quality_tab(model_info)
         judge_dialog.open()
 
     async def check_llama_version(self):

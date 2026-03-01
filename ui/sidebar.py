@@ -54,7 +54,7 @@ def render_rag(locale, app_state, actions):
         with ui.column().classes('w-full gap-2 py-2'):
             # Enable RAG Switch
             rag_enabled_val = app_state.get('rag_enabled', False)
-            rag_toggle = ui.switch(locale.SETTINGS_RAG_ENABLED, value=rag_enabled_val, on_change=actions.on_rag_toggle).classes('text-sm')
+            ui.switch(locale.SETTINGS_RAG_ENABLED, value=rag_enabled_val, on_change=actions.on_rag_toggle).classes('text-sm')
             ui.label(locale.SETTINGS_RAG_ENABLED_DESC).classes(Styles.LABEL_MUTED + ' ml-10 -mt-1 text-xs')
             
             # Scan Button
@@ -168,7 +168,7 @@ def render_models(locale, actions, app_state, dialogs):
             with ui.expansion('📥 ' + locale.MODEL_DOWNLOAD_NEW, icon=Icons.DOWNLOAD).classes('w-full'):
                 with ui.column().classes('w-full gap-2 py-2'):
                      # Defined simplified list of download options
-                     download_options = [
+                     [
                          MODEL_INFO['qwen2.5-coder-7b-instruct-q4_k_m.gguf'],
                          MODEL_INFO['Llama-3.2-3B-Instruct-Q4_K_M.gguf'],
                          MODEL_INFO['Phi-3-mini-4k-instruct-q4.gguf']

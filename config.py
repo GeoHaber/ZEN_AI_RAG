@@ -3,9 +3,7 @@
 config.py - Legacy Bridge for config_system
 Allows old files to 'import config' without breaking.
 """
-import os
-from pathlib import Path
-from config_system import config, EMOJI, get_settings, is_dark_mode, set_dark_mode
+from config_system import config
 
 # Re-export core constants for files using 'from config import ...'
 BASE_DIR = config.BASE_DIR

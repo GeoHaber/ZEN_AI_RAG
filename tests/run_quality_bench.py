@@ -21,7 +21,32 @@ QA_PAIRS = [
     ["What happens if an expert provides a response with low fact-check score?", "The arbitrator applies a hallucination penalty, marking the agent as not selected for reliability tracking."],
 ]
 
+def _run_benchmark_part1():
+    """Run benchmark part 1."""
+
+    # Save results
+    avg_score = sum(r['score'] for r in results) / len(results)
+    avg_duration = sum(r['duration'] for r in results) / len(results)
+
+    summary = {
+        "timestamp": time.time(),
+        "avg_quality_score": avg_score,
+        "avg_latency": avg_duration,
+        "detailed_results": results
+    }
+
+    report_path = Path("tests/quality_report.json")
+    with open(report_path, "w") as f:
+        json.dump(summary, f, indent=4)
+
+    logger.info(f"\n🏆 Benchmark Complete!")
+    logger.info(f"📊 AVG Quality: {avg_score:.2f}")
+    logger.info(f"⏱️ AVG Latency: {avg_duration:.1f}s")
+    logger.info(f"📄 Report saved to {report_path}")
+
+
 async def run_benchmark():
+    """Run benchmark."""
     logger.info("🚀 Starting ZenAI Quality Benchmark...")
     backend = AsyncZenAIBackend()
     rag = LocalRAG() # Used for semantic similarity comparison
@@ -75,25 +100,7 @@ async def run_benchmark():
                 "duration": duration
             })
             
-    # Save results
-    avg_score = sum(r['score'] for r in results) / len(results)
-    avg_duration = sum(r['duration'] for r in results) / len(results)
-    
-    summary = {
-        "timestamp": time.time(),
-        "avg_quality_score": avg_score,
-        "avg_latency": avg_duration,
-        "detailed_results": results
-    }
-    
-    report_path = Path("tests/quality_report.json")
-    with open(report_path, "w") as f:
-        json.dump(summary, f, indent=4)
-        
-    logger.info(f"\n🏆 Benchmark Complete!")
-    logger.info(f"📊 AVG Quality: {avg_score:.2f}")
-    logger.info(f"⏱️ AVG Latency: {avg_duration:.1f}s")
-    logger.info(f"📄 Report saved to {report_path}")
+    _run_benchmark_part1()
 
 if __name__ == "__main__":
     asyncio.run(run_benchmark())

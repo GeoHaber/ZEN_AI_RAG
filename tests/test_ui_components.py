@@ -22,6 +22,7 @@ class TestUIElements:
     """
     
     def setup_method(self):
+        """Setup method."""
         # Reset mocks
         ui.reset_mock()
         self.backend = MagicMock()
@@ -44,7 +45,6 @@ class TestUIElements:
         # Verification
         # Check if ui.button was called with the NEW_CHAT ID in props
         # We search through call_args_list to find the specific button
-        found_new_chat = False
         for call_args in ui.button.call_args_list:
             # call_args.kwargs might have 'icon' or args[0] text
             # We look for the props call chained to it? 

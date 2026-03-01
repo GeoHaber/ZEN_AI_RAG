@@ -7,7 +7,7 @@ diagnostics and recovery capabilities.
 
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any
 from zena_mode.voice_manager import VoiceManager
 
 try:
@@ -68,7 +68,7 @@ diagnostics and recovery capabilities.
 
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+# from typing import Optional, Dict, Any
 from zena_mode.voice_manager import VoiceManager
 
 try:
@@ -286,6 +286,52 @@ if __name__ == "__main__":
     else:
         print("✗ Recording failed")
     
+def _record_audio_with_healing_part1(self, auto_fallback, duration, verbose):
+    """Record audio with healing part 1."""
+
+    # If failed and healing enabled, try to fix
+    if auto_fallback:
+        if verbose:
+            logger.info("Running microphone healing...")
+
+        result = self.diagnose_microphone(verbose=False)
+        best_device = result['diagnostic']['best_device_id']
+
+        if best_device is not None and best_device != self.device:
+            if verbose:
+                proc_count = len(result['diagnostic']['competing_processes'])
+                if proc_count > 0:
+                    logger.warning(
+                        f"  {proc_count} audio-using processes detected"
+                    )
+
+                device_name = result['diagnostic']['best_device'][
+                    'device_name'
+                ]
+                logger.info(f"  Switching to device: {device_name}")
+
+            # Try alternative device
+            old_device = self.device
+            self.device = best_device
+
+            try:
+                audio = self.record_audio(
+                    duration=duration,
+                    auto_fallback=False
+                )
+                if audio:
+                    if verbose:
+                        logger.info("✓ Recording successful with alternative device")
+                    return audio
+            except Exception as e:
+                if verbose:
+                    logger.error(f"Alternative device also failed: {e}")
+                self.device = old_device
+
+    logger.error("Could not record audio after healing attempts")
+    return None
+
+
     def record_audio_with_healing(
         self,
         duration: float = 5.0,
@@ -332,47 +378,7 @@ if __name__ == "__main__":
             if verbose:
                 logger.warning(f"Recording failed: {e}")
         
-        # If failed and healing enabled, try to fix
-        if auto_fallback:
-            if verbose:
-                logger.info("Running microphone healing...")
-            
-            result = self.diagnose_microphone(verbose=False)
-            best_device = result['diagnostic']['best_device_id']
-            
-            if best_device is not None and best_device != self.device:
-                if verbose:
-                    proc_count = len(result['diagnostic']['competing_processes'])
-                    if proc_count > 0:
-                        logger.warning(
-                            f"  {proc_count} audio-using processes detected"
-                        )
-                    
-                    device_name = result['diagnostic']['best_device'][
-                        'device_name'
-                    ]
-                    logger.info(f"  Switching to device: {device_name}")
-                
-                # Try alternative device
-                old_device = self.device
-                self.device = best_device
-                
-                try:
-                    audio = self.record_audio(
-                        duration=duration,
-                        auto_fallback=False
-                    )
-                    if audio:
-                        if verbose:
-                            logger.info("✓ Recording successful with alternative device")
-                        return audio
-                except Exception as e:
-                    if verbose:
-                        logger.error(f"Alternative device also failed: {e}")
-                    self.device = old_device
-        
-        logger.error("Could not record audio after healing attempts")
-        return None
+        _record_audio_with_healing_part1(self, auto_fallback, duration, verbose)
     
     def get_health_report(self) -> str:
         """

@@ -11,6 +11,7 @@ from pathlib import Path
 
 # Color codes for terminal output
 class Colors:
+    """Colors class."""
     CYAN = '\033[96m'
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
@@ -116,6 +117,7 @@ def cleanup_pycache():
             print(f"{Colors.YELLOW}[SKIP]{Colors.END} {pycache}: {e}")
 
 def main():
+    """Main."""
     os.chdir(str(ROOT))
     
     print(f"\n{Colors.CYAN}{Colors.BOLD}=== ZEN_AI_RAG WORKSPACE CLEANUP ==={Colors.END}\n")

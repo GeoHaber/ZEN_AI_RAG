@@ -7,16 +7,9 @@ Consistent formatting for model info, file sizes, numbers, etc.
 from typing import Optional, Tuple
 
 
-class Formatters:
-    """
-    Data formatting utilities for consistent display across the UI.
-    """
-    
-    # ==========================================================================
-    # FILE SIZE FORMATTING
-    # ==========================================================================
-    
-    @staticmethod
+class _FormattersBase:
+    """Base methods for Formatters."""
+
     def file_size(bytes_size: int, precision: int = 1) -> str:
         """
         Format bytes to human-readable size.
@@ -133,6 +126,18 @@ class Formatters:
             return f"~{ram_needed:.0f}GB RAM (needs 16GB+ system)"
         else:
             return f"~{ram_needed:.0f}GB RAM (needs high-end system)"
+
+
+class Formatters(_FormattersBase):
+    """
+    Data formatting utilities for consistent display across the UI.
+    """
+    
+    # ==========================================================================
+    # FILE SIZE FORMATTING
+    # ==========================================================================
+    
+    @staticmethod
     
     @staticmethod
     def speed_rating(size_gb: float) -> Tuple[str, str]:

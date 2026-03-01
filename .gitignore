@@ -71,3 +71,7 @@ _Extra_files/
 _legacy_audit/
 _sandbox/
 docs/
+
+# Added by cleanup
+.ruff_cache/
+

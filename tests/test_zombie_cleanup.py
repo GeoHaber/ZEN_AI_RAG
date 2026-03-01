@@ -46,7 +46,7 @@ class TestZombieCleanup:
         
         # Cleanup (if still alive)
         try: proc.kill()
-        except: pass
+        except Exception: pass
 
     def test_start_server_cleanup_logic(self):
         """TDD: Verify start_server() cleans up port BEFORE launching."""

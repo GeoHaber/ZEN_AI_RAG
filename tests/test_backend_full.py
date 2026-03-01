@@ -19,6 +19,7 @@ from zena_mode.rag_pipeline import LocalRAG
 from config_system import config, EMOJI
 
 async def test_llm_chat():
+    """Test llm chat."""
     print(f"🔎 {EMOJI['robot']} Testing LLM Chat Connectivity...")
     backend = AsyncZenAIBackend()
     
@@ -40,13 +41,14 @@ async def test_llm_chat():
         return False
 
 def test_rag_standalone():
+    """Test rag standalone."""
     print(f"🔎 {EMOJI['database']} Testing RAG Indexing & Retrieval...")
     test_cache = Path("tests/rag_test_cache")
     if test_cache.exists():
         try:
             import shutil
             shutil.rmtree(test_cache)
-        except: pass
+        except Exception: pass
     
     rag = LocalRAG(cache_dir=test_cache)
     
@@ -85,10 +87,11 @@ def test_rag_standalone():
             import shutil
             if test_cache.exists():
                 shutil.rmtree(test_cache)
-        except:
+        except Exception:
             pass
 
 def test_hub_api():
+    """Test hub api."""
     print(f"🔎 {EMOJI['web']} Testing Hub API Status...")
     hub_url = f"http://{config.host}:{config.mgmt_port}"
     try:
@@ -105,6 +108,7 @@ def test_hub_api():
         return False
 
 async def main():
+    """Main."""
     print("="*60)
     print("🚀 ZENAI BACKEND HEADLESS VERIFICATION")
     print("="*60)

@@ -1,8 +1,7 @@
 import logging
 import asyncio
-from flask import Flask, request, Response
+from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-from twilio.rest import Client
 from async_backend import backend
 from config_system import config
 

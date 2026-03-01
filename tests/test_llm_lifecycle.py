@@ -40,7 +40,7 @@ def llm_server():
             if resp.status_code == 200:
                 api_ready = True
                 break
-        except:
+        except Exception:
             time.sleep(1)
             
     if not api_ready:
@@ -59,13 +59,13 @@ def llm_server():
 
 def test_hub_health(llm_server):
     """Verify Hub API is responding."""
-    resp = requests.get(HUB_URL + "/")
+    resp = requests.get(HUB_URL + "/", timeout=30)
     assert resp.status_code == 200
     assert "ZenAI Hub Active" in resp.text
 
 def test_model_endpoints(llm_server):
     """Verify model listing endpoint."""
-    resp = requests.get(HUB_URL + "/models/available")
+    resp = requests.get(HUB_URL + "/models/available", timeout=30)
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
@@ -73,12 +73,12 @@ def test_model_endpoints(llm_server):
 
 def test_update_check(llm_server):
     """Verify update checker endpoint works."""
-    resp = requests.get(HUB_URL + "/updates/check")
+    resp = requests.get(HUB_URL + "/updates/check", timeout=30)
     # This might fail if no internet, but code usually returns 500 or json error.
     # We accept 200 or 500, as long as it returns JSON.
     assert resp.status_code in [200, 500]
     try:
         data = resp.json()
         assert isinstance(data, dict)
-    except:
+    except Exception:
         pytest.fail("Did not return valid JSON")

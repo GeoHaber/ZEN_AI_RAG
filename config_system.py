@@ -114,6 +114,7 @@ class AppConfig:
 
     @classmethod
     def from_json(cls, path: Path) -> 'AppConfig':
+        """From json."""
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -145,6 +146,7 @@ class AppConfig:
             return cls()
 
     def to_json(self, path: Path) -> None:
+        """To json."""
         try:
             data = {}
             for key, value in self.__dict__.items():
