@@ -10,12 +10,14 @@ import numpy as np
 import cv2
 
 def test_vision_engine_init():
+    """Test vision engine init."""
     print("Testing VisionEngine initialization...")
     engine = get_vision_engine()
     assert engine is not None
     print(f"✅ VisionEngine initialized (Enabled: {engine.enabled})")
 
 def test_object_detection_dummy():
+    """Test object detection dummy."""
     print("Testing object detection on a black image...")
     engine = get_vision_engine()
     if not engine.enabled:

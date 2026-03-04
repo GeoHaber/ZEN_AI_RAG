@@ -13,6 +13,7 @@ ROOT_DIR = Path(__file__).parent.parent.resolve()
 START_SCRIPT = ROOT_DIR / "start_llm.py"
 
 def wait_for_port(port, timeout=60):
+    """Wait for port."""
     start = time.time()
     url = f"http://127.0.0.1:{port}/health"
     while time.time() - start < timeout:
@@ -25,12 +26,13 @@ def wait_for_port(port, timeout=60):
             elif resp.status_code == 503:
                 # Still loading
                 pass
-        except:
+        except Exception:
             time.sleep(1)
         time.sleep(0.5)
     return False
 
 def launch_instance(port, env):
+    """Launch instance."""
     # Copy env context and set port
     my_env = env.copy()
     my_env["LLM_PORT"] = str(port)
@@ -105,4 +107,4 @@ def test_multi_process_concurrency():
         time.sleep(2)
         for _, proc in procs:
             try: proc.kill()
-            except: pass
+            except Exception: pass

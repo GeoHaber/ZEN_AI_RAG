@@ -239,9 +239,10 @@ class TestRealAPIQueries:
 
         # All responses should contain Python code
         for result in results:
-            if not result["content"].startswith("["):
-                assert "def" in result["content"], f"Expected Python function in response"
-                assert "prime" in result["content"].lower(), f"Expected 'prime' in response"
+            if result["content"].startswith("["):
+                continue
+            assert "def" in result["content"], f"Expected Python function in response"
+            assert "prime" in result["content"].lower(), f"Expected 'prime' in response"
 
         # Calculate consensus
         responses = [r["content"] for r in results if not r["content"].startswith("[")]

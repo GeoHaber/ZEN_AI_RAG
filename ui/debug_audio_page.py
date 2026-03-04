@@ -12,9 +12,10 @@ voice_manager = InjectableVoiceManager()
 
 # Simple debug page
 @ui.page('/debug/audio')
-async def debug_audio_page():
-    """Debug page for audio testing"""
-    
+def _do_debug_audio_page_setup():
+    """Helper: setup phase for debug_audio_page."""
+
+
     ui.add_head_html("""
     <style>
         .debug-panel {
@@ -26,6 +27,23 @@ async def debug_audio_page():
         }
     </style>
     """)
+
+
+def _debug_audio_page_part1():
+    """Debug audio page part 1."""
+
+
+    # Quick Start
+    with ui.row().classes('gap-4 items-start'), ui.card().classes('w-full'):
+        ui.label('🚀 Quick Start').classes('font-bold')
+        ui.label('1. Click "🗣️ Voice-like" to inject test audio')
+        ui.label('2. Click "🎙️ Record Audio" to test recording')
+        ui.label('3. If successful, real microphone should also work')
+
+
+async def debug_audio_page():
+    """Debug page for audio testing"""
+    _do_debug_audio_page_setup()
     
     with ui.column().classes('w-full gap-4 p-4'):
         
@@ -68,6 +86,7 @@ async def debug_audio_page():
             status_display.classes('text-sm text-gray-700 mt-2')
             
             async def update_injection_status():
+                """Update injection status."""
                 status = voice_manager.get_injection_status()
                 if status['enabled']:
                     label = status['last_injection'].get('label', 'Injected')
@@ -89,6 +108,7 @@ async def debug_audio_page():
             recording_result = ui.label('Ready to record')
             
             async def test_record():
+                """Test record."""
                 recording_result.text = f"🔄 Recording {int(duration_slider.value)}s..."
                 recording_result.classes('text-yellow-700')
                 recording_result.update()
@@ -145,14 +165,7 @@ async def debug_audio_page():
                     ui.label(answer).classes('text-gray-700')
         
         ui.separator()
-        
-        # Quick Start
-        with ui.row().classes('gap-4 items-start'):
-            with ui.card().classes('w-full'):
-                ui.label('🚀 Quick Start').classes('font-bold')
-                ui.label('1. Click "🗣️ Voice-like" to inject test audio')
-                ui.label('2. Click "🎙️ Record Audio" to test recording')
-                ui.label('3. If successful, real microphone should also work')
+    _debug_audio_page_part1()
 
 
 # Run if called directly (for testing)

@@ -16,12 +16,8 @@ Features:
 """
 import io
 import sys
-import time
-import threading
-import warnings
 import psutil
 import numpy as np
-from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 from scipy.io import wavfile
 from dataclasses import dataclass, asdict
@@ -50,6 +46,7 @@ class DeviceScore:
     # Overall score (weighted average)
     @property
     def total_score(self) -> int:
+        """Total score."""
         return int(
             self.availability_score * 0.5 +  # Most important
             self.quality_score * 0.3 +
@@ -105,14 +102,15 @@ class ProcessAudioUsageDetector:
                     
                     # Check if this is an audio app
                     for app_exe, app_name in audio_apps.items():
-                        if app_exe.lower() in name:
-                            processes.append({
-                                'pid': proc.info['pid'],
-                                'name': app_name,
-                                'executable': proc.info['name'],
-                                'status': 'possibly_using_audio'
-                            })
-                            break
+                        if app_exe.lower() not in name:
+                            continue
+                        processes.append({
+                            'pid': proc.info['pid'],
+                            'name': app_name,
+                            'executable': proc.info['name'],
+                            'status': 'possibly_using_audio'
+                        })
+                        break
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     pass
         except Exception as e:
@@ -310,42 +308,116 @@ class ProductionMicrophoneHealer:
         
         return score
     
+def _do_do_full_diagnostic_setup_setup(verbose):
+    """Helper: setup phase for _do_full_diagnostic_setup."""
+
+
+    if verbose:
+        print("\n[DIAGNOSTIC] MICROPHONE SYSTEM")
+        print("=" * 70)
+
+    # Get all devices
+    all_devices = sd.query_devices()
+    input_devices = [
+        (i, d) for i, d in enumerate(all_devices)
+        if d['max_input_channels'] > 0
+    ]
+
+    if verbose:
+        print(f"\n[INFO] Found {len(input_devices)} input device(s)")
+
+    # Score each device
+    device_scores: List[DeviceScore] = []
+
+    for dev_id, dev_info in input_devices:
+        if verbose:
+            print(f"\n  Testing device #{dev_id}: {dev_info['name']}")
+
+        score = self.score_device(dev_id)
+        device_scores.append(score)
+
+        if verbose:
+            print(f"    Availability: {score.availability_score}/100 - {score.availability_reason}")
+            print(f"    Quality: {score.quality_score}/100 - {score.quality_reason}")
+            print(f"    Priority: {score.priority_score}/100 - {score.priority_reason}")
+            print(f"    TOTAL: {score.total_score}/100")
+
+    return device_scores
+
+    return device_scores
+
+
+def _do_full_diagnostic_setup_part1():
+    """Do full diagnostic setup part 1."""
+
+
+    # Get diagnostic data
+    diag = self.full_diagnostic(verbose=True)
+
+    # Generate recommendations
+    recommendations = []
+
+    best_score = diag['best_device_id']
+
+    if best_score is None:
+        recommendations.append(
+            "[ERROR] No input devices found! Connect a microphone."
+        )
+    elif diag['devices'][0]['availability_score'] < 100:
+        # Device is locked
+        processes = diag['competing_processes']
+        if processes:
+            proc_names = [p['name'] for p in processes]
+            # De-duplicate
+            proc_names = list(dict.fromkeys(proc_names))
+            recommendations.append(
+                f"[ACTION] Microphone locked by: {', '.join(proc_names[:5])}. "
+                f"Close these apps to use the microphone in ZEN_AI."
+            )
+        else:
+            recommendations.append(
+                "[ACTION] Microphone device is locked (unknown process). "
+                "Check Windows audio settings or restart your system."
+            )
+
+    elif diag['devices'][0]['quality_score'] < 50:
+        recommendations.append(
+            "[ACTION] Microphone audio quality is very low. "
+            "Increase microphone volume in Windows Sound Mixer (Right-click speaker icon)."
+        )
+
+    elif diag['devices'][0]['quality_score'] < 80:
+        recommendations.append(
+            "[ACTION] Microphone audio could be better. "
+            "Consider increasing microphone gain in system settings."
+        )
+    else:
+        recommendations.append(
+            "[OK] Microphone system is healthy and ready to use!"
+        )
+
+    print(f"\n[ADVICE] RECOMMENDATIONS:")
+    for rec in recommendations:
+        print(f"  {rec}")
+
+    return {
+        'diagnostic': diag,
+        'recommendations': recommendations,
+        'status': 'OK' if diag['devices'][0]['availability_score'] == 100 else 'NEEDS_ATTENTION'
+    }
+
+
+def _do_full_diagnostic_setup(verbose):
+    """Helper: setup phase for full_diagnostic."""
+    _do_do_full_diagnostic_setup_setup(verbose)
+
     def full_diagnostic(self, verbose: bool = True) -> Dict[str, Any]:
         """
         Run complete system diagnostic.
         
         Returns comprehensive analysis with recommendations.
         """
-        if verbose:
-            print("\n[DIAGNOSTIC] MICROPHONE SYSTEM")
-            print("=" * 70)
-        
-        # Get all devices
-        all_devices = sd.query_devices()
-        input_devices = [
-            (i, d) for i, d in enumerate(all_devices)
-            if d['max_input_channels'] > 0
-        ]
-        
-        if verbose:
-            print(f"\n[INFO] Found {len(input_devices)} input device(s)")
-        
-        # Score each device
-        device_scores: List[DeviceScore] = []
-        
-        for dev_id, dev_info in input_devices:
-            if verbose:
-                print(f"\n  Testing device #{dev_id}: {dev_info['name']}")
-            
-            score = self.score_device(dev_id)
-            device_scores.append(score)
-            
-            if verbose:
-                print(f"    Availability: {score.availability_score}/100 - {score.availability_reason}")
-                print(f"    Quality: {score.quality_score}/100 - {score.quality_reason}")
-                print(f"    Priority: {score.priority_score}/100 - {score.priority_reason}")
-                print(f"    TOTAL: {score.total_score}/100")
-        
+        device_scores = _do_full_diagnostic_setup(verbose)
         # Sort by score
         device_scores.sort(key=lambda s: s.total_score, reverse=True)
         
@@ -382,61 +454,7 @@ class ProductionMicrophoneHealer:
         """
         print("\n[HEALING] MICROPHONE AUTO-HEALING SYSTEM")
         print("=" * 70)
-        
-        # Get diagnostic data
-        diag = self.full_diagnostic(verbose=True)
-        
-        # Generate recommendations
-        recommendations = []
-        
-        best_score = diag['best_device_id']
-        
-        if best_score is None:
-            recommendations.append(
-                "[ERROR] No input devices found! Connect a microphone."
-            )
-        elif diag['devices'][0]['availability_score'] < 100:
-            # Device is locked
-            processes = diag['competing_processes']
-            if processes:
-                proc_names = [p['name'] for p in processes]
-                # De-duplicate
-                proc_names = list(dict.fromkeys(proc_names))
-                recommendations.append(
-                    f"[ACTION] Microphone locked by: {', '.join(proc_names[:5])}. "
-                    f"Close these apps to use the microphone in ZEN_AI."
-                )
-            else:
-                recommendations.append(
-                    "[ACTION] Microphone device is locked (unknown process). "
-                    "Check Windows audio settings or restart your system."
-                )
-        
-        elif diag['devices'][0]['quality_score'] < 50:
-            recommendations.append(
-                "[ACTION] Microphone audio quality is very low. "
-                "Increase microphone volume in Windows Sound Mixer (Right-click speaker icon)."
-            )
-        
-        elif diag['devices'][0]['quality_score'] < 80:
-            recommendations.append(
-                "[ACTION] Microphone audio could be better. "
-                "Consider increasing microphone gain in system settings."
-            )
-        else:
-            recommendations.append(
-                "[OK] Microphone system is healthy and ready to use!"
-            )
-        
-        print(f"\n[ADVICE] RECOMMENDATIONS:")
-        for rec in recommendations:
-            print(f"  {rec}")
-        
-        return {
-            'diagnostic': diag,
-            'recommendations': recommendations,
-            'status': 'OK' if diag['devices'][0]['availability_score'] == 100 else 'NEEDS_ATTENTION'
-        }
+    _do_full_diagnostic_setup_part1()
 
 
 # Test script

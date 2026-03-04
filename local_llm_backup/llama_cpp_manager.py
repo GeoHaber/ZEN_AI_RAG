@@ -270,14 +270,15 @@ class LlamaCppManager:
                 if result and 'llama-server.exe' in (result.stdout or ''):
                     lines = (result.stdout or '').strip().split('\n')
                     for line in lines:
-                        if 'llama-server.exe' in line:
-                            parts = line.split()
-                            if len(parts) >= 2:
-                                try:
-                                    pid = int(parts[1])
-                                    return True, pid
-                                except ValueError:
-                                    pass
+                        if 'llama-server.exe' not in line:
+                            continue
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            try:
+                                pid = int(parts[1])
+                                return True, pid
+                            except ValueError:
+                                pass
                     return True, None
             else:
                 result = self._safe_run(['pgrep', '-f', 'llama-server'], timeout=5)

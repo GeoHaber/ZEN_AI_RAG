@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import asyncio
 
 class TestTelegramGateway(unittest.IsolatedAsyncioTestCase):
+    """TestTelegramGateway class."""
     def setUp(self):
         self.whitelist = [123456789] # Mock authorized User ID
         self.unauthorized_user = 987654321

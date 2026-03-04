@@ -33,7 +33,7 @@ async def test_zenai_page_execution():
     # We will try to run it. If it fails due to missing context, that's fine, 
     # as long as it's not a NameError.
     
-    client_mock = MagicMock()
+    MagicMock()
     
     try:
         # We wrap it in a catch-all because we expect it might fail on 
@@ -46,7 +46,7 @@ async def test_zenai_page_execution():
         # Check if it's a simple mock attribute error vs a real bug
         if "has no attribute" in str(e):
              pytest.fail(f"CRITICAL: AttributeError in UI code: {e}")
-    except RuntimeError as e:
+    except RuntimeError:
         # RuntimeError is expected because we aren't in a real NiceGUI loop
         pass
     except Exception as e:

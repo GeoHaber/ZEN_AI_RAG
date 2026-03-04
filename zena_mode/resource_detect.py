@@ -9,7 +9,6 @@ import os
 import sys
 import logging
 import subprocess
-import platform
 
 try:
     import psutil
@@ -83,7 +82,7 @@ class HardwareProfiler:
                     cmd = "powershell -NoProfile -Command \"Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json\""
                     out = subprocess.check_output(
                         cmd, 
-                        shell=True, 
+                        shell=False, 
                         text=True, 
                         stderr=subprocess.DEVNULL, 
                         timeout=3

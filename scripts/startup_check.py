@@ -167,6 +167,7 @@ def check_local_llm_servers() -> Tuple[bool, bool]:
     logger.header("🖥️  Checking Local LLM Servers")
     
     def check_port(host: str, port: int, name: str) -> bool:
+        """Check port."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(2)
@@ -249,7 +250,7 @@ def check_api_keys() -> bool:
     """Check for configured API keys."""
     logger.header("🔑 Checking API Keys")
     
-    env_file = Path(__file__).parent / ".env"
+    Path(__file__).parent / ".env"
     
     api_keys = {
         "OPENAI_API_KEY": "OpenAI",

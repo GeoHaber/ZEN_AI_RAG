@@ -1,4 +1,3 @@
-import json
 import logging
 import requests
 from zena_mode.handlers.base import BaseZenHandler

@@ -4,6 +4,7 @@ import sys
 import json
 
 def run_test():
+    """Run test."""
     print("🚀 Starting Final Integration Smoke Test...")
     ui_url = "http://127.0.0.1:8080"
     
@@ -33,12 +34,11 @@ def run_test():
     print("⏳ Waiting for LLM response to propagate to UI...")
     max_wait = 15
     start_time = time.time()
-    last_text = ""
     
     while time.time() - start_time < max_wait:
         try:
             r = requests.get(f"{ui_url}/test/state", timeout=2)
-            state = r.json()
+            r.json()
             # In our zena.py test/state, we might need to improve what it returns
             # but for now we look at logs or just wait for success.
             # print(f"  Current UI State: {state}")

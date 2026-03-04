@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(BASE_DIR))
 
 def test_import(module_name):
+    """Test import."""
     try:
         print(f"Testing import: {module_name}...", end="", flush=True)
         __import__(module_name)

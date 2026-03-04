@@ -33,7 +33,7 @@ try:
 finally:
     try:
         client.close()
-    except:
+    except Exception:
         pass
 
 # TEST 2: Auto-Fallback Microphone Support

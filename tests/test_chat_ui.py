@@ -85,22 +85,23 @@ async def test_streaming_response():
                     return False
                 
                 async for line in response.aiter_lines():
-                    if line.startswith('data: '):
-                        json_str = line[6:]
-                        if json_str.strip() == '[DONE]':
-                            break
-                        
-                        try:
-                            import json
-                            data = json.loads(json_str)
-                            delta = data['choices'][0]['delta']
-                            content = delta.get('content', '')
-                            if content:
-                                chunk_count += 1
-                                full_response += content
-                        except:
-                            pass
-            
+                    if not line.startswith('data: '):
+                        continue
+                    json_str = line[6:]
+                    if json_str.strip() == '[DONE]':
+                        break
+
+                    try:
+                        import json
+                        data = json.loads(json_str)
+                        delta = data['choices'][0]['delta']
+                        content = delta.get('content', '')
+                        if content:
+                            chunk_count += 1
+                            full_response += content
+                    except Exception:
+                        pass
+
             print(f"  ✅ Received {chunk_count} chunks")
             print(f"  ✅ Response: {full_response[:100]}")
             return chunk_count > 0
@@ -200,7 +201,6 @@ async def test_chat_ui_e2e_playwright():
                 
                 # Find send button (icon 'send' or similar)
                 # Try explicit send button or Enter key
-                button_selector = "button:has-text('send'), button .q-icon:has-text('send'), button[icon='send']" 
                 # Improving selector robustness
                 send_buttons = page.locator(".q-btn i:text('send')")
                 if await send_buttons.count() > 0:
@@ -235,6 +235,7 @@ async def test_chat_ui_e2e_playwright():
 
 
 async def main():
+    """Main."""
     print("\n" + "🧪" * 30)
     print("   ZENA CHAT UI AUTOMATED TESTS")
     print("🧪" * 30 + "\n")

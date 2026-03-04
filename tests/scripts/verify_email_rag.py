@@ -13,17 +13,25 @@ from zena_mode.email_ingestor import EmailIngestor
 from zena_mode.rag_pipeline import LocalRAG
 from config_system import config
 
-async def test_email_rag_flow():
+def _do_test_email_rag_flow_setup():
+    """Helper: setup phase for test_email_rag_flow."""
+
     print("📧 Starting Email RAG Verification...")
-    
+
     # 1. Setup Temporary Artifacts
     tmp_dir = Path("temp_email_test")
     if tmp_dir.exists():
         shutil.rmtree(tmp_dir)
     tmp_dir.mkdir()
-    
+
     mbox_path = tmp_dir / "legacy_archive.mbox"
     rag_storage = tmp_dir / "rag_db"
+    return mbox_path, rag_storage, tmp_dir
+
+
+async def test_email_rag_flow():
+    """Test email rag flow."""
+    mbox_path, rag_storage, tmp_dir = _do_test_email_rag_flow_setup()
     
     try:
         # 2. Create Dummy MBOX

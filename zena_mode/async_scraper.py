@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import logging
 import time
-from .web_scanner import WebCrawlScanner, CrawlabilityReport
+from .web_scanner import WebCrawlScanner
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ class SafeAsyncScraper:
         delay_between_requests: float = 0.5,  # 500ms delay
         timeout: int = 10
     ):
+        """Initialize instance."""
         self.base_url = base_url
         self.domain = urlparse(base_url).netloc
         self.max_concurrent = max_concurrent
@@ -118,7 +119,7 @@ class SafeAsyncScraper:
                 # Clean text
                 clean_start = time.time()
                 text = ' '.join(text.split())
-                clean_time = time.time() - clean_start
+                time.time() - clean_start
                 
                 total_time = time.time() - start_time
                 
@@ -154,7 +155,7 @@ class SafeAsyncScraper:
                 parsed.netloc == self.domain and
                 not url.endswith(('.pdf', '.jpg', '.png', '.gif', '.zip', '.exe'))
             )
-        except:
+        except Exception:
             return False
     
     async def discover_urls(self, session: aiohttp.ClientSession, start_url: str, max_pages: int) -> list:

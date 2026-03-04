@@ -3,12 +3,10 @@
 zena_mode/vision_engine.py - SOTA Vision Analysis with YOLOv26
 Provides object detection and video scene analysis.
 """
-import os
 import logging
 import cv2
 import numpy as np
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from collections import Counter
 
 try:
@@ -26,6 +24,7 @@ class VisionEngine:
     """
     
     def __init__(self, model_name: str = "yolo26n.pt"):
+        """Initialize instance."""
         self.enabled = ULTRALYTICS_AVAILABLE
         self.model = None
         self.model_name = model_name
@@ -148,6 +147,7 @@ class VisionEngine:
 _vision_engine = None
 
 def get_vision_engine():
+    """Get vision engine."""
     global _vision_engine
     if _vision_engine is None:
         _vision_engine = VisionEngine()

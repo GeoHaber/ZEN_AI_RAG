@@ -6,13 +6,11 @@ Ported and adapted from naughty-antonelli
 import asyncio
 import httpx
 import json
-import logging
 import time
 import hashlib
 import re
 import sqlite3
 import numpy as np
-from datetime import datetime
 from enum import Enum
 from typing import List, AsyncGenerator, Dict
 import os
@@ -21,6 +19,7 @@ from utils import safe_print, logger
 from .profiler import monitor
 
 class ConsensusMethod(Enum):
+    """ConsensusMethod class."""
     WORD_SET = "word_set"
     SEMANTIC = "semantic"
     HYBRID = "hybrid"
@@ -36,12 +35,14 @@ class ConsensusProtocol(Enum):
 class AgentPerformanceTracker:
     """Track agent accuracy and reliability over time using SQLite."""
     def __init__(self, db_path: str = None):
+        """Initialize instance."""
         if db_path is None:
             db_path = str(config.BASE_DIR / "agent_performance.db")
         self.db_path = db_path
         self._init_db()
 
     def _init_db(self):
+        """Init db."""
         try:
             conn = sqlite3.connect(self.db_path)
             conn.execute("""
@@ -63,6 +64,7 @@ class AgentPerformanceTracker:
             logger.error(f"[Performance] DB Init Error: {e}")
 
     def record_response(self, agent_id, task_type, query_hash, response_text, was_selected, consensus_score, confidence, response_time=0.0):
+        """Record response."""
         try:
             conn = sqlite3.connect(self.db_path)
             conn.execute("""
@@ -129,23 +131,23 @@ class CostTracker:
         self.total_cost = 0.0
 
     def record_query(self, model: str, content: str):
+        """Record query."""
         tokens = len(content.split()) * 1.3 # Rough estimate
         cost_per_1k = 0.0
         for m, c in self.COSTS.items():
-            if m in model.lower():
-                cost_per_1k = c
-                break
+            if m not in model.lower():
+                continue
+            cost_per_1k = c
+            break
         cost = (tokens / 1000.0) * cost_per_1k
         self.total_cost += cost
         return cost
 
-class SwarmArbitrator:
-    """
-    Manages parallel LLM queries and implements arbitrage logic 
-    to correct hallucinations and improve response quality.
-    """
-    
+class _SwarmArbitratorBase:
+    """Base methods for SwarmArbitrator."""
+
     def __init__(self, ports: List[int] = None):
+        """Initialize instance."""
         # Default scan range (main port + experts in 8005-8012 range)
         self.scan_ports = [config.llm_port] + list(range(8005, 8013))
         self.ports = []
@@ -206,13 +208,15 @@ class SwarmArbitrator:
 
     async def warmup(self):
         """Pre-load NLI model."""
-        if self.nli_model is None:
-            logger.info("[Arbitrator] Warming up NLI model...")
-            from sentence_transformers import CrossEncoder
-            self.nli_model = CrossEncoder('cross-encoder/nli-distilroberta-base')
-            # Dry run
-            _ = self.nli_model.predict([["fact", "context"]])
-            logger.info("[Arbitrator] NLI Model ready.")
+        if self.nli_model is not None:
+            return
+
+        logger.info("[Arbitrator] Warming up NLI model...")
+        from sentence_transformers import CrossEncoder
+        self.nli_model = CrossEncoder('cross-encoder/nli-distilroberta-base')
+        # Dry run
+        _ = self.nli_model.predict([["fact", "context"]])
+        logger.info("[Arbitrator] NLI Model ready.")
 
     async def discover_swarm(self):
         """Async heartbeat check to find live experts."""
@@ -254,7 +258,7 @@ class SwarmArbitrator:
                 self.latencies[port] = latency
                 return True
             return False
-        except:
+        except Exception:
             return False
 
     def select_protocol(self, task_type: str) -> ConsensusProtocol:
@@ -393,6 +397,14 @@ class SwarmArbitrator:
         except Exception as e:
             return {"content": f"Connect Error: {e}", "time": time.time() - start, "model": "N/A", "confidence": 0.0}
 
+
+class SwarmArbitrator(_SwarmArbitratorBase):
+    """
+    Manages parallel LLM queries and implements arbitrage logic 
+    to correct hallucinations and improve response quality.
+    """
+    
+
     async def _query_model_with_timeout(
         self,
         client: httpx.AsyncClient,
@@ -530,7 +542,7 @@ class SwarmArbitrator:
         safe_print(f"      🔍 SWARM INQUIRY: {text[:150]}...")
         safe_print("="*80)
         
-        query_hash = hashlib.md5(text.encode()).hexdigest()
+        query_hash = hashlib.sha256(text.encode()).hexdigest()
         
         # --- NEW: Trace ID for telemetry (Improvement 18) ---
         trace_id = monitor.start_trace()
@@ -545,10 +557,6 @@ class SwarmArbitrator:
         ]
         
         # Original system prompt for the Referee
-        referee_messages_base = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text}
-        ]
         
         yield f"{EMOJI['loading']} **Thinking...** (Swarm size: {len(self.endpoints)})\n\n"
         
@@ -679,17 +687,18 @@ FINAL VERIFIED RESPONSE:
             try:
                 async with client.stream('POST', referee_endpoint, json=payload, timeout=httpx.Timeout(60.0, connect=5.0)) as response:
                     async for line in response.aiter_lines():
-                        if line.startswith('data: '):
-                            json_str = line[6:]
-                            if json_str.strip() == '[DONE]': break
-                            try:
-                                data = json.loads(json_str)
-                                content = data['choices'][0]['delta'].get('content', '')
-                                if content: 
-                                    full_referee_text += content
-                                    safe_print(content, end="", flush=True)
-                                    yield content
-                            except: pass
+                        if not line.startswith('data: '):
+                            continue
+                        json_str = line[6:]
+                        if json_str.strip() == '[DONE]': break
+                        try:
+                            data = json.loads(json_str)
+                            content = data['choices'][0]['delta'].get('content', '')
+                            if content: 
+                                full_referee_text += content
+                                safe_print(content, end="", flush=True)
+                                yield content
+                        except Exception: pass
             except Exception as e:
                 yield f"\n\n{EMOJI['error']} Arbitration failed: {e}"
             
@@ -698,7 +707,7 @@ FINAL VERIFIED RESPONSE:
             
             # --- IMPROVEMENT 5: RECORD PERFORMANCE ---
             for r in valid_results:
-                reliability = self.performance_tracker.get_agent_reliability(r['model'], task_type)
+                self.performance_tracker.get_agent_reliability(r['model'], task_type)
                 
                 # Apply Hallucination Penalty to was_selected (Improvement 17)
                 final_selection = True

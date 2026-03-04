@@ -10,6 +10,7 @@ class UIState:
     or async tasks can safely mutate and read shared structures.
     """
     def __init__(self, initial: dict | None = None):
+        """Initialize instance."""
         self._lock = threading.RLock()
         self._state: dict[str, Any] = dict(initial or {})
         # Flag used by UI tests and safe update helpers to simulate
@@ -17,6 +18,7 @@ class UIState:
         self._state.setdefault('is_valid', True)
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Get."""
         with self._lock:
             val = self._state.get(key, default)
             # Return a shallow copy for lists to avoid callers mutating internal lists

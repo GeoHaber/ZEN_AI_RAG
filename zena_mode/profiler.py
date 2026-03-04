@@ -13,15 +13,18 @@ class PerformanceMonitor:
     _instance = None
     
     def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(PerformanceMonitor, cls).__new__(cls)
-            cls._instance.metrics = {
-                'llm_tps': deque(maxlen=50),      # Tokens per second
-                'llm_ttft': deque(maxlen=50),     # Time to first token
-                'rag_retrieval': deque(maxlen=50), # ms for RAG fetch
-                'expert_latency': deque(maxlen=50), # ms for swarm consensus
-                'traces': {}                       # Trace ID -> detailed logs
-            }
+        """New."""
+        if cls._instance is not None:
+            return
+
+        cls._instance = super(PerformanceMonitor, cls).__new__(cls)
+        cls._instance.metrics = {
+            'llm_tps': deque(maxlen=50),      # Tokens per second
+            'llm_ttft': deque(maxlen=50),     # Time to first token
+            'rag_retrieval': deque(maxlen=50), # ms for RAG fetch
+            'expert_latency': deque(maxlen=50), # ms for swarm consensus
+            'traces': {}                       # Trace ID -> detailed logs
+        }
         return cls._instance
 
     def start_trace(self) -> str:
@@ -32,14 +35,18 @@ class PerformanceMonitor:
 
     def log_trace(self, trace_id: str, message: str):
         """Append a message to a specific trace."""
-        if trace_id in self.metrics['traces']:
-            self.metrics['traces'][trace_id].append(f"[{time.strftime('%H:%M:%S')}] {message}")
-            logger.debug(f"[Trace:{trace_id}] {message}")
+        if trace_id not in self.metrics['traces']:
+            return
+
+        self.metrics['traces'][trace_id].append(f"[{time.strftime('%H:%M:%S')}] {message}")
+        logger.debug(f"[Trace:{trace_id}] {message}")
 
     def add_metric(self, key: str, value: float):
-        if key in self.metrics:
-            self.metrics[key].append(value)
-            logger.debug(f"[Metric] {key}: {value:.2f}")
+        if key not in self.metrics:
+            return
+
+        self.metrics[key].append(value)
+        logger.debug(f"[Metric] {key}: {value:.2f}")
 
     def get_averages(self):
         return {k: (sum(v)/len(v) if v else 0) for k, v in self.metrics.items()}
@@ -52,8 +59,10 @@ def profile_execution(name: str):
     Automatically logs results to PerformanceMonitor.
     """
     def decorator(func):
+        """Decorator."""
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            """Wrapper."""
             start = time.time()
             result = func(*args, **kwargs)
             duration_ms = (time.time() - start) * 1000
@@ -74,8 +83,10 @@ def profile_async_execution(name: str):
     Async version of the execution profiler.
     """
     def decorator(func):
+        """Decorator."""
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
+            """Wrapper."""
             start = time.time()
             result = await func(*args, **kwargs)
             duration_ms = (time.time() - start) * 1000

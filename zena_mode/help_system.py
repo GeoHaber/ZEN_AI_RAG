@@ -1,7 +1,6 @@
-import os
 import logging
 import ast
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from pathlib import Path
 from .rag_pipeline import LocalRAG
 
@@ -32,37 +31,36 @@ def get_help_rag():
             return None
     return _help_rag
 
-def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
-    """
-    Scans and indexes project documentation into the RAG system.
-    """
+def _do_index_internal_docs_setup(rag, root_dir):
+    """Helper: setup phase for index_internal_docs."""
+
     rag = rag or get_help_rag()
     if not rag:
         logger.warning("[HelpSystem] RAG unavailable, skipping indexing.")
         return
 
     logger.info("📚 Indexing internal documentation for Interactive Help...")
-    
+
     docs_payload = []
-    
+
     # Check root, _docs, and _Extra_files
     search_paths = [root_dir, root_dir / "_docs", root_dir / "_Extra_files"]
-    
+
     for doc_name in DOCS_TO_INDEX:
         content = None
         found_path = None
-        
+
         for p in search_paths:
             candidate = p / doc_name
             if candidate.exists():
                 found_path = candidate
                 break
-        
+
         if found_path:
             try:
                 with open(found_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                
+
                 docs_payload.append({
                     "title": f"System Doc: {doc_name}",
                     "url": str(found_path),
@@ -71,7 +69,15 @@ def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
                 logger.info(f"  [+] Found: {doc_name}")
             except Exception as e:
                 logger.error(f"  [-] Failed to read {doc_name}: {e}")
-    
+
+    return docs_payload, f, rag
+
+
+def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
+    """
+    Scans and indexes project documentation into the RAG system.
+    """
+    docs_payload, f, rag = _do_index_internal_docs_setup(rag, root_dir)
     # --- NEW: Index Codebase Docstrings (Self-Awareness) ---
     zena_mode_dir = root_dir / "zena_mode"
     if zena_mode_dir.exists():
@@ -93,14 +99,15 @@ def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
                 
                 # Extract class and function docstrings
                 for item in node.body:
-                    if isinstance(item, (ast.ClassDef, ast.FunctionDef)):
-                        item_doc = ast.get_docstring(item)
-                        if item_doc:
-                            docs_payload.append({
-                                "title": f"Logic: {py_file.name} -> {item.name}",
-                                "url": str(py_file),
-                                "content": item_doc
-                            })
+                    if not isinstance(item, (ast.ClassDef, ast.FunctionDef)):
+                        continue
+                    item_doc = ast.get_docstring(item)
+                    if item_doc:
+                        docs_payload.append({
+                            "title": f"Logic: {py_file.name} -> {item.name}",
+                            "url": str(py_file),
+                            "content": item_doc
+                        })
             except Exception as e:
                 logger.debug(f"  [-] Failed to parse docstrings in {py_file.name}: {e}")
 

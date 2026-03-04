@@ -93,13 +93,14 @@ class TestMessageSending:
                 'data: [DONE]'
             ]
             for line in lines:
-                if line.startswith('data: ') and '[DONE]' not in line:
-                    import json
-                    data = json.loads(line[6:])
-                    content = data.get('choices', [{}])[0].get('delta', {}).get('content', '')
-                    if content:
-                        yield content
-        
+                if line.startswith('data: ') and '[DONE]' in line:
+                    continue
+                import json
+                data = json.loads(line[6:])
+                content = data.get('choices', [{}])[0].get('delta', {}).get('content', '')
+                if content:
+                    yield content
+
         chunks = []
         async for chunk in mock_stream_response():
             chunks.append(chunk)
@@ -191,6 +192,7 @@ class TestStreamingResponses:
         cancelled = False
         
         async def long_stream():
+            """Long stream."""
             nonlocal cancelled
             for i in range(100):
                 yield f"chunk{i}"
@@ -198,6 +200,7 @@ class TestStreamingResponses:
             cancelled = False  # Only reached if not cancelled
         
         async def consume_with_cancel():
+            """Consume with cancel."""
             nonlocal cancelled
             async for chunk in long_stream():
                 chunks.append(chunk)
@@ -298,7 +301,7 @@ class TestTimeoutHandling:
         
         # Should timeout but not crash
         try:
-            result = await asyncio.wait_for(slow_operation(), timeout=0.1)
+            await asyncio.wait_for(slow_operation(), timeout=0.1)
             assert False, "Should have timed out"
         except asyncio.TimeoutError:
             pass  # Expected
@@ -348,7 +351,9 @@ class TestUIState:
         """Test UIState class initialization."""
         # Import the UIState class pattern
         class UIState:
+            """UIState class."""
             def __init__(self):
+                """Initialize instance."""
                 self.chat_log = None
                 self.scroll_container = None
                 self.status_text = None
@@ -357,6 +362,7 @@ class TestUIState:
                 self.is_valid = True
             
             def safe_update(self, element):
+                """Safe update."""
                 if not self.is_valid:
                     return
                 # Mock update
@@ -374,6 +380,7 @@ class TestUIState:
     def test_ui_state_disconnection_handling(self):
         """Test that UI state handles client disconnection."""
         class UIState:
+            """UIState class."""
             def __init__(self):
                 self.is_valid = True
             

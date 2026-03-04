@@ -1,6 +1,4 @@
-import asyncio
 import json
-import logging
 from typing import Dict
 from config_system import config
 import voice_service
@@ -11,7 +9,7 @@ def file_log(msg):
     try:
         with open("voice_trace.txt", "a", encoding="utf-8") as f:
             f.write(f"{msg}\n")
-    except: pass
+    except Exception: pass
     safe_print(msg)
 
 class VoiceStreamHandler:
@@ -46,7 +44,6 @@ class VoiceStreamHandler:
             await websocket.send(json.dumps({"status": "ready", "msg": "Stream Processor Initialized"}))
 
             # 2. Loop
-            args = [] # Inspect arguments
             file_log("Entering message loop...")
             async for message in websocket:
                 if isinstance(message, str):

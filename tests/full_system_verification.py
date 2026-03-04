@@ -4,6 +4,7 @@ import time
 import os
 
 def run_test(name, script_path):
+    """Run test."""
     print(f"\n{'='*60}")
     print(f"🧪 RUNNING: {name}")
     print(f"{'='*60}")
@@ -41,6 +42,7 @@ def run_test(name, script_path):
         return False, 0
 
 def check_efficiency():
+    """Check efficiency."""
     print(f"\n{'='*60}")
     print(f"📊 EFFICIENCY AUDIT")
     print(f"{'='*60}")
@@ -62,6 +64,7 @@ def check_efficiency():
         print(f"Could not run tasklist: {e}")
 
 def main():
+    """Main."""
     tests = [
         ("Backend Integration", "tests/test_async_backend.py"),
         ("RAG Pipeline", "tests/test_rag_pipeline.py"),

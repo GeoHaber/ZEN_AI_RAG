@@ -41,7 +41,7 @@ class TestWebScanner:
         """Test that we respect robots.txt disallow."""
         scanner = WebCrawlScanner()
         # Test with a known blocked path (may vary by site)
-        report = await scanner.scan("https://www.linkedin.com/in/test")
+        await scanner.scan("https://www.linkedin.com/in/test")
         # LinkedIn typically blocks crawlers on /in/ paths
         # Note: This may fail if LinkedIn changes their robots.txt
         # In that case, mock the robots.txt response
@@ -169,18 +169,17 @@ class TestScraperRetryLogic:
             Mock(status_code=200, text='<html><body>Success</body></html>')
         ]
 
-        with patch('requests.get', side_effect=responses):
-            with patch('time.sleep', side_effect=mock_sleep):
-                result = scraper.scrape(max_pages=1)
+        with patch('requests.get', side_effect=responses), patch('time.sleep', side_effect=mock_sleep):
+            scraper.scrape(max_pages=1)
 
-                # Verify exponential backoff pattern
-                assert len(sleep_times) >= 2  # At least 2 retries
-                # Each retry should wait longer (2^n + random(1-3))
-                # Sleep times should be roughly: 3-5s, 5-7s
-                assert sleep_times[0] >= 3.0  # 2^1 + 1
-                assert sleep_times[0] <= 5.0  # 2^1 + 3
-                assert sleep_times[1] >= 5.0  # 2^2 + 1
-                assert sleep_times[1] <= 7.0  # 2^2 + 3
+            # Verify exponential backoff pattern
+            assert len(sleep_times) >= 2  # At least 2 retries
+            # Each retry should wait longer (2^n + random(1-3))
+            # Sleep times should be roughly: 3-5s, 5-7s
+            assert sleep_times[0] >= 3.0  # 2^1 + 1
+            assert sleep_times[0] <= 5.0  # 2^1 + 3
+            assert sleep_times[1] >= 5.0  # 2^2 + 1
+            assert sleep_times[1] <= 7.0  # 2^2 + 3
 
 
 class TestCookieBannerRemoval:
@@ -507,7 +506,7 @@ class TestPoliteDelays:
             mock_get.return_value = mock_response
 
             with patch('time.sleep', side_effect=mock_sleep):
-                result = scraper.scrape(max_pages=3)
+                scraper.scrape(max_pages=3)
 
                 # Should have delays between requests (not before first request)
                 # 3 pages = 2 delays (between 1→2 and 2→3)

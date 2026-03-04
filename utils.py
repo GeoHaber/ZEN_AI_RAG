@@ -10,13 +10,11 @@ import sys
 import time
 import socket
 import logging
-import ctypes
 import subprocess
 import signal
 import hashlib
-import platform
 from pathlib import Path
-from typing import Optional, NoReturn, List, Dict, Set
+from typing import List, Dict
 
 try:
     import psutil
@@ -68,7 +66,7 @@ def safe_print(*args, level: str = "info", **kwargs):
     # Aggressive Flush
     try:
         sys.stdout.flush()
-    except: pass
+    except Exception: pass
     
     try:
         sys.stdout.flush()
@@ -129,18 +127,19 @@ class ProcessManager:
         # 1. Port-based detection
         try:
             for conn in psutil.net_connections(kind='inet'):
-                if conn.laddr.port in target_ports and conn.status == 'LISTEN':
-                    try:
-                        p = psutil.Process(conn.pid)
-                        # Skip self and parent (py.exe launcher)
-                        if conn.pid in (current_pid, parent_pid): continue
-                        zombies[conn.pid] = {
-                            'type': 'Port Conflict',
-                            'port': conn.laddr.port,
-                            'name': p.name(),
-                            'cmd': " ".join(p.cmdline()[:3])
-                        }
-                    except (psutil.NoSuchProcess, psutil.AccessDenied): continue
+                if conn.laddr.port in target_ports and conn.status != 'LISTEN':
+                    continue
+                try:
+                    p = psutil.Process(conn.pid)
+                    # Skip self and parent (py.exe launcher)
+                    if conn.pid in (current_pid, parent_pid): continue
+                    zombies[conn.pid] = {
+                        'type': 'Port Conflict',
+                        'port': conn.laddr.port,
+                        'name': p.name(),
+                        'cmd': " ".join(p.cmdline()[:3])
+                    }
+                except (psutil.NoSuchProcess, psutil.AccessDenied): continue
         except (psutil.AccessDenied, OSError): pass  # Connection iteration failed
         
         # 2. Script-based detection
@@ -152,14 +151,15 @@ class ProcessManager:
                 cmd = p.info['cmdline'] or []
                 cmd_str = " ".join(cmd).lower()
                 for target in target_scripts:
-                    if target.lower() in cmd_str:
-                        zombies[pid] = {
-                            'type': 'Hanging Instance',
-                            'port': 'N/A',
-                            'name': p.info['name'],
-                            'cmd': cmd_str[:100]
-                        }
-                        break
+                    if target.lower() not in cmd_str:
+                        continue
+                    zombies[pid] = {
+                        'type': 'Hanging Instance',
+                        'port': 'N/A',
+                        'name': p.info['name'],
+                        'cmd': cmd_str[:100]
+                    }
+                    break
             except (psutil.NoSuchProcess, psutil.AccessDenied): continue
         return zombies
 
@@ -212,6 +212,7 @@ try:
 except ImportError:
     # Fallback to keep utils valid even if zena_mode path issues exist during dev
     class HardwareProfiler: 
+        """HardwareProfiler class."""
         @staticmethod
         def get_profile(): 
             return {"type": "CPU", "ram_gb": 8.0, "vram_mb": 0, "free_vram_mb": 0, "threads": os.cpu_count() or 4}
@@ -234,6 +235,7 @@ class DiagnosticRunner:
     """v3.1 Smoke Test Engine."""
     @staticmethod
     async def run_smoke_test():
+        """Run smoke test."""
         results = []
         safe_print(f"\n{EMOJI['search']} Running Global System Health Check...")
         
@@ -260,17 +262,19 @@ def kill_process_by_name(name: str):
     """Legacy shim."""
     if not psutil: return
     for p in psutil.process_iter(['name']):
-        if p.info['name'] == name:
-            try: p.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
+        if p.info['name'] != name:
+            continue
+        try: p.kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied): pass
 
 def kill_process_by_port(port: int):
     """Legacy shim."""
     if not psutil: return
     for conn in psutil.net_connections():
-        if conn.laddr.port == port:
-            try: psutil.Process(conn.pid).kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
+        if conn.laddr.port != port:
+            continue
+        try: psutil.Process(conn.pid).kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied): pass
 
 def trace_log(msg: str, level: str = "info"):
     """Legacy shim."""
@@ -285,7 +289,7 @@ def format_message_with_attachment(user_query: str, filename: str, content: str)
     
     code_extensions = ['.py', '.js', '.html', '.css', '.json', '.cpp', '.c', '.java', '.go', '.rs', '.ts', '.sh', '.bat']
     if ext in code_extensions:
-        lang = ext[1:]; 
+        lang = ext[1:] 
         if lang == 'py': lang = 'python'
         context_block = f"I have attached a code file '{filename}'. Please analyze and review its logic:\\n\\n```{lang}\\n{content}\\n```"
     else:

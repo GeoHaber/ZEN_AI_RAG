@@ -32,6 +32,7 @@ def create_model_gallery(ui_state, app_state):
         grid_container = ui.grid(columns=3).classes('w-full gap-4 p-4 overflow-y-auto flex-grow')
         
         def refresh_models():
+            """Refresh models."""
             grid_container.clear()
             try:
                 # Fetch available models
@@ -71,16 +72,17 @@ def create_model_gallery(ui_state, app_state):
                                     # Swap Button
                                     def swap(m=model_file):
                                         ui.notify(f"Swapping to {m}...", color='orange')
-                                        requests.post(f"http://127.0.0.1:{config.mgmt_port}/swap", json={"model": m})
+                                        requests.post(f"http://127.0.0.1:{config.mgmt_port}/swap", json={"model": m}, timeout=30)
                                         dialog.close()
                                         
                                     ui.button('Swap', on_click=swap).props('outline size=sm color=orange')
                                     
                                     # Launch Expert Button
                                     def launch(m=model_file):
+                                        """Launch."""
                                         ui.notify(f"Summoning Expert: {m}...", color='purple')
                                         # Auto-assign port logic basic
-                                        requests.post(f"http://127.0.0.1:{config.mgmt_port}/swarm/launch", json={"model": m, "port": 8005}) # Hardcoded for demo
+                                        requests.post(f"http://127.0.0.1:{config.mgmt_port}/swarm/launch", json={"model": m, "port": 8005}, timeout=30) # Hardcoded for demo
                                         ui.notify("Expert Summoned!", color='positive')
                                         
                                     ui.button('Summon', on_click=launch).props('unelevated size=sm color=purple')

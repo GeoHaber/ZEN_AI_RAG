@@ -9,8 +9,10 @@ import subprocess
 from pathlib import Path
 
 class TestDistribution(unittest.TestCase):
+    """TestDistribution class."""
     
     def setUp(self):
+        """Setup."""
         # Paths
         self.project_root = Path(os.getcwd())
         self.dist_path = self.project_root / "dist" / "ZenAI_Dist.zip"
@@ -26,6 +28,7 @@ class TestDistribution(unittest.TestCase):
         self.sandbox.mkdir()
 
     def tearDown(self):
+        """Teardown."""
         # Cleanup
         if self.sandbox.exists():
             try:

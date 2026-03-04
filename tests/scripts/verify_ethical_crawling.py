@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger("EthicalVerify")
 
 async def verify_async_politeness():
+    """Verify async politeness."""
     logger.info("\n--- 🔍 VERIFYING ASYNC SCRAPER (POLITE MODE) ---")
     
     # Target 1: A blocked site (Google Search)
@@ -32,6 +33,7 @@ async def verify_async_politeness():
         logger.info(f"✅ ASYNC: Successfully crawled allowed URL: {results[0]['url']}")
 
 def verify_sync_politeness():
+    """Verify sync politeness."""
     logger.info("\n--- 🔍 VERIFYING SYNC SCRAPER (POLITE MODE) ---")
     
     # Target 1: A blocked site

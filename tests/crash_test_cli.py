@@ -33,7 +33,9 @@ PROMPTS = [
 ]
 
 class CLITester:
+    """CLITester class."""
     def __init__(self, max_N=10, safe_mode=True):
+        """Initialize instance."""
         self.max_N = max_N
         self.safe_mode = safe_mode
         self.models = scan_models(MODELS_DIR)
@@ -102,6 +104,7 @@ class CLITester:
             return {"index": index, "model": model_path.name, "success": False, "error": str(e)}
 
     def run_cycle(self, N):
+        """Run cycle."""
         print(f"\n[CLI-Test] Starting Cycle N={N} (Parallel Instances) ---")
         
         futures = []
@@ -158,6 +161,7 @@ class CLITester:
         return (success_count == N)
 
     def run(self):
+        """Run."""
         # Clear old report
         if REPORT_FILE.exists():
             os.remove(REPORT_FILE)

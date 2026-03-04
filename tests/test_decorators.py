@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from decorators import retry, log_errors, performance_critical, timer
 
 class TestDecorators:
+    """TestDecorators class."""
     
     def test_retry_sync_success(self):
         """Test retry wrapper succeeds eventually."""
@@ -14,6 +15,7 @@ class TestDecorators:
         
         @retry(max_attempts=3, delay=0.01)
         def flaky():
+            """Flaky."""
             attempts[0] += 1
             if attempts[0] < 2:
                 raise ValueError("Fail")
@@ -43,6 +45,7 @@ class TestDecorators:
         
         @retry(max_attempts=3, delay=0.01)
         async def flaky_async():
+            """Flaky async."""
             attempts[0] += 1
             if attempts[0] < 2:
                 raise ValueError("Async Fail")

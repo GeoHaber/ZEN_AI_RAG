@@ -18,7 +18,7 @@ try:
     from .llama_cpp_manager import LlamaCppManager, LlamaCppStatus
     from .model_card import ModelRegistry, ModelCard, ModelCategory
 except ImportError:
-    from llama_cpp_manager import LlamaCppManager, LlamaCppStatus
+    from llama_cpp_manager import LlamaCppManager
     from model_card import ModelRegistry, ModelCard, ModelCategory
 
 logger = logging.getLogger(__name__)
@@ -203,34 +203,48 @@ class LocalLLMManager:
         """Get all models as UI-ready cards"""
         return self.registry.get_all_cards()
 
+def _do_do_print_summary_setup_setup():
+    """Helper: setup phase for _do_print_summary_setup."""
+
+
+    status = self.get_status()
+
+    print("\n" + "=" * 70)
+    print("LOCAL LLM MANAGER - STATUS SUMMARY")
+    print("=" * 70)
+
+    # llama.cpp status
+    print("\n[llama.cpp Server]")
+    llama = status.llama_cpp_status
+    if llama['installed']:
+        print(f"  ✓ Installed: {llama['version']}")
+        if llama['needs_update']:
+            print(f"  ⚠ Update available: {llama['latest_version']}")
+        if llama['running']:
+            print(f"  ✓ Running (PID: {llama['pid']})")
+        else:
+            print("  ✗ Not running")
+    else:
+        print("  ✗ Not installed")
+        print(f"  Download from: {self.llama_manager.get_download_url()}")
+
+    # Models status
+    print(f"\n[Models]")
+    print(f"  Total discovered: {status.models_discovered}")
+    print(f"  Groups: {len(self.registry._model_groups)}")
+
+    return status
+
+    return status
+
+
+def _do_print_summary_setup():
+    """Helper: setup phase for print_summary."""
+    _do_do_print_summary_setup_setup()
+
     def print_summary(self):
         """Print human-readable status summary"""
-        status = self.get_status()
-
-        print("\n" + "=" * 70)
-        print("LOCAL LLM MANAGER - STATUS SUMMARY")
-        print("=" * 70)
-
-        # llama.cpp status
-        print("\n[llama.cpp Server]")
-        llama = status.llama_cpp_status
-        if llama['installed']:
-            print(f"  ✓ Installed: {llama['version']}")
-            if llama['needs_update']:
-                print(f"  ⚠ Update available: {llama['latest_version']}")
-            if llama['running']:
-                print(f"  ✓ Running (PID: {llama['pid']})")
-            else:
-                print("  ✗ Not running")
-        else:
-            print("  ✗ Not installed")
-            print(f"  Download from: {self.llama_manager.get_download_url()}")
-
-        # Models status
-        print(f"\n[Models]")
-        print(f"  Total discovered: {status.models_discovered}")
-        print(f"  Groups: {len(self.registry._model_groups)}")
-
+        status = _do_print_summary_setup()
         # Category breakdown
         by_category = {}
         for model in status.models:

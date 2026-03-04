@@ -4,6 +4,7 @@ import json
 import unittest
 
 class TestHubScaling(unittest.TestCase):
+    """TestHubScaling class."""
     def test_hub_scale_endpoint(self):
         """Verify that /swarm/scale exists and accepts a count."""
         url = "http://127.0.0.1:8002/swarm/scale"

@@ -56,6 +56,7 @@ CHAOS_MESSAGES = [
 
 
 def print_banner():
+    """Print banner."""
     print("""
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    🐒  LIVE MONKEY TEST  🐒                    ║
@@ -88,17 +89,17 @@ def trigger_click(element_id):
     """Trigger a click on a UI element via the app's test API."""
     try:
         # Use the test endpoint exposed by on_startup
-        r = requests.post(
+        requests.post(
             f"{BASE_URL}/_nicegui/api/run_javascript",
             json={"code": f"""
-                const btn = document.querySelector('[id*="{element_id}"]') || 
+                const btn = document.querySelector('[id*="{element_id}"]', timeout=30) || 
                             document.evaluate('//*[contains(text(), "{element_id}")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (btn) {{ btn.click(); console.log('Clicked: {element_id}'); }}
             """},
             timeout=2
         )
         print(f"   🖱️  Clicked: {element_id}")
-    except Exception as e:
+    except Exception:
         # Fallback - just log the action
         print(f"   🖱️  Click (simulated): {element_id}")
     time.sleep(0.3)
@@ -109,10 +110,10 @@ def send_message(text):
     try:
         # Try to inject text and trigger send
         escaped_text = text.replace("'", "\\'").replace('"', '\\"')[:200]
-        r = requests.post(
+        requests.post(
             f"{BASE_URL}/_nicegui/api/run_javascript",
             json={"code": f"""
-                const input = document.querySelector('input[placeholder*="anything"]') || 
+                const input = document.querySelector('input[placeholder*="anything"]', timeout=30) || 
                               document.querySelector('textarea');
                 if (input) {{
                     input.value = '{escaped_text}';
@@ -125,7 +126,7 @@ def send_message(text):
             timeout=2
         )
         print(f"   💬 Sent: {text[:50]}{'...' if len(text) > 50 else ''}")
-    except Exception as e:
+    except Exception:
         print(f"   💬 Message (simulated): {text[:30]}...")
     time.sleep(0.5)
 
@@ -190,6 +191,7 @@ def run_manual_chaos():
 
 
 def main():
+    """Main."""
     print_banner()
     
     if not check_connection():

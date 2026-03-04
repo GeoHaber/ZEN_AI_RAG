@@ -1,11 +1,9 @@
 import logging
 import mailbox
-import email
 from email.utils import parsedate_to_datetime
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional, Any
-import hashlib
 
 # Try importing PST handling libraries
 try:
@@ -97,10 +95,11 @@ class EmailIngestor:
             # Find the store
             pst_store = None
             for store in outlook.Stores:
-                if str(path) in str(store.FilePath):
-                    pst_store = store
-                    break
-            
+                if str(path) not in str(store.FilePath):
+                    continue
+                pst_store = store
+                break
+
             if not pst_store:
                 logger.error("[Email] Could not load PST in Outlook")
                 return []
@@ -117,6 +116,7 @@ class EmailIngestor:
         return documents
 
     def _walk_outlook_folders(self, folder, source_file) -> List[Dict]:
+        """Walk outlook folders."""
         docs = []
         try:
             for item in folder.Items:
@@ -146,7 +146,7 @@ class EmailIngestor:
                                 "type": "email"
                             }
                         })
-                except Exception as ex:
+                except Exception:
                     continue
             
             for sub in folder.Folders:
@@ -183,7 +183,7 @@ class EmailIngestor:
                                 "type": "email"
                             }
                         })
-                    except: continue
+                    except Exception: continue
         except Exception as e:
             logger.error(f"[Email] Libratom error: {e}")
         return documents
@@ -201,7 +201,7 @@ class EmailIngestor:
                 try:
                     dt = parsedate_to_datetime(date_header)
                     date_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-                except:
+                except Exception:
                     date_str = str(date_header)
 
             # Extract Body

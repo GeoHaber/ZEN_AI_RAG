@@ -8,19 +8,20 @@ from pathlib import Path
 TRACE_FILE = Path("startup_trace.log")
 
 def log(msg):
+    """Log."""
     timestamp = time.strftime("%H:%M:%S")
     line = f"[{timestamp}] {msg}"
     print(line)
     try:
         with open(TRACE_FILE, "a", encoding='utf-8') as f:
             f.write(line + "\n")
-    except:
+    except Exception:
         pass
 
 if __name__ == "__main__":
     if TRACE_FILE.exists():
         try: os.remove(TRACE_FILE)
-        except: pass
+        except Exception: pass
         
     log("🚀 DIAGNOSTIC STARTUP INITIATED")
     log(f"Current Directory: {os.getcwd()}")

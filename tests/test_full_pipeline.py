@@ -4,14 +4,15 @@
 import asyncio
 from zena_mode.voice_manager import get_voice_manager
 
-async def test_voice_pipeline():
-    """Test complete voice input -> transcription -> synthesis -> output"""
-    
+def _do_test_voice_pipeline_setup():
+    """Helper: setup phase for test_voice_pipeline."""
+
+
     vm = get_voice_manager()
-    
+
     print("🎤 Full Voice Pipeline Test\n")
     print("=" * 60)
-    
+
     # 1. Check devices
     print("\n1️⃣ Microphone Devices:")
     devices = vm.enumerate_devices()
@@ -19,28 +20,34 @@ async def test_voice_pipeline():
     for dev in input_devices[:3]:
         print(f"   • {dev['name']} (ID {dev['id']})")
     print(f"   ... and {len(input_devices) - 3} more" if len(input_devices) > 3 else "")
-    
+
     # 2. Test transcription with sample audio (skip recording to save time)
     print("\n2️⃣ Testing STT (Speech-to-Text):")
     from voice_service import VoiceService
     from pathlib import Path
     import io
-    
+
     # Create a test WAV file
     vs = VoiceService(model_dir=Path.home() / ".zena" / "models")
-    
+
     print("   Loading Whisper model...")
     vs.load_stt_model()
     print("   ✓ Whisper ready")
-    
+
     # 3. Test TTS synthesis  
     print("\n3️⃣ Testing TTS (Text-to-Speech):")
-    
+
     test_texts = [
         "Hello world",
         "This is a test",
         "Artificial intelligence is amazing"
     ]
+    return test_texts, vm
+
+
+async def test_voice_pipeline():
+    """Test complete voice input -> transcription -> synthesis -> output"""
+    test_texts, vm = _do_test_voice_pipeline_setup()
     
     for text in test_texts:
         result = vm.synthesize(text)

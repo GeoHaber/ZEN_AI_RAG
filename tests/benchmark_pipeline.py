@@ -13,9 +13,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("Benchmark")
 
-def benchmark_rag():
+def _do_benchmark_rag_setup():
+    """Helper: setup phase for benchmark_rag."""
+
     logger.info("🚀 Starting RAG Pipeline Benchmark provided by ZenAI...")
-    
+
     try:
         from zena_mode.rag_pipeline import LocalRAG
         from zena_mode.arbitrage import SwarmArbitrator
@@ -25,13 +27,13 @@ def benchmark_rag():
         return
 
     # 1. Initialize System (Measure Startup/Warmup Time)
-    start_init = time.time()
+    time.time()
     logger.info("Initializing LocalRAG...")
-    
+
     # Use a temp directory for benchmark index to avoid polluting main DB
     rag = LocalRAG(cache_dir=Path("./benchmark_storage"))
     arbitrator = SwarmArbitrator()
-    
+
     # Run Warmup
     t0 = time.time()
     rag.warmup()
@@ -40,7 +42,7 @@ def benchmark_rag():
     if arbitrator.nli_model is None:
          logger.info("Warming up NLI model manually for benchmark...")
          arbitrator.nli_model = CrossEncoder('cross-encoder/nli-distilroberta-base')
-    
+
     warmup_time = time.time() - t0
     logger.info(f"✅ System Warmup took: {warmup_time:.4f}s")
 
@@ -57,9 +59,15 @@ def benchmark_rag():
 
     # 3. Benchmark Search (Retrieval Only)
     query = "What is the capital of France?"
-    
+
     logger.info(f"\n--- Benchmarking Query: '{query}' ---")
-    
+
+    return arbitrator, query, rag, t0, warmup_time
+
+
+def benchmark_rag():
+    """Benchmark rag."""
+    arbitrator, query, rag, t0, warmup_time = _do_benchmark_rag_setup()
     # Metric: Retrieval Latency
     t_start = time.time()
     results = rag.search(query, k=5)
@@ -77,7 +85,7 @@ def benchmark_rag():
     context_chunks = [c['text'] for c in reranked]
     
     t_start = time.time()
-    verification = arbitrator.verify_hallucination(response_text, context_chunks)
+    arbitrator.verify_hallucination(response_text, context_chunks)
     t_verify = time.time() - t_start
     logger.info(f"🔹 NLI Verification: {t_verify:.4f}s")
     

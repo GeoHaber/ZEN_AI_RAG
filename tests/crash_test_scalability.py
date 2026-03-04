@@ -18,7 +18,9 @@ REPORT_FILE = ROOT_DIR / "scalability_report.csv"
 START_PORT = 9000
 
 class ScalabilityTester:
+    """ScalabilityTester class."""
     def __init__(self, max_instances=10, safe_mode=False):
+        """Initialize instance."""
         self.procs = []
         self.metrics = []
         self.max_instances = max_instances
@@ -29,21 +31,24 @@ class ScalabilityTester:
         print(f"[CrashTest] {msg}")
 
     def clean_all(self):
+        """Clean all."""
         self.log("Cleaning up processes...")
         for p in self.procs:
             try: p.terminate() 
-            except: pass
+            except Exception: pass
         
         # Aggressive cleanup of orphaned llama-server
         for p in psutil.process_iter(['pid', 'name']):
-            if p.info['name'] == 'llama-server.exe':
-                try: p.terminate()
-                except: pass
+            if p.info['name'] != 'llama-server.exe':
+                continue
+            try: p.terminate()
+            except Exception: pass
         self.procs = []
         self.active_ports = []
         time.sleep(2)
 
     def launch_instance(self, port):
+        """Launch instance."""
         env = os.environ.copy()
         env["LLM_PORT"] = str(port)
         
@@ -61,20 +66,20 @@ class ScalabilityTester:
         return proc
 
     def wait_health(self, port, timeout_sec=60):
+        """Wait health."""
         start = time.time()
         while time.time() - start < timeout_sec:
             try:
                 r = requests.get(f"http://127.0.0.1:{port}/health", timeout=1)
                 if r.status_code == 200:
                     return True
-            except:
+            except Exception:
                 time.sleep(1)
         return False
 
     def benchmark_single(self, port, question="Verify system check."):
         """Measure inference time on a single instance"""
         start_t = time.time()
-        ttft = 0
         end_t = 0
         
         # Simple completion payload
@@ -97,36 +102,81 @@ class ScalabilityTester:
                     "tokens": resp.json().get('timings', {}).get('predicted_n', 0),
                     "port": port
                 }
-        except Exception as e:
+        except Exception:
             pass
             
         return {"success": False, "port": port}
 
-    def run_cycle(self, count):
-        self.log(f"--- Starting Cycle N={count} ---")
-        cycle_ports = [START_PORT + i for i in range(count)]
-        
-        # Launch Group
-        launch_start = time.time()
-        for p in cycle_ports:
-            proc = self.launch_instance(p)
-            self.procs.append(proc)
-        
-        # Wait for Ready
-        ready_count = 0
-        for p in cycle_ports:
-            if self.wait_health(p):
-                ready_count += 1
-            else:
-                self.log(f"Port {p} failed to start")
-                
-        launch_duration = time.time() - launch_start
-        self.log(f"Ready: {ready_count}/{count} (Launch took {launch_duration:.2f}s)")
-        
-        if ready_count < count:
-            self.log("CRITICAL: Not all instances started. System limit reached?")
-            return False
+def _do_do_run_cycle_setup_setup(count):
+    """Helper: setup phase for _do_run_cycle_setup."""
 
+
+    self.log(f"--- Starting Cycle N={count} ---")
+    cycle_ports = [START_PORT + i for i in range(count)]
+
+    # Launch Group
+    launch_start = time.time()
+    for p in cycle_ports:
+        proc = self.launch_instance(p)
+        self.procs.append(proc)
+
+    # Wait for Ready
+    ready_count = 0
+    for p in cycle_ports:
+        if self.wait_health(p):
+            ready_count += 1
+        else:
+            self.log(f"Port {p} failed to start")
+
+    launch_duration = time.time() - launch_start
+    self.log(f"Ready: {ready_count}/{count} (Launch took {launch_duration:.2f}s)")
+
+    if ready_count < count:
+        self.log("CRITICAL: Not all instances started. System limit reached?")
+        return False
+
+    return cycle_ports, i, launch_duration, p
+
+    return cycle_ports, i, launch_duration, p
+
+
+def _do_run_cycle_setup_part1():
+    """Do run cycle setup part 1."""
+
+
+    def run(self):
+        """Run."""
+        # CSV Header
+        with open(REPORT_FILE, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=["instances", "success_rate", "avg_latency", "launch_overhead", "cpu_usage", "ram_usage"])
+            writer.writeheader()
+
+        for n in range(1, self.max_instances + 1):
+            if self.run_cycle(n):
+                continue
+            self.log("Stopping due to failure.")
+            break
+
+            # Append Record
+            with open(REPORT_FILE, 'a', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=["instances", "success_rate", "avg_latency", "launch_overhead", "cpu_usage", "ram_usage"])
+                writer.writerow(self.metrics[-1])
+
+            self.clean_all()
+            if self.safe_mode and n >= 2:
+                self.log("Safe Mode: Stopping at N=2")
+                break
+
+        self.log(f"Test Complete. Report saved to {REPORT_FILE}")
+
+
+def _do_run_cycle_setup(count):
+    """Helper: setup phase for run_cycle."""
+    cycle_ports, i, launch_duration, p = _do_do_run_cycle_setup_setup(count)
+
+    def run_cycle(self, count):
+        """Run cycle."""
+        cycle_ports, i, launch_duration, p = _do_run_cycle_setup(count)
         # Benchmark Parallel
         self.log("Generating Parallel Load...")
         questions = [
@@ -154,7 +204,7 @@ class ScalabilityTester:
         successes = [r for r in results if r['success']]
         avg_time = statistics.mean([r['duration'] for r in successes]) if successes else 0
         total_tokens = sum([r.get('tokens', 0) for r in successes])
-        tps = total_tokens / avg_time if avg_time > 0 else 0 # Rough estimate per instance stream
+        total_tokens / avg_time if avg_time > 0 else 0 # Rough estimate per instance stream
         
         row = {
             "instances": count,
@@ -168,29 +218,7 @@ class ScalabilityTester:
         self.log(f"Cycle Result: {json.dumps(row, indent=2)}")
         
         return len(successes) == count
-
-    def run(self):
-        # CSV Header
-        with open(REPORT_FILE, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=["instances", "success_rate", "avg_latency", "launch_overhead", "cpu_usage", "ram_usage"])
-            writer.writeheader()
-
-        for n in range(1, self.max_instances + 1):
-            if not self.run_cycle(n):
-                self.log("Stopping due to failure.")
-                break
-                
-            # Append Record
-            with open(REPORT_FILE, 'a', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=["instances", "success_rate", "avg_latency", "launch_overhead", "cpu_usage", "ram_usage"])
-                writer.writerow(self.metrics[-1])
-            
-            self.clean_all()
-            if self.safe_mode and n >= 2:
-                self.log("Safe Mode: Stopping at N=2")
-                break
-                
-        self.log(f"Test Complete. Report saved to {REPORT_FILE}")
+    _do_run_cycle_setup_part1()
 
 if __name__ == "__main__":
     # If run directly with no args, default to safe mode (N=2) for verification

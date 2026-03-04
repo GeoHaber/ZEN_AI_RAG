@@ -41,12 +41,6 @@ class TestRequestFormatting:
         ]
 
         # Expected format for Anthropic
-        expected = {
-            "model": "claude-3-5-sonnet-20241022",
-            "messages": messages,
-            "temperature": 0.7,
-            "max_tokens": 1024
-        }
 
         # Test formatting function (if exists)
         # For now, verify structure
@@ -445,7 +439,7 @@ class TestPerformanceTracking:
 
         # Calculate average times
         times = [r["time"] for r in mock_responses]
-        avg_time = sum(times) / len(times)
+        sum(times) / len(times)
 
         # External APIs should be faster than local
         local_time = next(r["time"] for r in mock_responses if "local" in r["model"])
@@ -461,7 +455,7 @@ class TestPerformanceTracking:
         # Simulate correct and incorrect responses
         import hashlib
 
-        query_hash = hashlib.md5("What is 2+2?".encode()).hexdigest()[:16]
+        query_hash = hashlib.sha256("What is 2+2?".encode()).hexdigest()[:16]
 
         # Record correct response
         arbitrator._enhanced.performance_tracker.record_response(

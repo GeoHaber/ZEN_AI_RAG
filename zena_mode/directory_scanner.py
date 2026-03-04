@@ -14,7 +14,9 @@ from utils import safe_print
 logger = logging.getLogger(__name__)
 
 class DirectoryScanner:
+    """DirectoryScanner class."""
     def __init__(self, root_dir: str):
+        """Initialize instance."""
         self.root_dir = Path(root_dir)
         self.documents = []
         self.supported_extensions = {
@@ -56,7 +58,7 @@ class DirectoryScanner:
             if file_path.stat().st_size > size_limit:
                 logger.debug(f"[DirScanner] Skipping large file: {file_path}")
                 return False
-        except:
+        except Exception:
             return False
         
         return True
@@ -91,6 +93,57 @@ class DirectoryScanner:
         
         return ""
     
+def _scan_part1_part2(self):
+    """Scan part1 part 2."""
+
+
+    def get_stats(self) -> Dict:
+        """Get scanning statistics."""
+        if not self.documents:
+            return {}
+
+        extensions = {}
+        for doc in self.documents:
+            ext = doc['extension']
+            extensions[ext] = extensions.get(ext, 0) + 1
+
+        return {
+            'total_files': len(self.documents),
+            'total_size': sum(doc['size'] for doc in self.documents),
+            'extensions': extensions,
+            'root_dir': str(self.root_dir)
+        }
+
+    def check_project_dependencies(self):
+        """Analyze project imports and check for updates."""
+        try:
+            # Import our new manager
+            import sys
+            sys.path.append(str(self.root_dir))
+            try:
+                import dependency_manager
+                safe_print(f"\n📦 Analyzing dependencies for: {self.root_dir}")
+                dependency_manager.generate_requirements(self.root_dir)
+                dependency_manager.check_updates()
+                return True
+            except ImportError:
+                logger.error("[DirScanner] dependency_manager.py not found in project root")
+                return False
+        except Exception as e:
+            logger.error(f"[DirScanner] Dependency check failed: {e}")
+            return False
+
+
+def _scan_part1(self):
+    """Scan part 1."""
+
+
+    logger.info(f"[DirScanner] ✅ Completed: {len(self.documents)} files in {total_time:.2f}s")
+    logger.info(f"[DirScanner] Total content: {total_size / 1024:.1f} KB ({total_size / (1024*1024):.2f} MB)")
+
+    return self.documents
+
+
     def scan(self, max_files: int = 1000) -> List[Dict]:
         """Recursively scan directory and extract text content."""
         start_time = time.time()
@@ -105,10 +158,11 @@ class DirectoryScanner:
             dirs[:] = [d for d in dirs if not self.should_skip_dir(root_path / d)]
             
             for file in files:
-                if file_count >= max_files:
-                    logger.info(f"[DirScanner] Reached max files limit: {max_files}")
-                    break
-                
+                if file_count < max_files:
+                    continue
+                logger.info(f"[DirScanner] Reached max files limit: {max_files}")
+                break
+
                 file_path = root_path / file
                 
                 if not self.should_index_file(file_path):
@@ -143,46 +197,7 @@ class DirectoryScanner:
             if file_count >= max_files:
                 break
         
-        total_time = time.time() - start_time
-        total_size = sum(doc['size'] for doc in self.documents)
-        
-        logger.info(f"[DirScanner] ✅ Completed: {len(self.documents)} files in {total_time:.2f}s")
-        logger.info(f"[DirScanner] Total content: {total_size / 1024:.1f} KB ({total_size / (1024*1024):.2f} MB)")
-        
-        return self.documents
-    
-    def get_stats(self) -> Dict:
-        """Get scanning statistics."""
-        if not self.documents:
-            return {}
-        
-        extensions = {}
-        for doc in self.documents:
-            ext = doc['extension']
-            extensions[ext] = extensions.get(ext, 0) + 1
-        
-        return {
-            'total_files': len(self.documents),
-            'total_size': sum(doc['size'] for doc in self.documents),
-            'extensions': extensions,
-            'root_dir': str(self.root_dir)
-        }
-
-    def check_project_dependencies(self):
-        """Analyze project imports and check for updates."""
-        try:
-            # Import our new manager
-            import sys
-            sys.path.append(str(self.root_dir))
-            try:
-                import dependency_manager
-                safe_print(f"\n📦 Analyzing dependencies for: {self.root_dir}")
-                dependency_manager.generate_requirements(self.root_dir)
-                dependency_manager.check_updates()
-                return True
-            except ImportError:
-                logger.error("[DirScanner] dependency_manager.py not found in project root")
-                return False
-        except Exception as e:
-            logger.error(f"[DirScanner] Dependency check failed: {e}")
-            return False
+        time.time() - start_time
+        sum(doc['size'] for doc in self.documents)
+        _scan_part1(self)
+    _scan_part1_part2(self)

@@ -23,6 +23,7 @@ STRESS_TESTS = [
 ]
 
 async def reproduce():
+    """Reproduce."""
     logger.info("🧪 Starting Stress Test...")
     backend = AsyncZenAIBackend()
     

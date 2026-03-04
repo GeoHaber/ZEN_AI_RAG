@@ -11,8 +11,10 @@ from security import validate_path, FileValidator
 from config_system import config
 
 class TestSecurityHardening(unittest.TestCase):
+    """TestSecurityHardening class."""
 
     def setUp(self):
+        """Setup."""
         self.test_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.test_dir.name).resolve()
         

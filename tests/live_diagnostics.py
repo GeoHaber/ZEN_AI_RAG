@@ -15,6 +15,7 @@ import model_manager
 from ui.registry import UI_IDS, MONKEY_TARGETS, UI_METADATA
 
 async def check_service(name, url, timeout=2.0):
+    """Check service."""
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, timeout=timeout)
@@ -42,6 +43,7 @@ MONKEY_PROMPTS = [
 ]
 
 async def run_monkey_test(backend, iterations=5):
+    """Run monkey test."""
     print("\n" + "🐒" * 25)
     print("      LIVE MONKEY TEST: CHAOS INJECTION")
     print("🐒" * 25 + "\n")
@@ -71,6 +73,7 @@ async def run_monkey_test(backend, iterations=5):
     return success_count == iterations
 
 async def run_ui_chaos_test(backend, iterations=10):
+    """Run ui chaos test."""
     print("\n" + "🌀" * 25)
     print("      UI SMART CHAOS TEST: AI-VALIDATED POKING")
     print("🌀" * 25 + "\n")
@@ -135,6 +138,7 @@ async def run_semantic_ui_audit(backend):
     return "error" not in full_response.lower()
 
 async def run_diagnostics(monkey_mode=False):
+    """Run diagnostics."""
     print("\n" + "="*50)
     print("      ZENAI LIVE DIAGNOSTICS & SYSTEM CHECK")
     print("="*50 + "\n")

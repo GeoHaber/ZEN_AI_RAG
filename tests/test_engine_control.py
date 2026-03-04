@@ -31,9 +31,10 @@ def get_llama_pids():
 def kill_all_llama():
     """Cleanup helper"""
     for proc in psutil.process_iter(['pid', 'name']):
-        if proc.info['name'] == LLAMA_EXE:
-            try: proc.kill()
-            except: pass
+        if proc.info['name'] != LLAMA_EXE:
+            continue
+        try: proc.kill()
+        except Exception: pass
 
 @pytest.fixture(scope="module")
 def clean_env():
@@ -41,13 +42,9 @@ def clean_env():
     yield
     kill_all_llama()
 
-def test_engine_lifecycle(clean_env):
-    """
-    1. Start Engine (Instance A)
-    2. Verify Running
-    3. Start Engine (Instance B) -> Should kill A
-    4. Verify A dead, B running
-    """
+def _do_test_engine_lifecycle_setup():
+    """Helper: setup phase for test_engine_lifecycle."""
+
     # Skip if model or native llama binary not present in this environment
     LLAMA_EXE_PATH = Path(__file__).parent.parent / "_bin" / "llama-server.exe"
     if not MODEL_PATH.exists() or not LLAMA_EXE_PATH.exists():
@@ -58,13 +55,13 @@ def test_engine_lifecycle(clean_env):
     # We use --guard-bypass for the first one so it doesn't kill unrelated things, 
     # but strictly we want to test guard.
     # Let's just run it.
-    
+
     cmd = [sys.executable, str(START_SCRIPT), "--model", str(MODEL_PATH)]
-    
+
     # We set environment variable to avoid "input()" pause on crash/exit?
     # The script uses input() at end. We can pipe \n to it if needed.
     # But usually we keep it running.
-    
+
     proc_a = subprocess.Popen(
         cmd,
         cwd=ROOT_DIR,
@@ -73,11 +70,18 @@ def test_engine_lifecycle(clean_env):
         stdin=subprocess.PIPE, # To send \n if needed
         text=True
     )
-    
+
+    return cmd, proc_a
+
+
+def _do_test_engine_lifecycle_init():
+    """Helper: setup phase for test_engine_lifecycle."""
+
+    cmd, proc_a = _do_test_engine_lifecycle_setup()
     # Wait for startup (API 8001)
     port_active = False
     pid_a = None
-    
+
     for i in range(20):
         pids = get_llama_pids()
         if pids:
@@ -88,10 +92,10 @@ def test_engine_lifecycle(clean_env):
                 if resp.status_code == 200:
                     port_active = True
                     break
-            except:
+            except Exception:
                 pass
         time.sleep(1)
-        
+
     if not pid_a:
         # Check stdout
         out, err = proc_a.communicate(timeout=1)
@@ -102,6 +106,17 @@ def test_engine_lifecycle(clean_env):
     print(f"[Test] Instance A Running (PID: {pid_a})")
     assert port_active, "API 8001 not responding"
 
+    return cmd, pid_a, proc_a
+
+
+def test_engine_lifecycle(clean_env):
+    """
+    1. Start Engine (Instance A)
+    2. Verify Running
+    3. Start Engine (Instance B) -> Should kill A
+    4. Verify A dead, B running
+    """
+    cmd, pid_a, proc_a = _do_test_engine_lifecycle_init()
     # --- Step 2: Start Instance B (Trigger Guard) ---
     print("[Test] Starting Instance B (Should kill A)...")
     

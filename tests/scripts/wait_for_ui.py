@@ -3,6 +3,7 @@ import socket
 import sys
 
 def wait_for_port(port, timeout=60):
+    """Wait for port."""
     start_time = time.time()
     print(f"Waiting for port {port}...")
     while time.time() - start_time < timeout:

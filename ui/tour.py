@@ -31,7 +31,7 @@ async def start_tutorial(client):
 
     with ui.dialog() as tour_dialog, ui.card().classes('w-96 items-center text-center'):
         lbl = ui.markdown().classes('text-lg mb-4')
-        btn_next = ui.button('Next', on_click=lambda: tour_dialog.submit(True))
+        ui.button('Next', on_click=lambda: tour_dialog.submit(True))
         
     tour_dialog.open()
     

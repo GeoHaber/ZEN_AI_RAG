@@ -191,6 +191,7 @@ class TestThreadSafety:
         errors = []
         
         def search_task(query):
+            """Search task."""
             try:
                 result = rag.search(query, k=3)
                 results.append(len(result))
@@ -218,6 +219,7 @@ class TestThreadSafety:
         errors = []
         
         def build_task(batch_id):
+            """Build task."""
             try:
                 docs = [
                     {"url": f"batch{batch_id}_{i}", "title": f"T{i}", 

@@ -10,6 +10,7 @@ MODEL_NAME = "tinyllama-1.1b-chat.Q4_K_M.gguf"
 SWARM_PORT = 8005
 
 def test_launch():
+    """Test launch."""
     logger.info(f"🚀 Launching {MODEL_NAME} on port {SWARM_PORT}...")
     try:
         resp = requests.post(f"{HUB_URL}/swarm/launch", json={
@@ -36,7 +37,7 @@ def test_launch():
                 logger.info("✅ Expert is ONLINE!")
                 logger.info(resp.json())
                 return
-        except:
+        except Exception:
             pass
         time.sleep(1)
         print(".", end="", flush=True)

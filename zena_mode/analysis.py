@@ -11,6 +11,7 @@ logger = logging.getLogger('Analysis')
 
 
 def analyze_file(path: Path) -> Dict[str, Any]:
+    """Analyze file."""
     result = {'path': str(path), 'issues': []}
     try:
         if not path.exists() or not path.is_file():
@@ -48,6 +49,7 @@ def analyze_file(path: Path) -> Dict[str, Any]:
 
 
 def analyze_and_write_report(files: List[str], job_id: str = None) -> Dict[str, Any]:
+    """Analyze and write report."""
     report = {'job_id': job_id, 'files': [], 'summary': {}}
     for f in files:
         # validate path

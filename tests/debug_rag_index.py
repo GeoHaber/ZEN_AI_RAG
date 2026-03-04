@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RAGDebug")
 
 def debug_index():
+    """Debug index."""
     print(f"📂 Loading RAG Index from: {config.rag_cache_dir}")
     rag = LocalRAG()
     

@@ -20,6 +20,7 @@ async def generate_sine_wave_pcm(duration_sec=3, frequency=440, sample_rate=1600
     return bytes(audio_data)
 
 async def inject_voice():
+    """Inject voice."""
     uri = "ws://127.0.0.1:8005"
     logger.info(f"💉 Voice Injection Test Target: {uri}")
     

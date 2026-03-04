@@ -29,13 +29,14 @@ def test_no_legacy_branding_in_codebase():
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
                     for legacy in LEGACY_STRINGS:
-                        if legacy in content:
-                            # Try to find line number
-                            lines = content.splitlines()
-                            for i, line in enumerate(lines):
-                                if legacy in line:
-                                    found_violations.append(f"{file_path}:{i+1} - Found '{legacy}'")
-            except Exception as e:
+                        if legacy not in content:
+                            continue
+                        # Try to find line number
+                        lines = content.splitlines()
+                        for i, line in enumerate(lines):
+                            if legacy in line:
+                                found_violations.append(f"{file_path}:{i+1} - Found '{legacy}'")
+            except Exception:
                 # print(f"Could not read {file_path}: {e}")
                 pass
                 

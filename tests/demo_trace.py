@@ -3,6 +3,7 @@ import time
 from zena_mode.arbitrage import SwarmArbitrator
 
 async def demo_trace():
+    """Demo trace."""
     print("[DEBUG] Initializing Arbitrator with Auto-Discovery...")
     arb = SwarmArbitrator()
     

@@ -6,6 +6,7 @@ from ui_state import UIState
 
 
 class DummySelect:
+    """DummySelect class."""
     def __init__(self):
         self.options = []
         self.update_called = 0
@@ -15,9 +16,11 @@ class DummySelect:
 
 
 def test_concurrent_clear_and_append():
+    """Test concurrent clear and append."""
     state = UIState({'chat_container': [], 'chat_history': []})
 
     def worker(i):
+        """Worker."""
         # alternate between append and clear to provoke races
         if i % 3 == 0:
             state.clear_chat()
@@ -43,6 +46,7 @@ def test_concurrent_clear_and_append():
 
 
 def test_update_model_options_calls_update():
+    """Test update model options calls update."""
     sel = DummySelect()
     state = UIState({'model_select': sel})
 

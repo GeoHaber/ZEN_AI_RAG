@@ -4,6 +4,7 @@ import httpx
 from zena_mode.arbitrage import SwarmArbitrator
 
 async def test_quiet_cot_logic():
+    """Test quiet cot logic."""
     print("--- TESTING QUIET COT EVOLUTION (Phase 19) ---")
     
     # Mock arbitrator with a single endpoint for reflection test

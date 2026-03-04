@@ -7,6 +7,7 @@ from zena_mode.batch_engine import BatchAnalyzer
 
 @pytest.mark.asyncio
 async def test_batch_analysis_logic(tmp_path):
+    """Test batch analysis logic."""
     # Setup mock backend
     mock_backend = MagicMock()
     mock_gen = MagicMock()

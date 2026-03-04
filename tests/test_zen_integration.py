@@ -31,7 +31,7 @@ def test_zen_brain_initialization():
     try:
         from zena_mode.heart_and_brain import ZenBrain
         from config_system import config
-        brain = ZenBrain(Path(config.MODEL_DIR))
+        ZenBrain(Path(config.MODEL_DIR))
         print("  ✓ ZenBrain instance created")
         return True
     except Exception as e:
@@ -107,6 +107,7 @@ def test_no_dead_code():
         return False
 
 def main():
+    """Main."""
     print("\n" + "="*60)
     print("PHASE 5 INTEGRATION TEST")
     print("="*60 + "\n")

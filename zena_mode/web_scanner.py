@@ -6,7 +6,7 @@ Checks robots.txt, anti-bot protection, and permission meta-tags.
 import httpx
 import asyncio
 from urllib.robotparser import RobotFileParser
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 import logging
 import socket
 from bs4 import BeautifulSoup
@@ -16,7 +16,9 @@ from utils import safe_print
 logger = logging.getLogger("WebScanner")
 
 class CrawlabilityReport:
+    """CrawlabilityReport class."""
     def __init__(self, url: str):
+        """Initialize instance."""
         self.url = url
         self.domain = urlparse(url).netloc
         self.can_crawl = True
@@ -114,11 +116,12 @@ class WebCrawlScanner:
                 }
                 
                 for pattern, label in protection_patterns.items():
-                    if pattern in html:
-                        report.bot_protection = label
-                        # Cloudflare doesn't always block, but Akamai/DataDome usually do for RAG
-                        if pattern not in ["cloudflare", "access denied"]:
-                            report.metadata["high_difficulty"] = True
+                    if pattern not in html:
+                        continue
+                    report.bot_protection = label
+                    # Cloudflare doesn't always block, but Akamai/DataDome usually do for RAG
+                    if pattern not in ["cloudflare", "access denied"]:
+                        report.metadata["high_difficulty"] = True
 
                 if "linkedin.com" in report.domain:
                     report.bot_protection = "LinkedIn High-Precision Filter"
@@ -169,6 +172,7 @@ class WebCrawlScanner:
         return report
 
 async def test_scanner():
+    """Test scanner."""
     scanner = WebCrawlScanner()
     urls = [
         "https://www.google.com/search?q=test",

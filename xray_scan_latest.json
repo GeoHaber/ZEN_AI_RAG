@@ -1,0 +1,158 @@
+{
+  "smells": {
+    "total": 565,
+    "critical": 71,
+    "warning": 346,
+    "info": 148,
+    "by_category": {
+      "deep-nesting": 141,
+      "complex-function": 92,
+      "long-function": 100,
+      "god-class": 11,
+      "too-many-returns": 29,
+      "large-class": 5,
+      "too-many-branches": 27,
+      "too-many-params": 12,
+      "dataclass-candidate": 18,
+      "boolean-blindness": 23,
+      "missing-docstring": 84,
+      "missing-class-docstring": 23
+    },
+    "worst_files": {
+      "x_ray_project.py": 30,
+      "zena_mode/universal_extractor.py": 15,
+      "zena_mode/arbitrage.py": 12,
+      "zena_mode/rag_pipeline.py": 12,
+      "zena_mode/swarm_arbitrator.py": 11,
+      "zena_mode/production_microphone_healer.py": 11,
+      "ui/handlers.py": 10,
+      "utils.py": 9,
+      "ui/actions.py": 8,
+      "tests/crash_test_scalability.py": 8
+    }
+  },
+  "duplicates": {
+    "total_groups": 103,
+    "exact_duplicates": 1,
+    "structural_duplicates": 1,
+    "near_duplicates": 35,
+    "semantic_duplicates": 66,
+    "total_functions_involved": 288,
+    "avg_similarity": 0.696
+  },
+  "lint": {
+    "total": 2,
+    "critical": 0,
+    "warning": 2,
+    "info": 0,
+    "fixable": 2,
+    "by_rule": {
+      "F401": 2
+    },
+    "worst_files": {
+      "tests\\test_real_rag_e2e.py": 2
+    },
+    "source": "ruff"
+  },
+  "security": {
+    "total": 115,
+    "critical": 3,
+    "warning": 12,
+    "info": 100,
+    "fixable": 0,
+    "by_rule": {
+      "B110": 32,
+      "B311": 30,
+      "B603": 28,
+      "B113": 7,
+      "B607": 4,
+      "B310": 3,
+      "B105": 3,
+      "B324": 2,
+      "B606": 2,
+      "B602": 1,
+      "B103": 1,
+      "B104": 1,
+      "B112": 1
+    },
+    "worst_files": {
+      "ui\\handlers.py": 6,
+      "scripts\\install.py": 5,
+      "ui\\loading_messages.py": 5,
+      "local_llm_backup\\llama_cpp_manager.py": 4,
+      "tests\\test_llm_lifecycle.py": 4,
+      "tests\\crash_test_scalability.py": 4,
+      "tests\\test_engine_control.py": 4,
+      "tests\\test_loading_messages.py": 4,
+      "tests\\test_ui_chaos.py": 4,
+      "zena_mode\\resource_detect.py": 3
+    },
+    "source": "bandit",
+    "by_confidence": {
+      "HIGH": 102,
+      "LOW": 7,
+      "MEDIUM": 6
+    }
+  },
+  "grade": {
+    "score": 51.0,
+    "letter": "F",
+    "breakdown": {
+      "smells": {
+        "penalty": 30,
+        "critical": 71,
+        "warning": 346,
+        "info": 148
+      },
+      "duplicates": {
+        "penalty": 10.3,
+        "groups": 103
+      },
+      "lint": {
+        "penalty": 0.1,
+        "critical": 0,
+        "warning": 2,
+        "info": 0,
+        "fixable": 2
+      },
+      "security": {
+        "penalty": 8.6,
+        "critical": 3,
+        "warning": 12,
+        "info": 100
+      }
+    },
+    "tools_run": [
+      "X-Ray Smells",
+      "X-Ray Duplicates",
+      "Ruff Lint",
+      "Bandit Security"
+    ]
+  },
+  "hardware": {
+    "arch": "AMD64",
+    "cpu_brand": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+    "cpu_cores": 8,
+    "ram_gb": 15.84,
+    "available_ram_gb": 3.27,
+    "gpu_name": "Intel(R) UHD Graphics 620",
+    "gpu_vram_gb": 0.0,
+    "avx2": true,
+    "avx512": true,
+    "neon": false,
+    "tier": "low",
+    "tier_label": "\ud83d\udfe0 Low    \u2014 small quants (Q2-Q4), \u22647B",
+    "recommended_gpu_layers": 0,
+    "fingerprint": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz | Intel(R) UHD Graphics 620 | 16GB RAM",
+    "os": "Windows",
+    "os_release": "11",
+    "machine": "AMD64",
+    "processor": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+    "cpu_name": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+    "cpu_count_logical": 8,
+    "cpu_count_physical": 8,
+    "rust_available": true,
+    "rust_version": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+    "rust_acceleration": true
+  }
+}

@@ -3,6 +3,7 @@ import json
 import sys
 
 def test_routes():
+    """Test routes."""
     base_url = "http://127.0.0.1:8002"
     routes = [
         "/api/test-llm",

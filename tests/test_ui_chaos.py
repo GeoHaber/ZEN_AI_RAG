@@ -7,6 +7,7 @@ from playwright.async_api import Page, expect
 # Minimal navigation fixture relying on pytest-playwright to handle loop
 @pytest.fixture(autouse=True)
 async def navigate_to_app(page: Page):
+    """Navigate to app."""
     port = os.environ.get("NICEGUI_SCREEN_TEST_PORT", "8080")
     url = f"http://localhost:{port}"
     try:
@@ -16,19 +17,27 @@ async def navigate_to_app(page: Page):
     yield
 
 @pytest.mark.asyncio
-async def test_chaos_monkey(page: Page):
+def _do_test_chaos_monkey_setup():
+    """Helper: setup phase for test_chaos_monkey."""
+
     print("\n🐒 Unleashing Chaos Monkey...")
-    
+
     selectors = [
         "button", 
         "input[class*='q-field__native']", 
         ".q-toggle", 
         ".q-btn"
     ]
-    
+
     interactions = 25 
     errors = []
-    
+
+    return errors, interactions, selectors
+
+
+async def test_chaos_monkey(page: Page):
+    """Test chaos monkey."""
+    errors, interactions, selectors = _do_test_chaos_monkey_setup()
     # Wait for app to be ready
     await page.wait_for_timeout(2000)
     

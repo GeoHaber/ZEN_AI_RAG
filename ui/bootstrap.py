@@ -9,6 +9,7 @@ from config_system import config
 
 # Logging - output to BOTH file and console
 def setup_logging():
+    """Setup logging."""
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
@@ -22,6 +23,7 @@ def setup_logging():
 
 # --- Global Crash Handler ---
 def handle_exception(exc_type, exc_value, exc_traceback):
+    """Handle exception."""
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
@@ -35,10 +37,11 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 def setup_crash_handler():
     sys.excepthook = handle_exception
 
-def initialize_services():
-    """Initialize all backend services (RAG, Memory, Features, Cleanup)."""
+def _do_initialize_services_setup():
+    """Helper: setup phase for initialize_services."""
+
     logger = logging.getLogger("ZenAI.Bootstrap")
-    
+
     # 1. Config Mode
     ZENA_MODE = config.zena_mode_enabled
     ZENA_CONFIG = {
@@ -56,7 +59,7 @@ def initialize_services():
         try:
             from zena_mode import LocalRAG
             from zena_mode.universal_extractor import UniversalExtractor
-            
+
             # Universal Extractor for PDF/Image OCR in chat
             universal_extractor = UniversalExtractor()
             logger.info("[RAG] Universal Extractor ready for OCR")
@@ -73,6 +76,12 @@ def initialize_services():
         except Exception as e:
             logger.error(f"[RAG] Failed to initialize: {e}")
 
+    return ZENA_CONFIG, ZENA_MODE, logger, rag_system, universal_extractor
+
+
+def initialize_services():
+    """Initialize all backend services (RAG, Memory, Features, Cleanup)."""
+    ZENA_CONFIG, ZENA_MODE, logger, rag_system, universal_extractor = _do_initialize_services_setup()
     # 3. Conversation Memory
     conversation_memory = None
     try:

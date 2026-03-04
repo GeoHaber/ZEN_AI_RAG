@@ -413,7 +413,7 @@ class TestUIInteractions:
             await toast.first.wait_for(timeout=2000, state="visible")
             text = await toast.first.text_content()
             assert "Speaking" in text or "audio device" in text or "error" in text.lower()
-        except:
+        except Exception:
              # If too fast, just pass - click was successful
              pass
 

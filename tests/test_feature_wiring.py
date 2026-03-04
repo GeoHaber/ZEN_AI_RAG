@@ -22,10 +22,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 
-class TestFeatureWiring(unittest.TestCase):
-    """Tests that verify features are properly wired to the UI."""
-    
-    @classmethod
+class _TestFeatureWiringBase(unittest.TestCase):
+    """Base methods for TestFeatureWiring."""
+
     def setUpClass(cls):
         """Load source files for analysis."""
         cls.root = Path(__file__).parent.parent
@@ -109,6 +108,12 @@ class TestFeatureWiring(unittest.TestCase):
             self.ui_components_code,
             "setup_rag_dialog should exist in ui_components.py"
         )
+
+
+class TestFeatureWiring(_TestFeatureWiringBase, unittest.TestCase):
+    """Tests that verify features are properly wired to the UI."""
+    
+    @classmethod
     
     # =========================================================================
     # MODEL MANAGEMENT
@@ -195,6 +200,7 @@ class TestUIElementIDs(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
+        """Setupclass."""
         cls.root = Path(__file__).parent.parent
         cls.registry_path = cls.root / "ui" / "registry.py"
         with open(cls.registry_path, 'r', encoding='utf-8') as f:

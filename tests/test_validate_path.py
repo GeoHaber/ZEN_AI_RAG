@@ -7,8 +7,9 @@ from config import BASE_DIR, MODEL_DIR
 
 
 def test_validate_path_within_base_dir(tmp_path):
+    """Test validate path within base dir."""
     # Create a temp file inside BASE_DIR (simulate)
-    root = Path(BASE_DIR)
+    Path(BASE_DIR)
     test_file = tmp_path / "test.txt"
     test_file.write_text("hello")
 
@@ -18,6 +19,7 @@ def test_validate_path_within_base_dir(tmp_path):
 
 
 def test_validate_path_rejects_system_paths():
+    """Test validate path rejects system paths."""
     if os.name == 'nt':
         bad = 'C:\\Windows\\system32\\cmd.exe'
     else:

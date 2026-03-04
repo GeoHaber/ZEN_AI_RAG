@@ -16,9 +16,11 @@ def clean_build_dirs():
     if os.path.exists(DIST_DIR): shutil.rmtree(DIST_DIR)
     if os.path.exists(WORK_DIR): shutil.rmtree(WORK_DIR)
 
-def build():
+def _do_build_setup():
+    """Helper: setup phase for build."""
+
     clean_build_dirs()
-    
+
     # Define imports to force include
     hidden_imports = [
         "nicegui",
@@ -33,7 +35,7 @@ def build():
         "ui",
         # Add any other dynamic imports here
     ]
-    
+
     # Construct PyInstaller arguments
     args = [
         ENTRY_POINT,
@@ -45,12 +47,18 @@ def build():
         "--clean",
         "--noconfirm",
     ]
-    
+
     # Add hidden imports
     for hidden in hidden_imports:
         args.append(f"--hidden-import={hidden}")
-        
+
     # Add Data (NiceGUI Assets)
+    return args
+
+
+def build():
+    """Build."""
+    args = _do_build_setup()
     # NiceGUI needs its static and template files
     import nicegui
     nicegui_path = Path(nicegui.__file__).parent

@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RAG_Diag")
 
 async def test_rag():
+    """Test rag."""
     print("="*60)
     print("🔍 RAG DIAGNOSTICS START")
     print("="*60)

@@ -17,6 +17,7 @@ class InjectableVoiceManager(VoiceManager):
     """
     
     def __init__(self, *args, **kwargs):
+        """Initialize instance."""
         super().__init__(*args, **kwargs)
         self.inject_audio: Optional[bytes] = None
         self.inject_enabled = False
@@ -212,6 +213,7 @@ def create_audio_test_panel(ui, voice_manager: InjectableVoiceManager):
         status_label = ui.label('Status: Ready')
         
         async def update_status():
+            """Update status."""
             status = voice_manager.get_injection_status()
             if status['enabled']:
                 mode = status['last_injection'].get('label', 'Injected')

@@ -3,6 +3,7 @@ import json
 import time
 
 def test_swarm_endpoint():
+    """Test swarm endpoint."""
     print("Testing Swarm Endpoint to verify TaskType fix...")
     
     url = "http://127.0.0.1:8004/api/chat/swarm"
@@ -11,7 +12,7 @@ def test_swarm_endpoint():
     }
     
     try:
-        start_time = time.time()
+        time.time()
         print(f"Sending POST to {url}...")
         response = requests.post(url, json=payload, timeout=120)
         

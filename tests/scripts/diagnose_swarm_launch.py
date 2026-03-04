@@ -15,17 +15,19 @@ HEALTH_URL = "http://127.0.0.1:8005/health"
 MODEL_NAME = "tinyllama-1.1b-chat.Q4_K_M.gguf"
 
 def check_server_health():
+    """Check server health."""
     for _ in range(15): # Wait up to 30s
         try:
             resp = requests.get("http://127.0.0.1:8002/health", timeout=2)
             if resp.status_code == 200: return True
-        except:
+        except Exception:
             pass
         time.sleep(2)
         logger.info("   ... waiting for Main Server (8002) ...")
     return False
 
 def diagnose_launch():
+    """Diagnose launch."""
     logger.info("🔍 DIAGNOSING SWARM LAUNCH...")
 
     # 1. Check Main Server

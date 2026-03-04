@@ -4,11 +4,9 @@ resource_manager.py - Dynamic Resource Management for ZenAI V2
 Monitors system RAM and determines model loading strategies to prevent crashes.
 """
 import logging
-import platform
-import os
 from typing import Dict, Literal, Optional
 import threading
-from typing import List, Optional
+# from typing import List, Optional
 from config_system import config
 import asyncio
 
@@ -34,6 +32,7 @@ class ResourceManager:
     """
     
     def __init__(self):
+        """Initialize instance."""
         self.strategy: Literal["SERIAL", "SWAP", "PARALLEL"] = "SERIAL"
         self.total_ram_gb = 0
         self.available_ram_gb = 0
@@ -49,7 +48,7 @@ class ResourceManager:
         Returns the Thread object.
         """
         # Determine effective max_workers
-        effective_max = max_workers if max_workers is not None else getattr(config, 'GENERIC_MAX_WORKERS', 4)
+        max_workers if max_workers is not None else getattr(config, 'GENERIC_MAX_WORKERS', 4)
 
         t = threading.Thread(target=target, args=args, daemon=daemon)
         with self._threads_lock:

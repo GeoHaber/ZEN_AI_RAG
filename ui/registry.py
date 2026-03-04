@@ -6,6 +6,7 @@ and enable automatic chaos/monkey testing.
 """
 
 class UI_IDS:
+    """UI_IDS class."""
     # --- Sidebar / Drawer ---
     BTN_NEW_CHAT = "ui-btn-new-chat"
     BTN_SETTINGS = "ui-btn-settings"

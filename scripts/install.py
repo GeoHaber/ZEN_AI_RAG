@@ -23,6 +23,7 @@ import json
 
 # Color codes for output
 class Colors:
+    """Colors class."""
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -73,11 +74,11 @@ def get_pip_command() -> str:
     try:
         subprocess.run(["pip", "--version"], capture_output=True, check=True)
         return "pip"
-    except:
+    except Exception:
         try:
             subprocess.run(["pip3", "--version"], capture_output=True, check=True)
             return "pip3"
-        except:
+        except Exception:
             print(Colors.red("  ❌ pip not found! Python installation is broken."))
             sys.exit(1)
 
@@ -131,7 +132,7 @@ def install_packages(packages: List[str], pip_cmd: str) -> bool:
         except subprocess.TimeoutExpired:
             print(Colors.yellow("⏱ (timeout, may still install)"))
             failed.append(package)
-        except Exception as e:
+        except Exception:
             print(Colors.red("✗"))
             failed.append(package)
     
@@ -175,13 +176,14 @@ def check_local_llm_servers() -> Tuple[bool, bool]:
     import socket
     
     def is_port_open(port: int) -> bool:
+        """Is port open."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
             result = sock.connect_ex(('localhost', port))
             sock.close()
             return result == 0
-        except:
+        except Exception:
             return False
     
     ollama = is_port_open(11434)

@@ -2,16 +2,11 @@ import threading
 from typing import List, Any, Optional
 
 
-class RAGManager:
-    """Thread-safe manager for RAG-related state (documents, file paths, model).
+class _RAGManagerBase:
+    """Base methods for RAGManager."""
 
-    This is intentionally minimal: it provides atomic update and snapshot accessors
-    so callers (UI and workers) can rely on consistent views of the state.
-
-    All methods are synchronous — the underlying LocalRAG is synchronous.
-    Uses threading.Lock for thread safety (NOT asyncio.Lock which requires async context).
-    """
     def __init__(self):
+        """Initialize instance."""
         self._lock = threading.Lock()
         self._model = None
         self._documents: List[Any] = []
@@ -53,6 +48,17 @@ class RAGManager:
             if self._model and hasattr(self._model, 'save'):
                 return self._model.save(path)
             raise RuntimeError('No underlying RAG system set')
+
+
+class RAGManager(_RAGManagerBase):
+    """Thread-safe manager for RAG-related state (documents, file paths, model).
+
+    This is intentionally minimal: it provides atomic update and snapshot accessors
+    so callers (UI and workers) can rely on consistent views of the state.
+
+    All methods are synchronous — the underlying LocalRAG is synchronous.
+    Uses threading.Lock for thread safety (NOT asyncio.Lock which requires async context).
+    """
 
     def hybrid_search(self, *args, **kwargs):
         """Perform hybrid search via the underlying RAG system."""

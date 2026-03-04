@@ -12,12 +12,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def test_initialization():
+    """Test initialization."""
     print("Testing UniversalExtractor initialization...")
     extractor = UniversalExtractor()
     assert extractor is not None
     print("✅ Initialized successfully")
 
 def test_type_detection():
+    """Test type detection."""
     print("Testing document type detection...")
     extractor = UniversalExtractor()
     
@@ -28,8 +30,9 @@ def test_type_detection():
     print("✅ Type detection passed")
 
 def test_bytes_routing():
+    """Test bytes routing."""
     print("Testing bytes routing (dry run)...")
-    extractor = UniversalExtractor()
+    UniversalExtractor()
     
     # We won't actually call OCR here to avoid Tesseract dependency in CI, 
     # but we check if it reaches the handler

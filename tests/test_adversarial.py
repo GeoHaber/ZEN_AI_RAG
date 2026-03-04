@@ -153,6 +153,7 @@ class TestAsyncRaceConditions:
         errors = []
         
         def access_config():
+            """Access config."""
             try:
                 for _ in range(100):
                     _ = config.llm_port
@@ -178,6 +179,7 @@ class TestAsyncRaceConditions:
         lock = threading.Lock()
         
         def rapid_cache_ops():
+            """Rapid cache ops."""
             for i in range(1000):
                 key = f"query_{i % 10}"
                 with lock:

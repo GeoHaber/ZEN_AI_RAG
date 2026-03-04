@@ -36,86 +36,86 @@ def build_header(ui_state, drawer, locale, open_gallery=None):
     return header
 
 def build_footer(ui_state, handlers, locale):
+    """Build footer."""
     # ... (unchanged) ...
     # Floating capsule container - sits above the bottom edge
-    with ui.footer().classes('bg-transparent border-0 p-3 md:p-4') as footer:
-        with ui.column().classes('w-full max-w-3xl mx-auto gap-2'):
-            # Attachment preview (when file is attached) - start completely hidden
-            ui_state.attachment_preview = ui.label('')
-            ui_state.attachment_preview.set_visibility(False)
-            ui_state.attachment_preview.classes(
-                'text-sm px-4 py-2 rounded-full self-start '
-                'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 '
-                'border border-blue-200 dark:border-blue-700'
-            )
-            
+    with ui.footer().classes('bg-transparent border-0 p-3 md:p-4') as footer, ui.column().classes('w-full max-w-3xl mx-auto gap-2'):
+        # Attachment preview (when file is attached) - start completely hidden
+        ui_state.attachment_preview = ui.label('')
+        ui_state.attachment_preview.set_visibility(False)
+        ui_state.attachment_preview.classes(
+            'text-sm px-4 py-2 rounded-full self-start '
+            'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 '
+            'border border-blue-200 dark:border-blue-700'
+        )
 
-            
-            # === COMMAND CAPSULE ===
-            # Floating pill-shaped input with shadow and modern styling
-            with ui.card().classes(
-                'w-full p-3 rounded-3xl shadow-xl '
-                'bg-white dark:bg-slate-800 '
-                'border-2 border-gray-100 dark:border-slate-600 '
-            ).props('flat'):
-                with ui.row().classes('items-center gap-2 w-full'):
-                    # Attach button
-                    uploader = ui.upload(on_upload=handlers.on_upload, auto_upload=True).classes('hidden')
-                    ui.button(
-                        on_click=lambda: uploader.run_method('pickFiles'), 
-                        icon=Icons.ATTACH
-                    ).props(f'flat round dense id={UI_IDS.BTN_ATTACH}').classes(
-                        'text-gray-400 hover:text-blue-500 transition-colors'
-                    )
-                    
-                    # Input field - grows to fill space
-                    placeholder_text = getattr(locale, 'CHAT_PLACEHOLDER_ZENA', 'Ask anything...') if config.zena_mode_enabled else getattr(locale, 'CHAT_PLACEHOLDER', 'Type a message...')
-                    ui_state.user_input = ui.input(placeholder=placeholder_text).props(
-                        f'borderless dense autogrow id={UI_IDS.INPUT_CHAT}'
-                    ).classes('flex-1 text-base bg-transparent')
-                    ui_state.user_input.on('keydown.enter.prevent', lambda: handlers.handle_send(ui_state.user_input.value))
-                    
-                    # Voice button with device selector
-                    async def setup_voice_devices():
-                        """Initialize voice device selector."""
-                        try:
-                            import httpx
-                            async with httpx.AsyncClient() as client:
-                                response = await client.get('http://localhost:8001/voice/devices')
-                                if response.status_code == 200:
-                                    data = response.json()
-                                    input_devices = [d for d in data.get('devices', []) if d['is_input']]
-                                    device_options = {d['name']: d['id'] for d in input_devices}
-                                    if device_options:
-                                        ui_state.mic_device_select.set_options(device_options)
-                                        default_id = data.get('default_device')
-                                        if default_id is not None:
-                                            ui_state.mic_device_select.value = list(device_options.values())[0]
-                        except Exception as e:
-                            logger.warning(f"[Voice] Failed to load devices: {e}")
-                    
-                    # Device selector (initially hidden, shown on click)
-                    ui_state.mic_device_select = ui.select(
-                        {}, 
-                        label='🎤'
-                    ).props('dense outlined').classes('text-sm').style('max-width: 200px; display: none;')
-                    ui_state.mic_device_select.tooltip = 'Select microphone'
-                    
-                    # Voice button
-                    ui.button(
-                        icon=Icons.RECORD, 
-                        on_click=handlers.on_voice_click
-                    ).props(f'flat round dense id={UI_IDS.BTN_VOICE}').classes(
-                        'text-gray-400 hover:text-purple-500 transition-colors'
-                    ).tooltip('Click to toggle voice recording')
-                    
-                    # Send button - prominent
-                    ui.button(
-                        icon=Icons.SEND, 
-                        on_click=lambda: handlers.handle_send(ui_state.user_input.value)
-                    ).props(f'round dense unelevated id={UI_IDS.BTN_SEND}').classes(
-                        'bg-gradient-to-r from-blue-500 to-violet-500 text-white w-10 h-10 shadow-md hover:shadow-lg transition-shadow'
-                    )
+
+
+        # === COMMAND CAPSULE ===
+        # Floating pill-shaped input with shadow and modern styling
+        with ui.card().classes(
+            'w-full p-3 rounded-3xl shadow-xl '
+            'bg-white dark:bg-slate-800 '
+            'border-2 border-gray-100 dark:border-slate-600 '
+        ).props('flat'):
+            with ui.row().classes('items-center gap-2 w-full'):
+                # Attach button
+                uploader = ui.upload(on_upload=handlers.on_upload, auto_upload=True).classes('hidden')
+                ui.button(
+                    on_click=lambda: uploader.run_method('pickFiles'), 
+                    icon=Icons.ATTACH
+                ).props(f'flat round dense id={UI_IDS.BTN_ATTACH}').classes(
+                    'text-gray-400 hover:text-blue-500 transition-colors'
+                )
+
+                # Input field - grows to fill space
+                placeholder_text = getattr(locale, 'CHAT_PLACEHOLDER_ZENA', 'Ask anything...') if config.zena_mode_enabled else getattr(locale, 'CHAT_PLACEHOLDER', 'Type a message...')
+                ui_state.user_input = ui.input(placeholder=placeholder_text).props(
+                    f'borderless dense autogrow id={UI_IDS.INPUT_CHAT}'
+                ).classes('flex-1 text-base bg-transparent')
+                ui_state.user_input.on('keydown.enter.prevent', lambda: handlers.handle_send(ui_state.user_input.value))
+
+                # Voice button with device selector
+                async def setup_voice_devices():
+                    """Initialize voice device selector."""
+                    try:
+                        import httpx
+                        async with httpx.AsyncClient() as client:
+                            response = await client.get('http://localhost:8001/voice/devices')
+                            if response.status_code == 200:
+                                data = response.json()
+                                input_devices = [d for d in data.get('devices', []) if d['is_input']]
+                                device_options = {d['name']: d['id'] for d in input_devices}
+                                if device_options:
+                                    ui_state.mic_device_select.set_options(device_options)
+                                    default_id = data.get('default_device')
+                                    if default_id is not None:
+                                        ui_state.mic_device_select.value = list(device_options.values())[0]
+                    except Exception as e:
+                        logger.warning(f"[Voice] Failed to load devices: {e}")
+
+                # Device selector (initially hidden, shown on click)
+                ui_state.mic_device_select = ui.select(
+                    {}, 
+                    label='🎤'
+                ).props('dense outlined').classes('text-sm').style('max-width: 200px; display: none;')
+                ui_state.mic_device_select.tooltip = 'Select microphone'
+
+                # Voice button
+                ui.button(
+                    icon=Icons.RECORD, 
+                    on_click=handlers.on_voice_click
+                ).props(f'flat round dense id={UI_IDS.BTN_VOICE}').classes(
+                    'text-gray-400 hover:text-purple-500 transition-colors'
+                ).tooltip('Click to toggle voice recording')
+
+                # Send button - prominent
+                ui.button(
+                    icon=Icons.SEND, 
+                    on_click=lambda: handlers.handle_send(ui_state.user_input.value)
+                ).props(f'round dense unelevated id={UI_IDS.BTN_SEND}').classes(
+                    'bg-gradient-to-r from-blue-500 to-violet-500 text-white w-10 h-10 shadow-md hover:shadow-lg transition-shadow'
+                )
     return footer
 
 def build_chat_area(ui_state):
@@ -130,7 +130,7 @@ def build_page(ui_state, handlers, drawer_factory, rag_dialog_factory):
     locale = get_locale()
     
     # 1. Dialogs & Components
-    rag_dialog = rag_dialog_factory()
+    rag_dialog_factory()
     gallery_dialog = create_model_gallery(ui_state, None) # app_state not needed strictly yet
     drawer = drawer_factory()
     
@@ -147,13 +147,12 @@ def build_page(ui_state, handlers, drawer_factory, rag_dialog_factory):
         handlers.add_message("system", locale.WELCOME_DEFAULT)
     
     # 4. Action Chips - Click to auto-send
-    with ui_state.chat_log:
-        with ui.row().classes('w-full justify-center gap-2 mt-4 flex-wrap'):
-            for item in EXAMPLES:
-                async def make_handler(p=item['prompt']):
-                    # Set the input value and immediately send
-                    ui_state.user_input.value = p
-                    await handlers.handle_send(p)
-                ui.button(item['title'], on_click=lambda p=item['prompt']: make_handler(p)).props('outline rounded-full dense').classes('text-[11px] px-3 py-1 normal-case hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors')
+    with ui_state.chat_log, ui.row().classes('w-full justify-center gap-2 mt-4 flex-wrap'):
+        for item in EXAMPLES:
+            async def make_handler(p=item['prompt']):
+                # Set the input value and immediately send
+                ui_state.user_input.value = p
+                await handlers.handle_send(p)
+            ui.button(item['title'], on_click=lambda p=item['prompt']: make_handler(p)).props('outline rounded-full dense').classes('text-[11px] px-3 py-1 normal-case hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors')
 
     return {"header": header, "drawer": drawer}

@@ -1,0 +1,28 @@
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore = [
+    "E712",
+    "E402",
+    "E741",
+    "E701",
+    "E702",
+    "F541",
+    "F811",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"ui_flet/*.py" = ["F821", "F401"]
+"ui_flet/**/*.py" = ["F821", "F401"]
+"zena_flet.py" = ["F821", "F401"]
+"zena.py" = ["F821", "F401"]
+"tests/*.py" = ["F821", "F401"]
+"tests/**/*.py" = ["F821", "F401"]
+"scripts/*.py" = ["F821", "F401"]
+"scripts/**/*.py" = ["F821", "F401"]
+"zena_mode/*.py" = ["F821"]
+"zena_mode/**/*.py" = ["F821"]
+"ui/*.py" = ["F821", "F401"]
+"ui/**/*.py" = ["F821", "F401"]

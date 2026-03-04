@@ -5,6 +5,78 @@ import asyncio
 import time
 from zena_mode.voice_manager import get_voice_manager
 
+def _test_voice_pipeline_part1():
+    """Test voice pipeline part 1."""
+
+
+    # Second synthesis (cache hit)
+    start = time.time()
+    result2 = vm.synthesize(test_text, use_cache=True)
+    time2 = time.time() - start
+
+    print(f"   First call (synthesis):  {time1:.3f}s")
+    print(f"   Second call (cached):    {time2:.6f}s (essentially instant)")
+    if time2 > 0:
+        print(f"   Speedup:                 {time1/time2:.0f}x faster")
+    else:
+        print(f"   Speedup:                 INSTANT (< 1ms)")
+    print(f"   ✓ Cache hit verified:    {result1['audio_data'] == result2['audio_data']}")
+
+    # 5. Audio format verification
+    print("\n5️⃣ Audio Format Verification:")
+    result = vm.synthesize("Format test")
+    if result['success']:
+        audio_b64 = result['audio_data']
+        print(f"   ✓ Base64 encoded:        {len(audio_b64)} chars")
+        print(f"   ✓ Audio URL ready:       data:audio/wav;base64,...")
+        print(f"   ✓ Duration estimate:     {result['duration']:.1f}s")
+        print(f"   ✓ HTML5 compatible:      Yes (float32 WAV)")
+
+    # 6. Batch synthesis test
+    print("\n6️⃣ Batch Synthesis (5 unique phrases):")
+    phrases = [
+        "Good morning",
+        "How are you",
+        "Very well, thank you",
+        "Nice to meet you",
+        "See you later"
+    ]
+
+    start = time.time()
+    for phrase in phrases:
+        vm.synthesize(phrase, use_cache=True)
+    total_time = time.time() - start
+
+    print(f"   Synthesized {len(phrases)} phrases in {total_time:.2f}s")
+    print(f"   Average per phrase:      {total_time/len(phrases):.2f}s")
+
+    # Repeat with cache
+    start = time.time()
+    for phrase in phrases:
+        vm.synthesize(phrase, use_cache=True)
+    time.time() - start
+
+
+def _test_voice_pipeline_part2():
+    """Test voice pipeline part 2."""
+
+
+    print(f"   From cache (5 phrases):  {cached_time:.4f}s (instant)")
+    if cached_time > 0:
+        print(f"   Total speedup:           {total_time/cached_time:.0f}x faster")
+    else:
+        print(f"   Total speedup:           INSTANT (< 1ms for all)")
+
+    print("\n" + "=" * 70)
+    print("✅ ALL TESTS PASSED!")
+    print("\n📊 Summary:")
+    print("   ✓ Device enumeration working")
+    print("   ✓ TTS synthesis optimized (float32 - no int16 conversion)")
+    print("   ✓ Audio caching working")
+    print("   ✓ Base64 encoding for HTML5")
+    print("   ✓ Ready for production deployment")
+
+
 async def test_voice_pipeline():
     """Test complete optimized voice pipeline"""
     
@@ -54,70 +126,10 @@ async def test_voice_pipeline():
     
     # First synthesis (cache miss)
     start = time.time()
-    result1 = vm.synthesize(test_text, use_cache=True)
-    time1 = time.time() - start
-    
-    # Second synthesis (cache hit)
-    start = time.time()
-    result2 = vm.synthesize(test_text, use_cache=True)
-    time2 = time.time() - start
-    
-    print(f"   First call (synthesis):  {time1:.3f}s")
-    print(f"   Second call (cached):    {time2:.6f}s (essentially instant)")
-    if time2 > 0:
-        print(f"   Speedup:                 {time1/time2:.0f}x faster")
-    else:
-        print(f"   Speedup:                 INSTANT (< 1ms)")
-    print(f"   ✓ Cache hit verified:    {result1['audio_data'] == result2['audio_data']}")
-    
-    # 5. Audio format verification
-    print("\n5️⃣ Audio Format Verification:")
-    result = vm.synthesize("Format test")
-    if result['success']:
-        audio_b64 = result['audio_data']
-        print(f"   ✓ Base64 encoded:        {len(audio_b64)} chars")
-        print(f"   ✓ Audio URL ready:       data:audio/wav;base64,...")
-        print(f"   ✓ Duration estimate:     {result['duration']:.1f}s")
-        print(f"   ✓ HTML5 compatible:      Yes (float32 WAV)")
-    
-    # 6. Batch synthesis test
-    print("\n6️⃣ Batch Synthesis (5 unique phrases):")
-    phrases = [
-        "Good morning",
-        "How are you",
-        "Very well, thank you",
-        "Nice to meet you",
-        "See you later"
-    ]
-    
-    start = time.time()
-    for phrase in phrases:
-        vm.synthesize(phrase, use_cache=True)
-    total_time = time.time() - start
-    
-    print(f"   Synthesized {len(phrases)} phrases in {total_time:.2f}s")
-    print(f"   Average per phrase:      {total_time/len(phrases):.2f}s")
-    
-    # Repeat with cache
-    start = time.time()
-    for phrase in phrases:
-        vm.synthesize(phrase, use_cache=True)
-    cached_time = time.time() - start
-    
-    print(f"   From cache (5 phrases):  {cached_time:.4f}s (instant)")
-    if cached_time > 0:
-        print(f"   Total speedup:           {total_time/cached_time:.0f}x faster")
-    else:
-        print(f"   Total speedup:           INSTANT (< 1ms for all)")
-    
-    print("\n" + "=" * 70)
-    print("✅ ALL TESTS PASSED!")
-    print("\n📊 Summary:")
-    print("   ✓ Device enumeration working")
-    print("   ✓ TTS synthesis optimized (float32 - no int16 conversion)")
-    print("   ✓ Audio caching working")
-    print("   ✓ Base64 encoding for HTML5")
-    print("   ✓ Ready for production deployment")
+    vm.synthesize(test_text, use_cache=True)
+    time.time() - start
+    _test_voice_pipeline_part1()
+    _test_voice_pipeline_part2()
 
 if __name__ == '__main__':
     asyncio.run(test_voice_pipeline())

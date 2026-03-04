@@ -12,8 +12,10 @@ from zena_mode.rag_pipeline import LocalRAG
 from zena_mode.arbitrage import SwarmArbitrator
 
 class TestSelfHelpRAG(unittest.TestCase):
+    """TestSelfHelpRAG class."""
     
     def setUp(self):
+        """Setup."""
         # Use a temporary cache for testing
         self.test_cache = Path("./test_self_help_cache")
         if self.test_cache.exists():
@@ -36,10 +38,11 @@ class TestSelfHelpRAG(unittest.TestCase):
         ]
         
         for p in candidates:
-            if p.exists():
-                content = p.read_text(encoding="utf-8")
-                break
-        
+            if not p.exists():
+                continue
+            content = p.read_text(encoding="utf-8")
+            break
+
         if not content:
             # Fallback mock for CI/CD safety
             content = """# ZenAI User Manual\n## 2. Model Manager\nExpand this section to view and manage your local LLMs.\n- Catalog: Shows a list of popular models."""
@@ -53,12 +56,13 @@ class TestSelfHelpRAG(unittest.TestCase):
         self.rag.build_index([doc], filter_junk=False)
 
     def tearDown(self):
+        """Teardown."""
         self.rag.close()
         # Clean up
         if self.test_cache.exists():
             try:
                 shutil.rmtree(self.test_cache)
-            except: pass
+            except Exception: pass
 
     def test_manual_retrieval(self):
         """Test if 'how to switch models' retrieves the Model Manager section."""
@@ -85,10 +89,11 @@ class TestSelfHelpRAG(unittest.TestCase):
         
         found_troubleshooting = False
         for res in results:
-            if "troubleshooting" in res['text'].lower() or "microphone" in res['text'].lower() or "audio" in res['text'].lower():
-                found_troubleshooting = True
-                break
-                
+            if not ("troubleshooting" in res['text'].lower() or "microphone" in res['text'].lower() or "audio" in res['text'].lower()):
+                continue
+            found_troubleshooting = True
+            break
+
         self.assertTrue(found_troubleshooting, "Did not find troubleshooting info for audio issue")
 
     def test_verification_shield(self):

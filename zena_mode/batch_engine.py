@@ -5,14 +5,10 @@ Handles processing multiple files, generating AI reviews, and persisting results
 """
 import asyncio
 import logging
-import os
 from pathlib import Path
 from typing import List, Callable, Optional, Dict, Any
-import json
-import random
 
 from async_backend import AsyncZenAIBackend
-from config_system import config
 from locales import get_locale
 
 logger = logging.getLogger('BatchEngine')

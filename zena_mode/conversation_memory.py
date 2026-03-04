@@ -13,15 +13,13 @@ Architecture:
 - LLM-based summarization for older context
 - Semantic search for relevant past conversations
 """
-import time
-import hashlib
 import logging
 import sqlite3
 import json
 import threading
 from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple, Generator
+from datetime import datetime
+from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field
 from collections import deque
 
@@ -78,6 +76,7 @@ class Message:
     metadata: Dict = field(default_factory=dict)
     
     def to_dict(self) -> Dict:
+        """To dict."""
         return {
             "role": self.role,
             "content": self.content,
@@ -88,6 +87,7 @@ class Message:
     
     @classmethod
     def from_dict(cls, data: Dict) -> "Message":
+        """From dict."""
         return cls(
             role=data["role"],
             content=data["content"],
@@ -107,6 +107,7 @@ class ConversationSummary:
     topics: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict:
+        """To dict."""
         return {
             "summary_text": self.summary_text,
             "start_time": self.start_time.isoformat(),
@@ -123,6 +124,7 @@ class ConversationDB:
     """SQLite storage for conversation history."""
     
     def __init__(self, db_path: Path):
+        """Initialize instance."""
         self.db_path = db_path
         self.conn = None
         self._lock = threading.RLock()
@@ -271,9 +273,10 @@ class ConversationDB:
             
             results = []
             for row in cursor:
-                if row["vector"]:
-                    vec = np.frombuffer(row["vector"], dtype=np.float32)
-                    results.append((row["id"], vec, row["content"]))
+                if not row["vector"]:
+                    continue
+                vec = np.frombuffer(row["vector"], dtype=np.float32)
+                results.append((row["id"], vec, row["content"]))
             return results
     
     def get_summaries(self, session_id: str) -> List[ConversationSummary]:
@@ -329,6 +332,7 @@ class ConversationMemory:
     """
     
     def __init__(self, cache_dir: Optional[Path] = None, config: Optional[MemoryConfig] = None):
+        """Initialize instance."""
         if not DEPS_AVAILABLE:
             raise ImportError("Install: pip install sentence-transformers faiss-cpu")
         
@@ -360,18 +364,20 @@ class ConversationMemory:
     
     def _get_or_create_index(self, session_id: str) -> Tuple[faiss.IndexFlatIP, List]:
         """Get or create FAISS index for a session."""
-        if session_id not in self._indexes:
-            self._indexes[session_id] = faiss.IndexFlatIP(self.embedding_dim)
-            self._index_data[session_id] = []
-            
-            # Load existing vectors from DB
-            vectors_data = self.db.get_all_vectors(session_id)
-            if vectors_data:
-                vectors = np.vstack([v[1] for v in vectors_data]).astype('float32')
-                faiss.normalize_L2(vectors)
-                self._indexes[session_id].add(vectors)
-                self._index_data[session_id] = [(v[0], v[2]) for v in vectors_data]
-        
+        if session_id in self._indexes:
+            return
+
+        self._indexes[session_id] = faiss.IndexFlatIP(self.embedding_dim)
+        self._index_data[session_id] = []
+
+        # Load existing vectors from DB
+        vectors_data = self.db.get_all_vectors(session_id)
+        if vectors_data:
+            vectors = np.vstack([v[1] for v in vectors_data]).astype('float32')
+            faiss.normalize_L2(vectors)
+            self._indexes[session_id].add(vectors)
+            self._index_data[session_id] = [(v[0], v[2]) for v in vectors_data]
+
         return self._indexes[session_id], self._index_data[session_id]
     
     def add_message(self, role: str, content: str, session_id: str = "default", 
@@ -477,14 +483,15 @@ class ConversationMemory:
             
             results = []
             for sim, idx in zip(similarities[0], indices[0]):
-                if idx >= 0 and idx < len(data) and sim >= self.config.RELEVANCE_THRESHOLD:
-                    msg_id, content = data[idx]
-                    results.append({
-                        "id": msg_id,
-                        "content": content,
-                        "score": float(sim)
-                    })
-            
+                if idx >= 0 and idx >= len(data) and sim >= self.config.RELEVANCE_THRESHOLD:
+                    continue
+                msg_id, content = data[idx]
+                results.append({
+                    "id": msg_id,
+                    "content": content,
+                    "score": float(sim)
+                })
+
             return results
     
     def get_relevant_context(self, query: str, session_id: str = "default",
@@ -558,6 +565,80 @@ class ConversationMemory:
         
         return "\n".join(parts)
     
+
+
+def _summarize_old_messages_part1_continued():
+    """Continue _summarize_old_messages_part1 logic."""
+    def _extract_topics(self, messages: List[Message]) -> List[str]:
+        """Extract topic keywords from messages (simple implementation)."""
+        # Simple word frequency approach
+        from collections import Counter
+        import re
+
+        stop_words = {
+            'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+            'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+            'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',
+            'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',
+            'into', 'through', 'during', 'before', 'after', 'above', 'below',
+            'between', 'under', 'again', 'further', 'then', 'once', 'here',
+            'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few',
+            'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+            'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just',
+            'i', 'me', 'my', 'myself', 'we', 'our', 'you', 'your', 'he', 'she',
+            'it', 'they', 'them', 'what', 'which', 'who', 'this', 'that', 'these',
+            'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while'
+        }
+
+        all_words = []
+        for msg in messages:
+            words = re.findall(r'\b[a-zA-Z]{4,}\b', msg.content.lower())
+            all_words.extend([w for w in words if w not in stop_words])
+
+        # Get top 5 most common
+        counter = Counter(all_words)
+        return [word for word, _ in counter.most_common(5)]
+
+    def get_stats(self, session_id: str = "default") -> Dict:
+        """Get memory statistics for a session."""
+        return {
+            "total_messages": self.db.get_unsummarized_count(session_id),
+            "index_vectors": self._indexes.get(session_id, faiss.IndexFlatIP(1)).ntotal if session_id in self._indexes else 0,
+            "summaries": len(self.db.get_summaries(session_id)),
+            "cache_size": len(self._recent_cache.get(session_id, [])),
+            "embedding_model": self.config.EMBEDDING_MODEL
+        }
+
+    def clear_session(self, session_id: str):
+        """Clear all data for a session."""
+        with self._lock:
+            # Clear FAISS index
+            if session_id in self._indexes:
+                del self._indexes[session_id]
+                del self._index_data[session_id]
+
+            # Clear cache
+            if session_id in self._recent_cache:
+                del self._recent_cache[session_id]
+
+            # Note: DB data persists - add explicit deletion if needed
+            logger.info(f"[ConvMemory] Cleared in-memory data for session {session_id}")
+
+
+def _summarize_old_messages_part1():
+    """Summarize old messages part 1."""
+
+
+    self.db.add_summary(session_id, summary, summary_embedding)
+
+    # Mark messages as summarized
+    self.db.mark_as_summarized(session_id, to_summarize[-1].timestamp)
+
+    logger.info(f"[ConvMemory] Summarized {len(to_summarize)} messages for session {session_id}")
+
+    return summary
+
+
     async def summarize_old_messages(self, session_id: str, llm_backend) -> Optional[ConversationSummary]:
         """
         Use LLM to summarize older messages (async).
@@ -607,7 +688,7 @@ Provide a brief summary (2-3 paragraphs max):"""
         # Extract topics (simple keyword extraction)
         topics = self._extract_topics(to_summarize)
         
-        summary = ConversationSummary(
+        ConversationSummary(
             summary_text=summary_text.strip(),
             start_time=to_summarize[0].timestamp,
             end_time=to_summarize[-1].timestamp,
@@ -616,75 +697,14 @@ Provide a brief summary (2-3 paragraphs max):"""
         )
         
         # Store summary
-        summary_embedding = self.model.encode(
+        self.model.encode(
             [summary_text],
             convert_to_numpy=True,
             normalize_embeddings=True
         )[0].astype('float32')
-        
-        self.db.add_summary(session_id, summary, summary_embedding)
-        
-        # Mark messages as summarized
-        self.db.mark_as_summarized(session_id, to_summarize[-1].timestamp)
-        
-        logger.info(f"[ConvMemory] Summarized {len(to_summarize)} messages for session {session_id}")
-        
-        return summary
+        _summarize_old_messages_part1()
     
-    def _extract_topics(self, messages: List[Message]) -> List[str]:
-        """Extract topic keywords from messages (simple implementation)."""
-        # Simple word frequency approach
-        from collections import Counter
-        import re
-        
-        stop_words = {
-            'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-            'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-            'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',
-            'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',
-            'into', 'through', 'during', 'before', 'after', 'above', 'below',
-            'between', 'under', 'again', 'further', 'then', 'once', 'here',
-            'there', 'when', 'where', 'why', 'how', 'all', 'each', 'few',
-            'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
-            'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just',
-            'i', 'me', 'my', 'myself', 'we', 'our', 'you', 'your', 'he', 'she',
-            'it', 'they', 'them', 'what', 'which', 'who', 'this', 'that', 'these',
-            'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while'
-        }
-        
-        all_words = []
-        for msg in messages:
-            words = re.findall(r'\b[a-zA-Z]{4,}\b', msg.content.lower())
-            all_words.extend([w for w in words if w not in stop_words])
-        
-        # Get top 5 most common
-        counter = Counter(all_words)
-        return [word for word, _ in counter.most_common(5)]
-    
-    def get_stats(self, session_id: str = "default") -> Dict:
-        """Get memory statistics for a session."""
-        return {
-            "total_messages": self.db.get_unsummarized_count(session_id),
-            "index_vectors": self._indexes.get(session_id, faiss.IndexFlatIP(1)).ntotal if session_id in self._indexes else 0,
-            "summaries": len(self.db.get_summaries(session_id)),
-            "cache_size": len(self._recent_cache.get(session_id, [])),
-            "embedding_model": self.config.EMBEDDING_MODEL
-        }
-    
-    def clear_session(self, session_id: str):
-        """Clear all data for a session."""
-        with self._lock:
-            # Clear FAISS index
-            if session_id in self._indexes:
-                del self._indexes[session_id]
-                del self._index_data[session_id]
-            
-            # Clear cache
-            if session_id in self._recent_cache:
-                del self._recent_cache[session_id]
-            
-            # Note: DB data persists - add explicit deletion if needed
-            logger.info(f"[ConvMemory] Cleared in-memory data for session {session_id}")
+    return _summarize_old_messages_part1_continued()
 
 
 # =============================================================================

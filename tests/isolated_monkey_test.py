@@ -16,6 +16,7 @@ from ui.registry import MONKEY_TARGETS
 BASE_URL = "http://127.0.0.1:8080"
 
 def run_monkey_test():
+    """Run monkey test."""
     print(f"🚀 Starting Isolated Monkey Test on {BASE_URL}")
     
     passed = 0

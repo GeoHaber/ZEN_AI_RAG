@@ -10,6 +10,7 @@ HUB_URL = "http://127.0.0.1:8002"
 MODEL_NAME = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
 
 def test_swap():
+    """Test swap."""
     logger.info(f"🔄 Triggering Swap to {MODEL_NAME}...")
     try:
         resp = requests.post(f"{HUB_URL}/swap", json={"model": MODEL_NAME}, timeout=5)

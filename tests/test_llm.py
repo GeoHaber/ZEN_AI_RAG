@@ -2,6 +2,7 @@ import asyncio
 from async_backend import backend
 
 async def test():
+    """Test."""
     print("Testing LLM...")
     async with backend:
         async for chunk in backend.send_message_async("Say only 'HELLO'"):

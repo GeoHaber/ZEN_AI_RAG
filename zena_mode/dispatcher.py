@@ -1,7 +1,6 @@
 import re
-import asyncio
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 logger = logging.getLogger("FastDispatcher")
 
@@ -39,11 +38,12 @@ class FastDispatcher:
         """
         # --- Level 0: Instant Check ---
         for pattern, response in self.fast_responses.items():
-            if pattern.search(prompt.strip()):
-                if callable(response):
-                    return {"type": "direct", "content": response()}
-                return {"type": "direct", "content": response}
-                
+            if not pattern.search(prompt.strip()):
+                continue
+            if callable(response):
+                return {"type": "direct", "content": response()}
+            return {"type": "direct", "content": response}
+
         # --- Level 1: Intent Classification (Mock/Heuristic for now, can use small model later) ---
         # Heuristics for RAG: "who is", "what is", "search", "find", "?" (if it looks like a fact query)
         # Heuristics for Code: "code", "write function", "script", "python", "js"

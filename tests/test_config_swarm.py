@@ -10,14 +10,17 @@ from pathlib import Path
 from config_system import AppConfig
 
 class TestConfigSwarm(unittest.TestCase):
+    """TestConfigSwarm class."""
     def setUp(self):
         self.test_config_path = Path("test_config.json")
         if self.test_config_path.exists():
             os.remove(self.test_config_path)
 
     def tearDown(self):
-        if self.test_config_path.exists():
-            os.remove(self.test_config_path)
+        if not self.test_config_path.exists():
+            return
+
+        os.remove(self.test_config_path)
 
     def test_swarm_defaults(self):
         """Verify that swarm settings have correct defaults."""

@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 class TestInputHandlerPattern:
+    """TestInputHandlerPattern class."""
     
     @pytest.mark.asyncio
     async def test_handler_dict_dispatch(self):
@@ -17,6 +18,7 @@ class TestInputHandlerPattern:
         
         # 2. Define Receiver (simulates chip_action defined early in code)
         async def receiver_chip_action():
+            """Receiver chip action."""
             # Chip action logic:
             # user_input.value = text (omitted for behavioral test)
             if handlers['send']:

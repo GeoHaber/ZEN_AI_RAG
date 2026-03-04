@@ -5,6 +5,7 @@ import asyncio
 from zena_mode.voice_manager import get_voice_manager
 
 async def test_tts():
+    """Test tts."""
     vm = get_voice_manager()
     
     print("Testing TTS Synthesis...\n")

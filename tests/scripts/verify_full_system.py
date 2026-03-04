@@ -13,6 +13,7 @@ logger = logging.getLogger("FullSystemVerify")
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def test_rag_completeness():
+    """Test rag completeness."""
     logger.info(">>> 1. Verifying RAG 2.0 Components")
     from zena_mode.rag_pipeline import LocalRAG
     from config_system import config
@@ -39,6 +40,7 @@ def test_rag_completeness():
         raise
 
 def test_ui_components():
+    """Test ui components."""
     logger.info(">>> 2. Verifying UI Components (Headless)")
     from ui.modern_chat import ModernChatMessage
     
@@ -59,6 +61,7 @@ def test_ui_components():
     logger.info("✅ UI Data Structure: Verified")
 
 def main():
+    """Main."""
     logger.info("🚀 Starting Pre-Commit Verification...")
     try:
         test_rag_completeness()

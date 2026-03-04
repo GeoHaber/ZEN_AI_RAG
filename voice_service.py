@@ -6,7 +6,6 @@ Provides voice input/output capabilities using:
 - Piper TTS for TTS (speech synthesis)
 """
 
-import os
 import io
 import wave
 import logging
@@ -33,6 +32,7 @@ class VoiceService:
     """
     
     def __init__(self, model_dir: Path, stt_model: str = "base.en", tts_voice: str = "en_US-lessac-medium"):
+        """Initialize instance."""
         self.model_dir = model_dir
         self.model_dir.mkdir(exist_ok=True, parents=True)
         
@@ -210,9 +210,9 @@ class VoiceService:
             finally:
                 # Cleanup
                 try: raw_path.unlink(missing_ok=True) 
-                except: pass
+                except Exception: pass
                 try: clean_path.unlink(missing_ok=True) 
-                except: pass
+                except Exception: pass
     
     def synthesize_speech(self, text: str, speed: float = 1.0) -> bytes:
         """
@@ -235,7 +235,6 @@ class VoiceService:
         audio_stream = io.BytesIO()
         
         try:
-            import numpy as np
             
             # Piper synthesize returns AudioChunk objects with audio_float_array (float32)
             # Keep in float32 format - no conversion needed, browser Web Audio API handles it
@@ -282,6 +281,7 @@ class StreamProcessor:
     Uses sliding window with quick partial results.
     """
     def __init__(self, model: WhisperModel):
+        """Initialize instance."""
         self.model = model
         self.audio_buffer = bytearray()
         self.sample_rate = 16000
@@ -392,7 +392,6 @@ def get_voice_service(model_dir: Path, stt_model: str = "base.en", tts_voice: st
 
 if __name__ == "__main__":
     # Test the voice service
-    import sys
     logging.basicConfig(level=logging.INFO)
     
     model_dir = Path(__file__).parent / "voice_models"

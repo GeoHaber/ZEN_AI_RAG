@@ -1,4 +1,3 @@
-import os
 import mimetypes
 import logging
 from zena_mode.handlers.base import BaseZenHandler

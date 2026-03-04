@@ -12,6 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from zena_mode.email_ingestor import EmailIngestor
 
 class TestEmailIngestor:
+    """TestEmailIngestor class."""
 
     @pytest.fixture
     def mbox_file(self, tmp_path):
@@ -41,6 +42,7 @@ class TestEmailIngestor:
         return mbox_path
 
     def test_mbox_ingestion(self, mbox_file):
+        """Test mbox ingestion."""
         ingestor = EmailIngestor()
         docs = ingestor.ingest(str(mbox_file))
         
@@ -58,6 +60,7 @@ class TestEmailIngestor:
         assert "2000" in doc2['metadata']['date']
         
     def test_unsupported_format(self, tmp_path):
+        """Test unsupported format."""
         ingestor = EmailIngestor()
         bad_file = tmp_path / "archive.xyz"
         bad_file.touch()

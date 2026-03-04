@@ -64,13 +64,14 @@ async def wait_for_swarm(ports):
                     if resp.status_code == 200:
                         ready = True
                         break
-                except:
+                except Exception:
                     pass
                 await asyncio.sleep(2)
             if not ready:
                 print(f"[Warning] Port {port} timed out during startup.")
 
 async def run_tier_test(n):
+    """Run tier test."""
     print(f"\n{'='*80}")
     print(f"🚀 STARTING STRESS TEST TIER: N={n}")
     print(f"{'='*80}")
@@ -124,6 +125,7 @@ async def run_tier_test(n):
     kill_swarm()
 
 async def main():
+    """Main."""
     # User requested 1 to 7
     # Let's do a few tiers to show the scaling clearly
     tiers = [1, 3, 5, 7]

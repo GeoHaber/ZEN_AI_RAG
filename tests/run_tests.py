@@ -24,6 +24,7 @@ import json
 
 # Colors for terminal output
 class Colors:
+    """Colors class."""
     GREEN = '\033[92m'
     RED = '\033[91m'
     YELLOW = '\033[93m'
@@ -166,9 +167,10 @@ def run_integration_tests(fast=False):
 
     all_success = True
     for test_file in test_files:
-        if not Path(test_file).exists():
-            print_warning(f"Skipping {test_file} (not found)")
+        if Path(test_file).exists():
             continue
+        print_warning(f"Skipping {test_file} (not found)")
+        continue
 
         cmd = [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"]
         success, _ = run_command(cmd, f"Integration: {test_file}")
@@ -241,11 +243,13 @@ def watch_mode():
         return
 
     class TestRunner(FileSystemEventHandler):
+        """TestRunner class."""
         def __init__(self):
             self.last_run = 0
             self.debounce = 2  # seconds
 
         def on_modified(self, event):
+            """On modified."""
             # Only react to .py files
             if not event.src_path.endswith('.py'):
                 return
@@ -325,8 +329,9 @@ def print_test_history():
 
         print(f"{color}{icon}{Colors.END} {timestamp} - {duration:.1f}s")
 
-def main():
-    """Main entry point."""
+def _do_main_setup():
+    """Helper: setup phase for main."""
+
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -376,6 +381,12 @@ def main():
         watch_mode()
         return
 
+    return args
+
+
+def main():
+    """Main entry point."""
+    args = _do_main_setup()
     # Check prerequisites
     if not check_pytest_installed():
         sys.exit(1)

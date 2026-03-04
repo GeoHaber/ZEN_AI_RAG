@@ -6,18 +6,22 @@ from zena_mode.swarm_arbitrator import SwarmArbitrator
 
 # Helper for async iteration
 class AsyncIterator:
+    """AsyncIterator class."""
     def __init__(self, items):
         self.items = iter(items)
     def __aiter__(self):
         return self
     async def __anext__(self):
+        """Anext."""
         try:
             return next(self.items)
         except StopIteration:
             raise StopAsyncIteration
 
 class TestTrafficController(unittest.IsolatedAsyncioTestCase):
+    """TestTrafficController class."""
     def setUp(self):
+        """Setup."""
         self.arbitrator = SwarmArbitrator(config={"enabled": True})
         # Mock endpoints
         self.arbitrator.endpoints = [

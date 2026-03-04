@@ -6,6 +6,7 @@ from pathlib import Path
 
 @pytest.fixture
 def arbitrator(tmp_path):
+    """Arbitrator."""
     # Use a unique temporary DB for each test
     db_file = tmp_path / "test_performance.db"
     arb = SwarmArbitrator()
@@ -71,7 +72,7 @@ async def test_contradiction_detection(arbitrator):
 @pytest.mark.asyncio
 async def test_weighted_performance_recording(arbitrator):
     """Verify that get_cot_response records reliability and protocol info."""
-    mock_client = MagicMock()
+    MagicMock()
     # Mocking single-model loop for simplicity
     arbitrator.endpoints = ["http://localhost:8001"]
     

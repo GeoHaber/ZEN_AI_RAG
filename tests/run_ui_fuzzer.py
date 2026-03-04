@@ -7,6 +7,7 @@ from playwright.async_api import async_playwright
 # Usage: python tests/run_ui_fuzzer.py
 
 async def run_chaos_monkey():
+    """Run chaos monkey."""
     port = "8080" # Default NiceGUI port
     url = f"http://localhost:{port}"
     
@@ -28,7 +29,7 @@ async def run_chaos_monkey():
             print(f"🔌 Connecting to {url}...")
             await page.goto(url, timeout=5000)
             await page.wait_for_selector('body', timeout=5000)
-        except Exception as e:
+        except Exception:
             print(f"⚠️ App not running at {url}. Please start 'python start_llm.py' first.")
             await browser.close()
             sys.exit(1)
@@ -87,7 +88,7 @@ async def run_chaos_monkey():
                         try:
                             if await el.is_visible() and await el.is_enabled():
                                 candidates.append(el)
-                        except:
+                        except Exception:
                             continue
                 
                 if not candidates:
@@ -99,7 +100,7 @@ async def run_chaos_monkey():
                 try:
                     tag_name = await target.evaluate("el => el.tagName.toLowerCase()", timeout=500)
                     type_attr = await target.get_attribute("type") or ""
-                    inner_text = await target.inner_text() or ""
+                    await target.inner_text() or ""
                     
                     # Highlight target
                     await target.evaluate("el => { el.style.outline = '3px solid #ff4444'; el.style.outlineOffset = '-3px'; }")
@@ -134,7 +135,7 @@ async def run_chaos_monkey():
 
                 await asyncio.sleep(0.2) 
                 
-            except Exception as e:
+            except Exception:
                 pass
             
             # Progress items

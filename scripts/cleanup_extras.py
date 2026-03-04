@@ -3,13 +3,15 @@ import os
 import shutil
 from pathlib import Path
 
-def cleanup_project():
+def _do_cleanup_project_setup():
+    """Helper: setup phase for cleanup_project."""
+
     print("🧹 Starting Project Cleanup...")
-    
+
     ROOT = Path(os.getcwd())
     EXTRA_DIR = ROOT / "_Extra_files"
     EXTRA_DIR.mkdir(exist_ok=True)
-    
+
     # Files/Dirs that MUST stay in root
     KEEPERS = {
         # Core App
@@ -27,13 +29,13 @@ def cleanup_project():
         "ui",
         "zena_mode",
         "models",
-        
+
         # Documentation
         "README.md",
         "USER_MANUAL.md",
         "INSTALL.md",
         "requirements.txt",
-        
+
         # System / Hidden
         ".git",
         ".venv",
@@ -41,27 +43,33 @@ def cleanup_project():
         "__pycache__",
         ".gitignore",
         ".coverage",
-        
+
         # Data / Storage
         "dist",
         "rag_cache",
         "qdrant_storage",
         "conversation_cache",
         "benchmarks", # If exists
-        
+
         # Dev Tools needed for validation
         "tests",
         "scripts",
         "run_tests.py",
         "pytest.ini",
-        
+
         # This script itself (will be in scripts/ but just in case)
         "cleanup_extras.py",
         "experimental_voice_lab",
-        
+
         # Target
         "_Extra_files"
     }
+    return EXTRA_DIR, KEEPERS, ROOT
+
+
+def cleanup_project():
+    """Cleanup project."""
+    EXTRA_DIR, KEEPERS, ROOT = _do_cleanup_project_setup()
 
     moved_count = 0
     

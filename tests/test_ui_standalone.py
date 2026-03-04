@@ -348,11 +348,13 @@ def test_dark_mode_toggle_icon_change():
     mock_state = create_mock_app_state()
 
     class MockDarkModeBtn:
+        """MockDarkModeBtn class."""
         def __init__(self):
             self.icon = 'dark_mode'  # Light mode showing moon
             self.dark_mode_enabled = False
 
         def toggle(self):
+            """Toggle."""
             if self.dark_mode_enabled:
                 self.dark_mode_enabled = False
                 self.icon = 'dark_mode'
@@ -571,13 +573,16 @@ def test_input_bar_send_button():
     mock_input.send_button_clicked = False
 
     def send_message():
-        if mock_input.value.strip():
-            mock_state.conversation_history.append({
-                'role': 'user',
-                'content': mock_input.value
-            })
-            mock_input.send_button_clicked = True
-            mock_input.value = ""
+        """Send message."""
+        if not mock_input.value.strip():
+            return
+
+        mock_state.conversation_history.append({
+            'role': 'user',
+            'content': mock_input.value
+        })
+        mock_input.send_button_clicked = True
+        mock_input.value = ""
 
     mock_input.on_send = send_message
 
@@ -621,11 +626,14 @@ def test_input_bar_empty_message_rejected():
     mock_input.value = "   "  # Whitespace only
 
     def send_message():
-        if mock_input.value.strip():
-            mock_state.conversation_history.append({
-                'role': 'user',
-                'content': mock_input.value
-            })
+        """Send message."""
+        if not mock_input.value.strip():
+            return
+
+        mock_state.conversation_history.append({
+            'role': 'user',
+            'content': mock_input.value
+        })
 
     mock_input.on_send = send_message
 
@@ -894,24 +902,9 @@ def test_settings_dialog_opens():
 # RUN ALL TESTS
 # ==========================================================================
 
-def run_all_tests():
-    """
-    Run all standalone UI tests and report results.
+def _do_run_all_tests_setup():
+    """Helper: setup phase for run_all_tests."""
 
-    WHAT:
-        - Runs: All test functions in this module
-        - Returns: Test results summary
-
-    WHY:
-        - Purpose: Validate all UI components in isolation
-        - Problem solved: Catch UI bugs before integration
-
-    HOW:
-        1. Collect all test functions (test_*)
-        2. Run each test, catch exceptions
-        3. Report pass/fail for each
-        4. Print summary
-    """
     print("=" * 70)
     print("STANDALONE UI TESTS")
     print("=" * 70)
@@ -936,6 +929,28 @@ def run_all_tests():
         test_model_dropdown_populates,
         test_settings_dialog_opens
     ]
+    return tests
+
+
+def run_all_tests():
+    """
+    Run all standalone UI tests and report results.
+
+    WHAT:
+        - Runs: All test functions in this module
+        - Returns: Test results summary
+
+    WHY:
+        - Purpose: Validate all UI components in isolation
+        - Problem solved: Catch UI bugs before integration
+
+    HOW:
+        1. Collect all test functions (test_*)
+        2. Run each test, catch exceptions
+        3. Report pass/fail for each
+        4. Print summary
+    """
+    tests = _do_run_all_tests_setup()
 
     passed = 0
     failed = 0

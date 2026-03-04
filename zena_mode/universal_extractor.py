@@ -10,7 +10,7 @@ import hashlib
 import time
 import threading
 from pathlib import Path
-from typing import List, Dict, Generator, Optional, Set, Any, Tuple, Union
+from typing import List, Dict, Optional, Any, Tuple, Union
 from dataclasses import dataclass, field
 from .chunker import TextChunker, ChunkerConfig
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -69,6 +69,7 @@ class ProcessingStats:
             setattr(self, category, current + count)
     
     def summary(self) -> str:
+        """Summary."""
         elapsed = time.time() - self.start_time
         return (
             f"Pages: {self.total_pages} | Text: {self.text_pages} | "
@@ -88,12 +89,14 @@ class ExtractedChunk:
     
     def __post_init__(self):
         """Generate deterministic ID if not provided."""
-        if not self.chunk_id:
-            source = self.metadata.get('source', '')
-            page = self.metadata.get('page', 0)
-            content_sample = self.text[:50]
-            unique_str = f"{source}_{page}_{content_sample}"
-            self.chunk_id = hashlib.md5(unique_str.encode()).hexdigest()
+        if self.chunk_id:
+            return
+
+        source = self.metadata.get('source', '')
+        page = self.metadata.get('page', 0)
+        content_sample = self.text[:50]
+        unique_str = f"{source}_{page}_{content_sample}"
+        self.chunk_id = hashlib.sha256(unique_str.encode()).hexdigest()
 
 
 class ImagePreprocessor:
@@ -329,19 +332,8 @@ class ImagePreprocessor:
         return stats
 
 
-class UniversalExtractor:
-    """
-    Universal text extractor supporting PDFs, images, screenshots.
-    Optimized for RAG pipelines with smart preprocessing.
-    """
-    
-    # Supported image formats
-    IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif', '.webp'}
-    
-    # Pre-compiled regex
-    WHITESPACE_PATTERN = re.compile(r'[ \t]+')
-    NEWLINE_PATTERN = re.compile(r'\n{3,}')
-    SENTENCE_ENDINGS = re.compile(r'(?<=[.!?])\s+')
+class _UniversalExtractorBase:
+    """Base methods for UniversalExtractor."""
 
     def __init__(
         self,
@@ -612,7 +604,7 @@ class UniversalExtractor:
             
             if temp_path:
                 try: os.unlink(temp_path)
-                except: pass
+                except Exception: pass
 
             if "error" in video_data:
                 logger.error(f"Video analysis failed: {video_data['error']}")
@@ -639,6 +631,22 @@ class UniversalExtractor:
         except Exception as e:
             logger.error(f"Video processing failed: {e}")
             return [], self.stats
+
+
+class UniversalExtractor(_UniversalExtractorBase):
+    """
+    Universal text extractor supporting PDFs, images, screenshots.
+    Optimized for RAG pipelines with smart preprocessing.
+    """
+    
+    # Supported image formats
+    IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif', '.webp'}
+    
+    # Pre-compiled regex
+    WHITESPACE_PATTERN = re.compile(r'[ \t]+')
+    NEWLINE_PATTERN = re.compile(r'\n{3,}')
+    SENTENCE_ENDINGS = re.compile(r'(?<=[.!?])\s+')
+
 
     def _extract_pdf_sequential(self, input_data: Union[Path, bytes]) -> List[Dict]:
         """Sequential PDF page processing."""
@@ -766,7 +774,7 @@ class UniversalExtractor:
                     ext = base_image["ext"]
                     
                     # Deduplicate images by hash
-                    img_hash = hashlib.md5(image_bytes).hexdigest()
+                    img_hash = hashlib.sha256(image_bytes).hexdigest()
                     img_filename = f"{img_hash}.{ext}"
                     local_path = img_dir / img_filename
                     
