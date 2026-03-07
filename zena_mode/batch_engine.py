@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Callable, Optional, Dict, Any
 
 from async_backend import AsyncZenAIBackend
-from locales import get_locale
+from ui.locales import get_locale
 
 logger = logging.getLogger('BatchEngine')
 

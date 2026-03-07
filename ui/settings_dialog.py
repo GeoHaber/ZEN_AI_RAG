@@ -7,7 +7,7 @@ Provides a full settings interface for ZenAI.
 from nicegui import ui
 from typing import Callable, Optional
 from config_system import config
-from locales import get_locale, set_locale, get_available_locales
+from ui.locales import get_locale, set_locale, get_available_locales
 from ui.styles import Styles
 from ui.icons import Icons
 from ui.theme import Colors

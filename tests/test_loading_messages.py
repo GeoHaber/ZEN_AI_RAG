@@ -4,9 +4,9 @@ Tests for loading messages in locales
 """
 import pytest
 import random
-from locales import get_locale
-from locales.base import BaseLocale
-from locales.es import SpanishLocale
+from ui.locales import get_locale
+from ui.locales.base import BaseLocale
+from ui.locales.es import SpanishLocale
 
 
 class TestLoadingMessages:

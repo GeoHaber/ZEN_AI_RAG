@@ -23,7 +23,7 @@ tests = [
     ("ui_components", "setup_app_theme, setup_common_dialogs, setup_drawer, setup_rag_dialog"),
     ("async_backend", "AsyncZenAIBackend"),
     ("mock_backend", "MockAsyncBackend"),
-    ("locales", "get_locale"),
+    ("ui.locales", "get_locale"),
 ]
 
 failed = []

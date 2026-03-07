@@ -1,5 +1,5 @@
 import pytest
-import locales
+from ui import locales
 
 def test_localization_switching_branding():
     """Verify that switching locales updates strings and maintains ZenAI branding."""

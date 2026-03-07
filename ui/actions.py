@@ -9,7 +9,7 @@ from pathlib import Path
 from nicegui import ui
 from ui import Styles, Icons
 from ui.registry import UI_IDS
-from locales import get_locale
+from ui.locales import get_locale
 
 logger = logging.getLogger("UI.Actions")
 

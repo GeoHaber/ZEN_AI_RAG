@@ -55,7 +55,7 @@ class TestDistribution(unittest.TestCase):
             "requirements.txt",
             "USER_MANUAL.md",
             "ui_components.py",
-            "locales/en.py"
+            "ui/locales/en.py"
         ]
         
         missing = []

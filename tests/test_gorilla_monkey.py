@@ -248,7 +248,7 @@ class TestNoUI_LocaleGorilla:
     LANG_CODES = ["en", "es", "fr", "ro", "hu", "he"]
 
     def test_all_locales_instantiate(self):
-        from locales import set_locale, get_locale
+        from ui.locales import set_locale, get_locale
         for code in self.LANG_CODES:
             loc = set_locale(code)
             assert loc is not None
@@ -256,8 +256,8 @@ class TestNoUI_LocaleGorilla:
 
     def test_all_keys_exist_in_all_languages(self):
         """Every attribute on BaseLocale must exist on every subclass."""
-        from locales.base import BaseLocale
-        from locales import set_locale
+        from ui.locales.base import BaseLocale
+        from ui.locales import set_locale
         base_attrs = [a for a in dir(BaseLocale)
                       if not a.startswith("_") and isinstance(getattr(BaseLocale, a), str)]
         missing = {}
@@ -270,8 +270,8 @@ class TestNoUI_LocaleGorilla:
 
     def test_all_keys_are_strings_not_empty(self):
         """Every locale value should be a non-empty string."""
-        from locales.base import BaseLocale
-        from locales import set_locale
+        from ui.locales.base import BaseLocale
+        from ui.locales import set_locale
         base_attrs = [a for a in dir(BaseLocale)
                       if not a.startswith("_") and isinstance(getattr(BaseLocale, a), str)]
         empty = {}
@@ -290,7 +290,7 @@ class TestNoUI_LocaleGorilla:
 
     def test_rapid_language_switching(self):
         """Switch locale 500 times randomly — must never crash."""
-        from locales import set_locale, get_locale
+        from ui.locales import set_locale, get_locale
         for _ in range(500):
             code = random.choice(self.LANG_CODES)
             loc = set_locale(code)
@@ -298,7 +298,7 @@ class TestNoUI_LocaleGorilla:
 
     def test_concurrent_language_switching(self):
         """Multiple threads switching language simultaneously."""
-        from locales import set_locale, get_locale
+        from ui.locales import set_locale, get_locale
         errors = []
 
         def _switch(tid):
@@ -322,7 +322,7 @@ class TestNoUI_LocaleGorilla:
 
     def test_invalid_locale_code(self):
         """set_locale with garbage must raise ValueError, not crash."""
-        from locales import set_locale
+        from ui.locales import set_locale
         for garbage in ["xx", "", "123", None, "en-US", "English", chaos_text(10)]:
             if garbage is None:
                 with pytest.raises((ValueError, TypeError, AttributeError)):
@@ -335,8 +335,8 @@ class TestNoUI_LocaleGorilla:
 
     def test_locale_keys_no_placeholder_mismatch(self):
         """If English has {0} or {name}, every translation must too."""
-        from locales.base import BaseLocale
-        from locales import set_locale
+        from ui.locales.base import BaseLocale
+        from ui.locales import set_locale
         base_attrs = [a for a in dir(BaseLocale)
                       if not a.startswith("_") and isinstance(getattr(BaseLocale, a), str)]
 
@@ -1010,7 +1010,7 @@ class TestWithUI_PersistenceIntegration:
 
     def test_language_persists_across_restarts(self):
         from ui_flet.persistence import save_settings, load_settings
-        from locales import set_locale, get_locale
+        from ui.locales import set_locale, get_locale
 
         for code in ["en", "es", "fr", "ro", "hu", "he"]:
             save_settings({"language": code})
@@ -1104,7 +1104,7 @@ class TestWithUI_LocaleIntegration:
 
     def test_locale_switch_during_chat(self):
         from ui_flet.state import get_state
-        from locales import set_locale, get_locale
+        from ui.locales import set_locale, get_locale
 
         page = MockFletPage()
         st = get_state(page)
@@ -1124,7 +1124,7 @@ class TestWithUI_LocaleIntegration:
 
     def test_all_nav_labels_exist_in_all_languages(self):
         """Navigation labels used by sidebar must exist in every locale."""
-        from locales import set_locale
+        from ui.locales import set_locale
         nav_keys = ["NAV_MODEL_MANAGER", "NAV_AI_ENGINE", "NAV_SYSTEM",
                      "NAV_SETTINGS", "NAV_HELP"]
         for code in self.LANG_CODES:
@@ -1149,7 +1149,7 @@ class TestDrunkGorilla:
     def test_full_chaos_orchestration(self):
         """10 threads × 200 iterations of random operations across all layers."""
         from ui_flet.state import get_state, DEFAULT_STATE
-        from locales import set_locale
+        from ui.locales import set_locale
         from ui_state import UIState
         from config_system import AppConfig
 
@@ -1223,7 +1223,7 @@ class TestDrunkGorilla:
 
     def test_monkey_army_rapid_fire(self):
         """20 monkey threads doing 100 operations each = 2000 ops."""
-        from locales import set_locale
+        from ui.locales import set_locale
         from ui_state import UIState
 
         ui = UIState({"chat_history": [], "is_valid": True})
@@ -1342,7 +1342,7 @@ class TestEdgeCases:
 
     def test_hebrew_rtl_locale(self):
         """Hebrew is RTL — make sure strings are non-empty."""
-        from locales import set_locale
+        from ui.locales import set_locale
         he = set_locale("he")
         assert he.APP_NAME
         assert he.BTN_SEND

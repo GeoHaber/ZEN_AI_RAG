@@ -2,7 +2,7 @@ from nicegui import ui
 import asyncio
 import random
 from config_system import config, EMOJI
-from locales import get_locale
+from ui.locales import get_locale
 from ui import Styles, Icons, Formatters
 from ui.registry import UI_IDS
 from ui.examples import EXAMPLES

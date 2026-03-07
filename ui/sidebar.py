@@ -2,7 +2,7 @@ from nicegui import ui
 from ui import Styles, Icons
 from ui.registry import UI_IDS
 from ui.model_data import MODEL_INFO
-from locales import get_locale
+from ui.locales import get_locale
 from settings import get_settings
 from pathlib import Path
 import os

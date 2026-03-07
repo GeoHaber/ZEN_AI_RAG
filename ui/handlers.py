@@ -5,7 +5,7 @@ import io
 import random
 from nicegui import ui
 from config_system import config, EMOJI
-from locales import get_locale, L
+from ui.locales import get_locale, L
 from state_management import attachment_state, chat_history
 from utils import format_message_with_attachment, sanitize_prompt, is_port_active
 from zena_mode.profiler import monitor

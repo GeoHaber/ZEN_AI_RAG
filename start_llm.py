@@ -69,7 +69,11 @@ def patch_requirements_for_hardware(req_path, hw_type):
     if hw_type == 'NVIDIA':
         accel_libs = ['onnxruntime-gpu', 'torch', 'torchvision', 'torchaudio']
     elif hw_type == 'AMD':
-        accel_libs = ['onnxruntime-rocm', 'torch', 'torchvision', 'torchaudio']
+        # onnxruntime-rocm is Linux-only; on Windows use directml (added below)
+        if sys.platform == 'win32':
+            accel_libs = ['onnxruntime', 'torch', 'torchvision', 'torchaudio']
+        else:
+            accel_libs = ['onnxruntime-rocm', 'torch', 'torchvision', 'torchaudio']
     elif hw_type == 'CPU':
         accel_libs = ['onnxruntime', 'torch', 'torchvision', 'torchaudio']
     # DirectML: Windows, any GPU/NPU

@@ -276,7 +276,7 @@ def build_theme_lang_controls(page: ft.Page, rebuild_fn):
     def on_lang_change(e):
         """Switch the application language and rebuild the UI."""
         try:
-            from locales import set_language
+            from ui.locales import set_language
             set_language(e.control.value)
         except ImportError:
             pass  # nosec B110 — optional locales module

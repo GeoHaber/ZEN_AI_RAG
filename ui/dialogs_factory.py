@@ -1,6 +1,6 @@
 from nicegui import ui
 from ui import Styles, Icons, UI_IDS
-from locales import get_locale
+from ui.locales import get_locale
 import logging
 
 logger = logging.getLogger("UI.Dialogs")
