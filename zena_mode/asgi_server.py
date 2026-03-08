@@ -4,6 +4,7 @@ asgi_server.py - FastAPI-based async server for ZenAI Hub API
 Replaces the sync BaseHTTPRequestHandler with a proper ASGI framework.
 This provides true async/await, middleware support, and better error handling.
 """
+
 import logging
 import threading
 from fastapi import FastAPI, Request, HTTPException
@@ -15,11 +16,7 @@ from config_system import config
 logger = logging.getLogger("ZenAI.ASGI")
 
 # --- FastAPI App ---
-app = FastAPI(
-    title="ZenAI Hub API",
-    version="2.0.0",
-    description="Async API for ZenAI orchestration"
-)
+app = FastAPI(title="ZenAI Hub API", version="2.0.0", description="Async API for ZenAI orchestration")
 
 # --- Middleware ---
 # CORS: Restrict to localhost only (security hardening)
@@ -31,7 +28,7 @@ app.add_middleware(
 )
 
 # Request size limiter
-MAX_REQUEST_SIZE = config.get('MAX_FILE_SIZE', 10 * 1024 * 1024)  # 10MB default
+MAX_REQUEST_SIZE = config.get("MAX_FILE_SIZE", 10 * 1024 * 1024)  # 10MB default
 
 
 @app.middleware("http")
@@ -39,15 +36,13 @@ async def limit_request_size(request: Request, call_next):
     """Enforce request size limits."""
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > MAX_REQUEST_SIZE:
-        return JSONResponse(
-            status_code=413,
-            content={"error": "Request entity too large"}
-        )
+        return JSONResponse(status_code=413, content={"error": "Request entity too large"})
     return await call_next(request)
 
 
 # --- API Key Authentication ---
 import os
+
 API_KEY = os.environ.get("ZENAI_API_KEY", "")  # Optional: set to enable auth
 API_KEY_HEADER = "X-API-Key"
 # Paths that don't require authentication
@@ -57,7 +52,7 @@ PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/voice/lab"}
 @app.middleware("http")
 async def api_key_auth(request: Request, call_next):
     """Optional API key authentication middleware.
-    
+
     - If ZENAI_API_KEY is not set, all requests pass (dev mode)
     - Localhost requests always pass (for UI integration)
     - External requests require valid API key header
@@ -65,59 +60,65 @@ async def api_key_auth(request: Request, call_next):
     # Skip if no API key configured (dev mode)
     if not API_KEY:
         return await call_next(request)
-    
+
     # Allow localhost without auth (UI uses this)
     client_host = request.client.host if request.client else ""
     if client_host in ("127.0.0.1", "localhost", "::1"):
         return await call_next(request)
-    
+
     # Allow public endpoints
     if request.url.path in PUBLIC_PATHS:
         return await call_next(request)
-    
+
     # Check API key header
     provided_key = request.headers.get(API_KEY_HEADER, "")
     if provided_key != API_KEY:
         logger.warning(f"[Auth] Unauthorized request from {client_host} to {request.url.path}")
-        return JSONResponse(
-            status_code=401,
-            content={"error": "Unauthorized - Invalid or missing API key"}
-        )
-    
+        return JSONResponse(status_code=401, content={"error": "Unauthorized - Invalid or missing API key"})
+
     return await call_next(request)
 
 
 # --- Pydantic Models ---
 class SwapRequest(BaseModel):
     """SwapRequest class."""
+
     model: str
 
 
 class ScaleRequest(BaseModel):
     """ScaleRequest class."""
+
     count: int = 3
 
 
 class ChatRequest(BaseModel):
     """ChatRequest class."""
+
     message: str
     mode: str = "fast"  # "fast", "deep_thinking", "council"
 
+
 class DownloadRequest(BaseModel):
     """DownloadRequest class."""
+
     repo_id: str
     filename: str
 
+
 # Global Swarm Instance per process
 _swarm_arbitrator = None
+
 
 def get_swarm():
     global _swarm_arbitrator
     if _swarm_arbitrator is None:
         from zena_mode.swarm_arbitrator import SwarmArbitrator
+
         # Initialize dynamically
         _swarm_arbitrator = SwarmArbitrator()
     return _swarm_arbitrator
+
 
 @app.post("/api/chat/swarm")
 async def chat_swarm(request: Request):
@@ -126,79 +127,83 @@ async def chat_swarm(request: Request):
     Routes to SwarmChatHandler for multi-model debate.
     """
     from zena_mode.handlers.swarm_chat import get_swarm_handler
-    
+
     handler = await get_swarm_handler()
-    
+
     # Simple adapter for BaseZenHandler compatibility
     class AsyncAdapter:
         """AsyncAdapter class."""
-        def __init__(self, req, body): 
+
+        def __init__(self, req, body):
             self.req = req
             self.body = body
             self.path = req.url.path
             self._response = None
-            
-        def parse_json_body(self): return self.body
+
+        def parse_json_body(self):
+            return self.body
+
         def send_json_response(self, code, content):
-             self._response = JSONResponse(status_code=code, content=content)
+            self._response = JSONResponse(status_code=code, content=content)
 
     try:
         body = await request.json()
         adapter = AsyncAdapter(request, body)
         await handler.handle_post_async(adapter)
-        
+
         if adapter._response:
             return adapter._response
         return JSONResponse(status_code=500, content={"error": "No response from Swarm Handler"})
-        
+
     except Exception as e:
         logger.error(f"Swarm Endpoint Error: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
     """Chat endpoint supporting Fast and Deep Thinking modes."""
     import requests
     from zena_mode.server import MODEL_PATH
-    
+
     if not req.message:
         raise HTTPException(status_code=400, detail="Missing message")
-    
+
     # Mode: Deep Thinking / Council
     if req.mode in ["deep_thinking", "council"]:
         try:
             swarm = get_swarm()
             # Ensure swarm knows about current experts
             await swarm.discover_swarm()
-            
+
             # Use simple consensus for now
             # We need to adapt swarm's stream/run methods to return a single string for this API
             # For now, let's use a simplified run method or iterate updates
-            
+
             # SwarmArbitrator.run() logic needed here.
             # Looking at swarm_arbitrator.py, it likely has a method to get a final answer.
             # Let's assume we want to stream back or return final.
             # As this is a sync-like endpoint returning JSON:
-            
+
             # We'll create a task runner
             # Temporarily import here to check method names if needed, but assuming standard flow
-            
+
             # Let's add a helper in SwarmArbitrator called `get_consensus_answer(query)`
             # Since I can't see the file content right now, I'll rely on generic usage
             # or add a specific method to swarm_arbitrator.py first?
-            
+
             # WAIT: I should check swarm_arbitrator.py API surface first to be safe.
             # But based on the code I wrote/saw earlier (step 3604), it has `_traffic_controller_mode` generator.
-            
+
             # Let's stick to simple "council" routing for V1:
-            # Query all models, concat answers? 
+            # Query all models, concat answers?
             # The user wants "judge with one has the corect".
-            
+
             # Using the arbitrator's direct functionality:
             final_answer = ""
             async for chunk in swarm._traffic_controller_mode(req.message):
                 final_answer += chunk
-                
+
             return {"response": final_answer, "emotion": "thoughtful", "mode": "council"}
 
         except Exception as e:
@@ -212,15 +217,15 @@ async def chat(req: ChatRequest):
             "model": MODEL_PATH.name,
             "messages": [
                 {"role": "system", "content": "You are ZenAI, a helpful assistant. Keep answers short."},
-                {"role": "user", "content": req.message}
+                {"role": "user", "content": req.message},
             ],
             "stream": False,
-            "max_tokens": 150
+            "max_tokens": 150,
         }
         resp = requests.post(config.get_api_url(), json=payload, timeout=30)
         if resp.status_code == 200:
             llm_data = resp.json()
-            content = llm_data['choices'][0]['message']['content']
+            content = llm_data["choices"][0]["message"]["content"]
             return {"response": content, "emotion": "neutral", "mode": "fast"}
         else:
             raise HTTPException(status_code=500, detail=f"LLM Error: {resp.text}")
@@ -229,25 +234,23 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 # ==================== HEALTH ROUTES ====================
+
 
 @app.get("/health")
 async def health_check():
     """Check overall system health."""
     from utils import is_port_active
+
     llm_status = is_port_active(config.llm_port)
-    return {
-        "status": "healthy" if llm_status else "degraded",
-        "llm_online": llm_status,
-        "llm_port": config.llm_port
-    }
+    return {"status": "healthy" if llm_status else "degraded", "llm_online": llm_status, "llm_port": config.llm_port}
 
 
 @app.get("/api/test-llm")
 async def test_llm():
     """Test if LLM engine is responding."""
     from utils import is_port_active
+
     status = is_port_active(config.llm_port)
     return {"success": status, "port": config.llm_port}
 
@@ -257,6 +260,7 @@ async def startup_progress():
     """Get startup progress for UI splash screen."""
     try:
         from startup_progress import get_startup_progress
+
         return get_startup_progress()
     except Exception:
         return {"stage": "loading", "percent": 0, "message": "Initializing..."}
@@ -266,10 +270,12 @@ async def startup_progress():
 async def get_metrics():
     """Return profiler metrics."""
     from zena_mode.profiler import monitor
+
     return monitor.get_summary()
 
 
 # ==================== MODEL ROUTES ====================
+
 
 @app.get("/list")
 async def list_models():
@@ -285,6 +291,7 @@ async def list_models():
 async def popular_models():
     """Get popular models from registry."""
     import model_manager
+
     try:
         return model_manager.get_popular_models()
     except Exception as e:
@@ -295,6 +302,7 @@ async def popular_models():
 async def search_models(q: str = ""):
     """Search HuggingFace for models."""
     import model_manager
+
     try:
         return model_manager.search_hf_models(q)
     except Exception as e:
@@ -305,6 +313,7 @@ async def search_models(q: str = ""):
 async def download_model(req: DownloadRequest):
     """Start async model download."""
     import model_manager
+
     try:
         model_manager.download_model_async(req.repo_id, req.filename)
         return {"status": "started", "message": f"Downloading {req.filename}..."}
@@ -314,10 +323,12 @@ async def download_model(req: DownloadRequest):
 
 # ==================== ORCHESTRATION ROUTES ====================
 
+
 @app.post("/swap")
 async def swap_model(req: SwapRequest):
     """Swap to a different model."""
     from zena_mode.server import restart_with_model
+
     threading.Thread(target=restart_with_model, args=(req.model,), daemon=True).start()
     return {"status": "accepted", "model": req.model}
 
@@ -326,6 +337,7 @@ async def swap_model(req: SwapRequest):
 async def scale_swarm(req: ScaleRequest):
     """Scale the expert swarm."""
     from zena_mode.server import scale_swarm as do_scale
+
     if req.count < 1 or req.count > 10:
         raise HTTPException(status_code=400, detail="count must be 1-10")
     threading.Thread(target=do_scale, args=(req.count,), daemon=True).start()
@@ -334,8 +346,10 @@ async def scale_swarm(req: ScaleRequest):
 
 class LaunchRequest(BaseModel):
     """LaunchRequest class."""
+
     model: str
     port: int
+
 
 @app.post("/swarm/launch")
 async def launch_swarm_expert(req: LaunchRequest):
@@ -343,12 +357,12 @@ async def launch_swarm_expert(req: LaunchRequest):
     from zena_mode.server import launch_expert_process
     from config_system import config
     from pathlib import Path
-    
+
     # Resolve Path
     m_path = Path(req.model)
     if not m_path.is_absolute():
         m_path = config.MODEL_DIR / req.model
-    
+
     if not m_path.exists():
         # Fallback to C:/AI/Models explicit check
         central = Path("C:/AI/Models") / req.model
@@ -366,14 +380,15 @@ async def launch_swarm_expert(req: LaunchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 # ==================== VOICE ROUTES ====================
+
 
 @app.get("/api/devices")
 async def list_devices():
     """List available audio devices."""
     try:
         import sounddevice as sd
+
         devices = sd.query_devices()
         return {"devices": [{"id": i, "name": d["name"]} for i, d in enumerate(devices)]}
     except Exception as e:
@@ -384,6 +399,7 @@ async def list_devices():
 async def voice_lab():
     """Serve the Voice Lab interface."""
     from fastapi.responses import HTMLResponse
+
     html_content = """
 <!DOCTYPE html>
 <html lang="en">
@@ -537,11 +553,12 @@ async def text_to_speech(request: Request):
     """Convert text to speech."""
     try:
         from zena_mode.server import get_cached_voice_service
+
         data = await request.json()
         text = data.get("text", "")
         if not text:
             raise HTTPException(status_code=400, detail="Missing text")
-        
+
         vs = get_cached_voice_service()
         audio_path = vs.synthesize(text)
         return {"status": "ok", "audio_path": str(audio_path)}
@@ -554,11 +571,12 @@ async def speech_to_text(request: Request):
     """Convert speech to text."""
     try:
         from zena_mode.server import get_cached_voice_service
+
         data = await request.json()
         audio_data = data.get("audio", "")
         if not audio_data:
             raise HTTPException(status_code=400, detail="Missing audio data")
-        
+
         vs = get_cached_voice_service()
         text = vs.transcribe(audio_data)
         return {"status": "ok", "text": text}
@@ -568,29 +586,30 @@ async def speech_to_text(request: Request):
 
 # ==================== CHAT ROUTES ====================
 
+
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
     """Simple chat proxy to LLM engine."""
     import requests
     from zena_mode.server import MODEL_PATH
-    
+
     if not req.message:
         raise HTTPException(status_code=400, detail="Missing message")
-    
+
     try:
         payload = {
             "model": MODEL_PATH.name,
             "messages": [
                 {"role": "system", "content": "You are ZenAI, a helpful assistant. Keep answers short."},
-                {"role": "user", "content": req.message}
+                {"role": "user", "content": req.message},
             ],
             "stream": False,
-            "max_tokens": 150
+            "max_tokens": 150,
         }
         resp = requests.post(config.get_api_url(), json=payload, timeout=30)
         if resp.status_code == 200:
             llm_data = resp.json()
-            content = llm_data['choices'][0]['message']['content']
+            content = llm_data["choices"][0]["message"]["content"]
             return {"response": content, "emotion": "neutral"}
         else:
             raise HTTPException(status_code=500, detail=f"LLM Error: {resp.text}")
@@ -600,6 +619,7 @@ async def chat(req: ChatRequest):
 
 
 # ==================== DEFAULT FALLBACK ====================
+
 
 @app.get("/")
 async def root():
@@ -611,6 +631,7 @@ async def root():
 def run_asgi_server(host: str = "127.0.0.1", port: int = 8002):
     """Start the ASGI server with uvicorn."""
     import uvicorn
+
     logger.info(f"Starting ASGI server on {host}:{port}")
     uvicorn.run(app, host=host, port=port, log_level="info")
 

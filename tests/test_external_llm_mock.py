@@ -13,6 +13,7 @@ Tests:
 4. Consensus with mixed local + external results
 5. Cost tracking
 """
+
 import pytest
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock
@@ -20,10 +21,12 @@ import time
 
 # Import modules to test
 import sys
-sys.path.insert(0, '.')
+
+sys.path.insert(0, ".")
 
 try:
     from zena_mode.arbitrage import SwarmArbitrator
+
     MODULES_AVAILABLE = True
 except ImportError:
     MODULES_AVAILABLE = False
@@ -35,10 +38,7 @@ class TestRequestFormatting:
 
     def test_anthropic_request_format(self):
         """Test Anthropic Claude API request formatting."""
-        messages = [
-            {"role": "system", "content": "You are helpful"},
-            {"role": "user", "content": "What is 2+2?"}
-        ]
+        messages = [{"role": "system", "content": "You are helpful"}, {"role": "user", "content": "What is 2+2?"}]
 
         # Expected format for Anthropic
 
@@ -54,13 +54,8 @@ class TestRequestFormatting:
 
         # Expected format for Gemini
         expected = {
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }],
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 1024
-            }
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024},
         }
 
         # Verify structure
@@ -69,16 +64,10 @@ class TestRequestFormatting:
 
     def test_grok_request_format(self):
         """Test Grok API request formatting (OpenAI-compatible)."""
-        messages = [
-            {"role": "user", "content": "What is 2+2?"}
-        ]
+        messages = [{"role": "user", "content": "What is 2+2?"}]
 
         # Expected format for Grok (OpenAI-compatible)
-        expected = {
-            "model": "grok-beta",
-            "messages": messages,
-            "temperature": 0.7
-        }
+        expected = {"model": "grok-beta", "messages": messages, "temperature": 0.7}
 
         # Verify structure
         assert "messages" in expected
@@ -94,14 +83,9 @@ class TestResponseParsing:
             "id": "msg_123",
             "type": "message",
             "role": "assistant",
-            "content": [
-                {"type": "text", "text": "The answer is 4"}
-            ],
+            "content": [{"type": "text", "text": "The answer is 4"}],
             "model": "claude-3-5-sonnet-20241022",
-            "usage": {
-                "input_tokens": 10,
-                "output_tokens": 5
-            }
+            "usage": {"input_tokens": 10, "output_tokens": 5},
         }
 
         # Parse response
@@ -116,18 +100,10 @@ class TestResponseParsing:
     def test_parse_gemini_response(self):
         """Test parsing Google Gemini API response."""
         mock_response = {
-            "candidates": [{
-                "content": {
-                    "parts": [{"text": "The answer is 4"}],
-                    "role": "model"
-                },
-                "finishReason": "STOP"
-            }],
-            "usageMetadata": {
-                "promptTokenCount": 10,
-                "candidatesTokenCount": 5,
-                "totalTokenCount": 15
-            }
+            "candidates": [
+                {"content": {"parts": [{"text": "The answer is 4"}], "role": "model"}, "finishReason": "STOP"}
+            ],
+            "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5, "totalTokenCount": 15},
         }
 
         # Parse response
@@ -144,19 +120,10 @@ class TestResponseParsing:
             "object": "chat.completion",
             "created": 1234567890,
             "model": "grok-beta",
-            "choices": [{
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": "The answer is 4"
-                },
-                "finish_reason": "stop"
-            }],
-            "usage": {
-                "prompt_tokens": 10,
-                "completion_tokens": 5,
-                "total_tokens": 15
-            }
+            "choices": [
+                {"index": 0, "message": {"role": "assistant", "content": "The answer is 4"}, "finish_reason": "stop"}
+            ],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
         }
 
         # Parse response
@@ -178,10 +145,8 @@ class TestErrorHandling:
         arbitrator = SwarmArbitrator(ports=[8001])
 
         # Mock timeout
-        with patch('httpx.AsyncClient.post', side_effect=asyncio.TimeoutError("Request timeout")):
-            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [
-                {"role": "user", "content": "Test"}
-            ])
+        with patch("httpx.AsyncClient.post", side_effect=asyncio.TimeoutError("Request timeout")):
+            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [{"role": "user", "content": "Test"}])
 
             # Should return error result
             assert "[" in result["content"]  # Error message format
@@ -198,10 +163,8 @@ class TestErrorHandling:
         mock_response.status_code = 401
         mock_response.text = "Invalid API key"
 
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [
-                {"role": "user", "content": "Test"}
-            ])
+        with patch("httpx.AsyncClient.post", return_value=mock_response):
+            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [{"role": "user", "content": "Test"}])
 
             # Should return error result
             assert "error" in result["content"].lower() or "401" in result["content"]
@@ -216,10 +179,8 @@ class TestErrorHandling:
         mock_response.status_code = 429
         mock_response.text = "Rate limit exceeded"
 
-        with patch('httpx.AsyncClient.post', return_value=mock_response):
-            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [
-                {"role": "user", "content": "Test"}
-            ])
+        with patch("httpx.AsyncClient.post", return_value=mock_response):
+            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [{"role": "user", "content": "Test"}])
 
             # Should return error result
             assert "error" in result["content"].lower() or "429" in result["content"]
@@ -230,10 +191,8 @@ class TestErrorHandling:
         arbitrator = SwarmArbitrator(ports=[8001])
 
         # Mock network error
-        with patch('httpx.AsyncClient.post', side_effect=Exception("Connection refused")):
-            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [
-                {"role": "user", "content": "Test"}
-            ])
+        with patch("httpx.AsyncClient.post", side_effect=Exception("Connection refused")):
+            result = await arbitrator._query_external_agent("claude-3-5-sonnet", [{"role": "user", "content": "Test"}])
 
             # Should return error result
             assert "[" in result["content"]
@@ -250,7 +209,7 @@ class TestConsensusWithMixedSources:
         responses = [
             "The capital of France is Paris",
             "Paris is the capital of France",
-            "The answer is Paris, the capital city of France"
+            "The answer is Paris, the capital city of France",
         ]
 
         # Calculate consensus (should be high)
@@ -263,11 +222,7 @@ class TestConsensusWithMixedSources:
         """Test consensus when LLMs partially agree."""
         arbitrator = SwarmArbitrator(ports=[8001])
 
-        responses = [
-            "The answer is 4",
-            "2 + 2 equals 4",
-            "The result of adding two and two is four"
-        ]
+        responses = ["The answer is 4", "2 + 2 equals 4", "The result of adding two and two is four"]
 
         consensus = arbitrator._calculate_consensus_simple(responses)
 
@@ -282,7 +237,7 @@ class TestConsensusWithMixedSources:
         responses = [
             "Buy stocks during a recession",
             "Avoid stocks during a recession",
-            "It depends on your risk tolerance and time horizon"
+            "It depends on your risk tolerance and time horizon",
         ]
 
         consensus = arbitrator._calculate_consensus_simple(responses)
@@ -367,11 +322,7 @@ class TestCostTracking:
         budget = 0.10  # $0.10 budget
 
         # Simulate queries
-        queries = [
-            ("claude-3", 50),
-            ("gpt-4", 50),
-            ("gemini", 50)
-        ]
+        queries = [("claude-3", 50), ("gpt-4", 50), ("gemini", 50)]
 
         total = 0.0
         for model, tokens in queries:
@@ -397,7 +348,7 @@ class TestMixedLocalExternal:
         mock_responses = [
             {"content": "Paris", "model": "local-llama-7b", "confidence": 0.85, "time": 2.0},
             {"content": "Paris", "model": "claude-3-5-sonnet", "confidence": 0.95, "time": 0.5},
-            {"content": "Paris", "model": "gemini-pro", "confidence": 0.92, "time": 0.6}
+            {"content": "Paris", "model": "gemini-pro", "confidence": 0.92, "time": 0.6},
         ]
 
         # Extract responses
@@ -434,7 +385,7 @@ class TestPerformanceTracking:
         mock_responses = [
             {"model": "local-llama", "time": 5.2},
             {"model": "claude-3-5-sonnet", "time": 0.8},
-            {"model": "gemini-pro", "time": 1.1}
+            {"model": "gemini-pro", "time": 1.1},
         ]
 
         # Calculate average times
@@ -466,7 +417,7 @@ class TestPerformanceTracking:
             was_selected=True,
             consensus_score=0.95,
             confidence=0.92,
-            response_time=0.8
+            response_time=0.8,
         )
 
         # Get reliability

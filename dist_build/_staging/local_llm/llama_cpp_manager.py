@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LlamaCppStatus:
     """Status of llama.cpp installation and runtime"""
+
     installed: bool
     version: Optional[str] = None
     latest_version: Optional[str] = None
@@ -45,15 +46,15 @@ class LlamaCppStatus:
     def to_dict(self) -> dict:
         """Convert to JSON-serializable dict"""
         return {
-            'installed': self.installed,
-            'version': self.version,
-            'latest_version': self.latest_version,
-            'needs_update': self.needs_update,
-            'path': str(self.path) if self.path else None,
-            'running': self.running,
-            'port': self.port,
-            'pid': self.pid,
-            'error': self.error
+            "installed": self.installed,
+            "version": self.version,
+            "latest_version": self.latest_version,
+            "needs_update": self.needs_update,
+            "path": str(self.path) if self.path else None,
+            "running": self.running,
+            "port": self.port,
+            "pid": self.pid,
+            "error": self.error,
         }
 
 
@@ -62,34 +63,34 @@ class LlamaCppManager:
 
     # Common installation paths by platform
     SEARCH_PATHS = {
-        'Windows': [
-            Path('C:\\AI\\_bin'),  # Custom AI folder (highest priority)
-            Path(os.getenv('BIN_DIR', 'C:\\AI\\_bin')),  # Environment variable override
-            Path('C:\\llama.cpp'),
-            Path('C:\\Program Files\\llama.cpp'),
-            Path('C:\\Program Files (x86)\\llama.cpp'),
-            Path.home() / 'llama.cpp',
-            Path.home() / 'AppData\\Local\\llama.cpp',
-            Path.home() / 'Downloads\\llama.cpp',
+        "Windows": [
+            Path("C:\\AI\\_bin"),  # Custom AI folder (highest priority)
+            Path(os.getenv("BIN_DIR", "C:\\AI\\_bin")),  # Environment variable override
+            Path("C:\\llama.cpp"),
+            Path("C:\\Program Files\\llama.cpp"),
+            Path("C:\\Program Files (x86)\\llama.cpp"),
+            Path.home() / "llama.cpp",
+            Path.home() / "AppData\\Local\\llama.cpp",
+            Path.home() / "Downloads\\llama.cpp",
         ],
-        'Darwin': [  # macOS
-            Path('/usr/local/bin'),
-            Path('/opt/homebrew/bin'),
-            Path.home() / 'llama.cpp',
-            Path('/Applications/llama.cpp'),
+        "Darwin": [  # macOS
+            Path("/usr/local/bin"),
+            Path("/opt/homebrew/bin"),
+            Path.home() / "llama.cpp",
+            Path("/Applications/llama.cpp"),
         ],
-        'Linux': [
-            Path('/usr/local/bin'),
-            Path('/usr/bin'),
-            Path.home() / 'llama.cpp',
-            Path.home() / '.local/bin',
-        ]
+        "Linux": [
+            Path("/usr/local/bin"),
+            Path("/usr/bin"),
+            Path.home() / "llama.cpp",
+            Path.home() / ".local/bin",
+        ],
     }
 
     EXECUTABLE_NAMES = {
-        'Windows': ['llama-server.exe', 'llama.exe'],
-        'Darwin': ['llama-server', 'llama-cpp-server'],
-        'Linux': ['llama-server', 'llama-cpp-server']
+        "Windows": ["llama-server.exe", "llama.exe"],
+        "Darwin": ["llama-server", "llama-cpp-server"],
+        "Linux": ["llama-server", "llama-cpp-server"],
     }
 
     def __init__(self):
@@ -117,14 +118,14 @@ class LlamaCppManager:
                 logging.debug(self._last_error)
                 return None
             except subprocess.TimeoutExpired as e:
-                logging.warning(f"Command timeout (attempt {attempt+1}/{retries+1}): {args}")
+                logging.warning(f"Command timeout (attempt {attempt + 1}/{retries + 1}): {args}")
                 self._last_error = str(e)
             except Exception as e:
-                logging.warning(f"Subprocess failure (attempt {attempt+1}/{retries+1}): {e}")
+                logging.warning(f"Subprocess failure (attempt {attempt + 1}/{retries + 1}): {e}")
                 self._last_error = str(e)
 
             attempt += 1
-            time.sleep(backoff * (2 ** attempt))
+            time.sleep(backoff * (2**attempt))
 
         return None
 
@@ -136,8 +137,8 @@ class LlamaCppManager:
             Path to executable or None if not found
         """
         system = platform.system()
-        search_paths = self.SEARCH_PATHS.get(system, self.SEARCH_PATHS['Linux'])
-        exe_names = self.EXECUTABLE_NAMES.get(system, self.EXECUTABLE_NAMES['Linux'])
+        search_paths = self.SEARCH_PATHS.get(system, self.SEARCH_PATHS["Linux"])
+        exe_names = self.EXECUTABLE_NAMES.get(system, self.EXECUTABLE_NAMES["Linux"])
 
         # Search common paths
         for search_path in search_paths:
@@ -170,10 +171,10 @@ class LlamaCppManager:
                 return False, None, None
 
             # Try to get version using safe runner
-            result = self._safe_run([str(exe_path), '--version'], timeout=5, retries=1)
-            if result and hasattr(result, 'stdout'):
+            result = self._safe_run([str(exe_path), "--version"], timeout=5, retries=1)
+            if result and hasattr(result, "stdout"):
                 version = result.stdout.strip()
-                match = re.search(r'(\d+\.\d+\.\d+)', version)
+                match = re.search(r"(\d+\.\d+\.\d+)", version)
                 if match:
                     version = match.group(1)
                 return True, version, exe_path
@@ -193,25 +194,27 @@ class LlamaCppManager:
             Version string or None if lookup fails
         """
         # Try urllib first (no external deps)
-        url = 'https://api.github.com/repos/ggerganov/llama.cpp/releases/latest'
+        url = "https://api.github.com/repos/ggerganov/llama.cpp/releases/latest"
         try:
-            req = urllib.request.Request(url, headers={'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'MARKET_AI'})
+            req = urllib.request.Request(
+                url, headers={"Accept": "application/vnd.github.v3+json", "User-Agent": "MARKET_AI"}
+            )
             with urllib.request.urlopen(req, timeout=5) as resp:
-                data = json.loads(resp.read().decode('utf-8'))
-                tag = data.get('tag_name', '')
-                version = tag.lstrip('b')
+                data = json.loads(resp.read().decode("utf-8"))
+                tag = data.get("tag_name", "")
+                version = tag.lstrip("b")
                 if version:
                     return version
         except Exception as e:
             logging.debug(f"urllib failed fetching latest version: {e}")
 
         # Fallback to curl via subprocess
-        res = self._safe_run(['curl', '-s', url, '-H', 'Accept: application/vnd.github.v3+json'], timeout=5, retries=1)
-        if res and hasattr(res, 'stdout'):
+        res = self._safe_run(["curl", "-s", url, "-H", "Accept: application/vnd.github.v3+json"], timeout=5, retries=1)
+        if res and hasattr(res, "stdout"):
             try:
                 data = json.loads(res.stdout)
-                tag = data.get('tag_name', '')
-                version = tag.lstrip('b')
+                tag = data.get("tag_name", "")
+                version = tag.lstrip("b")
                 if version:
                     return version
             except Exception:
@@ -232,8 +235,8 @@ class LlamaCppManager:
             True if update recommended
         """
         try:
-            current_parts = [int(x) for x in current.split('.')]
-            latest_parts = [int(x) for x in latest.split('.')]
+            current_parts = [int(x) for x in current.split(".")]
+            latest_parts = [int(x) for x in latest.split(".")]
 
             # Pad with zeros if needed
             while len(current_parts) < len(latest_parts):
@@ -256,21 +259,21 @@ class LlamaCppManager:
         try:
             # Prefer psutil if available for cross-platform process discovery
             if psutil is not None:
-                for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                     try:
-                        name = (proc.info.get('name') or '').lower()
-                        cmd = ' '.join(proc.info.get('cmdline') or []).lower()
-                        if 'llama-server' in name or 'llama-server' in cmd:
-                            return True, int(proc.info.get('pid'))
+                        name = (proc.info.get("name") or "").lower()
+                        cmd = " ".join(proc.info.get("cmdline") or []).lower()
+                        if "llama-server" in name or "llama-server" in cmd:
+                            return True, int(proc.info.get("pid"))
                     except Exception:
                         continue
 
-            if system == 'Windows':
-                result = self._safe_run(['tasklist', '/FI', 'IMAGENAME eq llama-server.exe'], timeout=5)
-                if result and 'llama-server.exe' in (result.stdout or ''):
-                    lines = (result.stdout or '').strip().split('\n')
+            if system == "Windows":
+                result = self._safe_run(["tasklist", "/FI", "IMAGENAME eq llama-server.exe"], timeout=5)
+                if result and "llama-server.exe" in (result.stdout or ""):
+                    lines = (result.stdout or "").strip().split("\n")
                     for line in lines:
-                        if 'llama-server.exe' in line:
+                        if "llama-server.exe" in line:
                             parts = line.split()
                             if len(parts) >= 2:
                                 try:
@@ -280,10 +283,10 @@ class LlamaCppManager:
                                     pass
                     return True, None
             else:
-                result = self._safe_run(['pgrep', '-f', 'llama-server'], timeout=5)
-                if result and result.returncode == 0 and (result.stdout or '').strip():
+                result = self._safe_run(["pgrep", "-f", "llama-server"], timeout=5)
+                if result and result.returncode == 0 and (result.stdout or "").strip():
                     try:
-                        pid = int((result.stdout or '').strip().split()[0])
+                        pid = int((result.stdout or "").strip().split()[0])
                         return True, pid
                     except (ValueError, IndexError):
                         return True, None
@@ -309,11 +312,7 @@ class LlamaCppManager:
 
                 installed, version, path = self.check_installed()
 
-                status = LlamaCppStatus(
-                    installed=installed,
-                    version=version,
-                    path=path
-                )
+                status = LlamaCppStatus(installed=installed, version=version, path=path)
 
                 if installed:
                     # Check for updates
@@ -341,17 +340,14 @@ class LlamaCppManager:
 
             except Exception as e:
                 logger.error(f"Error getting status: {e}")
-                return LlamaCppStatus(
-                    installed=False,
-                    error=str(e)
-                )
+                return LlamaCppStatus(installed=False, error=str(e))
 
     def get_download_url(self) -> str:
         """Get download URL for llama.cpp"""
         system = platform.system()
-        if system == 'Windows':
+        if system == "Windows":
             return "https://github.com/ggerganov/llama.cpp/releases"
-        elif system == 'Darwin':
+        elif system == "Darwin":
             return "https://github.com/ggerganov/llama.cpp/releases (or: brew install llama-cpp)"
         else:
             return "https://github.com/ggerganov/llama.cpp/releases"

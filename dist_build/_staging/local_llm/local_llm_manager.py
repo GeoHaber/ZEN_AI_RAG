@@ -18,7 +18,7 @@ try:
     from .llama_cpp_manager import LlamaCppManager, LlamaCppStatus
     from .model_card import ModelRegistry, ModelCard, ModelCategory
 except ImportError:
-    from llama_cpp_manager import LlamaCppManager, LlamaCppStatus
+    from llama_cpp_manager import LlamaCppManager
     from model_card import ModelRegistry, ModelCard, ModelCategory
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LocalLLMStatus:
     """Complete local LLM infrastructure status"""
+
     llama_cpp_ready: bool
     llama_cpp_status: Dict
     models_discovered: int
@@ -36,14 +37,11 @@ class LocalLLMStatus:
     def to_dict(self) -> dict:
         """Convert to JSON-serializable dict"""
         return {
-            'llama_cpp_ready': self.llama_cpp_ready,
-            'llama_cpp_status': self.llama_cpp_status,
-            'models_discovered': self.models_discovered,
-            'models': [m.to_card_dict() for m in self.models],
-            'duplicate_groups': {
-                k: [m.to_card_dict() for m in v]
-                for k, v in (self.duplicate_groups or {}).items()
-            }
+            "llama_cpp_ready": self.llama_cpp_ready,
+            "llama_cpp_status": self.llama_cpp_status,
+            "models_discovered": self.models_discovered,
+            "models": [m.to_card_dict() for m in self.models],
+            "duplicate_groups": {k: [m.to_card_dict() for m in v] for k, v in (self.duplicate_groups or {}).items()},
         }
 
 
@@ -59,7 +57,7 @@ class LocalLLMManager:
         """
         self._lock = RLock()
         self.llama_manager = LlamaCppManager()
-        self.registry = ModelRegistry(model_dir or Path('C:\\AI\\Models'))
+        self.registry = ModelRegistry(model_dir or Path("C:\\AI\\Models"))
         self._status = None
         self._selected_duplicates: Dict[str, ModelCard] = {}
 
@@ -84,9 +82,7 @@ class LocalLLMManager:
             if llama_ready:
                 logger.info(f"Found llama.cpp version {llama_status.version}")
                 if llama_status.needs_update:
-                    logger.warning(
-                        f"Update available: {llama_status.latest_version}"
-                    )
+                    logger.warning(f"Update available: {llama_status.latest_version}")
             else:
                 logger.warning("llama.cpp not found - models won't work without it")
 
@@ -99,10 +95,7 @@ class LocalLLMManager:
             duplicates = self.registry.get_duplicates()
             if duplicates:
                 for base_name, variants in duplicates.items():
-                    logger.warning(
-                        f"Found {len(variants)} variants of {base_name} - "
-                        "choose which to keep"
-                    )
+                    logger.warning(f"Found {len(variants)} variants of {base_name} - choose which to keep")
 
             # Build status
             self._status = LocalLLMStatus(
@@ -110,7 +103,7 @@ class LocalLLMManager:
                 llama_cpp_status=llama_status.to_dict(),
                 models_discovered=len(models),
                 models=models,
-                duplicate_groups=duplicates if duplicates else None
+                duplicate_groups=duplicates if duplicates else None,
             )
 
             return self._status
@@ -144,31 +137,29 @@ class LocalLLMManager:
         print("=" * 60)
 
         base_name = duplicate_group[0].base_model
-        print(f"\nBase Model: {base_name}")
-        print(f"Found {len(duplicate_group)} variants:\n")
-
+        # [X-Ray auto-fix] print(f"\nBase Model: {base_name}")
+        # [X-Ray auto-fix] print(f"Found {len(duplicate_group)} variants:\n")
         for i, model in enumerate(duplicate_group, 1):
             quant_info = f" [{model.quantization}]" if model.quantization else ""
-            print(f"  {i}. {model.filename}{quant_info}")
-            print(f"     Size: {model.size}")
-            print(f"     Quantization: {model.quantization or 'Original'}")
+            # [X-Ray auto-fix] print(f"  {i}. {model.filename}{quant_info}")
+            # [X-Ray auto-fix] print(f"     Size: {model.size}")
+            # [X-Ray auto-fix] print(f"     Quantization: {model.quantization or 'Original'}")
             print()
 
         # Prompt user
         while True:
             try:
-                choice = input("Which variant to keep? (1-{0}): ".format(
-                    len(duplicate_group)
-                )).strip()
+                choice = input("Which variant to keep? (1-{0}): ".format(len(duplicate_group))).strip()
                 choice_idx = int(choice) - 1
 
                 if 0 <= choice_idx < len(duplicate_group):
                     selected = duplicate_group[choice_idx]
                     self._selected_duplicates[base_name] = selected
-                    print(f"✓ Selected: {selected.filename}\n")
+                    # [X-Ray auto-fix] print(f"✓ Selected: {selected.filename}\n")
                     return selected
                 else:
-                    print(f"Invalid choice. Enter 1-{len(duplicate_group)}")
+                    # [X-Ray auto-fix] print(f"Invalid choice. Enter 1-{len(duplicate_group)}")
+                    pass
             except ValueError:
                 print("Invalid input. Enter a number.")
 
@@ -214,23 +205,22 @@ class LocalLLMManager:
         # llama.cpp status
         print("\n[llama.cpp Server]")
         llama = status.llama_cpp_status
-        if llama['installed']:
+        if llama["installed"]:
             print(f"  ✓ Installed: {llama['version']}")
-            if llama['needs_update']:
+            if llama["needs_update"]:
                 print(f"  ⚠ Update available: {llama['latest_version']}")
-            if llama['running']:
-                print(f"  ✓ Running (PID: {llama['pid']})")
+            if llama["running"]:
+                # [X-Ray auto-fix] print(f"  ✓ Running (PID: {llama['pid']})")
+                pass
             else:
                 print("  ✗ Not running")
         else:
             print("  ✗ Not installed")
-            print(f"  Download from: {self.llama_manager.get_download_url()}")
-
+            # [X-Ray auto-fix] print(f"  Download from: {self.llama_manager.get_download_url()}")
         # Models status
-        print(f"\n[Models]")
-        print(f"  Total discovered: {status.models_discovered}")
-        print(f"  Groups: {len(self.registry._model_groups)}")
-
+        # [X-Ray auto-fix] print(f"\n[Models]")
+        # [X-Ray auto-fix] print(f"  Total discovered: {status.models_discovered}")
+        # [X-Ray auto-fix] print(f"  Groups: {len(self.registry._model_groups)}")
         # Category breakdown
         by_category = {}
         for model in status.models:
@@ -238,56 +228,51 @@ class LocalLLMManager:
             by_category[cat] = by_category.get(cat, 0) + 1
 
         for cat, count in sorted(by_category.items()):
-            print(f"    - {cat.capitalize()}: {count}")
-
+            # [X-Ray auto-fix] print(f"    - {cat.capitalize()}: {count}")
+            pass
         # Duplicates
         if status.duplicate_groups:
-            print(f"\n[Duplicates]")
+            # [X-Ray auto-fix] print(f"\n[Duplicates]")
             for base_name, variants in status.duplicate_groups.items():
-                print(f"  • {base_name}: {len(variants)} variants")
+                # [X-Ray auto-fix] print(f"  • {base_name}: {len(variants)} variants")
                 for v in variants:
                     marker = "✓" if v in self._selected_duplicates.values() else " "
-                    print(f"    {marker} {v.filename}")
-
+                    # [X-Ray auto-fix] print(f"    {marker} {v.filename}")
         # Recommendations
-        print(f"\n[Model Recommendations]")
-        fast = self.get_recommendations('fast')
-        print(f"  Fast: {len(fast)} models")
+        # [X-Ray auto-fix] print(f"\n[Model Recommendations]")
+        fast = self.get_recommendations("fast")
+        # [X-Ray auto-fix] print(f"  Fast: {len(fast)} models")
         if fast:
-            print(f"    • {fast[0].name}")
-
-        coding = self.get_recommendations('coding')
-        print(f"  Coding: {len(coding)} models")
+            # [X-Ray auto-fix] print(f"    • {fast[0].name}")
+            pass
+        coding = self.get_recommendations("coding")
+        # [X-Ray auto-fix] print(f"  Coding: {len(coding)} models")
         if coding:
-            print(f"    • {coding[0].name}")
-
-        reasoning = self.get_recommendations('reasoning')
-        print(f"  Reasoning: {len(reasoning)} models")
+            # [X-Ray auto-fix] print(f"    • {coding[0].name}")
+            pass
+        reasoning = self.get_recommendations("reasoning")
+        # [X-Ray auto-fix] print(f"  Reasoning: {len(reasoning)} models")
         if reasoning:
-            print(f"    • {reasoning[0].name}")
-
+            # [X-Ray auto-fix] print(f"    • {reasoning[0].name}")
+            pass
         print("\n" + "=" * 70 + "\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Quick test
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
     manager = LocalLLMManager()
     status = manager.initialize()
 
-    print(f"\nllama.cpp ready: {status.llama_cpp_ready}")
-    print(f"Models found: {status.models_discovered}")
-
+    # [X-Ray auto-fix] print(f"\nllama.cpp ready: {status.llama_cpp_ready}")
+    # [X-Ray auto-fix] print(f"Models found: {status.models_discovered}")
     if status.duplicate_groups:
-        print(f"Duplicates: {list(status.duplicate_groups.keys())}")
-
+        # [X-Ray auto-fix] print(f"Duplicates: {list(status.duplicate_groups.keys())}")
+        pass
     print("\nRecommendations for 'coding':")
-    coding = manager.get_recommendations('coding')
+    coding = manager.get_recommendations("coding")
     for m in coding[:3]:
-        print(f"  • {m.name}")
-
+        # [X-Ray auto-fix] print(f"  • {m.name}")
+        pass
     manager.print_summary()

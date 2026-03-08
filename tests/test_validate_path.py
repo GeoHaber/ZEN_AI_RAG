@@ -20,10 +20,10 @@ def test_validate_path_within_base_dir(tmp_path):
 
 def test_validate_path_rejects_system_paths():
     """Test validate path rejects system paths."""
-    if os.name == 'nt':
-        bad = 'C:\\Windows\\system32\\cmd.exe'
+    if os.name == "nt":
+        bad = "C:\\Windows\\system32\\cmd.exe"
     else:
-        bad = '/usr/bin/passwd'
+        bad = "/usr/bin/passwd"
 
     with pytest.raises(ValueError):
         validate_path(bad)

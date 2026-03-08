@@ -50,6 +50,7 @@ class DocumentService:
         if storage_dir is None:
             try:
                 from config_system import config
+
                 storage_dir = config.BASE_DIR / "rag_storage"
             except ImportError:
                 storage_dir = Path.cwd() / "rag_storage"

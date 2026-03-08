@@ -36,6 +36,7 @@ class SessionService:
         if storage_dir is None:
             try:
                 from config_system import config
+
                 storage_dir = config.BASE_DIR / "conversation_cache"
             except ImportError:
                 storage_dir = Path.cwd() / "conversation_cache"
@@ -87,9 +88,7 @@ class SessionService:
         self._save_session(session)
         return msg
 
-    def get_history(
-        self, session_id: str, limit: int = 20
-    ) -> List[Dict[str, Any]]:
+    def get_history(self, session_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Get the last *limit* messages for a session."""
         session = self._get_or_load(session_id)
         return session["messages"][-limit:]
@@ -110,13 +109,15 @@ class SessionService:
         for path in self.storage_dir.glob("*.json"):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
-                summaries.append({
-                    "id": data.get("id"),
-                    "user_id": data.get("user_id"),
-                    "created_at": data.get("created_at"),
-                    "updated_at": data.get("updated_at"),
-                    "message_count": len(data.get("messages", [])),
-                })
+                summaries.append(
+                    {
+                        "id": data.get("id"),
+                        "user_id": data.get("user_id"),
+                        "created_at": data.get("created_at"),
+                        "updated_at": data.get("updated_at"),
+                        "message_count": len(data.get("messages", [])),
+                    }
+                )
             except Exception:
                 continue
         return summaries

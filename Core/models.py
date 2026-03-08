@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional
 
 class ResponseStatus(str, Enum):
     """Response status codes."""
+
     SUCCESS = "success"
     ERROR = "error"
     PARTIAL = "partial"
@@ -25,9 +26,11 @@ class ResponseStatus(str, Enum):
 
 # ─── Query ───────────────────────────────────────────────
 
+
 @dataclass
 class QueryRequest:
     """Request for a single query with optional RAG context."""
+
     query: str
     include_sources: bool = True
     max_tokens: int = 1024
@@ -45,6 +48,7 @@ class QueryRequest:
 @dataclass
 class QueryResponse:
     """Response from a query operation."""
+
     content: str
     sources: List[Dict[str, Any]] = field(default_factory=list)
     status: ResponseStatus = ResponseStatus.SUCCESS
@@ -57,9 +61,11 @@ class QueryResponse:
 
 # ─── Chat ────────────────────────────────────────────────
 
+
 @dataclass
 class ChatMessage:
     """Single chat message."""
+
     role: str  # "user", "assistant", "system"
     content: str
     timestamp: datetime = field(default_factory=datetime.now)
@@ -69,6 +75,7 @@ class ChatMessage:
 @dataclass
 class ChatRequest:
     """Request for a chat operation with conversation memory."""
+
     message: str
     session_id: str
     include_history: bool = True
@@ -87,6 +94,7 @@ class ChatRequest:
 @dataclass
 class ChatResponse:
     """Response from a chat operation."""
+
     message: ChatMessage
     history: List[ChatMessage] = field(default_factory=list)
     status: ResponseStatus = ResponseStatus.SUCCESS
@@ -99,9 +107,11 @@ class ChatResponse:
 
 # ─── Search ──────────────────────────────────────────────
 
+
 @dataclass
 class SearchRequest:
     """Request for a RAG knowledge-base search."""
+
     query: str
     limit: int = 10
     threshold: float = 0.5
@@ -119,6 +129,7 @@ class SearchRequest:
 @dataclass
 class SearchResult:
     """Single search result."""
+
     content: str
     score: float
     document_id: str
@@ -128,6 +139,7 @@ class SearchResult:
 @dataclass
 class SearchResponse:
     """Response from a search operation."""
+
     results: List[SearchResult] = field(default_factory=list)
     total_count: int = 0
     status: ResponseStatus = ResponseStatus.SUCCESS
@@ -139,9 +151,11 @@ class SearchResponse:
 
 # ─── Streaming ───────────────────────────────────────────
 
+
 @dataclass
 class StreamRequest:
     """Request for a streaming operation."""
+
     query: str
     max_tokens: int = 2048
     temperature: float = 0.7
@@ -152,6 +166,7 @@ class StreamRequest:
 @dataclass
 class StreamChunk:
     """Single chunk in a streaming response."""
+
     content: str
     chunk_id: int
     is_final: bool = False
@@ -161,9 +176,11 @@ class StreamChunk:
 
 # ─── Status ──────────────────────────────────────────────
 
+
 @dataclass
 class StatusResponse:
     """Application status response."""
+
     status: ResponseStatus = ResponseStatus.SUCCESS
     components: Dict[str, Any] = field(default_factory=dict)
     uptime_seconds: float = 0.0

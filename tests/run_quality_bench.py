@@ -12,27 +12,40 @@ logger = logging.getLogger("QualityBench")
 # Test Dataset: [Question, Reference Answer]
 QA_PAIRS = [
     ["What is ZenAI?", "ZenAI is an AI-powered assistant integrated with Qwen and RAG capabilities."],
-    ["How many experts can run in a swarm?", "The swarm can be dynamically scaled, often up to 5 or more experts depending on hardware."],
+    [
+        "How many experts can run in a swarm?",
+        "The swarm can be dynamically scaled, often up to 5 or more experts depending on hardware.",
+    ],
     ["What is RAG?", "RAG or Retrieval-Augmented Generation is a technique to provide external knowledge to an LLM."],
     ["Who created Qwen?", "Qwen was created by the Alibaba Cloud (Qwen team)."],
     ["If ZenAI 2.0 has 5 pillars and we finish 3, how many are left?", "There are 2 pillars left (5 minus 3 is 2)."],
-    ["Which file handles the multi-LLM consensus logic?", "The consensus logic is handled in arbitrage.py (specifically the SwarmArbitrator class)."],
-    ["Explain the benefit of latency-aware routing in one sentence.", "Latency-aware routing ensures that queries are sent to the fastest available experts, minimizing overall response time."],
-    ["What happens if an expert provides a response with low fact-check score?", "The arbitrator applies a hallucination penalty, marking the agent as not selected for reliability tracking."],
+    [
+        "Which file handles the multi-LLM consensus logic?",
+        "The consensus logic is handled in arbitrage.py (specifically the SwarmArbitrator class).",
+    ],
+    [
+        "Explain the benefit of latency-aware routing in one sentence.",
+        "Latency-aware routing ensures that queries are sent to the fastest available experts, minimizing overall response time.",
+    ],
+    [
+        "What happens if an expert provides a response with low fact-check score?",
+        "The arbitrator applies a hallucination penalty, marking the agent as not selected for reliability tracking.",
+    ],
 ]
+
 
 def _run_benchmark_part1():
     """Run benchmark part 1."""
 
     # Save results
-    avg_score = sum(r['score'] for r in results) / len(results)
-    avg_duration = sum(r['duration'] for r in results) / len(results)
+    avg_score = sum(r["score"] for r in results) / len(results)
+    avg_duration = sum(r["duration"] for r in results) / len(results)
 
     summary = {
         "timestamp": time.time(),
         "avg_quality_score": avg_score,
         "avg_latency": avg_duration,
-        "detailed_results": results
+        "detailed_results": results,
     }
 
     report_path = Path("tests/quality_report.json")
@@ -49,10 +62,10 @@ async def run_benchmark():
     """Run benchmark."""
     logger.info("🚀 Starting ZenAI Quality Benchmark...")
     backend = AsyncZenAIBackend()
-    rag = LocalRAG() # Used for semantic similarity comparison
-    
+    rag = LocalRAG()  # Used for semantic similarity comparison
+
     results = []
-    
+
     async with backend:
         if not await backend.health_check():
             logger.error("❌ Backend offline! Start 'python start_llm.py' first.")
@@ -60,7 +73,7 @@ async def run_benchmark():
 
         for question, reference in QA_PAIRS:
             logger.info(f"❓ Testing: {question}")
-            
+
             # --- RAG INJECTION ---
             final_prompt = question
             try:
@@ -77,30 +90,29 @@ async def run_benchmark():
 
             full_response = ""
             start_time = time.time()
-            
+
             async for chunk in backend.send_message_async(final_prompt):
                 full_response += chunk
-            
+
             duration = time.time() - start_time
-            
+
             # --- Evaluation ---
             # 1. Semantic Similarity using RAG's embedding model
             ref_emb = rag.model.encode([reference], normalize_embeddings=True)[0]
             ans_emb = rag.model.encode([full_response], normalize_embeddings=True)[0]
-            
+
             import numpy as np
+
             similarity = np.dot(ref_emb, ans_emb)
-            
+
             logger.info(f"✅ Score: {similarity:.2f} | Time: {duration:.1f}s")
-            
-            results.append({
-                "question": question,
-                "response": full_response,
-                "score": float(similarity),
-                "duration": duration
-            })
-            
+
+            results.append(
+                {"question": question, "response": full_response, "score": float(similarity), "duration": duration}
+            )
+
     _run_benchmark_part1()
+
 
 if __name__ == "__main__":
     asyncio.run(run_benchmark())

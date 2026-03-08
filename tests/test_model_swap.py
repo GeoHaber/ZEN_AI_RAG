@@ -1,4 +1,3 @@
-
 import requests
 import time
 import logging
@@ -8,6 +7,7 @@ logger = logging.getLogger("SwapTest")
 
 HUB_URL = "http://127.0.0.1:8002"
 MODEL_NAME = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
+
 
 def test_swap():
     """Test swap."""
@@ -19,7 +19,7 @@ def test_swap():
         logger.error(f"Request failed (expected if server restarts immediately): {e}")
 
     logger.info("⏳ Waiting for restart...")
-    
+
     # Monitor for 60 seconds
     start = time.time()
     while time.time() - start < 60:
@@ -29,7 +29,7 @@ def test_swap():
             if resp.status_code == 200:
                 data = resp.json()
                 if data.get("llm_online"):
-                    logger.info(f"✅ Server is BACK ONLINE! (Time: {time.time()-start:.1f}s)")
+                    logger.info(f"✅ Server is BACK ONLINE! (Time: {time.time() - start:.1f}s)")
                     return
                 else:
                     logger.info("Hub online, LLM booting...")
@@ -39,10 +39,11 @@ def test_swap():
             logger.info("❌ Connection Refused (Server Down)")
         except Exception as e:
             logger.info(f"Error: {e}")
-        
+
         time.sleep(2)
-    
+
     logger.error("❌ TIMEOUT: Server did not return within 60s.")
+
 
 if __name__ == "__main__":
     test_swap()

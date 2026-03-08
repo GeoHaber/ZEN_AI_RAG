@@ -9,12 +9,14 @@ from zena_mode.vision_engine import get_vision_engine
 import numpy as np
 import cv2
 
+
 def test_vision_engine_init():
     """Test vision engine init."""
     print("Testing VisionEngine initialization...")
     engine = get_vision_engine()
     assert engine is not None
-    print(f"✅ VisionEngine initialized (Enabled: {engine.enabled})")
+    # [X-Ray auto-fix] print(f"✅ VisionEngine initialized (Enabled: {engine.enabled})")
+
 
 def test_object_detection_dummy():
     """Test object detection dummy."""
@@ -23,14 +25,14 @@ def test_object_detection_dummy():
     if not engine.enabled:
         print("⚠️ Vision engine disabled, skipping detection test")
         return
-        
+
     # Create a dummy image
     img = np.zeros((640, 640, 3), dtype=np.uint8)
     detections = engine.detect_objects(img)
-    print(f"✅ Detection run completed. Found {len(detections)} objects.")
-    
+    # [X-Ray auto-fix] print(f"✅ Detection run completed. Found {len(detections)} objects.")
     summary = engine.get_vision_summary(detections)
-    print(f"Summary: {summary or 'None'}")
+    # [X-Ray auto-fix] print(f"Summary: {summary or 'None'}")
+
 
 if __name__ == "__main__":
     test_vision_engine_init()

@@ -106,9 +106,7 @@ class LLMService:
             response = "".join(chunks)
             t_total = _time.perf_counter() - t0
             logger.info(
-                f"✓ LLM call {provider}/{model} "
-                f"adapt={t_adapt:.2f}s total={t_total:.2f}s "
-                f"{len(response)} chars"
+                f"✓ LLM call {provider}/{model} adapt={t_adapt:.2f}s total={t_total:.2f}s {len(response)} chars"
             )
             return response
 

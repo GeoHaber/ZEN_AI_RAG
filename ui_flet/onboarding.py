@@ -13,18 +13,19 @@ import flet as ft
 from ui_flet.theme import TH
 
 _STEPS = [
-    ("Choose Your Source", "Paste a website URL, pick a local folder, or connect your email to scan.",
-     ft.Icons.LANGUAGE),
-    ("Scan & Index", "Hit Scan — we'll extract, chunk, embed, and index your data locally.",
-     ft.Icons.SEARCH),
-    ("Ask Zena", "Chat with your data using RAG-powered intelligent answers.",
-     ft.Icons.CHAT_BUBBLE_OUTLINE),
+    (
+        "Choose Your Source",
+        "Paste a website URL, pick a local folder, or connect your email to scan.",
+        ft.Icons.LANGUAGE,
+    ),
+    ("Scan & Index", "Hit Scan — we'll extract, chunk, embed, and index your data locally.", ft.Icons.SEARCH),
+    ("Ask Zena", "Chat with your data using RAG-powered intelligent answers.", ft.Icons.CHAT_BUBBLE_OUTLINE),
 ]
-
 
 
 def _show_onboarding_part2(desc_text, icon_ctrl, step_idx, step_ind, title_text):
     """Continue show_onboarding logic."""
+
     def on_next(e):
         """Advance to the next onboarding step."""
         if step_idx[0] >= len(_STEPS) - 1:
@@ -42,9 +43,11 @@ def _show_onboarding_part2(desc_text, icon_ctrl, step_idx, step_ind, title_text)
         _update()
 
     back_btn = ft.TextButton("← Back", on_click=on_back, visible=False)
-    next_btn = ft.ElevatedButton(
-        "Next →", on_click=on_next,
-        bgcolor=TH.accent, color=ft.Colors.WHITE,
+    next_btn = ft.Button(
+        "Next →",
+        on_click=on_next,
+        bgcolor=TH.accent,
+        color=ft.Colors.WHITE,
     )
 
     dlg = ft.AlertDialog(
@@ -82,7 +85,10 @@ def show_onboarding(page: ft.Page) -> None:
     step_idx = [0]
 
     title_text = ft.Text(
-        _STEPS[0][0], size=20, weight=ft.FontWeight.BOLD, color=TH.accent,
+        _STEPS[0][0],
+        size=20,
+        weight=ft.FontWeight.BOLD,
+        color=TH.accent,
     )
     desc_text = ft.Text(_STEPS[0][1], size=14, color=TH.dim)
     icon_ctrl = ft.Icon(_STEPS[0][2], size=48, color=TH.accent)

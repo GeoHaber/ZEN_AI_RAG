@@ -9,6 +9,7 @@ Tests against actual sites:
 - Bloomberg (financial news)
 - Wikipedia (open access)
 """
+
 import asyncio
 import json
 from pathlib import Path
@@ -17,6 +18,7 @@ from datetime import datetime
 try:
     from zena_mode.scraper import WebsiteScraper
     from zena_mode.web_scanner import WebCrawlScanner
+
     MODULES_AVAILABLE = True
 except ImportError:
     MODULES_AVAILABLE = False
@@ -31,23 +33,21 @@ class RealWorldTester:
         self.results = []
         self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+
 def _test_site_part1_part2_part4(self):
     """Test site part1 part2 part 4."""
 
-
-    scan_matches_expected = (
-        result.get("scan", {}).get("can_crawl") == expected_crawlable
-    )
+    scan_matches_expected = result.get("scan", {}).get("can_crawl") == expected_crawlable
 
     if scan_matches_expected:
-        print(f"   ✅ Scanner prediction CORRECT")
+        # [X-Ray auto-fix] print(f"   ✅ Scanner prediction CORRECT")
         result["evaluation"] = "correct"
     else:
-        print(f"   ⚠️  Scanner prediction UNEXPECTED")
+        # [X-Ray auto-fix] print(f"   ⚠️  Scanner prediction UNEXPECTED")
         result["evaluation"] = "unexpected"
 
     # User guidance
-    print(f"\n💡 User Guidance")
+    # [X-Ray auto-fix] print(f"\n💡 User Guidance")
     print("-" * 40)
 
     if not result.get("scan", {}).get("can_crawl", True):
@@ -70,7 +70,7 @@ def _test_site_part1_part2_part4(self):
             print("   ⏱️  Rate limit detected")
             print("   💡 Recommendation: Try again later or slow down requests")
         else:
-            print(f"   ⚠️  Blocked: {reason}")
+            # [X-Ray auto-fix] print(f"   ⚠️  Blocked: {reason}")
             print("   💡 Recommendation: Manual content extraction or authenticated access")
 
     elif result.get("scrape", {}).get("success"):
@@ -88,8 +88,6 @@ def _test_site_part1_part2_part4(self):
 def _test_site_part1_part2(self, url):
     """Test site part1 part 2."""
 
-
-
     async def test_site(self, url: str, expected_crawlable: bool, category: str):
         """
         Test a single site and document results.
@@ -99,17 +97,16 @@ def _test_site_part1_part2(self, url):
             expected_crawlable: Whether we expect to be able to scrape
             category: Site category (social, financial, government, etc.)
         """
-        print(f"\n{'='*80}")
-        print(f"🔍 TESTING: {url}")
-        print(f"   Category: {category}")
-        print(f"   Expected: {'✅ Crawlable' if expected_crawlable else '🛑 Blocked'}")
-        print(f"{'='*80}\n")
-
+        # [X-Ray auto-fix] print(f"\n{'=' * 80}")
+        # [X-Ray auto-fix] print(f"🔍 TESTING: {url}")
+        # [X-Ray auto-fix] print(f"   Category: {category}")
+        # [X-Ray auto-fix] print(f"   Expected: {'✅ Crawlable' if expected_crawlable else '🛑 Blocked'}")
+        # [X-Ray auto-fix] print(f"{'=' * 80}\n")
         result = {
             "url": url,
             "category": category,
             "expected_crawlable": expected_crawlable,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp,
         }
 
         # Phase 1: Pre-flight scan
@@ -126,7 +123,7 @@ def _test_site_part1_part2(self, url):
                 "bot_protection": scan_report.bot_protection,
                 "requires_js": scan_report.requires_js,
                 "delay_suggestion": scan_report.delay_suggestion,
-                "metadata": scan_report.metadata
+                "metadata": scan_report.metadata,
             }
 
             print(f"   Can Crawl: {'✅ YES' if scan_report.can_crawl else '🛑 NO'}")
@@ -134,35 +131,34 @@ def _test_site_part1_part2(self, url):
             if scan_report.bot_protection:
                 print(f"   🛡️  Protection: {scan_report.bot_protection}")
             if scan_report.requires_js:
-                print(f"   ⚡ Requires JavaScript")
+                # [X-Ray auto-fix] print(f"   ⚡ Requires JavaScript")
+                pass
             if scan_report.metadata:
                 print(f"   📋 Metadata: {scan_report.metadata}")
 
         except Exception as e:
-            print(f"   ❌ Scan failed: {e}")
+            # [X-Ray auto-fix] print(f"   ❌ Scan failed: {e}")
             result["scan"] = {"error": str(e)}
             scan_report = None
 
         # Phase 2: Actual scraping attempt (only if scan passed or we want to test anyway)
-        print(f"\n📝 Phase 2: Scraping Attempt")
+        # [X-Ray auto-fix] print(f"\n📝 Phase 2: Scraping Attempt")
         print("-" * 40)
         _test_site_part1(self, url)
+
     _test_site_part1_part2_part4(self)
 
 
 def _test_site_part1_part3(self):
     """Test site part1 part 3."""
 
-
     def generate_report(self):
         """Generate comprehensive test report."""
-        print(f"\n\n{'='*80}")
+        # [X-Ray auto-fix] print(f"\n\n{'=' * 80}")
         print(f"📊 COMPREHENSIVE TEST REPORT")
-        print(f"{'='*80}\n")
-
-        print(f"🕒 Test Run: {self.timestamp}")
-        print(f"📈 Total Sites Tested: {len(self.results)}\n")
-
+        # [X-Ray auto-fix] print(f"{'=' * 80}\n")
+        # [X-Ray auto-fix] print(f"🕒 Test Run: {self.timestamp}")
+        # [X-Ray auto-fix] print(f"📈 Total Sites Tested: {len(self.results)}\n")
         # Summary by category
         categories = {}
         for r in self.results:
@@ -178,43 +174,42 @@ def _test_site_part1_part3(self):
         print("📊 Summary by Category:")
         print("-" * 40)
         for cat, stats in categories.items():
-            print(f"   {cat}:")
-            print(f"      Total: {stats['total']}")
-            print(f"      ✅ Crawlable: {stats['crawlable']}")
-            print(f"      🛑 Blocked: {stats['blocked']}")
-
+            # [X-Ray auto-fix] print(f"   {cat}:")
+            # [X-Ray auto-fix] print(f"      Total: {stats['total']}")
+            # [X-Ray auto-fix] print(f"      ✅ Crawlable: {stats['crawlable']}")
+            # [X-Ray auto-fix] print(f"      🛑 Blocked: {stats['blocked']}")
+            pass
         # Individual site results
-        print(f"\n📋 Individual Site Results:")
+        # [X-Ray auto-fix] print(f"\n📋 Individual Site Results:")
         print("-" * 80)
 
         for i, r in enumerate(self.results, 1):
             can_crawl = r.get("scan", {}).get("can_crawl", False)
             status = "✅ PASS" if can_crawl == r["expected_crawlable"] else "⚠️  UNEXPECTED"
 
-            print(f"\n{i}. {r['url']}")
-            print(f"   Category: {r['category']}")
-            print(f"   Expected: {'✅ Crawlable' if r['expected_crawlable'] else '🛑 Blocked'}")
-            print(f"   Actual: {'✅ Crawlable' if can_crawl else '🛑 Blocked'}")
-            print(f"   Result: {status}")
-
+            # [X-Ray auto-fix] print(f"\n{i}. {r['url']}")
+            # [X-Ray auto-fix] print(f"   Category: {r['category']}")
+            # [X-Ray auto-fix] print(f"   Expected: {'✅ Crawlable' if r['expected_crawlable'] else '🛑 Blocked'}")
+            # [X-Ray auto-fix] print(f"   Actual: {'✅ Crawlable' if can_crawl else '🛑 Blocked'}")
+            # [X-Ray auto-fix] print(f"   Result: {status}")
             if r.get("scan", {}).get("bot_protection"):
-                print(f"   Protection: {r['scan']['bot_protection']}")
-
+                # [X-Ray auto-fix] print(f"   Protection: {r['scan']['bot_protection']}")
+                pass
             if r.get("scrape", {}).get("success"):
-                docs = r['scrape']['documents_count']
-                print(f"   Scraped: {docs} pages")
-
+                docs = r["scrape"]["documents_count"]
+                # [X-Ray auto-fix] print(f"   Scraped: {docs} pages")
         # Save to JSON
         report_file = Path("test_results_real_world.json")
         with open(report_file, "w") as f:
-            json.dump({
-                "timestamp": self.timestamp,
-                "summary": {
-                    "total_tested": len(self.results),
-                    "by_category": categories
+            json.dump(
+                {
+                    "timestamp": self.timestamp,
+                    "summary": {"total_tested": len(self.results), "by_category": categories},
+                    "results": self.results,
                 },
-                "results": self.results
-            }, f, indent=2)
+                f,
+                indent=2,
+            )
 
         print(f"\n💾 Full results saved to: {report_file}")
 
@@ -224,9 +219,8 @@ def _test_site_part1_part3(self):
 def _test_site_part1(self, url):
     """Test site part 1."""
 
-
     if scan_report and not scan_report.can_crawl:
-        print(f"   ⏭️  SKIPPED - Pre-flight scan blocked")
+        # [X-Ray auto-fix] print(f"   ⏭️  SKIPPED - Pre-flight scan blocked")
         result["scrape"] = {"skipped": True, "reason": "pre-flight_blocked"}
     else:
         scraper = WebsiteScraper(url)
@@ -239,16 +233,15 @@ def _test_site_part1(self, url):
                 "stats": scrape_result.get("stats", {}),
                 "error": scrape_result.get("error"),
                 "warning": scrape_result.get("warning"),
-                "failed_urls_count": len(scrape_result.get("failed_urls", []))
+                "failed_urls_count": len(scrape_result.get("failed_urls", [])),
             }
 
             if scrape_result["success"]:
                 stats = scrape_result["stats"]
-                print(f"   ✅ SUCCESS")
-                print(f"   📄 Pages Saved: {stats['total_saved']}/{stats['total_visited']}")
-                print(f"   ⏱️  Total Time: {stats['total_time']:.2f}s")
-                print(f"   ⚡ Avg/Page: {stats['avg_time_per_page']:.2f}s")
-
+                # [X-Ray auto-fix] print(f"   ✅ SUCCESS")
+                # [X-Ray auto-fix] print(f"   📄 Pages Saved: {stats['total_saved']}/{stats['total_visited']}")
+                # [X-Ray auto-fix] print(f"   ⏱️  Total Time: {stats['total_time']:.2f}s")
+                # [X-Ray auto-fix] print(f"   ⚡ Avg/Page: {stats['avg_time_per_page']:.2f}s")
                 if scrape_result.get("warning"):
                     print(f"   ⚠️  Warning: {scrape_result['warning']}")
 
@@ -256,21 +249,21 @@ def _test_site_part1(self, url):
                 if scrape_result["documents"]:
                     first_doc = scrape_result["documents"][0]
                     content_preview = first_doc["content"][:200]
-                    print(f"\n   📄 Sample Content:")
-                    print(f"      Title: {first_doc.get('title', 'N/A')}")
-                    print(f"      Preview: {content_preview}...")
+                    # [X-Ray auto-fix] print(f"\n   📄 Sample Content:")
+                    # [X-Ray auto-fix] print(f"      Title: {first_doc.get('title', 'N/A')}")
+                    # [X-Ray auto-fix] print(f"      Preview: {content_preview}...")
             else:
-                print(f"   ❌ FAILED")
-                print(f"   Reason: {scrape_result.get('error', 'Unknown')}")
+                # [X-Ray auto-fix] print(f"   ❌ FAILED")
+                # [X-Ray auto-fix] print(f"   Reason: {scrape_result.get('error', 'Unknown')}")
                 if scrape_result.get("protection"):
-                    print(f"   🛡️  Protection: {scrape_result['protection']}")
-
+                    # [X-Ray auto-fix] print(f"   🛡️  Protection: {scrape_result['protection']}")
+                    pass
         except Exception as e:
-            print(f"   ❌ Scraping exception: {e}")
+            # [X-Ray auto-fix] print(f"   ❌ Scraping exception: {e}")
             result["scrape"] = {"error": str(e)}
 
     # Evaluation
-    print(f"\n📊 Evaluation")
+    # [X-Ray auto-fix] print(f"\n📊 Evaluation")
     print("-" * 40)
     _test_site_part1_part2(self, url)
     _test_site_part1_part3(self)
@@ -285,18 +278,14 @@ async def main():
         # Social Media (HIGH PROTECTION)
         ("https://www.linkedin.com/in/williamhgates/", False, "Social Media - LinkedIn"),
         ("https://www.facebook.com/zuck", False, "Social Media - Facebook"),
-
         # Government / SEC (SHOULD ALLOW)
         ("https://www.sec.gov/edgar/searchedgar/companysearch", True, "Government - SEC EDGAR"),
         ("https://www.sec.gov/news/pressreleases", True, "Government - SEC News"),
-
         # Financial Advice (MAY ALLOW)
         ("https://www.investopedia.com/terms/s/stock.asp", True, "Financial - Investopedia"),
         ("https://www.investopedia.com/financial-advisor-4427709", True, "Financial - Investopedia Advisor"),
-
         # Financial News (MIXED)
         ("https://www.bloomberg.com/markets", False, "Financial News - Bloomberg"),  # Paywall expected
-
         # Open Access (SHOULD ALLOW)
         ("https://en.wikipedia.org/wiki/Stock_market", True, "Reference - Wikipedia"),
     ]
@@ -307,9 +296,10 @@ async def main():
         except KeyboardInterrupt:
             print("\n\n⚠️  Test interrupted by user")
             break
-        except Exception as e:
-            print(f"\n❌ Test failed with exception: {e}")
+        except Exception:
+            # [X-Ray auto-fix] print(f"\n❌ Test failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
 
     # Generate final report

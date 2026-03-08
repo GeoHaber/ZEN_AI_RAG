@@ -7,26 +7,27 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RAGVerify")
 
+
 def test_rag():
     """Test rag."""
     try:
         from config_system import config
         from zena_mode.rag_pipeline import LocalRAG
-        
+
         rag_cache = config.BASE_DIR / "rag_cache"
         logger.info(f"Using RAG cache: {rag_cache}")
-        
+
         rag = LocalRAG(cache_dir=rag_cache)
         stats = rag.get_stats()
         logger.info(f"RAG Stats: {stats}")
-        
-        if stats.get('total_chunks', 0) == 0:
+
+        if stats.get("total_chunks", 0) == 0:
             logger.warning("No chunks found in RAG! Indexing a test document...")
             test_docs = [
                 {
                     "title": "ZenAI Info",
                     "content": "ZenAI is a professional AI assistant with advanced RAG capabilities and modular UI.",
-                    "url": "https://zenai.local/info"
+                    "url": "https://zenai.local/info",
                 }
             ]
             rag.build_index(test_docs)
@@ -38,7 +39,7 @@ def test_rag():
         query = "What is ZenAI?"
         logger.info(f"Searching for: '{query}'")
         results = rag.search(query, k=3)
-        
+
         if results:
             logger.info(f"Found {len(results)} results:")
             for i, res in enumerate(results, 1):
@@ -58,6 +59,7 @@ def test_rag():
 
     except Exception as e:
         logger.error(f"RAG Test Failed: {e}", exc_info=True)
+
 
 if __name__ == "__main__":
     test_rag()

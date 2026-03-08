@@ -2,6 +2,7 @@
 """
 Tests for feature_detection.py
 """
+
 import pytest
 from feature_detection import FeatureDetector, get_feature_detector, is_feature_available
 
@@ -26,20 +27,20 @@ class TestFeatureDetector:
         detector = get_feature_detector()
 
         # Check known features exist in cache
-        assert 'voice_stt' in detector._cache
-        assert 'voice_tts' in detector._cache
-        assert 'pdf' in detector._cache
-        assert 'rag' in detector._cache
-        assert 'audio' in detector._cache
+        assert "voice_stt" in detector._cache
+        assert "voice_tts" in detector._cache
+        assert "pdf" in detector._cache
+        assert "rag" in detector._cache
+        assert "audio" in detector._cache
 
     def test_get_status(self):
         """Test detailed status retrieval."""
         detector = get_feature_detector()
-        status = detector.get_status('pdf')
+        status = detector.get_status("pdf")
 
         assert status is not None
-        assert hasattr(status, 'available')
-        assert hasattr(status, 'module_name')
+        assert hasattr(status, "available")
+        assert hasattr(status, "module_name")
         assert isinstance(status.available, bool)
 
     def test_get_unavailable_reason(self):
@@ -68,9 +69,9 @@ class TestFeatureDetector:
         """Test handling of unknown feature."""
         detector = get_feature_detector()
 
-        assert not is_feature_available('nonexistent_feature')
-        assert detector.get_status('nonexistent_feature') is None
+        assert not is_feature_available("nonexistent_feature")
+        assert detector.get_status("nonexistent_feature") is None
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -6,37 +6,39 @@ import time
 from zena_mode.server import ThreadingHTTPServer, ZenAIOrchestrator
 from config_system import config
 
+
 def test_request_size_limit():
     """Verify that the 10MB request size limit is enforced."""
     # We'll use a local instance for testing to avoid messing with the main one
     test_port = 9010
-    
+
     def run_server():
         """Run server."""
         try:
-            server = ThreadingHTTPServer(('127.0.0.1', test_port), ZenAIOrchestrator)
+            server = ThreadingHTTPServer(("127.0.0.1", test_port), ZenAIOrchestrator)
             server.serve_forever()
         except Exception:
             pass
 
     t = threading.Thread(target=run_server, daemon=True)
     t.start()
-    time.sleep(1) # Wait for startup
+    time.sleep(1)  # Wait for startup
 
     # Payload > 10MB (Assuming config.MAX_FILE_SIZE is 10 * 1024 * 1024)
     # Let's check the config value first in the test
     limit = config.MAX_FILE_SIZE
     large_data = "x" * (limit + 1024)
-    
+
     try:
         url = f"http://127.0.0.1:{test_port}/api/chat"
         resp = requests.post(url, data=json.dumps({"message": large_data}, timeout=30), timeout=5)
         assert resp.status_code == 413, f"Expected 413 for large payload, got {resp.status_code}"
     except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError):
         # This is also a success: the server rejected the large payload by dropping the connection
-        pass 
+        pass
     finally:
-        pass # In a real test we'd kill the server, but for now we let it die with the thread
+        pass  # In a real test we'd kill the server, but for now we let it die with the thread
+
 
 def test_local_only_bind():
     """Verify that the server rejects non-local binds if possible to test."""
@@ -48,19 +50,23 @@ def test_local_only_bind():
         # If it responds at all, it's alive. status_code 200 or 404 is fine as long as connection is made.
         assert resp.status_code in [200, 404]
     except requests.exceptions.ConnectionError:
-        # If the server isn't running, this is expected in some environments, 
+        # If the server isn't running, this is expected in some environments,
         # but for a 'tough' test we usually expect the server to be up or start it.
         pytest.skip("Server not running on mgmt_port")
+
 
 def test_invalid_json_handling():
     """Verify that malformed JSON doesn't crash the orchestrator."""
     test_port = 9011
+
     def run_server():
         """Run server."""
         try:
-            server = ThreadingHTTPServer(('127.0.0.1', test_port), ZenAIOrchestrator)
+            server = ThreadingHTTPServer(("127.0.0.1", test_port), ZenAIOrchestrator)
             server.serve_forever()
-        except Exception: pass
+        except Exception:
+            pass
+
     t = threading.Thread(target=run_server, daemon=True)
     t.start()
     time.sleep(1)

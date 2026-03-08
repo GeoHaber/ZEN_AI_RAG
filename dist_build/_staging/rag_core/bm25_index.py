@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +61,7 @@ class BM25Index:
 
         Returns the number of documents indexed.
         """
-        self._corpus_tokens = [
-            tokenize(doc, code_aware=self.code_aware) for doc in documents
-        ]
+        self._corpus_tokens = [tokenize(doc, code_aware=self.code_aware) for doc in documents]
 
         # Guard: empty corpus or all-empty tokens → nothing to index
         corpus_has_tokens = any(len(t) > 0 for t in self._corpus_tokens)
@@ -74,6 +72,7 @@ class BM25Index:
 
         try:
             from rank_bm25 import BM25Okapi
+
             self._bm25 = BM25Okapi(self._corpus_tokens)
             self._has_rank_bm25 = True
         except ImportError:

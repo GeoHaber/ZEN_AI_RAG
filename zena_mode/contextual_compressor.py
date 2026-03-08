@@ -10,6 +10,7 @@ are forwarded to the LLM, reducing token usage while preserving accuracy.
 
 Strategy: keyword-overlap sentence scoring with order-preserving selection.
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CompressionStats:
     """Track compression performance metrics."""
+
     total_chars_in: int = 0
     total_chars_out: int = 0
     total_chunks_in: int = 0
@@ -39,6 +41,7 @@ class CompressionStats:
 @dataclass
 class CompressedChunk:
     """One compressed chunk with metadata."""
+
     text: str
     score: float = 0.0
     source: str = ""
@@ -115,13 +118,15 @@ class ContextualCompressor:
                 if not overlap:
                     continue
                 score = overlap / max(len(keywords), 1)
-                scored.append({
-                    "sentence": sentence,
-                    "score": score,
-                    "source": source,
-                    "chunk_idx": idx,
-                    "metadata": meta,
-                })
+                scored.append(
+                    {
+                        "sentence": sentence,
+                        "score": score,
+                        "source": source,
+                        "chunk_idx": idx,
+                        "metadata": meta,
+                    }
+                )
 
         if not scored:
             return self._truncate_fallback(chunks)
@@ -168,7 +173,10 @@ class ContextualCompressor:
         ratio_pct = f"{self.stats.ratio:.0%}"
         logger.info(
             "Compressed %d chunks → %d sentences (ratio %s, budget remaining %d tokens)",
-            len(chunks), len(results), ratio_pct, token_budget,
+            len(chunks),
+            len(results),
+            ratio_pct,
+            token_budget,
         )
         return results
 
@@ -186,12 +194,14 @@ class ContextualCompressor:
                 char_limit = budget * 4
                 text = text[:char_limit]
                 est = estimate_tokens(text)
-            results.append(CompressedChunk(
-                text=text,
-                score=0.0,
-                source=chunk.get("source", ""),
-                original_index=idx,
-            ))
+            results.append(
+                CompressedChunk(
+                    text=text,
+                    score=0.0,
+                    source=chunk.get("source", ""),
+                    original_index=idx,
+                )
+            )
             budget -= est
             if budget <= 0:
                 break

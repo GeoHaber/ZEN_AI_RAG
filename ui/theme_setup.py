@@ -1,14 +1,15 @@
 from nicegui import ui
 
+
 def setup_app_theme():
     """Configures the application theme, colors, and CSS."""
     # Theme & Layout (Zena Style - Light & Professional)
-    ui.colors(primary='#3b82f6', secondary='#6c757d', accent='#17a2b8', dark=False)
+    ui.colors(primary="#3b82f6", secondary="#6c757d", accent="#17a2b8", dark=False)
     # Set light background
-    ui.query('body').classes('bg-gray-50 dark:bg-slate-900')
-    
+    ui.query("body").classes("bg-gray-50 dark:bg-slate-900")
+
     # CSS Fixes for Markdown Headers and Code Blocks in Chat
-    ui.add_head_html('''
+    ui.add_head_html("""
         <script>
             // Sync Quasar Dark Mode (body--dark) with Tailwind Dark Mode (dark class on html)
             function syncDarkMode() {
@@ -377,4 +378,4 @@ def setup_app_theme():
                 margin: 0 auto;
             }
         </style>
-    ''')
+    """)

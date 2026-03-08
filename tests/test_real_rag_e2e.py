@@ -102,10 +102,12 @@ def rag_instance(temp_rag_dir):
     """
     # Override config to use 'fast' model for speed
     from config_system import config
+
     original_model = config.rag.embedding_model
     config.rag.embedding_model = "fast"
 
     from zena_mode.rag_pipeline import LocalRAG
+
     rag = LocalRAG(cache_dir=temp_rag_dir)
 
     # Pre-index rich content so search tests don't each scrape + index
@@ -120,9 +122,7 @@ def rag_instance(temp_rag_dir):
         logger.warning("Failed to scrape Wikipedia full page: %s", exc)
     if docs:
         rag.build_index(docs)
-    logger.info(
-        "Pre-indexed %d docs, stats: %s", len(docs), rag.get_stats()
-    )
+    logger.info("Pre-indexed %d docs, stats: %s", len(docs), rag.get_stats())
 
     yield rag
 
@@ -167,6 +167,7 @@ def _scrape_page(url: str) -> Dict:
 #  PHASE 1 — WEB SCRAPING TESTS (no ML models needed)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestWebScraping:
     """Test that we can scrape real public websites and get useful content."""
 
@@ -183,10 +184,9 @@ class TestWebScraping:
         content_lower = doc["content"].lower()
 
         # These facts are on the Python About page and have been stable for years
-        assert any(
-            kw in content_lower
-            for kw in ["guido", "programming language", "open source", "interpreted"]
-        ), "Should mention key Python facts (Guido, open source, interpreted, etc.)"
+        assert any(kw in content_lower for kw in ["guido", "programming language", "open source", "interpreted"]), (
+            "Should mention key Python facts (Guido, open source, interpreted, etc.)"
+        )
 
     def test_scrape_httpbin(self):
         """Scrape httpbin.org which has a known structure."""
@@ -216,6 +216,7 @@ class TestWebScraping:
 #  PHASE 2 — RAG INDEXING TESTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestRAGIndexing:
     """Test indexing scraped content into the vector database."""
 
@@ -228,45 +229,34 @@ class TestRAGIndexing:
     def test_index_multiple_documents(self, rag_instance):
         """Index an additional Wikipedia summary and verify chunk count grows."""
         initial_stats = rag_instance.get_stats()
-        initial_count = initial_stats.get(
-            "total_chunks", initial_stats.get("points_count", 0)
-        )
+        initial_count = initial_stats.get("total_chunks", initial_stats.get("points_count", 0))
 
         # Fetch Wikipedia summary as a new (different) document
         wiki_doc = _fetch_wiki_summary()
         rag_instance.build_index([wiki_doc])
 
         final_stats = rag_instance.get_stats()
-        final_count = final_stats.get(
-            "total_chunks", final_stats.get("points_count", 0)
-        )
-        assert final_count >= initial_count, (
-            f"Chunk count should not shrink: {initial_count} → {final_count}"
-        )
+        final_count = final_stats.get("total_chunks", final_stats.get("points_count", 0))
+        assert final_count >= initial_count, f"Chunk count should not shrink: {initial_count} → {final_count}"
 
     def test_deduplication_prevents_double_indexing(self, rag_instance):
         """Indexing the same content again should not create duplicates."""
         stats_before = rag_instance.get_stats()
-        count_before = stats_before.get(
-            "total_chunks", stats_before.get("points_count", 0)
-        )
+        count_before = stats_before.get("total_chunks", stats_before.get("points_count", 0))
 
         # Re-index the same about page
         doc = _scrape_page(PYTHON_ABOUT_URL)
         rag_instance.build_index([doc])
 
         stats_after = rag_instance.get_stats()
-        count_after = stats_after.get(
-            "total_chunks", stats_after.get("points_count", 0)
-        )
-        assert count_after == count_before, (
-            f"Dedup should prevent growth: {count_before} → {count_after}"
-        )
+        count_after = stats_after.get("total_chunks", stats_after.get("points_count", 0))
+        assert count_after == count_before, f"Dedup should prevent growth: {count_before} → {count_after}"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  PHASE 3 — SEARCH & RETRIEVAL TESTS (the tough ones)
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestRAGSearch:
     """Query the indexed content and verify we get correct, relevant results."""
@@ -282,47 +272,32 @@ class TestRAGSearch:
 
     def test_hybrid_search_returns_ranked_results(self, rag_instance):
         """Hybrid search should return results with fusion scores."""
-        results = rag_instance.hybrid_search(
-            "Who created Python?", k=5, alpha=0.5
-        )
+        results = rag_instance.hybrid_search("Who created Python?", k=5, alpha=0.5)
         assert len(results) > 0, "Hybrid search should return results"
 
         # Results should have score fields
         first = results[0]
-        has_score = (
-            "fusion_score" in first
-            or "rerank_score" in first
-            or "score" in first
-        )
+        has_score = "fusion_score" in first or "rerank_score" in first or "score" in first
         assert has_score, f"First result should have a score field: {first.keys()}"
 
     def test_search_about_guido(self, rag_instance):
         """Query about Python's creator — the answer should mention Guido."""
-        results = rag_instance.hybrid_search(
-            "Who created the Python programming language?", k=5
-        )
+        results = rag_instance.hybrid_search("Who created the Python programming language?", k=5)
         assert len(results) > 0
 
         combined_text = " ".join(r.get("text", "") for r in results).lower()
         assert "guido" in combined_text, (
-            f"Results for 'who created Python' should mention Guido. "
-            f"Got top result: {results[0].get('text', '')[:200]}"
+            f"Results for 'who created Python' should mention Guido. Got top result: {results[0].get('text', '')[:200]}"
         )
 
     def test_search_about_open_source(self, rag_instance):
         """Query about Python's licensing — should confirm open source."""
-        results = rag_instance.hybrid_search(
-            "Is Python open source?", k=5
-        )
+        results = rag_instance.hybrid_search("Is Python open source?", k=5)
         assert len(results) > 0
 
         combined_text = " ".join(r.get("text", "") for r in results).lower()
-        assert any(
-            phrase in combined_text
-            for phrase in ["open source", "open-source", "free", "license"]
-        ), (
-            f"Results should mention open source/free/license. "
-            f"Got: {combined_text[:300]}"
+        assert any(phrase in combined_text for phrase in ["open source", "open-source", "free", "license"]), (
+            f"Results should mention open source/free/license. Got: {combined_text[:300]}"
         )
 
     def test_search_irrelevant_query_low_confidence(self, rag_instance):
@@ -331,16 +306,11 @@ class TestRAGSearch:
         bad_results = rag_instance.search("recipe for chocolate cake baking", k=3)
 
         if good_results and bad_results:
-            good_score = good_results[0].get(
-                "rerank_score", good_results[0].get("score", 0)
-            )
-            bad_score = bad_results[0].get(
-                "rerank_score", bad_results[0].get("score", 0)
-            )
+            good_score = good_results[0].get("rerank_score", good_results[0].get("score", 0))
+            bad_score = bad_results[0].get("rerank_score", bad_results[0].get("score", 0))
             # The relevant query should score higher than the irrelevant one
             assert good_score > bad_score, (
-                f"Relevant query score ({good_score:.4f}) should be higher "
-                f"than irrelevant ({bad_score:.4f})"
+                f"Relevant query score ({good_score:.4f}) should be higher than irrelevant ({bad_score:.4f})"
             )
 
     def test_search_respects_k_limit(self, rag_instance):
@@ -354,6 +324,7 @@ class TestRAGSearch:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  PHASE 4 — RAG CONTEXT BUILDING & COMPRESSION
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestRAGContextBuilding:
     """Test the context compression and building pipeline."""
@@ -378,14 +349,10 @@ class TestRAGContextBuilding:
         qp = get_query_processor()
 
         factual = qp.process_query("What is the capital of France?")
-        assert factual["intent"] == "factual", (
-            f"'What is...' should be factual, got {factual['intent']}"
-        )
+        assert factual["intent"] == "factual", f"'What is...' should be factual, got {factual['intent']}"
 
         comparison = qp.process_query("Compare Python and Java")
-        assert comparison["intent"] == "comparison", (
-            f"'Compare...' should be comparison, got {comparison['intent']}"
-        )
+        assert comparison["intent"] == "comparison", f"'Compare...' should be comparison, got {comparison['intent']}"
 
     def test_contextual_compressor_reduces_size(self):
         """ContextualCompressor should reduce chunk count while keeping relevance."""
@@ -428,6 +395,7 @@ class TestRAGContextBuilding:
 #  PHASE 5 — FULL PIPELINE INTEGRATION (scrape → index → query → verify)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestFullPipelineIntegration:
     """End-to-end: scrape a real site, index it, ask questions, verify answers."""
 
@@ -448,14 +416,18 @@ class TestFullPipelineIntegration:
         combined = " ".join(r.get("text", "") for r in results).lower()
         # The About page describes Python's features
         feature_keywords = [
-            "intuitive", "interpreted", "readable", "object", "free",
-            "portable", "dynamic", "library", "typing",
+            "intuitive",
+            "interpreted",
+            "readable",
+            "object",
+            "free",
+            "portable",
+            "dynamic",
+            "library",
+            "typing",
         ]
         matches = sum(1 for kw in feature_keywords if kw in combined)
-        assert matches >= 2, (
-            f"Expected at least 2 feature keywords, found {matches}. "
-            f"Text: {combined[:500]}"
-        )
+        assert matches >= 2, f"Expected at least 2 feature keywords, found {matches}. Text: {combined[:500]}"
 
     def test_e2e_wikipedia_summary_query(self):
         """Query 'when was Python first released?' against the full Wikipedia page."""
@@ -465,36 +437,25 @@ class TestFullPipelineIntegration:
 
         combined = " ".join(r.get("text", "") for r in results).lower()
         # The full Wikipedia page mentions 1991, February, Guido
-        assert any(
-            yr in combined for yr in ["1991", "1989", "february", "guido"]
-        ), (
+        assert any(yr in combined for yr in ["1991", "1989", "february", "guido"]), (
             f"Results should mention Python's release year. Got: {combined[:400]}"
         )
 
     def test_e2e_multi_source_cross_reference(self):
         """Cross-query: find both creator info and feature info from indexed content."""
         # Both python.org and Wikipedia are already indexed by the fixture
-        results = self.rag.hybrid_search(
-            "Python programming language creator and features", k=5
-        )
+        results = self.rag.hybrid_search("Python programming language creator and features", k=5)
         assert len(results) >= 2, "Should get results from multiple chunks"
 
         # Query that spans both sources
-        results = self.rag.hybrid_search(
-            "Python programming language creator and features", k=5
-        )
+        results = self.rag.hybrid_search("Python programming language creator and features", k=5)
         assert len(results) >= 2, "Should get results from multiple chunks"
 
         combined = " ".join(r.get("text", "") for r in results).lower()
         # Should find both creator info and feature info
         has_creator = "guido" in combined or "van rossum" in combined
-        has_features = any(
-            kw in combined
-            for kw in ["interpreted", "readable", "library", "object", "dynamic"]
-        )
-        assert has_creator or has_features, (
-            f"Cross-source query should find creator or features. Got: {combined[:500]}"
-        )
+        has_features = any(kw in combined for kw in ["interpreted", "readable", "library", "object", "dynamic"])
+        assert has_creator or has_features, f"Cross-source query should find creator or features. Got: {combined[:500]}"
 
     def test_e2e_reranking_improves_precision(self):
         """Reranked results should be more precise than un-reranked."""
@@ -519,18 +480,12 @@ class TestFullPipelineIntegration:
                     pass  # Both found it — reranker maintained precision
                 else:
                     # Neither found Guido in top-1; check all results
-                    combined_reranked = " ".join(
-                        r.get("text", "") for r in reranked_results
-                    ).lower()
+                    combined_reranked = " ".join(r.get("text", "") for r in reranked_results).lower()
                     # Even if Guido is not in results, the test is about
                     # reranking being at least as good — just verify
                     # reranked top-1 score >= raw top-1 score
-                    r_score = reranked_results[0].get(
-                        "rerank_score", reranked_results[0].get("score", 0)
-                    )
-                    raw_score = raw_results[0].get(
-                        "rerank_score", raw_results[0].get("score", 0)
-                    )
+                    r_score = reranked_results[0].get("rerank_score", reranked_results[0].get("score", 0))
+                    raw_score = raw_results[0].get("rerank_score", raw_results[0].get("score", 0))
                     assert r_score >= raw_score or "guido" in combined_reranked, (
                         f"Reranked should be >= raw or mention Guido. "
                         f"Scores: reranked={r_score:.4f}, raw={raw_score:.4f}"
@@ -540,6 +495,7 @@ class TestFullPipelineIntegration:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  PHASE 6 — STRESS & EDGE CASES
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestEdgeCases:
     """Test edge cases and robustness."""

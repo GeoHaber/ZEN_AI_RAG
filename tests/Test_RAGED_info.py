@@ -11,10 +11,8 @@ sys.path.append(os.getcwd())
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Test_RAGED")
 
-@pytest.mark.skipif(
-    not Path("rag_cache/rag.db").exists(), 
-    reason="Requires existing RAG cache with data"
-)
+
+@pytest.mark.skipif(not Path("rag_cache/rag.db").exists(), reason="Requires existing RAG cache with data")
 def test_rag_retrieval_content():
     """
     Diagnose RAG Quality:
@@ -22,8 +20,7 @@ def test_rag_retrieval_content():
     2. Searches for 'news' (or generic query).
     3. Prints the EXACT text chunks the LLM would see.
     """
-    print("\nXXX DIAGNOSTIC START XXX")
-    
+    # [X-Ray auto-fix] print("\nXXX DIAGNOSTIC START XXX")
     try:
         from zena_mode import LocalRAG
     except ImportError:
@@ -35,34 +32,33 @@ def test_rag_retrieval_content():
 
     rag = LocalRAG(cache_dir=rag_cache)
     rag.load(rag_cache)
-    
+
     if rag.index is None or rag.index.ntotal == 0:
         pytest.skip("RAG index is empty - no data to test")
-    
-    print(f"SUCCESS: Loaded RAG Index. Total vectors: {rag.index.ntotal}")
 
+    # [X-Ray auto-fix] print(f"SUCCESS: Loaded RAG Index. Total vectors: {rag.index.ntotal}")
     # Simulate User Query
     query = "what are the news on thet site"
-    print(f"\nQUERY: '{query}'")
-    
+    # [X-Ray auto-fix] print(f"\nQUERY: '{query}'")
     results = rag.search(query, k=5)
-    
+
     if not results:
         print("RESULT: No chunks found.")
     else:
-        print(f"RESULT: Found {len(results)} chunks.\n")
+        # [X-Ray auto-fix] print(f"RESULT: Found {len(results)} chunks.\n")
         for i, chunk in enumerate(results, 1):
-            title = chunk.get('title', 'No Title')
-            text = chunk.get('text', '[EMPTY TEXT]')
-            url = chunk.get('url', 'No URL')
-            
-            print(f"--- Chunk {i} ---")
-            print(f"Title: {title}")
-            print(f"URL:   {url}")
-            print(f"Text Length: {len(text)} chars")
-            print(f"PREVIEW: {text[:500].replace(chr(10), ' ')}...") 
+            title = chunk.get("title", "No Title")
+            text = chunk.get("text", "[EMPTY TEXT]")
+            url = chunk.get("url", "No URL")
+
+            # [X-Ray auto-fix] print(f"--- Chunk {i} ---")
+            # [X-Ray auto-fix] print(f"Title: {title}")
+            # [X-Ray auto-fix] print(f"URL:   {url}")
+            # [X-Ray auto-fix] print(f"Text Length: {len(text)} chars")
+            # [X-Ray auto-fix] print(f"PREVIEW: {text[:500].replace(chr(10), ' ')}...")
             print("----------------")
             sys.stdout.flush()
+
 
 if __name__ == "__main__":
     test_rag_retrieval_content()

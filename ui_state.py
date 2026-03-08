@@ -9,13 +9,14 @@ class UIState:
     Methods operate under an internal lock so callers from threads
     or async tasks can safely mutate and read shared structures.
     """
+
     def __init__(self, initial: dict | None = None):
         """Initialize instance."""
         self._lock = threading.RLock()
         self._state: dict[str, Any] = dict(initial or {})
         # Flag used by UI tests and safe update helpers to simulate
         # client connectivity. Default is connected/valid.
-        self._state.setdefault('is_valid', True)
+        self._state.setdefault("is_valid", True)
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get."""
@@ -34,13 +35,13 @@ class UIState:
         """Atomically update model options and trigger a UI update if widget present."""
         with self._lock:
             # store a copy
-            self._state['model_select_options'] = list(models)
-            sel = self._state.get('model_select')
+            self._state["model_select_options"] = list(models)
+            sel = self._state.get("model_select")
             if sel is not None:
                 try:
                     sel.options = list(models)
                     # some UI widgets provide an update() method; call if available
-                    if hasattr(sel, 'update'):
+                    if hasattr(sel, "update"):
                         sel.update()
                 except Exception:
                     # UI update failure should not crash the caller
@@ -52,10 +53,10 @@ class UIState:
         Returns True when the update was allowed, False otherwise.
         """
         with self._lock:
-            if not self._state.get('is_valid', True):
+            if not self._state.get("is_valid", True):
                 return False
             try:
-                if hasattr(element, 'update'):
+                if hasattr(element, "update"):
                     element.update()
                 return True
             except Exception:
@@ -67,12 +68,12 @@ class UIState:
         Returns False if the client is considered disconnected.
         """
         with self._lock:
-            if not self._state.get('is_valid', True):
+            if not self._state.get("is_valid", True):
                 return False
             # If a real scroll container exists, attempt a safe scroll operation.
-            scroll = self._state.get('scroll_container')
+            scroll = self._state.get("scroll_container")
             try:
-                if scroll and hasattr(scroll, 'scroll_to'):
+                if scroll and hasattr(scroll, "scroll_to"):
                     scroll.scroll_to(percent=1.0)
                 return True
             except Exception:
@@ -81,29 +82,29 @@ class UIState:
     def clear_chat(self) -> None:
         """Clear chat container and history atomically."""
         with self._lock:
-            cont = self._state.get('chat_container')
+            cont = self._state.get("chat_container")
             if isinstance(cont, list):
                 cont.clear()
-            hist = self._state.get('chat_history')
+            hist = self._state.get("chat_history")
             if isinstance(hist, list):
                 hist.clear()
 
     def append_chat_message(self, msg: Any) -> None:
         """Append a message to both container and history in one atomic step."""
         with self._lock:
-            cont = self._state.setdefault('chat_container', [])
-            hist = self._state.setdefault('chat_history', [])
+            cont = self._state.setdefault("chat_container", [])
+            hist = self._state.setdefault("chat_history", [])
             cont.append(msg)
             hist.append(msg)
 
     def push_engagement(self, key: str, params: dict | None = None) -> None:
         """Push an engagement message key (localized) to the UI state."""
         with self._lock:
-            msgs = self._state.setdefault('engagement_messages', [])
-            msgs.append({'key': key, 'params': params or {}, 'ts': time.time()})
+            msgs = self._state.setdefault("engagement_messages", [])
+            msgs.append({"key": key, "params": params or {}, "ts": time.time()})
 
     def set_animation(self, name: str, value: bool) -> None:
         """Enable or disable a named animation (e.g., 'thinking')."""
         with self._lock:
-            an = self._state.setdefault('animations', {})
+            an = self._state.setdefault("animations", {})
             an[name] = bool(value)

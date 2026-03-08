@@ -3,6 +3,7 @@
 web_scanner.py - Intelligent Web Crawlability & Ethics Scanner
 Checks robots.txt, anti-bot protection, and permission meta-tags.
 """
+
 import httpx
 import asyncio
 from urllib.robotparser import RobotFileParser
@@ -15,8 +16,10 @@ from utils import safe_print
 
 logger = logging.getLogger("WebScanner")
 
+
 class CrawlabilityReport:
     """CrawlabilityReport class."""
+
     def __init__(self, url: str):
         """Initialize instance."""
         self.url = url
@@ -24,7 +27,7 @@ class CrawlabilityReport:
         self.can_crawl = True
         self.reason = "Ready to crawl"
         self.requires_js = False
-        self.bot_protection = None # e.g., 'Cloudflare', 'Captcha'
+        self.bot_protection = None  # e.g., 'Cloudflare', 'Captcha'
         self.delay_suggestion = 1.0
         self.metadata = {}
 
@@ -32,24 +35,25 @@ class CrawlabilityReport:
         status = "✅ ALLOWED" if self.can_crawl else "❌ BLOCKED"
         return f"[{status}] {self.url} - {self.reason} (Protection: {self.bot_protection})"
 
+
 class WebCrawlScanner:
     """
-    Scans a target URL to determine if it is ethical and technically 
+    Scans a target URL to determine if it is ethical and technically
     possible to crawl using lightweight techniques.
     """
-    
+
     def __init__(self, user_agent: str = "ZenAI-Bot/1.0"):
         self.user_agent = user_agent
-        self.robot_parsers = {} # Cache for RobotFileParser objects
+        self.robot_parsers = {}  # Cache for RobotFileParser objects
 
     async def get_robots_parser(self, domain: str) -> RobotFileParser:
         """Fetch and parse robots.txt for a given domain."""
         if domain in self.robot_parsers:
             return self.robot_parsers[domain]
-        
+
         rp = RobotFileParser()
         robots_url = f"https://{domain}/robots.txt"
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(robots_url, timeout=5.0)
@@ -61,7 +65,7 @@ class WebCrawlScanner:
         except Exception as e:
             logger.warning(f"Failed to fetch robots.txt for {domain}: {e}")
             rp.allow_all = True
-            
+
         self.robot_parsers[domain] = rp
         return rp
 
@@ -70,7 +74,7 @@ class WebCrawlScanner:
         Perform a comprehensive scan of the URL for crawlability.
         """
         report = CrawlabilityReport(url)
-        
+
         # 1. Check robots.txt
         rp = await self.get_robots_parser(report.domain)
         if not rp.can_fetch(self.user_agent, url):
@@ -82,26 +86,31 @@ class WebCrawlScanner:
         try:
             headers = {
                 "User-Agent": self.user_agent,
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             }
             async with httpx.AsyncClient(follow_redirects=True) as client:
                 resp = await client.get(url, headers=headers, timeout=10.0)
-                
+
                 # Check status code
                 high_difficulty_codes = [403, 429, 999, 1020, 406]
                 if resp.status_code in high_difficulty_codes:
                     report.can_crawl = False
                     report.metadata["high_difficulty"] = True
-                    if resp.status_code == 403: report.reason = "Forbidden (403)"
-                    elif resp.status_code == 429: report.reason = "Rate Limited (429)"
-                    elif resp.status_code == 999: report.reason = "Bot Block (LinkedIn/Generic)"
-                    elif resp.status_code == 1020: report.reason = "Access Denied (Cloudflare 1020)"
-                    else: report.reason = f"Block Status ({resp.status_code})"
+                    if resp.status_code == 403:
+                        report.reason = "Forbidden (403)"
+                    elif resp.status_code == 429:
+                        report.reason = "Rate Limited (429)"
+                    elif resp.status_code == 999:
+                        report.reason = "Bot Block (LinkedIn/Generic)"
+                    elif resp.status_code == 1020:
+                        report.reason = "Access Denied (Cloudflare 1020)"
+                    else:
+                        report.reason = f"Block Status ({resp.status_code})"
                     return report
-                
+
                 # Check for anti-bot content & platform-specific filters
                 html = resp.text.lower()
-                
+
                 # Broad Anti-Bot Detection Patterns (Improvement)
                 protection_patterns = {
                     "cloudflare": "Cloudflare Ray ID",
@@ -112,9 +121,9 @@ class WebCrawlScanner:
                     "captcha": "CHALLENGE_CAPTCHA",
                     "g-recaptcha": "Google ReCaptcha",
                     "security check": "Generic AI/Bot Firewall",
-                    "access denied": "Generic Gateway Filter"
+                    "access denied": "Generic Gateway Filter",
                 }
-                
+
                 for pattern, label in protection_patterns.items():
                     if pattern not in html:
                         continue
@@ -138,21 +147,21 @@ class WebCrawlScanner:
                     report.reason = "Captcha detected"
                 elif "security check" in html:
                     report.bot_protection = "Generic Security"
-                
+
                 # Check for Cookie Banners (Improvement)
                 cookie_keywords = ["cookie consent", "refuse all", "reject all", "allow all", "manage cookies"]
                 if any(kw in html for kw in cookie_keywords):
                     report.metadata["cookie_banner_detected"] = True
-                
+
                 # Parse meta tags for robots instructions
-                soup = BeautifulSoup(resp.text, 'html.parser')
+                soup = BeautifulSoup(resp.text, "html.parser")
                 meta_robots = soup.find("meta", attrs={"name": "robots"})
                 if meta_robots and meta_robots.get("content"):
                     content = meta_robots["content"].lower()
                     if "noindex" in content or "nocrawl" in content:
                         report.can_crawl = False
                         report.reason = "Blocked by meta-robots tag"
-                
+
                 # Check for legal/ack requirements
                 acknowledgments = ["terms of service", "user agreement", "privacy policy", "do not scrape"]
                 for ack in acknowledgments:
@@ -163,13 +172,14 @@ class WebCrawlScanner:
             report.can_crawl = False
             report.reason = "Domain not found (Check for typos)"
         except httpx.ConnectError:
-             report.can_crawl = False
-             report.reason = "Connection failed (Server offline or invalid URL)"
+            report.can_crawl = False
+            report.reason = "Connection failed (Server offline or invalid URL)"
         except Exception as e:
             report.can_crawl = False
             report.reason = f"Connection error: {str(e)}"
-            
+
         return report
+
 
 async def test_scanner():
     """Test scanner."""
@@ -177,11 +187,12 @@ async def test_scanner():
     urls = [
         "https://www.google.com/search?q=test",
         "https://en.wikipedia.org/wiki/Python_(programming_language)",
-        "https://github.com/trending"
+        "https://github.com/trending",
     ]
     for url in urls:
         report = await scanner.scan(url)
         safe_print(report)
+
 
 if __name__ == "__main__":
     asyncio.run(test_scanner())

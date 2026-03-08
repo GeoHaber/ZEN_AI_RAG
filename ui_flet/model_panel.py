@@ -21,34 +21,52 @@ logger = logging.getLogger(__name__)
 # ── Static model info (fallback when backend unavailable) ────────────────────
 MODEL_INFO = {
     "qwen2.5-coder-7b": {
-        "name": "Qwen 2.5 Coder 7B", "icon": "🧑‍💻",
-        "desc": "Excellent for code generation", "size": "4.7 GB",
-        "tags": ["code", "fast"], "quality": "⭐⭐⭐⭐",
+        "name": "Qwen 2.5 Coder 7B",
+        "icon": "🧑‍💻",
+        "desc": "Excellent for code generation",
+        "size": "4.7 GB",
+        "tags": ["code", "fast"],
+        "quality": "⭐⭐⭐⭐",
     },
     "llama-3.2-3b": {
-        "name": "Llama 3.2 3B", "icon": "🦙",
-        "desc": "Meta's lightweight model", "size": "2.0 GB",
-        "tags": ["general", "fast"], "quality": "⭐⭐⭐",
+        "name": "Llama 3.2 3B",
+        "icon": "🦙",
+        "desc": "Meta's lightweight model",
+        "size": "2.0 GB",
+        "tags": ["general", "fast"],
+        "quality": "⭐⭐⭐",
     },
     "phi-3-mini": {
-        "name": "Phi-3 Mini", "icon": "🔬",
-        "desc": "Microsoft's efficient model", "size": "2.3 GB",
-        "tags": ["general", "efficient"], "quality": "⭐⭐⭐",
+        "name": "Phi-3 Mini",
+        "icon": "🔬",
+        "desc": "Microsoft's efficient model",
+        "size": "2.3 GB",
+        "tags": ["general", "efficient"],
+        "quality": "⭐⭐⭐",
     },
     "mistral-7b": {
-        "name": "Mistral 7B", "icon": "🌊",
-        "desc": "Mistral AI's flagship", "size": "4.1 GB",
-        "tags": ["general", "quality"], "quality": "⭐⭐⭐⭐",
+        "name": "Mistral 7B",
+        "icon": "🌊",
+        "desc": "Mistral AI's flagship",
+        "size": "4.1 GB",
+        "tags": ["general", "quality"],
+        "quality": "⭐⭐⭐⭐",
     },
     "deepseek-coder-6.7b": {
-        "name": "DeepSeek Coder 6.7B", "icon": "🐳",
-        "desc": "Strong code model", "size": "3.8 GB",
-        "tags": ["code", "quality"], "quality": "⭐⭐⭐⭐",
+        "name": "DeepSeek Coder 6.7B",
+        "icon": "🐳",
+        "desc": "Strong code model",
+        "size": "3.8 GB",
+        "tags": ["code", "quality"],
+        "quality": "⭐⭐⭐⭐",
     },
     "codellama-7b": {
-        "name": "CodeLlama 7B", "icon": "🦙",
-        "desc": "Meta's code-focused model", "size": "3.8 GB",
-        "tags": ["code"], "quality": "⭐⭐⭐",
+        "name": "CodeLlama 7B",
+        "icon": "🦙",
+        "desc": "Meta's code-focused model",
+        "size": "3.8 GB",
+        "tags": ["code"],
+        "quality": "⭐⭐⭐",
     },
 }
 
@@ -68,8 +86,7 @@ def _model_card(
     return ft.Container(
         content=ft.Column(
             [
-                ft.Text(info.get("icon", "🤖"), size=32,
-                        text_align=ft.TextAlign.CENTER),
+                ft.Text(info.get("icon", "🤖"), size=32, text_align=ft.TextAlign.CENTER),
                 ft.Text(
                     info.get("name", key),
                     size=14,
@@ -77,13 +94,11 @@ def _model_card(
                     color=TH.accent if is_active else TH.text,
                     text_align=ft.TextAlign.CENTER,
                 ),
-                ft.Text(info.get("size", ""), size=11, color=TH.muted,
-                        text_align=ft.TextAlign.CENTER),
-                ft.Text(info.get("desc", ""), size=11, color=TH.dim,
-                        text_align=ft.TextAlign.CENTER),
+                ft.Text(info.get("size", ""), size=11, color=TH.muted, text_align=ft.TextAlign.CENTER),
+                ft.Text(info.get("desc", ""), size=11, color=TH.dim, text_align=ft.TextAlign.CENTER),
                 tag_chips,
                 ft.Divider(color=TH.divider, height=8),
-                ft.ElevatedButton(
+                ft.Button(
                     "Active" if is_active else "Swap",
                     on_click=lambda e, k=key: on_swap(k),
                     bgcolor=TH.success if is_active else TH.accent,
@@ -104,33 +119,31 @@ def _model_card(
     )
 
 
-
-
 def __build_model_gallery_part2_part2(file_field, repo_field):
     """Continue _build_model_gallery_part2 logic."""
+
     def on_close(e):
         """Close the model gallery dialog."""
         page.close(dlg)
 
     dlg = ft.AlertDialog(
-        title=ft.Row([
-            ft.Text("🤖 Council of LLMs", size=20, weight=ft.FontWeight.BOLD,
-                    color=TH.accent),
-            ft.Container(expand=True),
-            ft.IconButton(icon=ft.Icons.CLOSE, icon_color=TH.muted, on_click=on_close),
-        ]),
+        title=ft.Row(
+            [
+                ft.Text("🤖 Council of LLMs", size=20, weight=ft.FontWeight.BOLD, color=TH.accent),
+                ft.Container(expand=True),
+                ft.IconButton(icon=ft.Icons.CLOSE, icon_color=TH.muted, on_click=on_close),
+            ]
+        ),
         content=ft.Container(
             content=ft.Column(
                 [
-                    ft.Text("Select a model to swap or download a new one",
-                            size=12, color=TH.muted),
+                    ft.Text("Select a model to swap or download a new one", size=12, color=TH.muted),
                     spacer(8),
                     grid,
                     ft.Divider(color=TH.divider, height=20),
-                    ft.Text("⬇️ Custom Download", size=14,
-                            weight=ft.FontWeight.BOLD, color=TH.accent2),
+                    ft.Text("⬇️ Custom Download", size=14, weight=ft.FontWeight.BOLD, color=TH.accent2),
                     ft.Row([repo_field, file_field], spacing=8),
-                    ft.ElevatedButton(
+                    ft.Button(
                         "Download",
                         on_click=lambda e: page.run_task(on_download, e),
                         icon=ft.Icons.DOWNLOAD,
@@ -153,12 +166,18 @@ def __build_model_gallery_part2_part2(file_field, repo_field):
 def _build_model_gallery_part2(client, grid, resp):
     """Continue build_model_gallery logic."""
     repo_field = ft.TextField(
-        label="HuggingFace Repo", hint_text="TheBloke/Mistral-7B-GGUF",
-        border_color=TH.border, color=TH.text, expand=True,
+        label="HuggingFace Repo",
+        hint_text="TheBloke/Mistral-7B-GGUF",
+        border_color=TH.border,
+        color=TH.text,
+        expand=True,
     )
     file_field = ft.TextField(
-        label="Filename", hint_text="mistral-7b.Q4_K_M.gguf",
-        border_color=TH.border, color=TH.text, expand=True,
+        label="Filename",
+        hint_text="mistral-7b.Q4_K_M.gguf",
+        border_color=TH.border,
+        color=TH.text,
+        expand=True,
     )
 
     async def on_download(e):
@@ -170,6 +189,7 @@ def _build_model_gallery_part2(client, grid, resp):
             return
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     "http://127.0.0.1:8002/models/download",
@@ -197,6 +217,7 @@ def build_model_gallery(
         """Request a model swap via the management API."""
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     "http://127.0.0.1:8002/swap",
@@ -217,8 +238,7 @@ def build_model_gallery(
         is_active = key in active_model
         cards.append(_model_card(key, info, is_active, lambda k: page.run_task(on_swap, k)))
 
-    grid = ft.Row(cards, wrap=True, spacing=12, run_spacing=12,
-                  alignment=ft.MainAxisAlignment.CENTER)
+    grid = ft.Row(cards, wrap=True, spacing=12, run_spacing=12, alignment=ft.MainAxisAlignment.CENTER)
 
     # Download section
     return _build_model_gallery_part2(client, grid, resp)

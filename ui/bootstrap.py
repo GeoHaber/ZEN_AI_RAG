@@ -1,4 +1,3 @@
-
 import sys
 import logging
 import time
@@ -7,19 +6,21 @@ import io
 from pathlib import Path
 from config_system import config
 
+
 # Logging - output to BOTH file and console
 def setup_logging():
     """Setup logging."""
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[
-            logging.FileHandler('nebula_debug.log', mode='w', encoding='utf-8'),
-            logging.StreamHandler(sys.stdout)  # Also print to console
-        ]
+            logging.FileHandler("nebula_debug.log", mode="w", encoding="utf-8"),
+            logging.StreamHandler(sys.stdout),  # Also print to console
+        ],
     )
     return logging.getLogger("ZenAI")
+
 
 # --- Global Crash Handler ---
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -28,14 +29,16 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
     try:
-        with open("ui_fatal_crash.txt", "w", encoding='utf-8') as f:
+        with open("ui_fatal_crash.txt", "w", encoding="utf-8") as f:
             f.write(f"Timestamp: {time.ctime()}\n")
             traceback.print_exception(exc_type, exc_value, exc_traceback, file=f)
     except (OSError, IOError):
         pass  # Can't write crash log, silently continue
 
+
 def setup_crash_handler():
     sys.excepthook = handle_exception
+
 
 def _do_initialize_services_setup():
     """Helper: setup phase for initialize_services."""
@@ -45,12 +48,14 @@ def _do_initialize_services_setup():
     # 1. Config Mode
     ZENA_MODE = config.zena_mode_enabled
     ZENA_CONFIG = {
-        'enabled': config.zena_mode_enabled,
-        'rag_enabled': True,
-        'rag_source': 'knowledge_base',
-        'swarm_enabled': config.swarm_enabled
+        "enabled": config.zena_mode_enabled,
+        "rag_enabled": True,
+        "rag_source": "knowledge_base",
+        "swarm_enabled": config.swarm_enabled,
     }
-    logger.info(f"[Core] v3.1 Spec Initialization | Mode: {'Native' if ZENA_MODE else 'Legacy'} | Swarm: {config.swarm_enabled}")
+    logger.info(
+        f"[Core] v3.1 Spec Initialization | Mode: {'Native' if ZENA_MODE else 'Legacy'} | Swarm: {config.swarm_enabled}"
+    )
 
     # 2. RAG System
     rag_system = None
@@ -70,8 +75,8 @@ def _do_initialize_services_setup():
             # RAG system initialization
             rag_system = LocalRAG(cache_dir=rag_cache)
             # Default RAG to enabled in config if not present
-            if 'rag_enabled' not in ZENA_CONFIG:
-                ZENA_CONFIG['rag_enabled'] = True
+            if "rag_enabled" not in ZENA_CONFIG:
+                ZENA_CONFIG["rag_enabled"] = True
             logger.info("[RAG] RAG system initialized")
         except Exception as e:
             logger.error(f"[RAG] Failed to initialize: {e}")
@@ -86,9 +91,10 @@ def initialize_services():
     conversation_memory = None
     try:
         from zena_mode import ConversationMemory
+
         conv_cache = config.BASE_DIR / "conversation_cache"
         conv_cache.mkdir(exist_ok=True)
-        
+
         conversation_memory = ConversationMemory(cache_dir=conv_cache)
         logger.info("[Memory] Conversation memory initialized")
     except Exception as e:
@@ -96,19 +102,22 @@ def initialize_services():
 
     # 4. Feature Detection
     from feature_detection import get_feature_detector
+
     feature_detector = get_feature_detector()
     logger.info("[Features] Feature detection complete")
 
     # 5. Cleanup Policy
     from cleanup_policy import get_cleanup_policy
+
     upload_cleanup = get_cleanup_policy(config.BASE_DIR / "uploads")
     logger.info("[Cleanup] Upload cleanup policy initialized")
-    
+
     # 6. Help System
     try:
         if rag_system:
             from zena_mode.help_system import index_internal_docs
             from zena_mode.help_system import index_internal_docs
+
             # index_internal_docs(config.BASE_DIR, rag_system) # Blocking startup, disabled for debugging
             logger.info("[HelpSystem] Internal documentation indexing skipped (DEBUG)")
     except Exception as e:
@@ -121,5 +130,5 @@ def initialize_services():
         "feature_detector": feature_detector,
         "upload_cleanup": upload_cleanup,
         "ZENA_CONFIG": ZENA_CONFIG,
-        "ZENA_MODE": ZENA_MODE
+        "ZENA_MODE": ZENA_MODE,
     }

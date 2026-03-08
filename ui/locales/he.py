@@ -10,18 +10,18 @@ from .base import BaseLocale
 
 class HebrewLocale(BaseLocale):
     """Hebrew (עברית) locale."""
-    
+
     LANGUAGE_CODE = "he"
     LANGUAGE_NAME = "Hebrew"
     LANGUAGE_NATIVE = "עברית"
     RTL = True  # Right-to-left language flag
-    
+
     # ==========================================================================
     # APP METADATA
     # ==========================================================================
     APP_TITLE = "ZenAI"
     APP_SUBTITLE = "העוזר המקומי שלך לבינה מלאכותית"
-    
+
     # ==========================================================================
     # NAVIGATION
     # ==========================================================================
@@ -33,7 +33,7 @@ class HebrewLocale(BaseLocale):
     NAV_HF_DOWNLOAD = "📥 הורד מ-Hugging Face"
     NAV_LOCAL_MODELS = "📂 מודלים מקומיים"
     NAV_NO_LOCAL_MODELS = "לא נמצאו מודלים מקומיים"
-    
+
     # ==========================================================================
     # BUTTONS
     # ==========================================================================
@@ -50,7 +50,7 @@ class HebrewLocale(BaseLocale):
     BTN_OK = "אישור"
     BTN_YES = "כן"
     BTN_NO = "לא"
-    
+
     # ==========================================================================
     # MODEL CATALOG
     # ==========================================================================
@@ -65,14 +65,14 @@ class HebrewLocale(BaseLocale):
     MODEL_SELECT_VARIANT = "בחר גרסת מודל"
     MODEL_LOADING_VARIANTS = "טוען גרסאות..."
     MODEL_NO_VARIANTS = "לא נמצאו גרסאות"
-    
+
     # Speed ratings
     MODEL_SPEED_FAST = "⚡ מהיר מאוד"
     MODEL_SPEED_GOOD = "🚀 מהיר"
     MODEL_SPEED_MEDIUM = "⏱️ בינוני"
     MODEL_SPEED_SLOW = "🐢 איטי"
     MODEL_SPEED_VERY_SLOW = "🦥 איטי מאוד"
-    
+
     # ==========================================================================
     # ENGINE / AI
     # ==========================================================================
@@ -85,7 +85,7 @@ class HebrewLocale(BaseLocale):
     ENGINE_SCANNING_SWARM = "סורק נחיל..."
     ENGINE_EXPERTS_ONLINE = "{count} מומחים מחוברים"
     ENGINE_STANDALONE = "מצב עצמאי ZenAI"
-    
+
     # ==========================================================================
     # SYSTEM
     # ==========================================================================
@@ -94,7 +94,7 @@ class HebrewLocale(BaseLocale):
     SYS_DIAGNOSTICS = "אבחון"
     SYS_UPDATE_ENGINE = "עדכן מנוע"
     SYS_GET_UPDATE = "קבל עדכון (GitHub)"
-    
+
     # ==========================================================================
     # SETTINGS
     # ==========================================================================
@@ -104,7 +104,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_SAVED = "ההגדרות נשמרו בהצלחה"
     SETTINGS_RESET_CONFIRM = "האם אתה בטוח שברצונך לאפס את כל ההגדרות?"
     SETTINGS_LANGUAGE_CHANGED = "השפה שונתה ל-{lang}. רענן את הדף ליישום."
-    
+
     SETTINGS_CAT_LANGUAGE = "🌐 שפה"
     SETTINGS_CAT_APPEARANCE = "🎨 מראה"
     SETTINGS_CAT_AI_MODEL = "🤖 מודל AI"
@@ -112,7 +112,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_CAT_RAG = "📚 RAG"
     SETTINGS_CAT_CHAT = "💬 צ'אט"
     SETTINGS_CAT_SYSTEM = "⚙️ מערכת"
-    
+
     SETTINGS_UI_LANGUAGE = "שפת ממשק"
     SETTINGS_UI_LANGUAGE_DESC = "בחר את שפת ממשק המשתמש"
     SETTINGS_DARK_MODE = "מצב כהה"
@@ -127,7 +127,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_CHAT_DENSITY_SPACIOUS = "מרווח"
     SETTINGS_SHOW_AVATARS = "הצג אווטארים"
     SETTINGS_ANIMATE_MESSAGES = "הנפש הודעות"
-    
+
     SETTINGS_DEFAULT_MODEL = "מודל ברירת מחדל"
     SETTINGS_DEFAULT_MODEL_DESC = "מודל לטעינה בהפעלה"
     SETTINGS_TEMPERATURE = "טמפרטורה"
@@ -136,7 +136,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_MAX_TOKENS_DESC = "אורך תגובה מקסימלי"
     SETTINGS_CONTEXT_WINDOW = "חלון הקשר"
     SETTINGS_CONTEXT_WINDOW_DESC = "כמה היסטוריית שיחה לזכור"
-    
+
     SETTINGS_TTS_ENABLED = "טקסט לדיבור"
     SETTINGS_TTS_ENABLED_DESC = "הפעל פלט קולי"
     SETTINGS_VOICE_SPEED = "מהירות קול"
@@ -145,7 +145,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_AUTO_SPEAK_DESC = "קרא בקול תגובות AI באופן אוטומטי"
     SETTINGS_RECORDING_DURATION = "משך הקלטה"
     SETTINGS_RECORDING_DURATION_DESC = "זמן הקלטת קול (שניות)"
-    
+
     SETTINGS_RAG_ENABLED = "הפעל RAG"
     SETTINGS_RAG_ENABLED_DESC = "השתמש בבסיס ידע לתשובות"
     SETTINGS_CHUNK_SIZE = "גודל מקטע"
@@ -154,7 +154,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_SIMILARITY_THRESHOLD_DESC = "ציון רלוונטיות מינימלי (0.0-1.0)"
     SETTINGS_MAX_RESULTS = "מקסימום תוצאות"
     SETTINGS_MAX_RESULTS_DESC = "מספר מקורות לאחזר"
-    
+
     SETTINGS_SHOW_TIMESTAMPS = "הצג חותמות זמן"
     SETTINGS_SHOW_TIMESTAMPS_DESC = "הצג זמן על כל הודעה"
     SETTINGS_AUTO_SCROLL = "גלילה אוטומטית"
@@ -163,7 +163,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_STREAM_RESPONSES_DESC = "הצג תגובה בזמן יצירתה"
     SETTINGS_SAVE_CONVERSATIONS = "שמור שיחות"
     SETTINGS_SAVE_CONVERSATIONS_DESC = "זכור היסטוריה בין הפעלות"
-    
+
     SETTINGS_API_PORT = "פורט API"
     SETTINGS_API_PORT_DESC = "פורט שרת backend LLM"
     SETTINGS_MODELS_DIRECTORY = "תיקיית מודלים"
@@ -174,7 +174,7 @@ class HebrewLocale(BaseLocale):
     SETTINGS_AUTO_START_BACKEND_DESC = "הפעל שרת LLM עם האפליקציה"
     SETTINGS_LOG_LEVEL = "רמת לוג"
     SETTINGS_LOG_LEVEL_DESC = "רמת פירוט יומני האפליקציה"
-    
+
     # ==========================================================================
     # RAG / SCAN & LEARN
     # ==========================================================================
@@ -192,7 +192,7 @@ class HebrewLocale(BaseLocale):
     RAG_START_SCAN = "התחל סריקה"
     RAG_ANSWERED_FROM_SOURCE = "**🔍 תשובה ממקור הנתונים**"
     RAG_VIEW_SOURCES = "📂 הצג נתוני מקור"
-    
+
     # ==========================================================================
     # CHAT INTERFACE
     # ==========================================================================
@@ -208,14 +208,14 @@ class HebrewLocale(BaseLocale):
     CHAT_READY = "מוכן"
     CHAT_RECORDING = "🔴 מקליט (5 שניות)..."
     CHAT_TRANSCRIBING = "מתמלל..."
-    
+
     # ==========================================================================
     # FILE UPLOAD
     # ==========================================================================
     UPLOAD_ATTACHED = "📎 {filename} ({size} תווים)"
     UPLOAD_SUCCESS = "{filename} צורף"
     UPLOAD_FAILED = "העלאה נכשלה: {error}"
-    
+
     # ==========================================================================
     # VOICE
     # ==========================================================================
@@ -225,7 +225,7 @@ class HebrewLocale(BaseLocale):
     VOICE_NO_SPEECH = "לא זוהה דיבור"
     VOICE_ERROR = "שגיאת קול: {error}"
     VOICE_NOT_AVAILABLE = "TTS לא זמין (חסר pyttsx3)"
-    
+
     # ==========================================================================
     # NOTIFICATIONS & MESSAGES
     # ==========================================================================
@@ -234,25 +234,25 @@ class HebrewLocale(BaseLocale):
     NOTIFY_MODEL_READY = "✅ מודל מוכן: {model}"
     NOTIFY_MODEL_ACTIVE = "✅ מודל פעיל: {model}"
     NOTIFY_MODEL_SET = "✅ מודל פעיל הוגדר: {model}"
-    
+
     # Download notifications
     NOTIFY_DOWNLOAD_STARTING = "🚀 מתחיל הורדה: {filename}..."
     NOTIFY_DOWNLOAD_STARTED = "✅ ההורדה החלה! בדוק התקדמות בטרמינל."
     NOTIFY_DOWNLOAD_FAILED = "❌ ההורדה נכשלה: {error}"
     NOTIFY_DOWNLOAD_ERROR = "❌ שגיאה: {error}"
     NOTIFY_HUB_CONNECTION_ERROR = "❌ לא ניתן להתחבר ל-Hub. האם הוא פועל על פורט 8002?"
-    
+
     # Upload/attachment notifications
     NOTIFY_ATTACHED = "{name} צורף"
     NOTIFY_UPLOAD_FAILED = "העלאה נכשלה: {error}"
-    
-    # Voice notifications  
+
+    # Voice notifications
     NOTIFY_SOUNDDEVICE_MISSING = "שגיאה: SoundDevice לא נמצא (מצב Headless?)"
     NOTIFY_TRANSCRIBED = "תומלל!"
     NOTIFY_NO_SPEECH = "לא זוהה דיבור"
     NOTIFY_TRANSCRIPTION_FAILED = "התמלול נכשל: {error}"
     NOTIFY_VOICE_ERROR = "שגיאת קול: {error}"
-    
+
     # RAG notifications
     NOTIFY_RAG_ENABLED = "מצב RAG הופעל"
     NOTIFY_RAG_DISABLED = "מצב RAG כובה"
@@ -266,12 +266,12 @@ class HebrewLocale(BaseLocale):
     NOTIFY_RAG_ENTER_URL = "אנא הזן כתובת אתר"
     NOTIFY_RAG_ENTER_PATH = "אנא הזן נתיב תיקייה"
     NOTIFY_RAG_FINDING_FILES = "📂 מחפש קבצים..."
-    
+
     # Version notifications
     NOTIFY_VERSION_UP_TO_DATE = "✅ מעודכן! גרסה: {version}"
     NOTIFY_VERSION_CHECK_FAILED = "בדיקת גרסה נכשלה: {error}"
     NOTIFY_UPDATE_MANUAL = "העדכון דורש הורדה ידנית כרגע. פותח GitHub..."
-    
+
     # Benchmark notifications
     NOTIFY_BENCHMARK_RUNNING = "🏃 מריץ בנצ'מרק... (ייקח כ-30 שניות)"
     NOTIFY_BENCHMARK_COMPLETE = "✅ הבנצ'מרק הושלם!"
@@ -281,7 +281,7 @@ class HebrewLocale(BaseLocale):
 📊 ביצועים: {tokens_per_sec:.1f} טוקנים/שנייה
 📝 נוצרו: {tokens} טוקנים
 ⏱️ זמן: {seconds:.1f} שניות"""
-    
+
     # Diagnostics
     NOTIFY_DIAGNOSTICS_RUNNING = "מריץ אבחון..."
     NOTIFY_DIAGNOSTICS_FAILED = "האבחון נכשל: {error}"
@@ -291,14 +291,14 @@ class HebrewLocale(BaseLocale):
     DIAG_RAG_VECTORS = "{emoji} RAG: {count} וקטורים"
     DIAG_RAG_NOT_INIT = "{emoji} RAG: לא אותחל"
     DIAG_MEMORY = "{emoji} זיכרון: {percent}% בשימוש"
-    
+
     # Generic
     NOTIFY_ERROR = "❌ שגיאה: {error}"
     NOTIFY_SUCCESS = "✅ הצלחה!"
     NOTIFY_WARNING = "⚠️ אזהרה: {message}"
     NOTIFY_INFO = "ℹ️ {message}"
     NOTIFY_ENTER_BOTH_FIELDS = "אנא הזן גם מזהה מאגר וגם שם קובץ"
-    
+
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
@@ -352,7 +352,7 @@ class HebrewLocale(BaseLocale):
     TOOLTIP_ATTACH_FILE = "צרף קובץ"
     TOOLTIP_VOICE_INPUT = "קלט קולי"
     TOOLTIP_SEND_MESSAGE = "שלח הודעה"
-    
+
     # ==========================================================================
     # ERRORS
     # ==========================================================================

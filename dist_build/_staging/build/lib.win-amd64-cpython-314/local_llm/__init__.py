@@ -24,6 +24,7 @@ except ImportError:
         from local_llm_backup.llama_cpp_manager import LlamaCppManager, LlamaCppStatus
         from local_llm_backup.model_card import ModelRegistry, ModelCard, ModelCategory
         from local_llm_backup.local_llm_manager import LocalLLMManager, LocalLLMStatus
+
         _logger.info("local_llm: Using local_llm_backup fallback")
     except ImportError as exc:
         _logger.warning(f"local_llm: No implementation available — {exc}")

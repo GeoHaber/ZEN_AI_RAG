@@ -13,23 +13,25 @@ HEALTH_URL = "http://127.0.0.1:8005/health"
 
 SERVER_PROC = None
 
+
 def start_server():
     """Start server."""
     global SERVER_PROC
     import subprocess
     import sys
-    
+
     logger.info("🔧 Starting Backend Server (headless)...")
     cmd = [sys.executable, "-m", "zena_mode.server"]
-    
+
     # Needs to be in root dir
     # Capture output to file for debugging
     log_file = open("server_log.txt", "w")
-    SERVER_PROC = subprocess.Popen(cmd, cwd=".", stdout=log_file, stderr=subprocess.STDOUT)
-    
+    SERVER_PROC = subprocess.Popen(cmd, cwd=".", stdout=log_file, stderr=subprocess.STDOUT, shell=False)
+
     # Wait for 8002
     import time
-    for i in range(60): # Increased to 60s
+
+    for i in range(60):  # Increased to 60s
         try:
             if requests.get("http://127.0.0.1:8002/health", timeout=1).status_code == 200:
                 logger.info("✅ Server Online")
@@ -39,74 +41,77 @@ def start_server():
         time.sleep(1)
     return False
 
+
 def launch_expert():
     """Launch expert."""
     logger.info("🚀 Launching Expert (TinyLlama)...")
     try:
-        resp = requests.post(SWARM_LAUNCH_URL, json={
-            "model": "tinyllama-1.1b-chat.Q4_K_M.gguf", 
-            "port": 8005
-        }, timeout=10) # Increased timeout
+        resp = requests.post(
+            SWARM_LAUNCH_URL, json={"model": "tinyllama-1.1b-chat.Q4_K_M.gguf", "port": 8005}, timeout=10
+        )  # Increased timeout
         logger.info(f"Launch Response: {resp.status_code} - {resp.text}")
         if resp.status_code != 200:
             return False
     except Exception as e:
         logger.error(f"❌ Launch Request Failed: {e}")
         return False
-    
+
     # Wait for ready
     import time
-    for _ in range(60): # Increased timeout for expert launch
+
+    for _ in range(60):  # Increased timeout for expert launch
         try:
             if requests.get(HEALTH_URL, timeout=5).status_code == 200:
                 logger.info("✅ Expert Online")
                 return True
         except Exception as e:
-            if _ % 5 == 0: logger.warning(f"Health check failed: {e}")
+            if _ % 5 == 0:
+                logger.warning(f"Health check failed: {e}")
             pass
         time.sleep(1)
         print("x", end="", flush=True)
     return False
 
+
 def test_consensus():
     """Test consensus."""
     if not start_server():
         logger.error("❌ Failed to start server in time")
-        if SERVER_PROC: SERVER_PROC.kill()
+        if SERVER_PROC:
+            SERVER_PROC.kill()
         return
 
     if not launch_expert():
         logger.error("❌ Failed to launch expert")
-        if SERVER_PROC: SERVER_PROC.kill()
+        if SERVER_PROC:
+            SERVER_PROC.kill()
         return
 
     logger.info("🧠 Testing Deep Thinking (Council) Mode...")
-    
-    payload = {
-        "message": "Who are you? Are you Qwen or TinyLlama?",
-        "mode": "council"
-    }
-    
+
+    payload = {"message": "Who are you? Are you Qwen or TinyLlama?", "mode": "council"}
+
     try:
         resp = requests.post(API_URL, json=payload, timeout=60)
         logger.info(f"Response Status: {resp.status_code}")
-        
+
         if resp.status_code == 200:
             data = resp.json()
             logger.info("✅ Success!")
             logger.info(f"Response: {data['response'][:200]}...")  # Print snippet
             logger.info(f"Mode: {data.get('mode')}")
-            
-            if "TinyLlama" in data['response'] or "Qwen" in data['response']:
+
+            if "TinyLlama" in data["response"] or "Qwen" in data["response"]:
                 logger.info("✅ Models identified in response!")
             else:
                 logger.warning("⚠️ Could not explicitly identify models in text (might be hidden by consensus)")
-                
+
         else:
             logger.error(f"❌ Failed: {resp.text}")
 
     except Exception as e:
         logger.error(f"❌ Request Error: {e}")
+
 
 if __name__ == "__main__":
     test_consensus()

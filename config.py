@@ -3,6 +3,7 @@
 config.py - Legacy Bridge for config_system
 Allows old files to 'import config' without breaking.
 """
+
 from config_system import config
 
 # Re-export core constants for files using 'from config import ...'

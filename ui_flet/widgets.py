@@ -18,6 +18,7 @@ from ui_flet.theme import TH, MONO_FONT
 #  GLASS CARD
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def glass_card(
     content: ft.Control,
     padding: int = 20,
@@ -40,6 +41,7 @@ def glass_card(
 # ═══════════════════════════════════════════════════════════════════════════════
 #  METRIC TILE
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def metric_tile(
     icon: str,
@@ -84,6 +86,7 @@ def metric_tile(
 #  SECTION TITLE
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def section_title(text: str, icon: str = "") -> ft.Text:
     """Bold accent-coloured section header with optional emoji."""
     display = f"{icon}  {text}" if icon else text
@@ -99,6 +102,7 @@ def section_title(text: str, icon: str = "") -> ft.Text:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  BAR ROW
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def bar_row(label: str, count: int, max_count: int, color: str) -> ft.Row:
     """Horizontal bar chart row for data visualisations."""
@@ -145,6 +149,7 @@ def bar_row(label: str, count: int, max_count: int, color: str) -> ft.Row:
 #  BADGE
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def badge(
     text: str,
     color: str | None = None,
@@ -164,6 +169,7 @@ def badge(
 # ═══════════════════════════════════════════════════════════════════════════════
 #  ADDITIONAL HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def themed_text_field(
     label: str = "",
@@ -210,9 +216,9 @@ def accent_button(
     icon: str | None = None,
     color: str | None = None,
     width: int = 260,
-) -> ft.ElevatedButton:
+) -> ft.Button:
     """Primary action button with accent styling."""
-    return ft.ElevatedButton(
+    return ft.Button(
         text=text,
         on_click=on_click,
         icon=icon,

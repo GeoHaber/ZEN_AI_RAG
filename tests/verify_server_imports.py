@@ -5,18 +5,21 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(BASE_DIR))
 
+
 def test_import(module_name):
     """Test import."""
     try:
-        print(f"Testing import: {module_name}...", end="", flush=True)
+        # [X-Ray auto-fix] print(f"Testing import: {module_name}...", end="", flush=True)
         __import__(module_name)
         print(" OK")
         return True
-    except Exception as e:
-        print(f" FAILED: {e}")
+    except Exception:
+        # [X-Ray auto-fix] print(f" FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 print("\n--- ZenAI Deep Import Verification ---\n")
 
@@ -28,7 +31,7 @@ modules = [
     "model_manager",
     "voice_service",
     "async_backend",
-    "security"
+    "security",
 ]
 
 all_ok = True

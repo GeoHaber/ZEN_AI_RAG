@@ -7,8 +7,8 @@ def test_update_and_read_consistency():
     mgr = RAGManager()
 
     def writer(i):
-        docs = [f'doc-{i}-{j}' for j in range(5)]
-        paths = [f'path-{i}-{j}' for j in range(5)]
+        docs = [f"doc-{i}-{j}" for j in range(5)]
+        paths = [f"path-{i}-{j}" for j in range(5)]
         mgr.update_documents(docs, paths)
 
     def reader():
@@ -29,7 +29,7 @@ def test_update_and_read_consistency():
 def test_clear_documents():
     """Test clear documents."""
     mgr = RAGManager()
-    mgr.update_documents(['a', 'b'], ['p1', 'p2'])
+    mgr.update_documents(["a", "b"], ["p1", "p2"])
     mgr.clear_documents()
     assert mgr.documents == []
     assert mgr.file_paths == []

@@ -3,6 +3,7 @@
 test_swarm_arbitrator.py - Comprehensive TDD test suite for SwarmArbitrator
 Ronald Reagan: "Trust but Verify" - Every feature tested!
 """
+
 import pytest
 import asyncio
 import sqlite3
@@ -15,20 +16,21 @@ import os
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from zena_mode.swarm_arbitrator import (
-    SwarmArbitrator, 
-    ArbitrationRequest, 
+    SwarmArbitrator,
+    ArbitrationRequest,
     ExpertResponse,
     TaskType,
     get_arbitrator,
     AgentPerformanceTracker,
     ConsensusMethod,
-    ConsensusProtocol
+    ConsensusProtocol,
 )
 from config_system import config
 
 # ============================================================================
 # FIXTURES
 # ============================================================================
+
 
 @pytest.fixture
 def temp_db(tmp_path):
@@ -39,10 +41,12 @@ def temp_db(tmp_path):
     if db_path.exists():
         db_path.unlink()
 
+
 @pytest.fixture
 def performance_tracker(temp_db):
     """Create performance tracker with temp database."""
     return AgentPerformanceTracker(db_path=temp_db)
+
 
 @pytest.fixture
 def arbitrator():
@@ -51,9 +55,10 @@ def arbitrator():
         "enabled": True,
         "size": 3,
         "track_performance": False,  # Disable for unit tests
-        "timeout_per_expert": 5.0
+        "timeout_per_expert": 5.0,
     }
     return SwarmArbitrator(config=config)
+
 
 @pytest.fixture
 def mock_responses():
@@ -64,27 +69,29 @@ def mock_responses():
             "time": 0.5,
             "model": "model-a",
             "confidence": 0.9,
-            "error": False
+            "error": False,
         },
         {
             "content": "It equals four, which is the sum of two and two.",
             "time": 0.6,
             "model": "model-b",
             "confidence": 0.85,
-            "error": False
+            "error": False,
         },
         {
             "content": "The result is 4 (two plus two).",
             "time": 0.4,
             "model": "model-c",
             "confidence": 0.95,
-            "error": False
-        }
+            "error": False,
+        },
     ]
+
 
 # ============================================================================
 # TEST AGENT PERFORMANCE TRACKER
 # ============================================================================
+
 
 class TestAgentPerformanceTracker:
     """Test performance tracking functionality."""
@@ -98,9 +105,7 @@ class TestAgentPerformanceTracker:
 
         # Check table exists
         conn = sqlite3.connect(temp_db)
-        cursor = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_performance'"
-        )
+        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='agent_performance'")
         assert cursor.fetchone() is not None
         conn.close()
 
@@ -114,7 +119,7 @@ class TestAgentPerformanceTracker:
             was_selected=True,
             consensus_score=0.85,
             confidence=0.9,
-            response_time=1.5
+            response_time=1.5,
         )
 
         # Verify record exists
@@ -125,7 +130,7 @@ class TestAgentPerformanceTracker:
 
         assert row is not None
         assert row[1] == "test-model"  # agent_id
-        assert row[2] == "reasoning"   # task_type
+        assert row[2] == "reasoning"  # task_type
 
     def test_get_agent_reliability_new_agent(self, performance_tracker):
         """Test reliability for new agent (no history)."""
@@ -144,7 +149,7 @@ class TestAgentPerformanceTracker:
                 was_selected=(i < 3),  # First 3 selected
                 consensus_score=0.8,
                 confidence=0.9,
-                response_time=1.0
+                response_time=1.0,
             )
 
         reliability = performance_tracker.get_agent_reliability("good-model")
@@ -153,14 +158,8 @@ class TestAgentPerformanceTracker:
     def test_get_stats(self, performance_tracker):
         """Test overall statistics."""
         # Record some data
-        performance_tracker.record_response(
-            "model-1", "reasoning", "hash1", "Response 1",
-            True, 0.8, 0.9, 1.0
-        )
-        performance_tracker.record_response(
-            "model-2", "reasoning", "hash2", "Response 2",
-            False, 0.6, 0.7, 1.5
-        )
+        performance_tracker.record_response("model-1", "reasoning", "hash1", "Response 1", True, 0.8, 0.9, 1.0)
+        performance_tracker.record_response("model-2", "reasoning", "hash2", "Response 2", False, 0.6, 0.7, 1.5)
 
         stats = performance_tracker.get_stats()
 
@@ -169,9 +168,11 @@ class TestAgentPerformanceTracker:
         assert 0.0 <= stats["avg_consensus"] <= 1.0
         assert 0.0 <= stats["avg_confidence"] <= 1.0
 
+
 # ============================================================================
 # TEST CONFIDENCE EXTRACTION
 # ============================================================================
+
 
 class TestConfidenceExtraction:
     """Test confidence score extraction from responses."""
@@ -206,9 +207,11 @@ class TestConfidenceExtraction:
         confidence = arbitrator._extract_confidence(text)
         assert confidence == 0.7  # Default
 
+
 # ============================================================================
 # TEST CONSENSUS CALCULATION
 # ============================================================================
+
 
 class TestConsensusCalculation:
     """Test consensus score calculation methods."""
@@ -227,11 +230,7 @@ class TestConsensusCalculation:
 
     def test_wordset_partial_overlap(self, arbitrator):
         """Test word-set method with partial overlap."""
-        responses = [
-            "The answer is 4",
-            "The result is 4",
-            "The solution is 4"
-        ]
+        responses = ["The answer is 4", "The result is 4", "The solution is 4"]
         score = arbitrator._calculate_consensus_wordset(responses)
         assert 0.0 < score < 1.0  # Partial agreement
 
@@ -243,11 +242,7 @@ class TestConsensusCalculation:
 
     def test_semantic_handles_synonyms(self, arbitrator):
         """Test semantic method handles synonyms better than word-set."""
-        responses = [
-            "The answer is 4",
-            "The result is four",
-            "It equals 4"
-        ]
+        responses = ["The answer is 4", "The result is four", "It equals 4"]
 
         word_score = arbitrator._calculate_consensus_wordset(responses)
 
@@ -270,9 +265,11 @@ class TestConsensusCalculation:
         score2 = arbitrator._calculate_consensus(responses, ConsensusMethod.HYBRID)
         assert isinstance(score2, float)
 
+
 # ============================================================================
 # TEST PROTOCOL ROUTING
 # ============================================================================
+
 
 class TestProtocolRouting:
     """Test task-based protocol selection."""
@@ -306,9 +303,11 @@ class TestProtocolRouting:
         protocol = arb.select_protocol("factual")
         assert protocol == ConsensusProtocol.WEIGHTED_VOTE
 
+
 # ============================================================================
 # TEST ADAPTIVE ROUND SELECTION
 # ============================================================================
+
 
 class TestAdaptiveRounds:
     """Test adaptive round selection logic."""
@@ -346,9 +345,11 @@ class TestAdaptiveRounds:
         should_continue = arb.should_do_round_two(0.3, [0.5, 0.6])
         assert should_continue is False
 
+
 # ============================================================================
 # TEST ASYNC DISCOVERY
 # ============================================================================
+
 
 class TestAsyncDiscovery:
     """Test async port discovery functionality."""
@@ -395,9 +396,11 @@ class TestAsyncDiscovery:
 
         assert is_live is False
 
+
 # ============================================================================
 # TEST TIMEOUT HANDLING
 # ============================================================================
+
 
 class TestTimeoutHandling:
     """Test per-expert timeout functionality."""
@@ -413,19 +416,11 @@ class TestTimeoutHandling:
         async def mock_query(client, endpoint, messages):
             """Mock query."""
             await asyncio.sleep(0.1)  # Fast response
-            return {
-                "content": "Test response",
-                "time": 0.1,
-                "model": "test-model",
-                "confidence": 0.8,
-                "error": False
-            }
+            return {"content": "Test response", "time": 0.1, "model": "test-model", "confidence": 0.8, "error": False}
 
         arbitrator._query_model = mock_query
 
-        result = await arbitrator._query_model_with_timeout(
-            client, "http://test", [], timeout=1.0
-        )
+        result = await arbitrator._query_model_with_timeout(client, "http://test", [], timeout=1.0)
 
         await client.aclose()
 
@@ -446,9 +441,7 @@ class TestTimeoutHandling:
 
         arbitrator._query_model = mock_query
 
-        result = await arbitrator._query_model_with_timeout(
-            client, "http://test", [], timeout=0.1
-        )
+        result = await arbitrator._query_model_with_timeout(client, "http://test", [], timeout=0.1)
 
         await client.aclose()
 
@@ -456,9 +449,11 @@ class TestTimeoutHandling:
         assert "TIMEOUT" in result["content"]
         assert result["confidence"] == 0.0
 
+
 # ============================================================================
 # TEST PARTIAL FAILURE HANDLING
 # ============================================================================
+
 
 class TestPartialFailures:
     """Test handling of partial expert failures."""
@@ -466,13 +461,9 @@ class TestPartialFailures:
     def test_filter_valid_responses(self, mock_responses):
         """Test filtering of valid vs failed responses."""
         # Add a failed response
-        mock_responses.append({
-            "content": "[TIMEOUT after 30s]",
-            "time": 30.0,
-            "model": "model-d",
-            "confidence": 0.0,
-            "error": True
-        })
+        mock_responses.append(
+            {"content": "[TIMEOUT after 30s]", "time": 30.0, "model": "model-d", "confidence": 0.0, "error": True}
+        )
 
         # Filter valid responses
         valid = [r for r in mock_responses if not r.get("error", False)]
@@ -480,9 +471,11 @@ class TestPartialFailures:
         assert len(valid) == 3
         assert len(mock_responses) == 4
 
+
 # ============================================================================
 # TEST FACTORY FUNCTION
 # ============================================================================
+
 
 class TestFactoryFunction:
     """Test arbitrator factory function."""
@@ -498,9 +491,11 @@ class TestFactoryFunction:
         arb = get_arbitrator(config=config)
         assert arb.config["size"] == 5
 
+
 # ============================================================================
 # TEST INTEGRATION
 # ============================================================================
+
 
 class TestIntegration:
     """Integration tests for full workflow."""
@@ -515,32 +510,14 @@ class TestIntegration:
         arbitrator.endpoints = [
             "http://127.0.0.1:8001/v1/chat/completions",
             "http://127.0.0.1:8005/v1/chat/completions",
-            "http://127.0.0.1:8006/v1/chat/completions"
+            "http://127.0.0.1:8006/v1/chat/completions",
         ]
 
         # Mock query responses
         mock_responses = [
-            {
-                "content": "The answer is 4",
-                "time": 0.5,
-                "model": "model-a",
-                "confidence": 0.9,
-                "error": False
-            },
-            {
-                "content": "The result is 4",
-                "time": 0.6,
-                "model": "model-b",
-                "confidence": 0.85,
-                "error": False
-            },
-            {
-                "content": "It equals 4",
-                "time": 0.4,
-                "model": "model-c",
-                "confidence": 0.95,
-                "error": False
-            }
+            {"content": "The answer is 4", "time": 0.5, "model": "model-a", "confidence": 0.9, "error": False},
+            {"content": "The result is 4", "time": 0.6, "model": "model-b", "confidence": 0.85, "error": False},
+            {"content": "It equals 4", "time": 0.4, "model": "model-c", "confidence": 0.95, "error": False},
         ]
 
         call_count = [0]
@@ -555,16 +532,21 @@ class TestIntegration:
         # Mock streaming referee response
         async def mock_stream(*args, **kwargs):
             """Mock stream."""
+
             class MockStream:
                 """MockStream class."""
+
                 async def __aenter__(self):
                     return self
+
                 async def __aexit__(self, *args):
                     pass
+
                 async def aiter_lines(self):
                     yield 'data: {"choices":[{"delta":{"content":"Final"}}]}'
                     yield 'data: {"choices":[{"delta":{"content":" answer"}}]}'
-                    yield 'data: [DONE]'
+                    yield "data: [DONE]"
+
             return MockStream()
 
         # Execute consensus
@@ -577,9 +559,11 @@ class TestIntegration:
         full_output = "".join(chunks)
         assert "Analyzing" in full_output or "Thinking" in full_output
 
+
 # ============================================================================
 # TEST ERROR HANDLING
 # ============================================================================
+
 
 class TestErrorHandling:
     """Test error handling and edge cases."""
@@ -610,9 +594,11 @@ class TestErrorHandling:
         output = "".join(chunks)
         assert "Error" in output or "available" in output.lower()
 
+
 # ============================================================================
 # PERFORMANCE BENCHMARKS
 # ============================================================================
+
 
 class TestPerformance:
     """Performance benchmarking tests."""
@@ -638,7 +624,7 @@ class TestPerformance:
         texts = [
             "I am 90% confident this is correct.",
             "Maybe this is the answer.",
-            "I'm absolutely certain about this."
+            "I'm absolutely certain about this.",
         ] * 10
 
         start = time.time()
@@ -648,6 +634,7 @@ class TestPerformance:
 
         # Should be very fast
         assert duration < 0.1
+
 
 # ============================================================================
 # RUN TESTS

@@ -9,7 +9,7 @@ through a cross-encoder model.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 RERANKER_MODELS: List[str] = [
-    "cross-encoder/ms-marco-MiniLM-L-12-v2",   # Best English
-    "BAAI/bge-reranker-base",                    # Good multilingual
+    "cross-encoder/ms-marco-MiniLM-L-12-v2",  # Best English
+    "BAAI/bge-reranker-base",  # Good multilingual
     "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",  # Multilingual
-    "cross-encoder/ms-marco-MiniLM-L-6-v2",     # Smaller / faster
+    "cross-encoder/ms-marco-MiniLM-L-6-v2",  # Smaller / faster
 ]
 
 
@@ -53,9 +53,7 @@ class RerankerManager:
             logger.warning("sentence-transformers not installed — no reranking")
             return False
 
-        models = (
-            [self._model_name] if self._model_name else []
-        ) + RERANKER_MODELS
+        models = ([self._model_name] if self._model_name else []) + RERANKER_MODELS
 
         for name in models:
             try:
@@ -92,9 +90,7 @@ class RerankerManager:
         pairs = [[query, doc] for doc in documents]
         scores = self._model.predict(pairs)
 
-        ranked = sorted(
-            enumerate(scores), key=lambda x: x[1], reverse=True
-        )
+        ranked = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
 
         if top_k:
             ranked = ranked[:top_k]

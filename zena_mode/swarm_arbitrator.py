@@ -13,6 +13,7 @@ Features:
 - Progressive streaming
 - Full TDD coverage
 """
+
 import asyncio
 import httpx
 import json
@@ -31,22 +32,28 @@ logger = logging.getLogger("SwarmArbitrator")
 # ENUMS & CONFIG
 # ============================================================================
 
+
 class ConsensusMethod(Enum):
     """Consensus calculation methods."""
-    WORD_SET = "word_set"          # Fast word-set overlap
-    SEMANTIC = "semantic"          # Embedding similarity
-    HYBRID = "hybrid"              # Combination
+
+    WORD_SET = "word_set"  # Fast word-set overlap
+    SEMANTIC = "semantic"  # Embedding similarity
+    HYBRID = "hybrid"  # Combination
+
 
 class ConsensusProtocol(Enum):
     """Consensus protocols for different task types."""
-    CONSENSUS = "consensus"        # Converge to single truth
-    VOTING = "voting"              # Democratic choice
-    WEIGHTED_VOTE = "weighted"     # By confidence + reliability
-    MAJORITY = "majority"          # Simple majority
-    HYBRID = "hybrid"              # Adaptive
+
+    CONSENSUS = "consensus"  # Converge to single truth
+    VOTING = "voting"  # Democratic choice
+    WEIGHTED_VOTE = "weighted"  # By confidence + reliability
+    MAJORITY = "majority"  # Simple majority
+    HYBRID = "hybrid"  # Adaptive
+
 
 class TaskType(Enum):
     """Task classification types."""
+
     FACTUAL = "factual"
     REASONING = "reasoning"
     MATH = "math"
@@ -54,15 +61,19 @@ class TaskType(Enum):
     CREATIVE = "creative"
     GENERAL = "general"
 
+
 from dataclasses import dataclass
+
 
 @dataclass
 class ArbitrationRequest:
     """Request for swarm arbitration."""
+
     id: str
     query: str
     task_type: str
     timestamp: float = 0.0
+
 
 ExpertResponse = Dict[str, Any]
 
@@ -84,6 +95,7 @@ DEFAULT_CONFIG = {
 # ============================================================================
 # AGENT PERFORMANCE TRACKER
 # ============================================================================
+
 
 class AgentPerformanceTracker:
     """Track agent accuracy and reliability over time."""
@@ -125,17 +137,28 @@ class AgentPerformanceTracker:
         was_selected: bool,
         consensus_score: float,
         confidence: float,
-        response_time: float
+        response_time: float,
     ):
         """Record agent response for future analysis."""
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO agent_performance
             (agent_id, task_type, query_hash, response_text, was_selected,
              consensus_score, confidence, response_time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (agent_id, task_type, query_hash, response_text[:500],
-              1 if was_selected else 0, consensus_score, confidence, response_time))
+        """,
+            (
+                agent_id,
+                task_type,
+                query_hash,
+                response_text[:500],
+                1 if was_selected else 0,
+                consensus_score,
+                confidence,
+                response_time,
+            ),
+        )
         conn.commit()
         conn.close()
 
@@ -187,15 +210,18 @@ class AgentPerformanceTracker:
             "unique_agents": row[1],
             "avg_consensus": row[2] or 0.0,
             "avg_confidence": row[3] or 0.0,
-            "avg_response_time": row[4] or 0.0
+            "avg_response_time": row[4] or 0.0,
         }
+
 
 # ============================================================================
 # COST TRACKING
 # ============================================================================
 
+
 class CostTracker:
     """Track API costs for budgeting (Improvement #12 companion)."""
+
     COSTS = {
         "local": 0.0,
         "gpt-4": 0.01,
@@ -265,15 +291,18 @@ class CostTracker:
 
         return (tokens / 1000.0) * cost_per_1k
 
+
 # ============================================================================
 # RAGED SWARM STORAGE (Memory for Experts)
 # ============================================================================
+
 
 class RagedSwarmStorage:
     """
     Dedicated RAG storage for expert opinions to reduce hallucinations.
     Stores query -> expert_consensus mappings.
     """
+
     def __init__(self, db_path: str = "swarm_memory.db"):
         self.db_path = db_path
         self._init_db()
@@ -301,12 +330,15 @@ class RagedSwarmStorage:
         """Store a finalized consensus."""
         conn = sqlite3.connect(self.db_path)
         q_hash = hashlib.sha256(query.encode()).hexdigest()
-        
+
         try:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO swarm_memory (query_hash, query_text, consensus_response, contributing_experts)
                 VALUES (?, ?, ?, ?)
-            """, (q_hash, query, response, json.dumps(experts)))
+            """,
+                (q_hash, query, response, json.dumps(experts)),
+            )
             conn.execute("INSERT INTO swarm_fts (query_text, consensus_response) VALUES (?, ?)", (query, response))
             conn.commit()
         except Exception as e:
@@ -319,11 +351,14 @@ class RagedSwarmStorage:
         conn = sqlite3.connect(self.db_path)
         try:
             # Using FTS for basic similarity
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT query_text, consensus_response FROM swarm_fts 
                 WHERE swarm_fts MATCH ? ORDER BY rank LIMIT ?
-            """, (query, limit))
-            
+            """,
+                (query, limit),
+            )
+
             results = []
             for row in cursor:
                 results.append({"query": row[0], "response": row[1]})
@@ -333,19 +368,16 @@ class RagedSwarmStorage:
         finally:
             conn.close()
 
+
 # ============================================================================
 # ENHANCED SWARM ARBITRATOR
 # ============================================================================
 
+
 class _SwarmArbitratorBase:
     """Base methods for SwarmArbitrator."""
 
-    def __init__(
-        self,
-        ports: Optional[List[int]] = None,
-        host: str = "127.0.0.1",
-        config: Optional[Dict] = None
-    ):
+    def __init__(self, ports: Optional[List[int]] = None, host: str = "127.0.0.1", config: Optional[Dict] = None):
         """Initialize instance."""
         # Configuration
         self.config = {**DEFAULT_CONFIG, **(config or {})}
@@ -362,7 +394,7 @@ class _SwarmArbitratorBase:
             self.performance_tracker = AgentPerformanceTracker()
         else:
             self.performance_tracker = None
-            
+
         # RAGed Swarm Memory
         self.swarm_memory = RagedSwarmStorage() if self.config.get("rag_swarm_enabled", True) else None
 
@@ -410,10 +442,7 @@ class _SwarmArbitratorBase:
     async def _check_port(self, client: httpx.AsyncClient, port: int) -> bool:
         """Check if a port is live."""
         try:
-            resp = await client.get(
-                f"http://{self.host}:{port}/health",
-                timeout=1.0
-            )
+            resp = await client.get(f"http://{self.host}:{port}/health", timeout=1.0)
             return resp.status_code in [200, 503]  # 503 = UP but loading
         except Exception:
             return False
@@ -423,20 +452,13 @@ class _SwarmArbitratorBase:
     # ========================================================================
 
     async def _query_model_with_timeout(
-        self,
-        client: httpx.AsyncClient,
-        endpoint: str,
-        messages: List[Dict],
-        timeout: float = None
+        self, client: httpx.AsyncClient, endpoint: str, messages: List[Dict], timeout: float = None
     ) -> Dict:
         """Query model with timeout and fallback."""
         timeout = timeout or self.config["timeout_per_expert"]
 
         try:
-            return await asyncio.wait_for(
-                self._query_model(client, endpoint, messages),
-                timeout=timeout
-            )
+            return await asyncio.wait_for(self._query_model(client, endpoint, messages), timeout=timeout)
         except asyncio.TimeoutError:
             logger.warning(f"[Arbitrator] Expert {endpoint} timed out after {timeout}s")
             return {
@@ -444,7 +466,7 @@ class _SwarmArbitratorBase:
                 "time": timeout,
                 "model": f"Timeout-{endpoint}",
                 "confidence": 0.0,
-                "error": True
+                "error": True,
             }
         except Exception as e:
             logger.error(f"[Arbitrator] Expert {endpoint} failed: {e}")
@@ -453,33 +475,23 @@ class _SwarmArbitratorBase:
                 "time": 0.0,
                 "model": f"Error-{endpoint}",
                 "confidence": 0.0,
-                "error": True
+                "error": True,
             }
 
-    async def _query_model(
-        self,
-        client: httpx.AsyncClient,
-        endpoint: str,
-        messages: List[Dict]
-    ) -> Dict:
+    async def _query_model(self, client: httpx.AsyncClient, endpoint: str, messages: List[Dict]) -> Dict:
         """Query a single model and return full response + metadata."""
         start = time.time()
 
         try:
-            payload = {
-                "messages": messages,
-                "stream": False,
-                "temperature": 0.7,
-                "max_tokens": 512
-            }
+            payload = {"messages": messages, "stream": False, "temperature": 0.7, "max_tokens": 512}
 
             response = await client.post(endpoint, json=payload, timeout=60.0)
             duration = time.time() - start
 
             if response.status_code == 200:
                 data = response.json()
-                content = data['choices'][0]['message']['content'].strip()
-                model_name = data.get('model', 'Unknown-Model')
+                content = data["choices"][0]["message"]["content"].strip()
+                model_name = data.get("model", "Unknown-Model")
 
                 # IMPROVEMENT #3: Extract confidence
                 confidence = self._extract_confidence(content)
@@ -489,7 +501,7 @@ class _SwarmArbitratorBase:
                     "time": duration,
                     "model": model_name,
                     "confidence": confidence,
-                    "error": False
+                    "error": False,
                 }
 
             return {
@@ -497,7 +509,7 @@ class _SwarmArbitratorBase:
                 "time": duration,
                 "model": "N/A",
                 "confidence": 0.0,
-                "error": True
+                "error": True,
             }
 
         except Exception as e:
@@ -506,7 +518,7 @@ class _SwarmArbitratorBase:
                 "time": time.time() - start,
                 "model": "N/A",
                 "confidence": 0.0,
-                "error": True
+                "error": True,
             }
 
     # ========================================================================
@@ -524,23 +536,23 @@ class _SwarmArbitratorBase:
         - "I think maybe" → 0.5
         """
         # Explicit percentage
-        match = re.search(r'(\d{1,3})%\s*confident', response_text.lower())
+        match = re.search(r"(\d{1,3})%\s*confident", response_text.lower())
         if match:
             return float(match.group(1)) / 100.0
 
         # Explicit decimal
-        match = re.search(r'confidence:?\s*(\d\.\d+)', response_text.lower())
+        match = re.search(r"confidence:?\s*(\d\.\d+)", response_text.lower())
         if match:
             return min(1.0, float(match.group(1)))
 
         # Linguistic markers
         confidence_markers = [
-            (r'\b(certain|definite|absolutely|definitely)\b', 0.95),
-            (r'\b(very confident|quite sure|very likely)\b', 0.85),
-            (r'\b(confident|likely|probably)\b', 0.75),
-            (r'\b(think|believe|seems)\b', 0.6),
-            (r'\b(maybe|perhaps|possibly|might)\b', 0.5),
-            (r'\b(unsure|uncertain|not sure)\b', 0.3),
+            (r"\b(certain|definite|absolutely|definitely)\b", 0.95),
+            (r"\b(very confident|quite sure|very likely)\b", 0.85),
+            (r"\b(confident|likely|probably)\b", 0.75),
+            (r"\b(think|believe|seems)\b", 0.6),
+            (r"\b(maybe|perhaps|possibly|might)\b", 0.5),
+            (r"\b(unsure|uncertain|not sure)\b", 0.3),
         ]
 
         for pattern, score in confidence_markers:
@@ -574,14 +586,19 @@ class _SwarmArbitratorBase:
         import os
 
         # Check for API keys (try multiple env vars)
-        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("XAI_API_KEY")
+        api_key = (
+            os.getenv("OPENAI_API_KEY")
+            or os.getenv("ANTHROPIC_API_KEY")
+            or os.getenv("GOOGLE_API_KEY")
+            or os.getenv("XAI_API_KEY")
+        )
 
         if not api_key:
             return {
                 "content": "[ERROR: No API Key found for external agent]",
                 "model": model,
                 "time": 0.0,
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
         start = time.time()
@@ -604,12 +621,12 @@ class _SwarmArbitratorBase:
 
                 if response.status_code == 200:
                     data = response.json()
-                    content = data['choices'][0]['message']['content'].strip()
+                    content = data["choices"][0]["message"]["content"].strip()
                     return {
                         "content": content,
                         "time": time.time() - start,
                         "model": model,
-                        "confidence": self._extract_confidence(content)
+                        "confidence": self._extract_confidence(content),
                     }
 
                 # Non-200 status codes
@@ -617,7 +634,7 @@ class _SwarmArbitratorBase:
                     "content": f"[API Error: {response.status_code}]",
                     "model": model,
                     "time": time.time() - start,
-                    "confidence": 0.0
+                    "confidence": 0.0,
                 }
 
         except Exception as e:
@@ -626,18 +643,14 @@ class _SwarmArbitratorBase:
                 "content": f"[Bridge Error: {str(e)}]",
                 "model": model,
                 "time": time.time() - start,
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
     # ========================================================================
     # CONSENSUS CALCULATION (IMPROVEMENT #4)
     # ========================================================================
 
-    def _calculate_consensus(
-        self,
-        responses: List[str],
-        method: Optional[ConsensusMethod] = None
-    ) -> float:
+    def _calculate_consensus(self, responses: List[str], method: Optional[ConsensusMethod] = None) -> float:
         """Calculate consensus using specified method."""
         method = method or ConsensusMethod[self.config["consensus_method"].upper()]
 
@@ -674,7 +687,8 @@ class _SwarmArbitratorBase:
             # Lazy import (only if semantic method used)
             if self._embedding_model is None:
                 from sentence_transformers import SentenceTransformer
-                self._embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+                self._embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
                 logger.info("[Arbitrator] Loaded semantic embedding model")
 
             from sklearn.metrics.pairwise import cosine_similarity
@@ -714,7 +728,6 @@ class SwarmArbitrator(_SwarmArbitratorBase):
     - Adaptive round selection
     """
 
-
     # ========================================================================
     # PROTOCOL ROUTING (IMPROVEMENT #6)
     # ========================================================================
@@ -740,11 +753,7 @@ class SwarmArbitrator(_SwarmArbitratorBase):
     # ADAPTIVE ROUND SELECTION (IMPROVEMENT #7)
     # ========================================================================
 
-    def should_do_round_two(
-        self,
-        agreement: float,
-        confidence_scores: List[float]
-    ) -> bool:
+    def should_do_round_two(self, agreement: float, confidence_scores: List[float]) -> bool:
         """Decide if second debate round is worth the cost."""
         if not self.config["adaptive_rounds"]:
             return False  # Always single round
@@ -770,9 +779,7 @@ class SwarmArbitrator(_SwarmArbitratorBase):
     # ========================================================================
 
     async def _traffic_controller_mode(
-        self,
-        query: str,
-        system_prompt: str = "You are a helpful AI assistant."
+        self, query: str, system_prompt: str = "You are a helpful AI assistant."
     ) -> AsyncGenerator[str, None]:
         """
         Traffic controller mode for 2 LLMs.
@@ -794,19 +801,19 @@ class SwarmArbitrator(_SwarmArbitratorBase):
             # Fallback if no endpoints (unlikely here)
             evaluation = {"difficulty": "medium", "confidence": 0.5}
 
-        difficulty = evaluation.get('difficulty', 'medium')
-        confidence = evaluation.get('confidence', 0.5)
+        difficulty = evaluation.get("difficulty", "medium")
+        confidence = evaluation.get("confidence", 0.5)
 
         threshold = self.config.get("traffic_controller_threshold", 0.8)
 
         # Step 2: Route based on evaluation
-        if difficulty == 'easy' and confidence > threshold:
+        if difficulty == "easy" and confidence > threshold:
             # Fast LLM handles it
             yield f"💨 **Fast response** ({difficulty}, confidence: {confidence:.0%})\n\n"
             async for chunk in self._stream_from_llm(fast_llm, query, system_prompt):
                 yield chunk
 
-        elif difficulty == 'hard' or confidence < 0.5:
+        elif difficulty == "hard" or confidence < 0.5:
             # Route to powerful LLM
             yield f"🚀 **Expert routing** ({difficulty}, confidence: {confidence:.0%})\n\n"
             async for chunk in self._stream_from_llm(powerful_llm, query, system_prompt):
@@ -833,7 +840,7 @@ class SwarmArbitrator(_SwarmArbitratorBase):
     async def _evaluate_query_difficulty(self, query: str, evaluator_endpoint: str = None) -> Dict:
         """
         Use fast LLM to classify query difficulty.
-        
+
         Args:
             query: The user query
             evaluator_endpoint: Endpoint to use for evaluation (defaults to self.endpoints[0])
@@ -850,7 +857,7 @@ class SwarmArbitrator(_SwarmArbitratorBase):
         if evaluator_endpoint:
             controller_endpoint = evaluator_endpoint
         elif self.endpoints:
-            controller_endpoint = self.endpoints[0] 
+            controller_endpoint = self.endpoints[0]
         else:
             # Fallback to hardcoded if state is really broken, but prefer config
             controller_endpoint = f"http://{self.host}:8001/v1/chat/completions"
@@ -879,11 +886,11 @@ JSON:"""
                     client,
                     controller_endpoint,
                     [{"role": "user", "content": eval_prompt}],
-                    timeout=5.0  # Fast timeout for classifier
+                    timeout=5.0,  # Fast timeout for classifier
                 )
 
                 # Parse JSON response
-                content = response['content']
+                content = response["content"]
 
                 # Extract JSON (handle markdown code blocks)
                 if "```json" in content:
@@ -901,59 +908,38 @@ JSON:"""
                 "difficulty": "medium",
                 "domain": "general",
                 "confidence": 0.5,
-                "reasoning": "Classification failed, defaulting to medium"
+                "reasoning": "Classification failed, defaulting to medium",
             }
 
-    async def _stream_from_llm(
-        self,
-        endpoint: str,
-        query: str,
-        system_prompt: str
-    ) -> AsyncGenerator[str, None]:
+    async def _stream_from_llm(self, endpoint: str, query: str, system_prompt: str) -> AsyncGenerator[str, None]:
         """Stream response from a single LLM."""
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": query}
-        ]
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": query}]
 
-        payload = {
-            "messages": messages,
-            "stream": True,
-            "temperature": 0.7,
-            "max_tokens": -1
-        }
+        payload = {"messages": messages, "stream": True, "temperature": 0.7, "max_tokens": -1}
 
         async with httpx.AsyncClient() as client:
-            async with client.stream('POST', endpoint, json=payload, timeout=120.0) as response:
+            async with client.stream("POST", endpoint, json=payload, timeout=120.0) as response:
                 async for line in response.aiter_lines():
-                    if not line.startswith('data: '):
+                    if not line.startswith("data: "):
                         continue
                     json_str = line[6:]
-                    if json_str.strip() == '[DONE]':
+                    if json_str.strip() == "[DONE]":
                         break
                     try:
                         data = json.loads(json_str)
-                        content = data['choices'][0]['delta'].get('content', '')
+                        content = data["choices"][0]["delta"].get("content", "")
                         if content:
                             yield content
                     except Exception:
                         pass
 
-    async def _get_answer(
-        self,
-        endpoint: str,
-        query: str,
-        system_prompt: str
-    ) -> str:
+    async def _get_answer(self, endpoint: str, query: str, system_prompt: str) -> str:
         """Get complete answer from a single LLM (non-streaming)."""
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": query}
-        ]
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": query}]
 
         async with httpx.AsyncClient() as client:
             response = await self._query_model_with_timeout(client, endpoint, messages)
-            return response['content']
+            return response["content"]
 
     # ========================================================================
     # STRUCTURED DECISION (API MODE)
@@ -964,59 +950,57 @@ JSON:"""
         Structured consensus decision (non-streaming) for API usage.
         """
         start_time = time.time()
-        
+
         # 1. Discover
         if not self.endpoints:
             await self.discover_swarm()
-            
+
         if not self.endpoints:
             return {
                 "consensus_answer": "Error: No experts available.",
                 "individual_responses": [],
                 "method": "failure",
                 "confidence": 0.0,
-                "duration": 0.0
+                "duration": 0.0,
             }
 
         # 2. Query Experts (Parallel)
         # Use simple system prompt for experts
         sys_prompt = {"role": "system", "content": "You are a swarm expert. Answer concisely."}
         messages = [sys_prompt, {"role": "user", "content": request.query}]
-        
+
         async with httpx.AsyncClient() as client:
             tasks = [self._query_model_with_timeout(client, ep, messages) for ep in self.endpoints]
             results = await asyncio.gather(*tasks)
-            
+
         valid_results = [r for r in results if not r.get("error")]
-        responses = [r['content'] for r in valid_results]
-        
+        responses = [r["content"] for r in valid_results]
+
         # 3. Consensus
         agreement = self._calculate_consensus(responses)
         # Handle TaskType enumeration conversion if needed
         # Assuming request.task_type is string compatible or Enum
-        t_type = request.task_type.value if hasattr(request.task_type, 'value') else str(request.task_type)
+        t_type = request.task_type.value if hasattr(request.task_type, "value") else str(request.task_type)
         protocol = self.select_protocol(t_type)
-        
+
         # 4. Referee Synthesis (Non-streaming)
         # Use main model as referee
         referee_endpoint = self.endpoints[0]
         prompt = self._build_arbitrage_prompt(request.query, responses, agreement, protocol)
-        
+
         final_answer = await self._get_answer(referee_endpoint, prompt, "You are the Swarm Referee.")
-        
+
         return {
             "consensus_answer": final_answer,
             "individual_responses": valid_results,
             "method": protocol.value,
             "confidence": agreement,
-            "duration": time.time() - start_time
+            "duration": time.time() - start_time,
         }
 
     # ========================================================================
     # MAIN CONSENSUS METHOD
     # ========================================================================
-
-
 
     async def _get_consensus_continued(self, messages, protocol, response):
         """Continue get_consensus logic."""
@@ -1024,10 +1008,7 @@ JSON:"""
             # ROUND 1: Parallel expert queries
             logger.info(f"[Arbitrator] Round 1: Querying {len(self.endpoints)} experts...")
 
-            tasks = [
-                self._query_model_with_timeout(client, ep, messages)
-                for ep in self.endpoints
-            ]
+            tasks = [self._query_model_with_timeout(client, ep, messages) for ep in self.endpoints]
             raw_results = await asyncio.gather(*tasks)
 
             # Filter out failures (IMPROVEMENT #8: Partial failure handling)
@@ -1045,8 +1026,8 @@ JSON:"""
                 yield f"⚠️ {failed_count} expert(s) unavailable\n"
 
             # Extract responses
-            responses = [r['content'] for r in valid_results]
-            confidence_scores = [r['confidence'] for r in valid_results]
+            responses = [r["content"] for r in valid_results]
+            confidence_scores = [r["confidence"] for r in valid_results]
 
             # Calculate consensus
             agreement = self._calculate_consensus(responses)
@@ -1056,7 +1037,7 @@ JSON:"""
             if verbose:
                 yield f"\n### Expert Responses ({confidence_label} Consensus: {agreement:.1%})\n\n"
                 for i, r in enumerate(valid_results):
-                    yield f"**Expert {i+1}** ({r['model']}, {r['time']:.1f}s, {r['confidence']:.0%} confident):\n"
+                    yield f"**Expert {i + 1}** ({r['model']}, {r['time']:.1f}s, {r['confidence']:.0%} confident):\n"
                     yield f"{r['content'][:300]}...\n\n"
 
             # ROUND 2: Adaptive cross-critique (if needed)
@@ -1064,25 +1045,23 @@ JSON:"""
                 yield f"⚖️ **Low consensus** ({agreement:.1%}) - Cross-critique round...\n\n"
 
                 critique_tasks = []
-                for i, endpoint in enumerate([self.endpoints[j] for j, r in enumerate(raw_results) if not r.get("error")]):
+                for i, endpoint in enumerate(
+                    [self.endpoints[j] for j, r in enumerate(raw_results) if not r.get("error")]
+                ):
                     other_responses = [responses[j] for j in range(len(responses)) if j != i]
 
                     critique_prompt = self._build_critique_prompt(
-                        original=responses[i],
-                        others=other_responses,
-                        question=text
+                        original=responses[i], others=other_responses, question=text
                     )
 
-                    critique_tasks.append(
-                        self._query_model_with_timeout(client, endpoint, critique_prompt)
-                    )
+                    critique_tasks.append(self._query_model_with_timeout(client, endpoint, critique_prompt))
 
                 revised_results = await asyncio.gather(*critique_tasks)
                 valid_revised = [r for r in revised_results if not r.get("error", False)]
 
                 # Use revised responses
                 if len(valid_revised) > 0:
-                    responses = [r['content'] for r in valid_revised]
+                    responses = [r["content"] for r in valid_revised]
                     agreement = self._calculate_consensus(responses)
                     yield f"✅ **Revised consensus:** {agreement:.1%}\n\n"
 
@@ -1090,40 +1069,35 @@ JSON:"""
             yield f"🔮 **Synthesizing final answer...**\n\n"
 
             arbitrage_prompt = self._build_arbitrage_prompt(
-                question=text,
-                responses=responses,
-                agreement=agreement,
-                protocol=protocol
+                question=text, responses=responses, agreement=agreement, protocol=protocol
             )
 
             referee_messages = [
-                {"role": "system", "content": "You are the Swarm Referee. Synthesize expert opinions into a unified answer."},
-                {"role": "user", "content": arbitrage_prompt}
+                {
+                    "role": "system",
+                    "content": "You are the Swarm Referee. Synthesize expert opinions into a unified answer.",
+                },
+                {"role": "user", "content": arbitrage_prompt},
             ]
 
             # Stream referee response
             referee_endpoint = self.endpoints[0]  # Main model
-            payload = {
-                "messages": referee_messages,
-                "stream": True,
-                "temperature": 0.2,
-                "max_tokens": -1
-            }
+            payload = {"messages": referee_messages, "stream": True, "temperature": 0.2, "max_tokens": -1}
 
             full_answer = ""
             start_synthesis = time.time()
 
             try:
-                async with client.stream('POST', referee_endpoint, json=payload, timeout=120.0) as response:
+                async with client.stream("POST", referee_endpoint, json=payload, timeout=120.0) as response:
                     async for line in response.aiter_lines():
-                        if not line.startswith('data: '):
+                        if not line.startswith("data: "):
                             continue
                         json_str = line[6:]
-                        if json_str.strip() == '[DONE]':
+                        if json_str.strip() == "[DONE]":
                             break
                         try:
                             data = json.loads(json_str)
-                            content = data['choices'][0]['delta'].get('content', '')
+                            content = data["choices"][0]["delta"].get("content", "")
                             if content:
                                 full_answer += content
                                 yield content
@@ -1140,27 +1114,26 @@ JSON:"""
                 query_hash = hashlib.sha256(text.encode()).hexdigest()
                 for i, r in enumerate(valid_results):
                     self.performance_tracker.record_response(
-                        agent_id=r['model'],
+                        agent_id=r["model"],
                         task_type=task_type,
                         query_hash=query_hash,
-                        response_text=r['content'],
+                        response_text=r["content"],
                         was_selected=(i == 0),  # Placeholder (first expert)
                         consensus_score=agreement,
-                        confidence=r['confidence'],
-                        response_time=r['time']
+                        confidence=r["confidence"],
+                        response_time=r["time"],
                     )
 
             # Final metrics
             yield f"\n\n---\n📊 **Swarm Metrics:** Consensus **{agreement:.1%}** | "
             yield f"Experts **{len(valid_results)}** | Synthesis **{synthesis_time:.1f}s** | Protocol **{protocol.value}**\n"
 
-
     async def get_consensus(
         self,
         text: str,
         system_prompt: str = "You are a helpful AI assistant.",
         task_type: str = "general",
-        verbose: bool = False
+        verbose: bool = False,
     ) -> AsyncGenerator[str, None]:
         """
         Get consensus answer from expert swarm.
@@ -1187,17 +1160,10 @@ JSON:"""
         elif num_llms == 1:
             # Single LLM mode - direct routing (no consensus needed)
             logger.info("[Arbitrator] Single LLM mode")
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ]
+            messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": text}]
             async with httpx.AsyncClient() as client:
-                response = await self._query_model_with_timeout(
-                    client,
-                    self.endpoints[0],
-                    messages
-                )
-                yield response['content']
+                response = await self._query_model_with_timeout(client, self.endpoints[0], messages)
+                yield response["content"]
             return
 
         elif num_llms == 2:
@@ -1211,10 +1177,7 @@ JSON:"""
         logger.info(f"[Arbitrator] Consensus mode ({num_llms} LLMs)")
 
         # Build messages
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text}
-        ]
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": text}]
 
         # Select protocol
         protocol = self.select_protocol(task_type)
@@ -1225,7 +1188,7 @@ JSON:"""
 
     def _build_critique_prompt(self, original: str, others: List[str], question: str) -> List[Dict]:
         """Build prompt for cross-critique round."""
-        other_text = "\n\n".join([f"--- Alternative View {i+1} ---\n{o}" for i, o in enumerate(others)])
+        other_text = "\n\n".join([f"--- Alternative View {i + 1} ---\n{o}" for i, o in enumerate(others)])
 
         prompt = f"""You previously answered: "{question}"
 
@@ -1245,14 +1208,10 @@ Revised or confirmed answer:"""
         return [{"role": "user", "content": prompt}]
 
     def _build_arbitrage_prompt(
-        self,
-        question: str,
-        responses: List[str],
-        agreement: float,
-        protocol: ConsensusProtocol
+        self, question: str, responses: List[str], agreement: float, protocol: ConsensusProtocol
     ) -> str:
         """Build referee synthesis prompt based on protocol."""
-        expert_text = "\n\n".join([f"--- Expert {i+1} ---\n{r}" for i, r in enumerate(responses)])
+        expert_text = "\n\n".join([f"--- Expert {i + 1} ---\n{r}" for i, r in enumerate(responses)])
 
         if protocol == ConsensusProtocol.CONSENSUS:
             strategy = "Find the single correct answer. Converge expert opinions to the most accurate truth."
@@ -1283,13 +1242,16 @@ Revised or confirmed answer:"""
 
         return prompt
 
+
 # ============================================================================
 # FACTORY FUNCTION
 # ============================================================================
 
+
 def get_arbitrator(config: Optional[Dict] = None) -> SwarmArbitrator:
     """Factory function to create arbitrator instance."""
     return SwarmArbitrator(config=config)
+
 
 # ============================================================================
 # MAIN (for testing)
@@ -1303,12 +1265,10 @@ if __name__ == "__main__":
 
         # Discover experts
         await arb.discover_swarm()
-        print(f"✅ Discovered {len(arb.ports)} experts: {arb.ports}")
-
+        # [X-Ray auto-fix] print(f"✅ Discovered {len(arb.ports)} experts: {arb.ports}")
         # Test query
         question = "What is 2 + 2?"
-        print(f"\n🔍 Question: {question}\n")
-
+        # [X-Ray auto-fix] print(f"\n🔍 Question: {question}\n")
         async for chunk in arb.get_consensus(question, verbose=True):
             print(chunk, end="", flush=True)
 
@@ -1317,9 +1277,9 @@ if __name__ == "__main__":
         # Show stats
         if arb.performance_tracker:
             stats = arb.performance_tracker.get_stats()
-            print(f"\n📊 Performance Stats:")
-            print(f"  Total Queries: {stats['total_queries']}")
-            print(f"  Avg Consensus: {stats['avg_consensus']:.1%}")
-            print(f"  Avg Confidence: {stats['avg_confidence']:.1%}")
+            # [X-Ray auto-fix] print(f"\n📊 Performance Stats:")
+            # [X-Ray auto-fix] print(f"  Total Queries: {stats['total_queries']}")
+            # [X-Ray auto-fix] print(f"  Avg Consensus: {stats['avg_consensus']:.1%}")
+            # [X-Ray auto-fix] print(f"  Avg Confidence: {stats['avg_confidence']:.1%}")
 
     asyncio.run(test_arbitrator())

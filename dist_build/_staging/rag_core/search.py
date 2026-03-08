@@ -120,12 +120,12 @@ class HybridSearcher:
             batch = 32
             total = len(texts)
             for i in range(0, total, batch):
-                chunk = texts[i: i + batch]
+                chunk = texts[i : i + batch]
                 emb = self.embeddings.encode(chunk, batch_size=batch)
                 all_embs.append(emb)
                 if progress:
                     pct = 0.3 + 0.4 * min(i + batch, total) / total
-                    progress(f"Embedding [{min(i+batch, total)}/{total}]", pct)
+                    progress(f"Embedding [{min(i + batch, total)}/{total}]", pct)
 
             self._doc_embeddings = np.vstack(all_embs) if all_embs else None
 
@@ -175,6 +175,7 @@ class HybridSearcher:
             sims = self.embeddings.cosine_similarity(q_vec, self._doc_embeddings)
 
             import numpy as np
+
             top_idx = np.argsort(sims)[::-1][:retrieve_k]
             dense_scores = {int(i): float(sims[i]) for i in top_idx if sims[i] > 0}
             rankings.append(dense_scores)
@@ -201,17 +202,10 @@ class HybridSearcher:
 
         # -- Select candidates for reranking -------------------------------
         candidates_k = min(top_k * 3, 20) if use_reranking else top_k
-        top_indices = sorted(fused, key=lambda idx: fused[idx], reverse=True)[
-            :candidates_k
-        ]
+        top_indices = sorted(fused, key=lambda idx: fused[idx], reverse=True)[:candidates_k]
 
         # -- Cross-encoder reranking ---------------------------------------
-        if (
-            use_reranking
-            and self.reranker
-            and self.reranker.is_loaded
-            and len(top_indices) > top_k
-        ):
+        if use_reranking and self.reranker and self.reranker.is_loaded and len(top_indices) > top_k:
             docs_to_rerank = [self._documents[i]["text"] for i in top_indices]
             reranked = self.reranker.rerank(query, docs_to_rerank, top_k=top_k)
             top_indices = [top_indices[orig_idx] for orig_idx, _ in reranked]
@@ -224,18 +218,18 @@ class HybridSearcher:
                 continue
             doc = self._documents[idx]
             meta = {k: v for k, v in doc.items() if k != "text"}
-            results.append(SearchResult(
-                text=doc["text"],
-                score=round(score, 4),
-                index=idx,
-                metadata=meta,
-            ))
+            results.append(
+                SearchResult(
+                    text=doc["text"],
+                    score=round(score, 4),
+                    index=idx,
+                    metadata=meta,
+                )
+            )
 
         return results
 
-    def _apply_filters(
-        self, scores: Dict[int, float], filters: Dict[str, Any]
-    ) -> Dict[int, float]:
+    def _apply_filters(self, scores: Dict[int, float], filters: Dict[str, Any]) -> Dict[int, float]:
         """Apply exact-match metadata filters."""
         filtered: Dict[int, float] = {}
         for idx, score in scores.items():

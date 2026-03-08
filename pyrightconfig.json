@@ -1,0 +1,20 @@
+{
+    "exclude": ["dist", "dist_build", "OLD", "build", ".venv", "qdrant_storage", "models", "data"],
+    "typeCheckingMode": "basic",
+    "reportMissingImports": "warning",
+    "reportMissingModuleSource": "none",
+    "reportOptionalMemberAccess": "none",
+    "reportGeneralClassIssues": "none",
+    "reportAttributeAccessIssue": "none",
+    "reportIndexIssue": "none",
+    "reportCallIssue": "none",
+    "reportOperatorIssue": "none",
+    "reportArgumentType": "none",
+    "reportReturnType": "none",
+    "reportAssignmentType": "none",
+    "reportPossiblyUnbound": "none",
+    "reportMissingTypeStubs": "none",
+    "reportUnusedImport": "none",
+    "reportRedefinedVariable": "none",
+    "pythonVersion": "3.11"
+}

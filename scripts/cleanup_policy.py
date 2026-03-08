@@ -2,6 +2,7 @@
 """
 cleanup_policy.py - Automated cleanup for uploads directory
 """
+
 import logging
 import time
 from pathlib import Path
@@ -14,13 +15,7 @@ logger = logging.getLogger(__name__)
 class UploadCleanupPolicy:
     """Manages cleanup of old uploaded files."""
 
-    def __init__(
-        self,
-        upload_dir: Path,
-        max_age_hours: int = 24,
-        max_files: int = 100,
-        max_size_mb: int = 500
-    ):
+    def __init__(self, upload_dir: Path, max_age_hours: int = 24, max_files: int = 100, max_size_mb: int = 500):
         """
         Initialize cleanup policy.
 
@@ -36,9 +31,9 @@ class UploadCleanupPolicy:
         self.max_size_mb = max_size_mb
         self._lock = threading.Lock()
 
+
 def _cleanup_part1_part2(self):
     """Cleanup part1 part 2."""
-
 
     def get_stats(self) -> dict:
         """
@@ -49,27 +44,26 @@ def _cleanup_part1_part2(self):
         """
         with self._lock:
             if not self.upload_dir.exists():
-                return {'count': 0, 'size_mb': 0.0, 'oldest_hours': 0.0}
+                return {"count": 0, "size_mb": 0.0, "oldest_hours": 0.0}
 
-            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
+            files = [f for f in self.upload_dir.glob("*") if f.is_file()]
             if not files:
-                return {'count': 0, 'size_mb': 0.0, 'oldest_hours': 0.0}
+                return {"count": 0, "size_mb": 0.0, "oldest_hours": 0.0}
 
             total_size = sum(f.stat().st_size for f in files)
             oldest_mtime = min(f.stat().st_mtime for f in files)
             oldest_hours = (time.time() - oldest_mtime) / 3600
 
             return {
-                'count': len(files),
-                'size_mb': round(total_size / (1024 * 1024), 2),
-                'oldest_hours': round(oldest_hours, 1)
+                "count": len(files),
+                "size_mb": round(total_size / (1024 * 1024), 2),
+                "oldest_hours": round(oldest_hours, 1),
             }
-
-
 
 
 def _cleanup_part1_continued(self, files_by_time, freed_mb, size):
     """Continue _cleanup_part1 logic."""
+
     def cleanup(self) -> dict:
         """
         Run cleanup based on policy.
@@ -80,11 +74,11 @@ def _cleanup_part1_continued(self, files_by_time, freed_mb, size):
         with self._lock:
             if not self.upload_dir.exists():
                 logger.debug(f"[Cleanup] Upload directory does not exist: {self.upload_dir}")
-                return {'deleted': 0, 'freed_mb': 0.0}
+                return {"deleted": 0, "freed_mb": 0.0}
 
-            files = list(self.upload_dir.glob('*'))
+            files = list(self.upload_dir.glob("*"))
             if not files:
-                return {'deleted': 0, 'freed_mb': 0.0}
+                return {"deleted": 0, "freed_mb": 0.0}
 
             deleted_count = 0
             freed_bytes = 0
@@ -108,7 +102,7 @@ def _cleanup_part1_continued(self, files_by_time, freed_mb, size):
                         logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
 
             # Refresh file list after age-based cleanup
-            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
+            files = [f for f in self.upload_dir.glob("*") if f.is_file()]
 
             # Step 2: If still too many files, delete oldest until under limit
             if len(files) > self.max_files:
@@ -127,15 +121,15 @@ def _cleanup_part1_continued(self, files_by_time, freed_mb, size):
                         logger.error(f"[Cleanup] Failed to delete {file_path.name}: {e}")
 
             # Step 3: If total size exceeds limit, delete oldest until under size limit
-            files = [f for f in self.upload_dir.glob('*') if f.is_file()]
+            files = [f for f in self.upload_dir.glob("*") if f.is_file()]
             sum(f.stat().st_size for f in files) / (1024 * 1024)
         _cleanup_part1(self)
+
     _cleanup_part1_part2(self)
 
 
 def _cleanup_part1(self):
     """Cleanup part 1."""
-
 
     if total_size_mb > self.max_size_mb:
         # Sort by modification time (oldest first)
@@ -159,8 +153,7 @@ def _cleanup_part1(self):
     if deleted_count > 0:
         logger.info(f"[Cleanup] Completed: {deleted_count} files deleted, {freed_mb:.2f} MB freed")
 
-    return {'deleted': deleted_count, 'freed_mb': round(freed_mb, 2)}
-
+    return {"deleted": deleted_count, "freed_mb": round(freed_mb, 2)}
 
     return _cleanup_part1_continued(self, files_by_time, freed_mb, size)
 
@@ -178,7 +171,7 @@ def get_cleanup_policy(upload_dir: Path = None) -> UploadCleanupPolicy:
         _cleanup_policy = UploadCleanupPolicy(
             upload_dir,
             max_age_hours=24,  # Delete files older than 24 hours
-            max_files=100,     # Keep max 100 files
-            max_size_mb=500    # Keep max 500 MB total
+            max_files=100,  # Keep max 100 files
+            max_size_mb=500,  # Keep max 500 MB total
         )
     return _cleanup_policy

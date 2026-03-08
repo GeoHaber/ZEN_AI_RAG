@@ -2,6 +2,7 @@
 """
 Tests for loading messages in locales
 """
+
 import pytest
 import random
 from ui.locales import get_locale
@@ -16,10 +17,10 @@ class TestLoadingMessages:
         """Test English locale has loading messages."""
         locale = get_locale()
 
-        assert hasattr(locale, 'LOADING_WAITING_FOR_USER')
-        assert hasattr(locale, 'LOADING_THINKING')
-        assert hasattr(locale, 'LOADING_RAG_THINKING')
-        assert hasattr(locale, 'LOADING_SWARM_THINKING')
+        assert hasattr(locale, "LOADING_WAITING_FOR_USER")
+        assert hasattr(locale, "LOADING_THINKING")
+        assert hasattr(locale, "LOADING_RAG_THINKING")
+        assert hasattr(locale, "LOADING_SWARM_THINKING")
 
         assert isinstance(locale.LOADING_WAITING_FOR_USER, list)
         assert isinstance(locale.LOADING_THINKING, list)
@@ -74,10 +75,10 @@ class TestLoadingMessages:
         """Test Spanish locale has loading messages."""
         locale = SpanishLocale()
 
-        assert hasattr(locale, 'LOADING_WAITING_FOR_USER')
-        assert hasattr(locale, 'LOADING_THINKING')
-        assert hasattr(locale, 'LOADING_RAG_THINKING')
-        assert hasattr(locale, 'LOADING_SWARM_THINKING')
+        assert hasattr(locale, "LOADING_WAITING_FOR_USER")
+        assert hasattr(locale, "LOADING_THINKING")
+        assert hasattr(locale, "LOADING_RAG_THINKING")
+        assert hasattr(locale, "LOADING_SWARM_THINKING")
 
         assert len(locale.LOADING_WAITING_FOR_USER) > 0
         assert len(locale.LOADING_THINKING) > 0
@@ -96,5 +97,5 @@ class TestLoadingMessages:
         assert has_emoji_thinking, "Thinking messages should have emojis"
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

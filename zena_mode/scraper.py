@@ -10,7 +10,9 @@ Enhanced Features (v2.0):
 - Anti-bot content detection
 - Comprehensive user feedback
 """
+
 import requests
+
 try:
     from bs4 import BeautifulSoup
 except ImportError:
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 # Import web scanner for pre-flight checks
 try:
     from .web_scanner import WebCrawlScanner
+
     WEB_SCANNER_AVAILABLE = True
 except ImportError:
     WEB_SCANNER_AVAILABLE = False
@@ -34,30 +37,32 @@ except ImportError:
 
 # User-Agent rotation to avoid fingerprinting
 USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1'
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
 ]
 
 
 def get_headers():
     """Generate realistic browser headers with rotating User-Agent."""
     return {
-        'User-Agent': random.choice(USER_AGENTS),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://www.google.com/',
-        'DNT': '1',  # Do Not Track
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
+        "User-Agent": random.choice(USER_AGENTS),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.google.com/",
+        "DNT": "1",  # Do Not Track
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
 
 
 from utils import normalize_input
 
+
 class WebsiteScraper:
     """WebsiteScraper class."""
+
     def __init__(self, base_url: str):
         """Initialize instance."""
         # Normalize: "example.com" -> "https://example.com"
@@ -89,23 +94,23 @@ class WebsiteScraper:
         """
         # 1. (Removed aggressive container selection to ensure we catch all sections like "Meet the Team")
         # Pre-process images to preserve ALT text and SRC
-        for img in soup.find_all('img', src=True):
-            alt_text = img.get('alt', '').strip()
-            src = img['src']
+        for img in soup.find_all("img", src=True):
+            alt_text = img.get("alt", "").strip()
+            src = img["src"]
             # Convert to absolute URL if needed (using soup's base or logic if available, but here we might need to handle it later or rely on src being mostly valid)
-            # Better: let's rely on the scraper's URL joining if possible, but here we are in clean_html. 
+            # Better: let's rely on the scraper's URL joining if possible, but here we are in clean_html.
             # We'll just generic markdown.
             img.replace_with(f" ![{alt_text}]({src}) ")
 
         # 2. Remove unwanted tags
-        for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe', 'form', 'button']):
+        for tag in soup(["script", "style", "nav", "header", "footer", "aside", "iframe", "form", "button"]):
             tag.decompose()
 
         # 3. Strip Cookie Banners & Modals (IMPROVEMENT #1)
         cookie_keywords = ["cookie", "consent", "privacy policy", "terms of use", "gdpr"]
-        for element in soup.find_all(['div', 'section', 'aside']):
-            classes = " ".join(element.get('class', [])) if element.get('class') else ""
-            ids = str(element.get('id', ""))
+        for element in soup.find_all(["div", "section", "aside"]):
+            classes = " ".join(element.get("class", [])) if element.get("class") else ""
+            ids = str(element.get("id", ""))
 
             # Check if this looks like a banner/modal (class/ID check)
             if any(kw in (classes + ids).lower() for kw in ["banner", "modal", "popup", "consent", "cookie"]):
@@ -116,13 +121,14 @@ class WebsiteScraper:
                     element.decompose()
 
         # 4. Get text
-        text = soup.get_text(separator=' ')
+        text = soup.get_text(separator=" ")
 
         # 5. Clean whitespace
         lines = [line.strip() for line in text.splitlines()]
-        text = '\n'.join(line for line in lines if line)
+        text = "\n".join(line for line in lines if line)
 
         return text
+
 
 def _do_scrape_setup_part1_part2():
     """Do scrape setup part1 part 2."""
@@ -131,10 +137,7 @@ def _do_scrape_setup_part1_part2():
     total_time = time.time() - start_time
     avg_time = total_time / len(self.documents) if self.documents else 0
 
-    logger.info(
-        f"[Scraper] ✅ Completed: {len(self.documents)} pages in {total_time:.2f}s "
-        f"({avg_time:.2f}s/page)"
-    )
+    logger.info(f"[Scraper] ✅ Completed: {len(self.documents)} pages in {total_time:.2f}s ({avg_time:.2f}s/page)")
 
     if failed_urls:
         logger.warning(f"[Scraper] ⚠️ Failed to scrape {len(failed_urls)} URLs")
@@ -150,8 +153,8 @@ def _do_scrape_setup_part1_part2():
             "total_saved": len(self.documents),
             "total_failed": len(failed_urls),
             "total_time": total_time,
-            "avg_time_per_page": avg_time
-        }
+            "avg_time_per_page": avg_time,
+        },
     }
 
     # Add warnings if applicable
@@ -170,7 +173,6 @@ def _do_scrape_setup_part1_part2():
 
 def _do_scrape_setup_part1():
     """Do scrape setup part 1."""
-
 
     while queue and len(self.visited) < max_pages:
         url = queue.pop(0)
@@ -250,7 +252,7 @@ def _do_scrape_setup_part1():
 
             # Parse HTML
             parse_start = time.time()
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response.text, "html.parser")
             parse_time = time.time() - parse_start
 
             # Extract clean text (with cookie banner removal)
@@ -260,11 +262,7 @@ def _do_scrape_setup_part1():
 
             # Only save pages with substantial content
             if len(text) > 100:
-                self.documents.append({
-                    "url": url,
-                    "title": soup.title.string if soup.title else url,
-                    "content": text
-                })
+                self.documents.append({"url": url, "title": soup.title.string if soup.title else url, "content": text})
                 logger.info(
                     f"[Scraper] ✅ Saved: {url} ({len(text)} chars) | "
                     f"Fetch: {fetch_time:.2f}s, Parse: {parse_time:.2f}s, Clean: {clean_time:.2f}s"
@@ -273,10 +271,10 @@ def _do_scrape_setup_part1():
                 logger.warning(f"[Scraper] ⚠️ Content too short for {url} ({len(text)} chars). Skipped.")
 
             # Find links to continue crawling
-            for link in soup.find_all('a', href=True):
-                full_url = urljoin(url, link['href'])
+            for link in soup.find_all("a", href=True):
+                full_url = urljoin(url, link["href"])
                 # Only follow same-domain HTTP(S) links
-                if self.is_same_domain(full_url) and full_url.startswith('http'):
+                if self.is_same_domain(full_url) and full_url.startswith("http"):
                     if full_url not in self.visited and full_url not in queue:
                         queue.append(full_url)
 
@@ -301,7 +299,7 @@ def _do_scrape_setup():
         return {
             "success": False,
             "error": "BeautifulSoup4 is required for web scraping. Install with: pip install beautifulsoup4",
-            "documents": []
+            "documents": [],
         }
 
     # PRE-FLIGHT SCAN (IMPROVEMENT #2: Early failure detection)
@@ -318,7 +316,7 @@ def _do_scrape_setup():
                     "error": f"Scrape blocked: {self.crawl_report.reason}",
                     "protection": self.crawl_report.bot_protection,
                     "documents": [],
-                    "report": self.crawl_report
+                    "report": self.crawl_report,
                 }
 
             # Warn if bot protection detected (may succeed with limitations)
@@ -330,8 +328,6 @@ def _do_scrape_setup():
         except Exception as e:
             logger.warning(f"[Scraper] Pre-flight scan failed: {e}. Continuing anyway...")
             self.crawl_report = None
-
-
 
     def scrape(self, max_pages: int = 50, progress_callback=None) -> dict:
         """
@@ -352,4 +348,5 @@ def _do_scrape_setup():
         _do_scrape_setup()
         # MAIN SCRAPING LOOP
         time.time()
+
     _do_scrape_setup_part1()

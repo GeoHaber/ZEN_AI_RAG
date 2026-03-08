@@ -1,0 +1,16 @@
+dist/
+dist_build/
+build/
+OLD/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.git/
+qdrant_storage/
+rag_cache/
+rag_storage/
+rag_verification_storage/
+conversation_cache/
+models/
+data/

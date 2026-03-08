@@ -5,10 +5,10 @@ Provides centralized text management for localization support.
 
 Usage:
     from ui.locales import get_locale, set_locale
-    
+
     locale = get_locale()
     print(locale.APP_NAME)  # "ZenAI"
-    
+
     set_locale('es')  # Switch to Spanish
 """
 
@@ -22,12 +22,12 @@ from .he import HebrewLocale
 
 # Available locales registry
 _LOCALES = {
-    'en': EnglishLocale,
-    'es': SpanishLocale,
-    'fr': FrenchLocale,
-    'ro': RomanianLocale,
-    'hu': HungarianLocale,
-    'he': HebrewLocale,
+    "en": EnglishLocale,
+    "es": SpanishLocale,
+    "fr": FrenchLocale,
+    "ro": RomanianLocale,
+    "hu": HungarianLocale,
+    "he": HebrewLocale,
     # 'de': GermanLocale,
     # 'zh': ChineseLocale,
     # 'ja': JapaneseLocale,
@@ -35,7 +35,7 @@ _LOCALES = {
 
 # Current active locale
 _current_locale = None
-_current_locale_code = 'en'
+_current_locale_code = "en"
 
 
 def get_locale() -> BaseLocale:
@@ -49,23 +49,23 @@ def get_locale() -> BaseLocale:
 def set_locale(code: str) -> BaseLocale:
     """
     Set the active locale by language code.
-    
+
     Args:
         code: Language code ('en', 'es', 'de', etc.)
-        
+
     Returns:
         The new active locale instance
-        
+
     Raises:
         ValueError: If locale code is not supported
     """
     global _current_locale, _current_locale_code
-    
+
     code = code.lower()
     if code not in _LOCALES:
-        available = ', '.join(_LOCALES.keys())
+        available = ", ".join(_LOCALES.keys())
         raise ValueError(f"Locale '{code}' not supported. Available: {available}")
-    
+
     _current_locale = _LOCALES[code]()
     _current_locale_code = code
     return _current_locale
@@ -79,18 +79,14 @@ def get_locale_code() -> str:
 def get_available_locales() -> dict:
     """
     Get dictionary of available locales with their details.
-    
+
     Returns:
         Dict of locale codes to info dicts with 'name' and 'native' keys.
         Example: {'en': {'name': 'English', 'native': 'English'}, ...}
     """
     result = {}
     for code, cls in _LOCALES.items():
-        result[code] = {
-            'name': cls.LANGUAGE_NAME,
-            'native': cls.LANGUAGE_NATIVE,
-            'rtl': getattr(cls, 'RTL', False)
-        }
+        result[code] = {"name": cls.LANGUAGE_NAME, "native": cls.LANGUAGE_NATIVE, "rtl": getattr(cls, "RTL", False)}
     return result
 
 

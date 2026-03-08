@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Chunk:
     """A single chunk of text with metadata."""
+
     text: str
     metadata: Dict[str, Any] = field(default_factory=dict)
     chunk_index: int = 0
@@ -34,14 +35,20 @@ class Chunk:
 
 class ChunkerConfig:
     """Configuration for the text chunker."""
+
     CHUNK_SIZE: int = 800
     CHUNK_OVERLAP: int = 100
     MIN_CHUNK_LENGTH: int = 50
     MIN_ENTROPY: float = 1.5
     MAX_ENTROPY: float = 6.0
     BLACKLIST_KEYWORDS: set = {
-        "advertisement", "sponsored", "cookie policy", "privacy policy",
-        "subscribe now", "sign up for", "click here to",
+        "advertisement",
+        "sponsored",
+        "cookie policy",
+        "privacy policy",
+        "subscribe now",
+        "sign up for",
+        "click here to",
     }
 
     def __init__(self, **overrides):
@@ -261,13 +268,15 @@ class TextChunker:
             )
 
             for chunk in chunks:
-                all_chunks.append({
-                    "text": chunk.text,
-                    "hash": chunk.hash,
-                    "chunk_index": chunk.chunk_index,
-                    "url": meta.get("url", ""),
-                    "title": meta.get("title", ""),
-                    "metadata": chunk.metadata,
-                })
+                all_chunks.append(
+                    {
+                        "text": chunk.text,
+                        "hash": chunk.hash,
+                        "chunk_index": chunk.chunk_index,
+                        "url": meta.get("url", ""),
+                        "title": meta.get("title", ""),
+                        "metadata": chunk.metadata,
+                    }
+                )
 
         return all_chunks

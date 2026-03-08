@@ -13,6 +13,7 @@ from typing import Tuple
 # Use project config defaults so shim/tests don't need to pass ports
 try:
     from config_system import config
+
     HOST = config.host
     PORTS = {"MGMT_API": config.mgmt_port}
 except Exception:
@@ -22,6 +23,7 @@ except Exception:
 
 class _SimpleHandler(BaseHTTPRequestHandler):
     """_SimpleHandler class."""
+
     def do_OPTIONS(self):
         """Do options."""
         self.send_response(200)
@@ -42,6 +44,7 @@ class _SimpleHandler(BaseHTTPRequestHandler):
 
         if self.path == "/models/available":
             import json
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -50,6 +53,7 @@ class _SimpleHandler(BaseHTTPRequestHandler):
 
         if self.path.startswith("/updates/check"):
             import json
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -85,6 +89,7 @@ def start_hub(host: str | None = None, port: int | None = None) -> Tuple[Threadi
     interval = 0.05
     elapsed = 0.0
     import socket
+
     bound = False
     while elapsed < timeout:
         try:
@@ -104,7 +109,7 @@ def start_hub(host: str | None = None, port: int | None = None) -> Tuple[Threadi
             pass
         raise RuntimeError(f"Hub failed to bind to {bind_host}:{bind_port} within {timeout}s")
 
-    print(f"HUB_BOUND {bind_host}:{bind_port}")
+    # [X-Ray auto-fix] print(f"HUB_BOUND {bind_host}:{bind_port}")
     return server, thread
 
 
@@ -129,4 +134,3 @@ def start_server(*args, **kwargs):
 
 
 __all__ = ["start_hub", "stop_hub", "start_server"]
-

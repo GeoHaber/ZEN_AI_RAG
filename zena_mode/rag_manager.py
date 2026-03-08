@@ -31,23 +31,23 @@ class _RAGManagerBase:
     def warmup(self) -> Optional[Any]:
         """Warm up the underlying RAG model."""
         with self._lock:
-            if self._model and hasattr(self._model, 'warmup'):
+            if self._model and hasattr(self._model, "warmup"):
                 return self._model.warmup()
             return None
 
     def build_index(self, documents):
         """Build the RAG index from documents."""
         with self._lock:
-            if self._model and hasattr(self._model, 'build_index'):
+            if self._model and hasattr(self._model, "build_index"):
                 return self._model.build_index(documents)
-            raise RuntimeError('No underlying RAG system set')
+            raise RuntimeError("No underlying RAG system set")
 
     def save(self, path):
         """Save RAG state to disk."""
         with self._lock:
-            if self._model and hasattr(self._model, 'save'):
+            if self._model and hasattr(self._model, "save"):
                 return self._model.save(path)
-            raise RuntimeError('No underlying RAG system set')
+            raise RuntimeError("No underlying RAG system set")
 
 
 class RAGManager(_RAGManagerBase):
@@ -63,23 +63,23 @@ class RAGManager(_RAGManagerBase):
     def hybrid_search(self, *args, **kwargs):
         """Perform hybrid search via the underlying RAG system."""
         with self._lock:
-            if self._model and hasattr(self._model, 'hybrid_search'):
+            if self._model and hasattr(self._model, "hybrid_search"):
                 return self._model.hybrid_search(*args, **kwargs)
-            raise RuntimeError('No underlying RAG system set')
+            raise RuntimeError("No underlying RAG system set")
 
     def query(self, *args, **kwargs):
         """Query the RAG system."""
         with self._lock:
-            if self._model and hasattr(self._model, 'query'):
+            if self._model and hasattr(self._model, "query"):
                 return self._model.query(*args, **kwargs)
-            raise RuntimeError('No underlying RAG system set')
+            raise RuntimeError("No underlying RAG system set")
 
     @property
     def index(self):
         """Get the current index object (thread-safe)."""
         with self._lock:
-            if self._model and hasattr(self._model, 'index'):
-                return getattr(self._model, 'index')
+            if self._model and hasattr(self._model, "index"):
+                return getattr(self._model, "index")
             return None
 
     @property
@@ -112,6 +112,6 @@ class RAGManager(_RAGManagerBase):
     def get_stats(self) -> dict:
         """Get stats from the underlying RAG system."""
         with self._lock:
-            if self._model and hasattr(self._model, 'get_stats'):
+            if self._model and hasattr(self._model, "get_stats"):
                 return self._model.get_stats()
             return {"status": "no_model"}

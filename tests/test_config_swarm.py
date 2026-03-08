@@ -3,14 +3,17 @@
 Tests for Swarm configuration - critical for multi-LLM consensus functionality.
 Verifies that swarm settings are properly stored and persisted.
 """
+
 import unittest
 import json
 import os
 from pathlib import Path
 from config_system import AppConfig
 
+
 class TestConfigSwarm(unittest.TestCase):
     """TestConfigSwarm class."""
+
     def setUp(self):
         self.test_config_path = Path("test_config.json")
         if self.test_config_path.exists():
@@ -48,5 +51,6 @@ class TestConfigSwarm(unittest.TestCase):
         self.assertTrue(config.swarm_enabled)
         self.assertEqual(config.swarm_size, 5)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

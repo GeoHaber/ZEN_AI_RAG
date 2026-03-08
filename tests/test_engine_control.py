@@ -20,27 +20,33 @@ START_SCRIPT = ROOT_DIR / "start_llm.py"
 BIN_DIR = ROOT_DIR / "_bin"
 LLAMA_EXE = "llama-server.exe"
 
+
 def get_llama_pids():
     """Return list of PIDs for llama-server.exe"""
     pids = []
-    for proc in psutil.process_iter(['pid', 'name']):
-        if proc.info['name'] == LLAMA_EXE:
-            pids.append(proc.info['pid'])
+    for proc in psutil.process_iter(["pid", "name"]):
+        if proc.info["name"] == LLAMA_EXE:
+            pids.append(proc.info["pid"])
     return pids
+
 
 def kill_all_llama():
     """Cleanup helper"""
-    for proc in psutil.process_iter(['pid', 'name']):
-        if proc.info['name'] != LLAMA_EXE:
+    for proc in psutil.process_iter(["pid", "name"]):
+        if proc.info["name"] != LLAMA_EXE:
             continue
-        try: proc.kill()
-        except Exception: pass
+        try:
+            proc.kill()
+        except Exception:
+            pass
+
 
 @pytest.fixture(scope="module")
 def clean_env():
     kill_all_llama()
     yield
     kill_all_llama()
+
 
 def _do_test_engine_lifecycle_setup():
     """Helper: setup phase for test_engine_lifecycle."""
@@ -52,7 +58,7 @@ def _do_test_engine_lifecycle_setup():
 
     # --- Step 1: Start Instance A ---
     print("\n[Test] Starting Instance A...")
-    # We use --guard-bypass for the first one so it doesn't kill unrelated things, 
+    # We use --guard-bypass for the first one so it doesn't kill unrelated things,
     # but strictly we want to test guard.
     # Let's just run it.
 
@@ -67,8 +73,9 @@ def _do_test_engine_lifecycle_setup():
         cwd=ROOT_DIR,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE, # To send \n if needed
-        text=True
+        stdin=subprocess.PIPE,  # To send \n if needed
+        text=True,
+        shell=False,
     )
 
     return cmd, proc_a
@@ -99,11 +106,11 @@ def _do_test_engine_lifecycle_init():
     if not pid_a:
         # Check stdout
         out, err = proc_a.communicate(timeout=1)
-        print(f"STDOUT: {out}")
-        print(f"STDERR: {err}")
+        # [X-Ray auto-fix] print(f"STDOUT: {out}")
+        # [X-Ray auto-fix] print(f"STDERR: {err}")
         pytest.fail("Instance A failed to start llama-server.exe")
 
-    print(f"[Test] Instance A Running (PID: {pid_a})")
+    # [X-Ray auto-fix] print(f"[Test] Instance A Running (PID: {pid_a})")
     assert port_active, "API 8001 not responding"
 
     return cmd, pid_a, proc_a
@@ -119,35 +126,36 @@ def test_engine_lifecycle(clean_env):
     cmd, pid_a, proc_a = _do_test_engine_lifecycle_init()
     # --- Step 2: Start Instance B (Trigger Guard) ---
     print("[Test] Starting Instance B (Should kill A)...")
-    
+
     proc_b = subprocess.Popen(
         cmd,
         cwd=ROOT_DIR,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
-        text=True
+        text=True,
+        shell=False,
     )
-    
+
     # Give it time to execute guard
     time.sleep(5)
-    
+
     # --- Step 3: Verify Swap ---
     current_pids = get_llama_pids()
-    print(f"[Test] Current PIDs: {current_pids}")
-    
+    # [X-Ray auto-fix] print(f"[Test] Current PIDs: {current_pids}")
     assert pid_a not in current_pids, "Instance A (PID {pid_a}) should have been killed!"
     assert len(current_pids) > 0, "Instance B should be running"
-    
+
     pid_b = current_pids[0]
     assert pid_b != pid_a, "PID should have changed"
-    
-    print(f"[Test] Instance B Running (PID: {pid_b}) - Swap Successful")
-    
+
+    # [X-Ray auto-fix] print(f"[Test] Instance B Running (PID: {pid_b}) - Swap Successful")
     # Cleanup
     proc_a.terminate()
     proc_b.terminate()
 
+
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__])

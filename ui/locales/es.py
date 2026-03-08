@@ -9,17 +9,17 @@ from .base import BaseLocale
 
 class SpanishLocale(BaseLocale):
     """Spanish (Español) locale."""
-    
+
     LANGUAGE_CODE = "es"
     LANGUAGE_NAME = "Spanish"
     LANGUAGE_NATIVE = "Español"
-    
+
     # ==========================================================================
     # APP METADATA
     # ==========================================================================
     APP_TITLE = "ZenAI"
     APP_SUBTITLE = "Tu Asistente IA Local"
-    
+
     # ==========================================================================
     # NAVIGATION
     # ==========================================================================
@@ -31,7 +31,7 @@ class SpanishLocale(BaseLocale):
     NAV_HF_DOWNLOAD = "📥 Descargar de Hugging Face"
     NAV_LOCAL_MODELS = "📂 Modelos Locales"
     NAV_NO_LOCAL_MODELS = "No hay modelos locales encontrados"
-    
+
     # ==========================================================================
     # BUTTONS
     # ==========================================================================
@@ -48,7 +48,7 @@ class SpanishLocale(BaseLocale):
     BTN_OK = "Aceptar"
     BTN_YES = "Sí"
     BTN_NO = "No"
-    
+
     # ==========================================================================
     # MODEL CATALOG
     # ==========================================================================
@@ -63,14 +63,14 @@ class SpanishLocale(BaseLocale):
     MODEL_SELECT_VARIANT = "Seleccionar variante de modelo"
     MODEL_LOADING_VARIANTS = "Cargando variantes..."
     MODEL_NO_VARIANTS = "No se encontraron variantes"
-    
+
     # Speed ratings
     MODEL_SPEED_FAST = "⚡ Muy Rápido"
     MODEL_SPEED_GOOD = "🚀 Rápido"
     MODEL_SPEED_MEDIUM = "⏱️ Medio"
     MODEL_SPEED_SLOW = "🐢 Lento"
     MODEL_SPEED_VERY_SLOW = "🦥 Muy Lento"
-    
+
     # ==========================================================================
     # ENGINE / AI
     # ==========================================================================
@@ -83,7 +83,7 @@ class SpanishLocale(BaseLocale):
     ENGINE_SCANNING_SWARM = "Escaneando enjambre..."
     ENGINE_EXPERTS_ONLINE = "{count} Expertos En Línea"
     ENGINE_STANDALONE = "Modo Independiente ZenAI"
-    
+
     # ==========================================================================
     # SYSTEM
     # ==========================================================================
@@ -92,7 +92,7 @@ class SpanishLocale(BaseLocale):
     SYS_DIAGNOSTICS = "Diagnósticos"
     SYS_UPDATE_ENGINE = "Actualizar Motor"
     SYS_GET_UPDATE = "Obtener Actualización (GitHub)"
-    
+
     # ==========================================================================
     # SETTINGS
     # ==========================================================================
@@ -110,7 +110,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_CAT_RAG = "📚 RAG"
     SETTINGS_CAT_CHAT = "💬 Chat"
     SETTINGS_CAT_SYSTEM = "⚙️ Sistema"
-    
+
     SETTINGS_UI_LANGUAGE = "Idioma de la Interfaz"
     SETTINGS_UI_LANGUAGE_DESC = "Selecciona el idioma de la interfaz de usuario"
     SETTINGS_DARK_MODE = "Modo Oscuro"
@@ -125,7 +125,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_CHAT_DENSITY_SPACIOUS = "Espacioso"
     SETTINGS_SHOW_AVATARS = "Mostrar Avatares"
     SETTINGS_ANIMATE_MESSAGES = "Animar Mensajes"
-    
+
     SETTINGS_DEFAULT_MODEL = "Modelo Predeterminado"
     SETTINGS_DEFAULT_MODEL_DESC = "Modelo a cargar al iniciar"
     SETTINGS_TEMPERATURE = "Temperatura"
@@ -134,7 +134,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_MAX_TOKENS_DESC = "Longitud máxima de respuesta"
     SETTINGS_CONTEXT_WINDOW = "Ventana de Contexto"
     SETTINGS_CONTEXT_WINDOW_DESC = "Cuánto historial de conversación recordar"
-    
+
     SETTINGS_TTS_ENABLED = "Texto a Voz"
     SETTINGS_TTS_ENABLED_DESC = "Habilitar salida de voz"
     SETTINGS_VOICE_SPEED = "Velocidad de Voz"
@@ -143,7 +143,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_AUTO_SPEAK_DESC = "Leer automáticamente las respuestas en voz alta"
     SETTINGS_RECORDING_DURATION = "Duración de Grabación"
     SETTINGS_RECORDING_DURATION_DESC = "Tiempo de grabación de voz (segundos)"
-    
+
     SETTINGS_RAG_ENABLED = "Habilitar RAG"
     SETTINGS_RAG_ENABLED_DESC = "Usar base de conocimiento para respuestas"
     SETTINGS_CHUNK_SIZE = "Tamaño de Fragmento"
@@ -152,7 +152,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_SIMILARITY_THRESHOLD_DESC = "Puntuación mínima de relevancia (0.0-1.0)"
     SETTINGS_MAX_RESULTS = "Resultados Máximos"
     SETTINGS_MAX_RESULTS_DESC = "Número de fuentes a recuperar"
-    
+
     SETTINGS_SHOW_TIMESTAMPS = "Mostrar Marcas de Tiempo"
     SETTINGS_SHOW_TIMESTAMPS_DESC = "Mostrar hora en cada mensaje"
     SETTINGS_AUTO_SCROLL = "Desplazamiento Automático"
@@ -161,7 +161,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_STREAM_RESPONSES_DESC = "Mostrar respuesta mientras se genera"
     SETTINGS_SAVE_CONVERSATIONS = "Guardar Conversaciones"
     SETTINGS_SAVE_CONVERSATIONS_DESC = "Recordar historial entre sesiones"
-    
+
     SETTINGS_API_PORT = "Puerto API"
     SETTINGS_API_PORT_DESC = "Puerto del servidor backend LLM"
     SETTINGS_MODELS_DIRECTORY = "Directorio de Modelos"
@@ -172,7 +172,7 @@ class SpanishLocale(BaseLocale):
     SETTINGS_AUTO_START_BACKEND_DESC = "Lanzar servidor LLM con la aplicación"
     SETTINGS_LOG_LEVEL = "Nivel de Registro"
     SETTINGS_LOG_LEVEL_DESC = "Verbosidad de los registros de aplicación"
-    
+
     # ==========================================================================
     # RAG / SCAN & LEARN
     # ==========================================================================
@@ -190,7 +190,7 @@ class SpanishLocale(BaseLocale):
     RAG_START_SCAN = "Iniciar Escaneo"
     RAG_ANSWERED_FROM_SOURCE = "**🔍 Respuesta de Fuente de Datos**"
     RAG_VIEW_SOURCES = "📂 Ver Datos de Origen"
-    
+
     # ==========================================================================
     # CHAT INTERFACE
     # ==========================================================================
@@ -241,14 +241,14 @@ class SpanishLocale(BaseLocale):
         "🌊 Mente colmena activándose...",
         "🏛️ Consejo en sesión...",
     ]
-    
+
     # ==========================================================================
     # FILE UPLOAD
     # ==========================================================================
     UPLOAD_ATTACHED = "📎 {filename} ({size} caracteres)"
     UPLOAD_SUCCESS = "{filename} adjuntado"
     UPLOAD_FAILED = "Error al subir: {error}"
-    
+
     # ==========================================================================
     # VOICE
     # ==========================================================================
@@ -258,7 +258,7 @@ class SpanishLocale(BaseLocale):
     VOICE_NO_SPEECH = "No se detectó voz"
     VOICE_ERROR = "Error de Voz: {error}"
     VOICE_NOT_AVAILABLE = "TTS no disponible (falta pyttsx3)"
-    
+
     # ==========================================================================
     # NOTIFICATIONS & MESSAGES
     # ==========================================================================
@@ -267,25 +267,25 @@ class SpanishLocale(BaseLocale):
     NOTIFY_MODEL_READY = "✅ Modelo listo: {model}"
     NOTIFY_MODEL_ACTIVE = "✅ Modelo activo: {model}"
     NOTIFY_MODEL_SET = "✅ Modelo activo configurado: {model}"
-    
+
     # Download notifications
     NOTIFY_DOWNLOAD_STARTING = "🚀 Iniciando descarga: {filename}..."
     NOTIFY_DOWNLOAD_STARTED = "✅ ¡Descarga iniciada! Revisa el progreso en tu terminal."
     NOTIFY_DOWNLOAD_FAILED = "❌ Descarga fallida: {error}"
     NOTIFY_DOWNLOAD_ERROR = "❌ Error: {error}"
     NOTIFY_HUB_CONNECTION_ERROR = "❌ No se puede conectar al Hub. ¿Está ejecutándose en el puerto 8002?"
-    
+
     # Upload/attachment notifications
     NOTIFY_ATTACHED = "{name} adjuntado"
     NOTIFY_UPLOAD_FAILED = "Error al subir: {error}"
-    
-    # Voice notifications  
+
+    # Voice notifications
     NOTIFY_SOUNDDEVICE_MISSING = "Error: SoundDevice no encontrado (¿Sin audio?)"
     NOTIFY_TRANSCRIBED = "¡Transcrito!"
     NOTIFY_NO_SPEECH = "No se detectó voz"
     NOTIFY_TRANSCRIPTION_FAILED = "Transcripción Fallida: {error}"
     NOTIFY_VOICE_ERROR = "Error de Voz: {error}"
-    
+
     # RAG notifications
     NOTIFY_RAG_ENABLED = "Modo RAG habilitado"
     NOTIFY_RAG_DISABLED = "Modo RAG deshabilitado"
@@ -299,12 +299,12 @@ class SpanishLocale(BaseLocale):
     NOTIFY_RAG_ENTER_URL = "Por favor ingresa una URL de sitio web"
     NOTIFY_RAG_ENTER_PATH = "Por favor ingresa una ruta de directorio"
     NOTIFY_RAG_FINDING_FILES = "📂 Buscando archivos..."
-    
+
     # Version notifications
     NOTIFY_VERSION_UP_TO_DATE = "✅ ¡Actualizado! Versión: {version}"
     NOTIFY_VERSION_CHECK_FAILED = "Verificación de versión fallida: {error}"
     NOTIFY_UPDATE_MANUAL = "La actualización requiere descarga manual actualmente. Abriendo GitHub..."
-    
+
     # Benchmark notifications
     NOTIFY_BENCHMARK_RUNNING = "🏃 Ejecutando benchmark... (esto tomará ~30 segundos)"
     NOTIFY_BENCHMARK_COMPLETE = "✅ ¡Benchmark Completado!"
@@ -314,7 +314,7 @@ class SpanishLocale(BaseLocale):
 📊 Rendimiento: {tokens_per_sec:.1f} tokens/seg
 📝 Generados: {tokens} tokens
 ⏱️ Tiempo: {seconds:.1f} segundos"""
-    
+
     # Diagnostics
     NOTIFY_DIAGNOSTICS_RUNNING = "Ejecutando diagnósticos..."
     NOTIFY_DIAGNOSTICS_FAILED = "Diagnósticos fallidos: {error}"
@@ -324,14 +324,14 @@ class SpanishLocale(BaseLocale):
     DIAG_RAG_VECTORS = "{emoji} RAG: {count} vectores"
     DIAG_RAG_NOT_INIT = "{emoji} RAG: No inicializado"
     DIAG_MEMORY = "{emoji} Memoria: {percent}% usada"
-    
+
     # Generic
     NOTIFY_ERROR = "❌ Error: {error}"
     NOTIFY_SUCCESS = "✅ ¡Éxito!"
     NOTIFY_WARNING = "⚠️ Advertencia: {message}"
     NOTIFY_INFO = "ℹ️ {message}"
     NOTIFY_ENTER_BOTH_FIELDS = "Por favor ingresa tanto el ID del Repositorio como el Nombre del Archivo"
-    
+
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
@@ -385,7 +385,7 @@ Soy tu asistente IA potenciado por NiceGUI. Puedo ayudarte con:
     TOOLTIP_ATTACH_FILE = "Adjuntar archivo"
     TOOLTIP_VOICE_INPUT = "Entrada de voz"
     TOOLTIP_SEND_MESSAGE = "Enviar mensaje"
-    
+
     # ==========================================================================
     # ERRORS
     # ==========================================================================
@@ -397,7 +397,7 @@ Soy tu asistente IA potenciado por NiceGUI. Puedo ayudarte con:
         "Procesando...",
         "Generando respuesta...",
         "Analizando intención...",
-        "Consultando rutas neuronales..."
+        "Consultando rutas neuronales...",
     ]
 
     LOADING_SWARM_THINKING = [
@@ -405,7 +405,7 @@ Soy tu asistente IA potenciado por NiceGUI. Puedo ayudarte con:
         "Reuniendo consenso...",
         "Expertos deliberando...",
         "Comparando salidas paralelas...",
-        "Verificando con el enjambre..."
+        "Verificando con el enjambre...",
     ]
 
     LOADING_RAG_THINKING = [
@@ -413,5 +413,5 @@ Soy tu asistente IA potenciado por NiceGUI. Puedo ayudarte con:
         "Recuperando fragmentos relevantes...",
         "Consultando tus documentos de proyecto...",
         "Verificando hechos con fuentes...",
-        "Leyendo la letra pequeña..."
+        "Leyendo la letra pequeña...",
     ]

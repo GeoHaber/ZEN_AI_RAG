@@ -1,4 +1,3 @@
-
 import time
 import logging
 import sys
@@ -7,11 +6,12 @@ import asyncio
 from pathlib import Path
 
 # Setup paths
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Configure Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("Benchmark")
+
 
 def _do_benchmark_rag_setup():
     """Helper: setup phase for benchmark_rag."""
@@ -40,17 +40,25 @@ def _do_benchmark_rag_setup():
     # Mocking async call for arbitrator warmup in sync context (or actually running it if possible)
     # We'll just init the heavy model directly for benchmarking pure inference
     if arbitrator.nli_model is None:
-         logger.info("Warming up NLI model manually for benchmark...")
-         arbitrator.nli_model = CrossEncoder('cross-encoder/nli-distilroberta-base')
+        logger.info("Warming up NLI model manually for benchmark...")
+        arbitrator.nli_model = CrossEncoder("cross-encoder/nli-distilroberta-base")
 
     warmup_time = time.time() - t0
     logger.info(f"✅ System Warmup took: {warmup_time:.4f}s")
 
     # 2. Ingest Sample Data
     documents = [
-        {"content": "The capital of France is Paris. It is known for the Eiffel Tower.", "url": "doc1", "title": "France Info"},
+        {
+            "content": "The capital of France is Paris. It is known for the Eiffel Tower.",
+            "url": "doc1",
+            "title": "France Info",
+        },
         {"content": "The capital of Germany is Berlin. It has a rich history.", "url": "doc2", "title": "Germany Info"},
-        {"content": "Python is a programming language created by Guido van Rossum.", "url": "doc3", "title": "Python History"},
+        {
+            "content": "Python is a programming language created by Guido van Rossum.",
+            "url": "doc3",
+            "title": "Python History",
+        },
         {"content": "Rust is a systems programming language focused on safety.", "url": "doc4", "title": "Rust Info"},
         {"content": "Machine learning is a subset of artificial intelligence.", "url": "doc5", "title": "AI Basics"},
     ]
@@ -79,16 +87,16 @@ def benchmark_rag():
     reranked = rag.rerank(query, results, top_k=3)
     t_rerank = time.time() - t_start
     logger.info(f"🔹 Cross-Encoder Re-ranking: {t_rerank:.4f}s")
-    
+
     # 4. Benchmark Verification (NLI Latency)
     response_text = "The capital of France is Paris."
-    context_chunks = [c['text'] for c in reranked]
-    
+    context_chunks = [c["text"] for c in reranked]
+
     t_start = time.time()
     arbitrator.verify_hallucination(response_text, context_chunks)
     t_verify = time.time() - t_start
     logger.info(f"🔹 NLI Verification: {t_verify:.4f}s")
-    
+
     # 5. Throughput Test (Simulating Load)
     logger.info("\n--- Stress Test (10 Iterations) ---")
     total_time = 0
@@ -98,15 +106,14 @@ def benchmark_rag():
         # Full Pipeline Simulation
         res = rag.search(query, k=5)
         top = rag.rerank(query, res, top_k=3)
-        _ = arbitrator.verify_hallucination(response_text, [c['text'] for c in top])
+        _ = arbitrator.verify_hallucination(response_text, [c["text"] for c in top])
         dur = time.time() - t0
         total_time += dur
         valid_iters += 1
-        print(f".", end="", flush=True)
-    
+        # [X-Ray auto-fix] print(f".", end="", flush=True)
     avg_latency = total_time / valid_iters
     logger.info(f"\n✅ Average Full Pipeline Latency: {avg_latency:.4f}s")
-    
+
     # Summary
     logger.info("\n=== BENCHMARK REPORT ===")
     logger.info(f"Warmup Time: {warmup_time:.2f}s")
@@ -115,6 +122,7 @@ def benchmark_rag():
     logger.info(f"Verification: {t_verify:.4f}s")
     logger.info(f"Total Per Request: {t_retrieval + t_rerank + t_verify:.4f}s")
     logger.info("========================")
+
 
 if __name__ == "__main__":
     benchmark_rag()

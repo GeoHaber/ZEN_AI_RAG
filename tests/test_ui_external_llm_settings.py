@@ -34,7 +34,6 @@ class TestExternalLLMSettings:
         assert settings.google_model == "gemini-pro"
         assert settings.xai_model == "grok-beta"
 
-
     def test_api_key_storage(self):
         """Test API key storage and retrieval."""
         settings = ExternalLLMSettings()
@@ -97,7 +96,7 @@ class TestExternalLLMSettings:
         app_settings = AppSettings()
 
         # Should have external_llm attribute
-        assert hasattr(app_settings, 'external_llm')
+        assert hasattr(app_settings, "external_llm")
         assert isinstance(app_settings.external_llm, ExternalLLMSettings)
 
         # Test modification through app settings
@@ -116,7 +115,7 @@ class TestExternalLLMUIComponents:
         # This would be tested with actual UI framework
         # For now, verify the settings structure is correct
         settings = AppSettings()
-        assert hasattr(settings, 'external_llm')
+        assert hasattr(settings, "external_llm")
 
     def test_api_key_password_masking(self):
         """Test that API keys are password-masked in UI."""
@@ -131,20 +130,13 @@ class TestExternalLLMUIComponents:
     def test_model_dropdown_options(self):
         """Test that model dropdown has correct options."""
         # Anthropic models
-        anthropic_models = [
-            'claude-3-5-sonnet-20241022',
-            'claude-3-opus-20240229',
-            'claude-3-haiku-20240307'
-        ]
+        anthropic_models = ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
 
         # Google models
-        google_models = [
-            'gemini-pro',
-            'gemini-pro-vision'
-        ]
+        google_models = ["gemini-pro", "gemini-pro-vision"]
 
         # Grok models
-        grok_models = ['grok-beta']
+        grok_models = ["grok-beta"]
 
         # Verify default selections are in the lists
         settings = ExternalLLMSettings()
@@ -182,19 +174,19 @@ class TestExternalLLMIntegration:
         settings.xai_api_key = "xai-test789"
 
         # Simulate setting environment variables from settings
-        os.environ['ANTHROPIC_API_KEY'] = settings.anthropic_api_key
-        os.environ['GOOGLE_API_KEY'] = settings.google_api_key
-        os.environ['XAI_API_KEY'] = settings.xai_api_key
+        os.environ["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
+        os.environ["GOOGLE_API_KEY"] = settings.google_api_key
+        os.environ["XAI_API_KEY"] = settings.xai_api_key
 
         # Verify they're set
-        assert os.getenv('ANTHROPIC_API_KEY') == "sk-ant-test123"
-        assert os.getenv('GOOGLE_API_KEY') == "AIza-test456"
-        assert os.getenv('XAI_API_KEY') == "xai-test789"
+        assert os.getenv("ANTHROPIC_API_KEY") == "sk-ant-test123"
+        assert os.getenv("GOOGLE_API_KEY") == "AIza-test456"
+        assert os.getenv("XAI_API_KEY") == "xai-test789"
 
         # Cleanup
-        del os.environ['ANTHROPIC_API_KEY']
-        del os.environ['GOOGLE_API_KEY']
-        del os.environ['XAI_API_KEY']
+        del os.environ["ANTHROPIC_API_KEY"]
+        del os.environ["GOOGLE_API_KEY"]
+        del os.environ["XAI_API_KEY"]
 
     def test_external_llm_enabled_flag(self):
         """Test that enabled flag controls external LLM usage."""
@@ -220,7 +212,6 @@ class TestExternalLLMIntegration:
         # Enable consensus mode
         settings.use_consensus = True
         assert settings.use_consensus == True
-
 
 
 class TestUIWorkflow:
@@ -317,10 +308,10 @@ class TestSettingsPersistence:
 
             # Simulate save
             data = {
-                'external_llm': {
-                    'enabled': settings.external_llm.enabled,
-                    'google_api_key': settings.external_llm.google_api_key,
-                    'budget_limit': settings.external_llm.budget_limit,
+                "external_llm": {
+                    "enabled": settings.external_llm.enabled,
+                    "google_api_key": settings.external_llm.google_api_key,
+                    "budget_limit": settings.external_llm.budget_limit,
                 }
             }
             settings_file.write_text(json.dumps(data, indent=2))
@@ -328,9 +319,9 @@ class TestSettingsPersistence:
             # Simulate load
             loaded_data = json.loads(settings_file.read_text())
             new_settings = AppSettings()
-            new_settings.external_llm.enabled = loaded_data['external_llm']['enabled']
-            new_settings.external_llm.google_api_key = loaded_data['external_llm']['google_api_key']
-            new_settings.external_llm.budget_limit = loaded_data['external_llm']['budget_limit']
+            new_settings.external_llm.enabled = loaded_data["external_llm"]["enabled"]
+            new_settings.external_llm.google_api_key = loaded_data["external_llm"]["google_api_key"]
+            new_settings.external_llm.budget_limit = loaded_data["external_llm"]["budget_limit"]
 
             # Verify
             assert new_settings.external_llm.enabled == True

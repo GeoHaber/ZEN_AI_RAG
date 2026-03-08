@@ -58,11 +58,10 @@ def save_settings(state: dict[str, Any]) -> None:
             data = {k: state[k] for k in _PERSISTENT_KEYS if k in state}
             content = json.dumps(data, indent=2, ensure_ascii=False)
             # Atomic write: write to temp file then rename
-            fd, tmp_path = tempfile.mkstemp(
-                dir=SETTINGS_FILE.parent, suffix=".tmp"
-            )
+            fd, tmp_path = tempfile.mkstemp(dir=SETTINGS_FILE.parent, suffix=".tmp")
             try:
                 import os
+
                 os.write(fd, content.encode("utf-8"))
                 os.close(fd)
                 Path(tmp_path).replace(SETTINGS_FILE)

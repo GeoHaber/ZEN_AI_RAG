@@ -20,12 +20,31 @@ FONT_FAMILY = "Segoe UI, Roboto, Helvetica, Arial, sans-serif"
 class _THMeta(type):
     """Metaclass: ``TH.accent`` returns a colour string directly."""
 
-    _KEYS = frozenset({
-        "accent", "accent2", "bg", "card", "surface", "border", "text",
-        "dim", "muted", "code_bg", "sidebar", "shadow", "divider",
-        "bar_bg", "chip", "success", "warning_c", "error_c",
-        "user_bubble", "ai_bubble", "rag_bubble",
-    })
+    _KEYS = frozenset(
+        {
+            "accent",
+            "accent2",
+            "bg",
+            "card",
+            "surface",
+            "border",
+            "text",
+            "dim",
+            "muted",
+            "code_bg",
+            "sidebar",
+            "shadow",
+            "divider",
+            "bar_bg",
+            "chip",
+            "success",
+            "warning_c",
+            "error_c",
+            "user_bubble",
+            "ai_bubble",
+            "rag_bubble",
+        }
+    )
 
     def __getattr__(cls, name: str) -> str:
         """Raise a clear error when an undefined theme attribute is accessed."""

@@ -3,19 +3,21 @@
 verify_ethical_crawling.py - Demonstration of Intelligent & Ethical Web Crawling
 Tests the new WebCrawlScanner integration in both sync and async scrapers.
 """
+
 import asyncio
 import logging
 from zena_mode.async_scraper import SafeAsyncScraper
 from zena_mode.scraper import WebsiteScraper
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("EthicalVerify")
+
 
 async def verify_async_politeness():
     """Verify async politeness."""
     logger.info("\n--- 🔍 VERIFYING ASYNC SCRAPER (POLITE MODE) ---")
-    
+
     # Target 1: A blocked site (Google Search)
     url_blocked = "https://www.google.com/search?q=zenai"
     logger.info(f"Testing blocked URL: {url_blocked}")
@@ -32,10 +34,11 @@ async def verify_async_politeness():
     if results:
         logger.info(f"✅ ASYNC: Successfully crawled allowed URL: {results[0]['url']}")
 
+
 def verify_sync_politeness():
     """Verify sync politeness."""
     logger.info("\n--- 🔍 VERIFYING SYNC SCRAPER (POLITE MODE) ---")
-    
+
     # Target 1: A blocked site
     url_blocked = "https://www.google.com/search?q=zenai"
     logger.info(f"Testing blocked URL: {url_blocked}")
@@ -52,11 +55,12 @@ def verify_sync_politeness():
     if results:
         logger.info(f"✅ SYNC: Successfully crawled allowed URL: {results[0]['url']}")
 
+
 if __name__ == "__main__":
     # Run async tests
     asyncio.run(verify_async_politeness())
-    
+
     # Run sync tests
     verify_sync_politeness()
-    
+
     logger.info("\n✨ Ethical Web Crawling verification complete!")

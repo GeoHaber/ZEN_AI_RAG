@@ -93,10 +93,12 @@ class RAGEngine:
         )
         self._reranker = RerankerManager(model_name=reranker_model)
         self._bm25 = BM25Index(code_aware=prefer_code)
-        self._chunker = TextChunker(ChunkerConfig(
-            CHUNK_SIZE=chunk_size,
-            CHUNK_OVERLAP=chunk_overlap,
-        ))
+        self._chunker = TextChunker(
+            ChunkerConfig(
+                CHUNK_SIZE=chunk_size,
+                CHUNK_OVERLAP=chunk_overlap,
+            )
+        )
         self._dedup = DeduplicationManager(similarity_threshold=dedup_threshold)
         self._cache: Optional[SemanticCache] = None
         self._searcher: Optional[HybridSearcher] = None
@@ -143,6 +145,7 @@ class RAGEngine:
 
         Returns True if at least BM25 is available.
         """
+
         def _p(msg: str, pct: float = 0.0):
             if progress:
                 progress(msg, pct)
@@ -246,17 +249,15 @@ class RAGEngine:
         # Save embedding cache for persistence
         if self._embeddings.is_loaded and self._searcher._doc_embeddings is not None:
             cache_path = self.storage_dir / f"{self.collection}_embeddings.npy"
-            self._embeddings.save_embeddings(
-                self._searcher._doc_embeddings, cache_path
-            )
+            self._embeddings.save_embeddings(self._searcher._doc_embeddings, cache_path)
             # Save document metadata alongside
             meta_path = self.storage_dir / f"{self.collection}_docs.json"
             meta_path.parent.mkdir(parents=True, exist_ok=True)
             meta_path.write_text(
                 json.dumps(
-                    [{"text": d["text"][:500], **{k: v for k, v in d.items() if k != "text"}}
-                     for d in chunks],
-                    indent=2, default=str,
+                    [{"text": d["text"][:500], **{k: v for k, v in d.items() if k != "text"}} for d in chunks],
+                    indent=2,
+                    default=str,
                 ),
                 encoding="utf-8",
             )
@@ -321,14 +322,15 @@ class RAGEngine:
                     if isinstance(r, dict):
                         # to_dict() flattens metadata into the dict —
                         # extract known fields and put the rest back into metadata.
-                        meta = {k: v for k, v in r.items()
-                                if k not in ("text", "score", "index")}
-                        restored.append(SearchResult(
-                            text=r["text"],
-                            score=r.get("score", 0.0),
-                            index=r.get("index", 0),
-                            metadata=meta,
-                        ))
+                        meta = {k: v for k, v in r.items() if k not in ("text", "score", "index")}
+                        restored.append(
+                            SearchResult(
+                                text=r["text"],
+                                score=r.get("score", 0.0),
+                                index=r.get("index", 0),
+                                metadata=meta,
+                            )
+                        )
                     else:
                         restored.append(r)
                 return restored
@@ -429,6 +431,7 @@ class RAGEngine:
 
         if loop and loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 return pool.submit(asyncio.run, coro).result()
         else:

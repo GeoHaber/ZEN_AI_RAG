@@ -13,10 +13,11 @@ DOCS_TO_INDEX = [
     "ARCHITECTURE_V2.md",
     "UI_REDESIGN_SPEC.md",
     "INSTALL.md",
-    "RAG_VISUAL_GUIDE.md"
+    "RAG_VISUAL_GUIDE.md",
 ]
 
 _help_rag = None
+
 
 def get_help_rag():
     """Lazy singleton for Help System RAG."""
@@ -24,12 +25,14 @@ def get_help_rag():
     if _help_rag is None:
         try:
             from config_system import config
+
             rag_cache = config.BASE_DIR / "rag_cache"
             _help_rag = LocalRAG(cache_dir=rag_cache)
         except Exception as e:
             logger.error(f"[HelpSystem] Failed to initialize RAG: {e}")
             return None
     return _help_rag
+
 
 def _do_index_internal_docs_setup(rag, root_dir):
     """Helper: setup phase for index_internal_docs."""
@@ -61,11 +64,7 @@ def _do_index_internal_docs_setup(rag, root_dir):
                 with open(found_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
-                docs_payload.append({
-                    "title": f"System Doc: {doc_name}",
-                    "url": str(found_path),
-                    "content": content
-                })
+                docs_payload.append({"title": f"System Doc: {doc_name}", "url": str(found_path), "content": content})
                 logger.info(f"  [+] Found: {doc_name}")
             except Exception as e:
                 logger.error(f"  [-] Failed to read {doc_name}: {e}")
@@ -84,30 +83,27 @@ def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
         logger.info("🔍 Indexing code docstrings in 'zena_mode'...")
         for py_file in zena_mode_dir.glob("*.py"):
             try:
-                if py_file.name == "help_system.py": continue # Avoid recursion if it parses itself
+                if py_file.name == "help_system.py":
+                    continue  # Avoid recursion if it parses itself
                 with open(py_file, "r", encoding="utf-8") as f:
                     node = ast.parse(f.read())
-                
+
                 # Extract file-level docstring
                 file_doc = ast.get_docstring(node)
                 if file_doc:
-                    docs_payload.append({
-                        "title": f"Code Logic: {py_file.name} (Overview)",
-                        "url": str(py_file),
-                        "content": file_doc
-                    })
-                
+                    docs_payload.append(
+                        {"title": f"Code Logic: {py_file.name} (Overview)", "url": str(py_file), "content": file_doc}
+                    )
+
                 # Extract class and function docstrings
                 for item in node.body:
                     if not isinstance(item, (ast.ClassDef, ast.FunctionDef)):
                         continue
                     item_doc = ast.get_docstring(item)
                     if item_doc:
-                        docs_payload.append({
-                            "title": f"Logic: {py_file.name} -> {item.name}",
-                            "url": str(py_file),
-                            "content": item_doc
-                        })
+                        docs_payload.append(
+                            {"title": f"Logic: {py_file.name} -> {item.name}", "url": str(py_file), "content": item_doc}
+                        )
             except Exception as e:
                 logger.debug(f"  [-] Failed to parse docstrings in {py_file.name}: {e}")
 
@@ -117,7 +113,9 @@ def index_internal_docs(root_dir: Path, rag: Optional[LocalRAG] = None):
     else:
         logger.warning("⚠️ No documentation files found to index.")
 
+
 if __name__ == "__main__":
     # Test run
     from config_system import config
+
     index_internal_docs(config.BASE_DIR)

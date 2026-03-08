@@ -12,6 +12,7 @@ Features:
   - Synonym-based query expansion (no LLM dependency)
   - Multi-query generation for comprehensive retrieval
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,8 +25,7 @@ logger = logging.getLogger(__name__)
 class QueryProcessor:
     """Intelligent query processing for better retrieval."""
 
-    def __init__(self, *, expansion_enabled: bool = True,
-                 rewriting_enabled: bool = True) -> None:
+    def __init__(self, *, expansion_enabled: bool = True, rewriting_enabled: bool = True) -> None:
         """Configure query expansion and rewriting toggles."""
         self.expansion_enabled = expansion_enabled
         self.rewriting_enabled = rewriting_enabled
@@ -97,8 +97,21 @@ class QueryProcessor:
         """Remove extra whitespace and add ``?`` if it looks like a question."""
         query = re.sub(r"\s+", " ", query.strip())
         q_words = {
-            "what", "when", "where", "who", "why", "how", "which",
-            "can", "could", "would", "should", "is", "are", "does", "do",
+            "what",
+            "when",
+            "where",
+            "who",
+            "why",
+            "how",
+            "which",
+            "can",
+            "could",
+            "would",
+            "should",
+            "is",
+            "are",
+            "does",
+            "do",
         }
         first = query.lower().split()[0] if query.split() else ""
         if (first in q_words or query.endswith("?")) and not query.endswith("?"):

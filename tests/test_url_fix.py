@@ -1,9 +1,11 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from zena_mode.scraper import WebsiteScraper
+
 
 def test_scraper_normalizes_url():
     """Verify scraper adds https:// to bare domains."""
@@ -19,10 +21,11 @@ def test_scraper_normalizes_url():
     # 3. Already valid
     scraper_valid = WebsiteScraper("http://test.com")
     assert scraper_valid.base_url == "http://test.com"
-    
+
     # 4. Input with spaces
     scraper_spaces = WebsiteScraper("  google.com  ")
     assert scraper_spaces.base_url == "https://google.com"
+
 
 if __name__ == "__main__":
     test_scraper_normalizes_url()

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 ui/registry.py - Centralized UI Interaction Registry
-Defines the IDs for all interactive elements to prevent dead links 
+Defines the IDs for all interactive elements to prevent dead links
 and enable automatic chaos/monkey testing.
 """
 
+
 class UI_IDS:
     """UI_IDS class."""
+
     # --- Sidebar / Drawer ---
     BTN_NEW_CHAT = "ui-btn-new-chat"
     BTN_SETTINGS = "ui-btn-settings"
@@ -15,13 +17,13 @@ class UI_IDS:
     SW_DARK_MODE = "ui-sw-dark-mode"
     EXP_RAG_SOURCES = "ui-exp-rag-sources"
     BTN_START_TOUR = "ui-btn-start-tour"
-    
+
     # --- Chat Input ---
     INPUT_CHAT = "ui-input-chat"
     BTN_SEND = "ui-btn-send"
     BTN_VOICE = "ui-btn-voice"
     BTN_ATTACH = "ui-btn-attach"
-    
+
     # --- Settings Dialog ---
     SET_LANGUAGE = "ui-set-language"
     SET_DARK_MODE = "ui-set-dark-mode"
@@ -31,7 +33,7 @@ class UI_IDS:
     SET_RAG_ENABLE = "ui-set-rag-enable"
     BTN_SET_SAVE = "ui-btn-set-save"
     BTN_SET_RESET = "ui-btn-set-reset"
-    
+
     # --- Model / System Dialogs ---
     BTN_DOWNLOAD_MODEL = "ui-btn-download-model"
     BTN_UPDATE_ENGINE = "ui-btn-update-engine"
@@ -39,12 +41,13 @@ class UI_IDS:
     BTN_SWARM = "ui-btn-swarm-manager"
     BTN_SCAN = "ui-btn-scan-trigger"
     BTN_JUDGE = "ui-btn-intelligence-judge"
-    
+
     # --- Batch Analysis ---
     BTN_BATCH_MENU = "ui-btn-batch-menu"
     BTN_BATCH_START = "ui-btn-batch-start"
     INPUT_BATCH_FILES = "ui-input-batch-files"
     EXP_BATCH_STATUS = "ui-exp-batch-status"
+
 
 # Metadata map for the LLM to understand what each ID does
 UI_METADATA = {

@@ -12,13 +12,10 @@ Adapted from RAG_RAT/Core/services/rag_service.py.
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import time as _time
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from Core.exceptions import (
-    DocumentError,
     LLMError,
     RAGError,
     ValidationError,
@@ -121,18 +118,14 @@ class RAGService:
         except Exception as exc:
             raise RAGError(f"RAG stream failed: {exc}", stage="stream_pipeline")
 
-    async def retrieve_documents(
-        self, query: str, top_k: int = 5
-    ) -> List[Dict[str, Any]]:
+    async def retrieve_documents(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """Public method — retrieve documents matching *query*."""
         self._validate_query(query)
         return await self._retrieve_documents(query, top_k)
 
     # ─── Private Helpers ─────────────────────────────────
 
-    async def _retrieve_documents(
-        self, query: str, top_k: int
-    ) -> List[Dict[str, Any]]:
+    async def _retrieve_documents(self, query: str, top_k: int) -> List[Dict[str, Any]]:
         """Retrieve from RAGIntegration or return empty list."""
         try:
             try:
@@ -140,9 +133,7 @@ class RAGService:
 
                 rag = await get_rag()
                 if rag and rag.initialized:
-                    results = await rag.search_context(
-                        query, top_k=top_k, score_threshold=0.25
-                    )
+                    results = await rag.search_context(query, top_k=top_k, score_threshold=0.25)
                     return [
                         {
                             "name": r.get("source", "unknown"),
@@ -175,14 +166,10 @@ class RAGService:
                 ]
 
             context = "\n\n".join(
-                f"Document: {doc.get('name', 'Unknown')}\n"
-                f"Content: {doc.get('content', '')[:500]}…"
+                f"Document: {doc.get('name', 'Unknown')}\nContent: {doc.get('content', '')[:500]}…"
                 for doc in documents[:3]
             )
-            augmented = (
-                f"Use the following documents to answer the query:\n\n"
-                f"{context}\n\nQuery: {query}"
-            )
+            augmented = f"Use the following documents to answer the query:\n\n{context}\n\nQuery: {query}"
             return [
                 {"role": "system", "content": sys_msg},
                 {"role": "user", "content": augmented},

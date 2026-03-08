@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 logger = logging.getLogger(__name__)
 

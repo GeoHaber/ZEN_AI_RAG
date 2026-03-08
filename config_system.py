@@ -3,6 +3,7 @@
 config_system.py - ZenAI Configuration System
 Centralized configuration for all application constants
 """
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Set, Dict
@@ -16,20 +17,25 @@ logger = logging.getLogger(__name__)
 # Nested Config Dataclasses
 # =============================================================================
 
+
 @dataclass
 class EmbeddingConfig:
     """Configuration for embedding models used in RAG."""
-    MODELS: Dict[str, str] = field(default_factory=lambda: {
-        "fast": "all-MiniLM-L6-v2",
-        "balanced": "all-mpnet-base-v2",
-        "accurate": "BAAI/bge-large-en-v1.5"
-    })
+
+    MODELS: Dict[str, str] = field(
+        default_factory=lambda: {
+            "fast": "all-MiniLM-L6-v2",
+            "balanced": "all-mpnet-base-v2",
+            "accurate": "BAAI/bge-large-en-v1.5",
+        }
+    )
     fallback_model: str = "fast"
 
 
 @dataclass
 class RAGConfig:
     """Configuration for the RAG pipeline."""
+
     embedding_model: str = "balanced"
     use_gpu: bool = False
     chunk_strategy: str = "recursive"
@@ -48,9 +54,11 @@ class RAGConfig:
 # Main Application Config
 # =============================================================================
 
+
 @dataclass
 class AppConfig:
     """Application configuration with sensible defaults."""
+
     # --- LLM Engine ---
     LLM_API_URL: str = "http://127.0.0.1:8001"
     llm_port: int = 8001
@@ -66,7 +74,7 @@ class AppConfig:
     # --- LLM Model Settings (referenced by heart_and_brain.py) ---
     host: str = "127.0.0.1"
     default_model: str = "model.gguf"
-    gpu_layers: int = -1        # -1 = auto-detect
+    gpu_layers: int = -1  # -1 = auto-detect
     batch_size: int = 512
     context_size: int = 4096
     parallel: int = 1
@@ -77,10 +85,26 @@ class AppConfig:
 
     # --- File Handling ---
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10 MB
-    ALLOWED_EXTENSIONS: Set[str] = field(default_factory=lambda: {
-        '.txt', '.md', '.py', '.js', '.html', '.css', '.json', '.xml',
-        '.csv', '.log', '.yaml', '.yml', '.rst', '.c', '.cpp', '.java'
-    })
+    ALLOWED_EXTENSIONS: Set[str] = field(
+        default_factory=lambda: {
+            ".txt",
+            ".md",
+            ".py",
+            ".js",
+            ".html",
+            ".css",
+            ".json",
+            ".xml",
+            ".csv",
+            ".log",
+            ".yaml",
+            ".yml",
+            ".rst",
+            ".c",
+            ".cpp",
+            ".java",
+        }
+    )
 
     # --- Audio ---
     AUDIO_SAMPLE_RATE: int = 16000
@@ -98,9 +122,9 @@ class AppConfig:
     # --- UI ---
     STREAM_UPDATE_INTERVAL: float = 0.05  # 50ms - batch UI updates
     MAX_CHAT_MESSAGES: int = 100  # Prevent DOM bloat
-    THEME_PRIMARY: str = '#007bff'
-    THEME_SECONDARY: str = '#6c757d'
-    THEME_ACCENT: str = '#17a2b8'
+    THEME_PRIMARY: str = "#007bff"
+    THEME_SECONDARY: str = "#6c757d"
+    THEME_ACCENT: str = "#17a2b8"
 
     # --- Workers ---
     RAG_MAX_WORKERS: int = 8
@@ -109,32 +133,30 @@ class AppConfig:
 
     # --- Paths ---
     BASE_DIR: Path = field(default_factory=lambda: Path(__file__).parent)
-    BIN_DIR: Path = field(default_factory=lambda: Path(__file__).parent / '_bin')
+    BIN_DIR: Path = field(default_factory=lambda: Path(__file__).parent / "_bin")
     MODEL_DIR: Path = field(default_factory=lambda: Path("C:/AI/Models"))
 
     @classmethod
-    def from_json(cls, path: Path) -> 'AppConfig':
+    def from_json(cls, path: Path) -> "AppConfig":
         """From json."""
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             # Handle nested configs
-            rag_data = data.pop('rag', None)
-            emb_data = data.pop('embedding_config', None)
+            rag_data = data.pop("rag", None)
+            emb_data = data.pop("embedding_config", None)
 
             config_data = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
 
             if rag_data and isinstance(rag_data, dict):
-                config_data['rag'] = RAGConfig(**{
-                    k: v for k, v in rag_data.items()
-                    if k in RAGConfig.__dataclass_fields__
-                })
+                config_data["rag"] = RAGConfig(
+                    **{k: v for k, v in rag_data.items() if k in RAGConfig.__dataclass_fields__}
+                )
             if emb_data and isinstance(emb_data, dict):
-                config_data['embedding_config'] = EmbeddingConfig(**{
-                    k: v for k, v in emb_data.items()
-                    if k in EmbeddingConfig.__dataclass_fields__
-                })
+                config_data["embedding_config"] = EmbeddingConfig(
+                    **{k: v for k, v in emb_data.items() if k in EmbeddingConfig.__dataclass_fields__}
+                )
 
             logger.info(f"[Config] Loaded from {path}")
             return cls(**config_data)
@@ -162,7 +184,7 @@ class AppConfig:
                     data[key] = nested
                 else:
                     data[key] = value
-            with open(path, 'w', encoding='utf-8') as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             logger.info(f"[Config] Saved to {path}")
         except Exception as e:
@@ -170,28 +192,29 @@ class AppConfig:
 
 
 EMOJI = {
-    'warning': '⚠️',
-    'search': '🔍',
-    'success': '✅',
-    'error': '❌',
-    'thinking': '💭',
-    'file': '📄',
-    'folder': '📁',
-    'database': '💾',
-    'web': '🌐',
-    'robot': '🤖',
-    'sparkles': '✨',
-    'check': '✓',
-    'info': 'ℹ️',
-    'timer': '⏱️',
-    'loading': '💡',
-    'expert': '🤖',
-    'rocket': '🚀',
-    'hardware': '🔧',
-    'recovery': '🔄',
+    "warning": "⚠️",
+    "search": "🔍",
+    "success": "✅",
+    "error": "❌",
+    "thinking": "💭",
+    "file": "📄",
+    "folder": "📁",
+    "database": "💾",
+    "web": "🌐",
+    "robot": "🤖",
+    "sparkles": "✨",
+    "check": "✓",
+    "info": "ℹ️",
+    "timer": "⏱️",
+    "loading": "💡",
+    "expert": "🤖",
+    "rocket": "🚀",
+    "hardware": "🔧",
+    "recovery": "🔄",
 }
 
 config = AppConfig()
+
 
 def load_config(config_path: Path = Path("config.json")) -> AppConfig:
     global config

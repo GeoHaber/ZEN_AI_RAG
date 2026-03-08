@@ -3,6 +3,7 @@
 chunker.py - Unified text chunking for ZenAI RAG.
 Consolidates logic from rag_pipeline.py and universal_extractor.py.
 """
+
 import re
 import hashlib
 import logging
@@ -13,9 +14,11 @@ from math import log2
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class Chunk:
     """Chunk class."""
+
     text: str
     metadata: Dict = field(default_factory=dict)
     chunk_index: int = 0
@@ -27,31 +30,40 @@ class Chunk:
 
         self.hash = hashlib.sha256(self.text.encode()).hexdigest()
 
+
 class ChunkerConfig:
     """Default configuration for chunking."""
+
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
     MIN_CHUNK_LENGTH: int = 50
     MIN_ENTROPY: float = 1.5
     MAX_ENTROPY: float = 6.0
     BLACKLIST_KEYWORDS: set = {
-        'advertisement', 'sponsored', 'cookie policy', 'privacy policy',
-        'subscribe now', 'sign up for', 'click here to'
+        "advertisement",
+        "sponsored",
+        "cookie policy",
+        "privacy policy",
+        "subscribe now",
+        "sign up for",
+        "click here to",
     }
+
 
 class TextChunker:
     """
     Unified text chunker with multiple strategies.
     """
-    
-    SENTENCE_ENDINGS = r'(?<=[.!?])\s+'
+
+    SENTENCE_ENDINGS = r"(?<=[.!?])\s+"
 
     def __init__(self, config: ChunkerConfig = None):
         self.config = config or ChunkerConfig()
 
     def _calculate_entropy(self, text: str) -> float:
         """Calculate Shannon entropy of text."""
-        if not text: return 0.0
+        if not text:
+            return 0.0
         counts = Counter(text)
         probs = [c / len(text) for c in counts.values()]
         return -sum(p * log2(p) for p in probs)
@@ -61,19 +73,19 @@ class TextChunker:
         text = text.strip()
         if len(text) < self.config.MIN_CHUNK_LENGTH:
             return True
-        
+
         words = text.split()
-        if len(words) < 5: # Basic world filter
+        if len(words) < 5:  # Basic world filter
             return True
-            
+
         entropy = self._calculate_entropy(text)
         if entropy < self.config.MIN_ENTROPY or entropy > self.config.MAX_ENTROPY:
             return True
-            
+
         text_lower = text.lower()
         if any(kw in text_lower for kw in self.config.BLACKLIST_KEYWORDS):
             return True
-            
+
         return False
 
     def recursive_split(self, text: str, max_size: int, overlap_size: int) -> List[str]:
@@ -96,14 +108,16 @@ class TextChunker:
                 split_at = max_size
 
             chunks.append(text[:split_at])
-            text = text[split_at - overlap_size:] if split_at > overlap_size else text[split_at:]
+            text = text[split_at - overlap_size :] if split_at > overlap_size else text[split_at:]
 
         if text:
             chunks.append(text)
 
         return chunks
 
-    def chunk_document(self, content: str, metadata: Dict = None, strategy: str = "recursive", filter_junk: bool = True, model=None) -> List[Chunk]:
+    def chunk_document(
+        self, content: str, metadata: Dict = None, strategy: str = "recursive", filter_junk: bool = True, model=None
+    ) -> List[Chunk]:
         """
         Divide a document into chunks.
 

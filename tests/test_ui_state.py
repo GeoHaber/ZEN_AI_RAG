@@ -7,6 +7,7 @@ from ui_state import UIState
 
 class DummySelect:
     """DummySelect class."""
+
     def __init__(self):
         self.options = []
         self.update_called = 0
@@ -17,7 +18,7 @@ class DummySelect:
 
 def test_concurrent_clear_and_append():
     """Test concurrent clear and append."""
-    state = UIState({'chat_container': [], 'chat_history': []})
+    state = UIState({"chat_container": [], "chat_history": []})
 
     def worker(i):
         """Worker."""
@@ -34,8 +35,8 @@ def test_concurrent_clear_and_append():
             f.result()
 
     # After concurrent ops, ensure structures are consistent and same length
-    cont = state.get('chat_container')
-    hist = state.get('chat_history')
+    cont = state.get("chat_container")
+    hist = state.get("chat_history")
 
     assert isinstance(cont, list)
     assert isinstance(hist, list)
@@ -48,9 +49,9 @@ def test_concurrent_clear_and_append():
 def test_update_model_options_calls_update():
     """Test update model options calls update."""
     sel = DummySelect()
-    state = UIState({'model_select': sel})
+    state = UIState({"model_select": sel})
 
-    state.update_model_options(['a', 'b', 'c'])
+    state.update_model_options(["a", "b", "c"])
 
-    assert sel.options == ['a', 'b', 'c']
+    assert sel.options == ["a", "b", "c"]
     assert sel.update_called >= 1

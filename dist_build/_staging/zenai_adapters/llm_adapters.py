@@ -30,6 +30,7 @@ except ImportError:
 
 class LLMProvider(Enum):
     """Supported LLM providers."""
+
     LOCAL_LLAMA = "local_llama"
     OLLAMA = "ollama"
     OPENAI = "openai"
@@ -42,6 +43,7 @@ class LLMProvider(Enum):
 @dataclass
 class LLMRequest:
     """Unified LLM request format."""
+
     provider: Any  # LLMProvider enum or str
     model: str
     prompt: str
@@ -57,6 +59,7 @@ class LLMRequest:
 @dataclass
 class LLMResponse:
     """Unified LLM response format."""
+
     text: str
     provider: Any = None
     model: str = ""
@@ -72,6 +75,7 @@ class LLMResponse:
 
 
 # ─── Base Adapter ────────────────────────────────────────
+
 
 class BaseLLMAdapter:
     """Base class for LLM adapters."""
@@ -99,6 +103,7 @@ class BaseLLMAdapter:
 
 # ─── Local llama.cpp Adapter ────────────────────────────
 
+
 class LocalLlamaAdapter(BaseLLMAdapter):
     """Adapter for local llama.cpp (in-memory, no HTTP port)."""
 
@@ -110,6 +115,7 @@ class LocalLlamaAdapter(BaseLLMAdapter):
         # Try in-memory FIFO adapter first
         try:
             from local_adapters import FIFOLlamaCppAdapter
+
             self.adapter = FIFOLlamaCppAdapter()
             logger.info("[LLM] FIFO in-memory llama.cpp initialized")
         except (ImportError, Exception) as exc:
@@ -180,6 +186,7 @@ class LocalLlamaAdapter(BaseLLMAdapter):
 
 # ─── Ollama Adapter ──────────────────────────────────────
 
+
 class OllamaAdapter(BaseLLMAdapter):
     """Adapter for Ollama local LLM server."""
 
@@ -227,6 +234,7 @@ class OllamaAdapter(BaseLLMAdapter):
 
 
 # ─── OpenAI Adapter ──────────────────────────────────────
+
 
 class OpenAIAdapter(BaseLLMAdapter):
     """Adapter for OpenAI API."""
@@ -293,6 +301,7 @@ class OpenAIAdapter(BaseLLMAdapter):
 
 # ─── Anthropic (Claude) Adapter ──────────────────────────
 
+
 class AnthropicAdapter(BaseLLMAdapter):
     """Adapter for Anthropic Claude API."""
 
@@ -344,6 +353,7 @@ class AnthropicAdapter(BaseLLMAdapter):
 
 # ─── HuggingFace Adapter ────────────────────────────────
 
+
 class HuggingFaceAdapter(BaseLLMAdapter):
     """Adapter for HuggingFace Inference API."""
 
@@ -383,6 +393,7 @@ class HuggingFaceAdapter(BaseLLMAdapter):
 
 
 # ─── Google Gemini Adapter ───────────────────────────────
+
 
 class GeminiAdapter(BaseLLMAdapter):
     """Adapter for Google Gemini API."""
@@ -429,6 +440,7 @@ class GeminiAdapter(BaseLLMAdapter):
 
 # ─── Factory ────────────────────────────────────────────
 
+
 class LLMFactory:
     """Factory for creating LLM adapters."""
 
@@ -463,10 +475,7 @@ class LLMFactory:
 
         adapter_cls = cls._registry.get(key)
         if adapter_cls is None:
-            raise ValueError(
-                f"Unknown provider: {provider}. "
-                f"Available: {list(cls._registry.keys())}"
-            )
+            raise ValueError(f"Unknown provider: {provider}. Available: {list(cls._registry.keys())}")
 
         if key in ("openai", "claude", "huggingface", "gemini"):
             return adapter_cls(api_key=api_key)

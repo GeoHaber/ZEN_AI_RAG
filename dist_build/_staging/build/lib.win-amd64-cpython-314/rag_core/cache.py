@@ -51,14 +51,8 @@ class SemanticCache:
     def _evict_expired(self):
         """Remove expired entries."""
         now = self._now()
-        self._exact = {
-            k: v for k, v in self._exact.items()
-            if now - v[0] < self.ttl
-        }
-        self._semantic = [
-            entry for entry in self._semantic
-            if now - entry[1] < self.ttl
-        ]
+        self._exact = {k: v for k, v in self._exact.items() if now - v[0] < self.ttl}
+        self._semantic = [entry for entry in self._semantic if now - entry[1] < self.ttl]
 
     def get(self, query: str) -> Optional[List[Dict[str, Any]]]:
         """Look up cached results for a query.
@@ -77,13 +71,12 @@ class SemanticCache:
         if self._encoder is not None and self._semantic:
             try:
                 import numpy as np
+
                 q_emb = self._encoder.encode_single(query, normalize=True)
                 for emb, ts, results in self._semantic:
                     sim = float(np.dot(q_emb, emb))
                     if sim >= self.similarity_threshold:
-                        logger.debug(
-                            "Cache HIT (semantic, %.3f): %s", sim, query[:50]
-                        )
+                        logger.debug("Cache HIT (semantic, %.3f): %s", sim, query[:50])
                         return results
             except Exception:
                 pass

@@ -2,6 +2,7 @@
 """
 ui/loading_messages.py - Fun loading messages for chat interface
 """
+
 import random
 
 

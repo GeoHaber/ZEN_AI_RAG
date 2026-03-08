@@ -1,4 +1,3 @@
-
 import sys
 import os
 import logging
@@ -14,6 +13,7 @@ from zena_mode.rag_pipeline import LocalRAG
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RAG2.0_Verify")
 
+
 def _do_test_rag_upgrade_setup():
     """Helper: setup phase for test_rag_upgrade."""
 
@@ -25,7 +25,7 @@ def _do_test_rag_upgrade_setup():
 
     # Force settings
     config.rag.chunk_strategy = "semantic"
-    config.rag.embedding_model = "balanced" # BGE-Base
+    config.rag.embedding_model = "balanced"  # BGE-Base
 
     # 2. Initialize RAG (should trigger BGE download/load)
     logger.info("Initializing LocalRAG (this may take time for model download)...")
@@ -62,23 +62,23 @@ def test_rag_upgrade():
     # 4. Test Semantic Cache
     logger.info("Testing Semantic Cache...")
     rag.cache.clear()
-    
+
     # Ingest chunks manually to index
     rag.add_chunks(chunks)
-    
+
     # Query 1 (Miss)
     start = time.time()
     rag.search("How to bake cookies?", k=1)
     t1 = time.time() - start
     logger.info(f"Query 1 (Miss): {t1:.4f}s")
-    
+
     # Query 2 (Semantic Hit - phrasing diff)
     start = time.time()
-    rag.search("Baking instruction", k=1) # Should hit "How to bake cookies?" embedding in cache? 
+    rag.search("Baking instruction", k=1)  # Should hit "How to bake cookies?" embedding in cache?
     # Wait, semantic cache matches QUERY vectors.
     # So "Baking instruction" embedding should be close to "How to bake cookies?" embedding.
     time.time() - start
-    
+
     # Check internals
     if rag.cache._semantic_cache:
         logger.info(f"Cache entries: {len(rag.cache._semantic_cache)}")
@@ -87,6 +87,7 @@ def test_rag_upgrade():
         logger.error("❌ Semantic Cache EMPTY")
 
     logger.info("✅ RAG 2.0 Verification Complete")
+
 
 if __name__ == "__main__":
     test_rag_upgrade()

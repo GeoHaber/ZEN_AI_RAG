@@ -5,19 +5,20 @@ Defines all UI strings that need localization.
 Subclass this and override strings for new languages.
 """
 
+
 class BaseLocale:
     """
     Base locale class containing all UI strings.
     Override in language-specific subclasses.
     """
-    
+
     # ==========================================================================
     # METADATA
     # ==========================================================================
     LANGUAGE_CODE = "en"
     LANGUAGE_NAME = "English"
     LANGUAGE_NATIVE = "English"
-    
+
     # ==========================================================================
     # APPLICATION
     # ==========================================================================
@@ -26,7 +27,7 @@ class BaseLocale:
     APP_TITLE = "ZenAI"
     APP_WELCOME = "Welcome to ZenAI!"
     APP_TAGLINE = "Your AI-powered assistant"
-    
+
     # ==========================================================================
     # NAVIGATION & SECTIONS
     # ==========================================================================
@@ -35,7 +36,7 @@ class BaseLocale:
     NAV_SYSTEM = "SYSTEM"
     NAV_SETTINGS = "SETTINGS"
     NAV_HELP = "HELP"
-    
+
     # ==========================================================================
     # COMMON BUTTONS
     # ==========================================================================
@@ -58,12 +59,12 @@ class BaseLocale:
     BTN_NEW_CHAT = "💬 New Chat"
     BTN_YES = "Yes"
     BTN_NO = "No"
-    
+
     # ==========================================================================
     # CHAT
     # ==========================================================================
     CHAT_CLEARED = "Chat cleared"
-    
+
     # ==========================================================================
     # MODEL MANAGEMENT
     # ==========================================================================
@@ -77,7 +78,7 @@ class BaseLocale:
     MODEL_FILE_PLACEHOLDER = "e.g. qwen2.5-7b-instruct-q4_k_m.gguf"
     MODEL_REPO_LABEL = "Repository ID"
     MODEL_FILE_LABEL = "Filename"
-    
+
     # Model card labels
     MODEL_CONTEXT = "Context"
     MODEL_BENCHMARK = "Benchmark"
@@ -89,18 +90,18 @@ class BaseLocale:
     MODEL_DOWNLOADS = "downloads"
     MODEL_RELEASED = "Released"
     MODEL_WHAT_THIS_MEANS = "💾 What this means:"
-    
+
     # Speed ratings
     SPEED_FAST = "⚡⚡⚡ Fast"
     SPEED_BALANCED = "⚡⚡ Balanced"
     SPEED_MODERATE = "⚡ Moderate"
     SPEED_SLOW = "Slower"
-    
+
     # Quality ratings
     QUALITY_5_STAR = "⭐⭐⭐⭐⭐"
     QUALITY_4_STAR = "⭐⭐⭐⭐"
     QUALITY_3_STAR = "⭐⭐⭐"
-    
+
     # ==========================================================================
     # AI ENGINE
     # ==========================================================================
@@ -111,7 +112,7 @@ class BaseLocale:
     ENGINE_SCANNING_SWARM = "Scanning swarm..."
     ENGINE_EXPERTS_ONLINE = "{count} Experts Online"
     ENGINE_STANDALONE = "ZenAI Standalone Mode"
-    
+
     # ==========================================================================
     # SYSTEM
     # ==========================================================================
@@ -120,7 +121,7 @@ class BaseLocale:
     SYS_DIAGNOSTICS = "Diagnostics"
     SYS_UPDATE_ENGINE = "Update Engine"
     SYS_GET_UPDATE = "Get Update (GitHub)"
-    
+
     # ==========================================================================
     # SETTINGS
     # ==========================================================================
@@ -130,7 +131,7 @@ class BaseLocale:
     SETTINGS_SAVED = "Settings saved successfully"
     SETTINGS_RESET_CONFIRM = "Are you sure you want to reset all settings to defaults?"
     SETTINGS_LANGUAGE_CHANGED = "Language changed to {lang}. Refresh page to apply."
-    
+
     # Settings Categories
     SETTINGS_CAT_LANGUAGE = "🌐 Language"
     SETTINGS_CAT_APPEARANCE = "🎨 Appearance"
@@ -139,11 +140,11 @@ class BaseLocale:
     SETTINGS_CAT_RAG = "📚 RAG"
     SETTINGS_CAT_CHAT = "💬 Chat"
     SETTINGS_CAT_SYSTEM = "⚙️ System"
-    
+
     # Language Settings
     SETTINGS_UI_LANGUAGE = "Interface Language"
     SETTINGS_UI_LANGUAGE_DESC = "Select the language for the user interface"
-    
+
     # Appearance Settings
     SETTINGS_DARK_MODE = "Dark Mode"
     SETTINGS_DARK_MODE_DESC = "Enable dark color theme"
@@ -157,7 +158,7 @@ class BaseLocale:
     SETTINGS_CHAT_DENSITY_SPACIOUS = "Spacious"
     SETTINGS_SHOW_AVATARS = "Show Avatars"
     SETTINGS_ANIMATE_MESSAGES = "Animate Messages"
-    
+
     # AI Model Settings
     SETTINGS_DEFAULT_MODEL = "Default Model"
     SETTINGS_DEFAULT_MODEL_DESC = "Model to load on startup"
@@ -173,7 +174,7 @@ class BaseLocale:
     SETTINGS_USE_COT_SWARM_DESC = "Use multi-expert consensus for better answers"
     SETTINGS_QUIET_COT = "Quiet CoT Mode"
     SETTINGS_QUIET_COT_DESC = "Hide expert deliberation, show only final answer"
-    
+
     # Voice Settings
     SETTINGS_TTS_ENABLED = "Text-to-Speech"
     SETTINGS_TTS_ENABLED_DESC = "Enable voice output"
@@ -183,7 +184,7 @@ class BaseLocale:
     SETTINGS_AUTO_SPEAK_DESC = "Automatically read AI responses aloud"
     SETTINGS_RECORDING_DURATION = "Recording Duration"
     SETTINGS_RECORDING_DURATION_DESC = "Voice input recording time (seconds)"
-    
+
     # RAG Settings
     SETTINGS_RAG_ENABLED = "Enable RAG"
     SETTINGS_RAG_ENABLED_DESC = "Use knowledge base for answers"
@@ -195,7 +196,7 @@ class BaseLocale:
     SETTINGS_MAX_RESULTS_DESC = "Number of sources to retrieve"
     SETTINGS_AUTO_INDEX = "Auto-Index on Startup"
     SETTINGS_AUTO_INDEX_DESC = "Rebuild index when app starts"
-    
+
     # Chat Settings
     SETTINGS_SHOW_TIMESTAMPS = "Show Timestamps"
     SETTINGS_SHOW_TIMESTAMPS_DESC = "Display time on each message"
@@ -209,7 +210,7 @@ class BaseLocale:
     SETTINGS_SAVE_CONVERSATIONS_DESC = "Remember chat history between sessions"
     SETTINGS_HISTORY_DAYS = "History Retention"
     SETTINGS_HISTORY_DAYS_DESC = "Days to keep conversation history"
-    
+
     # System Settings
     SETTINGS_API_PORT = "API Port"
     SETTINGS_API_PORT_DESC = "LLM backend server port"
@@ -221,7 +222,7 @@ class BaseLocale:
     SETTINGS_AUTO_START_BACKEND_DESC = "Launch LLM server with the app"
     SETTINGS_LOG_LEVEL = "Log Level"
     SETTINGS_LOG_LEVEL_DESC = "Verbosity of application logs"
-    
+
     # ==========================================================================
     # RAG / SCAN & LEARN
     # ==========================================================================
@@ -240,7 +241,7 @@ class BaseLocale:
     RAG_ANSWERED_FROM_SOURCE = "**🔍 Answered from Data Source**"
     RAG_VIEW_SOURCES = "📂 View Source Data"
     RAG_LABEL = "Local Context"
-    
+
     # ==========================================================================
     # CHAT INTERFACE
     # ==========================================================================
@@ -304,14 +305,14 @@ class BaseLocale:
     CHAT_READY = "Ready"
     CHAT_RECORDING = "🔴 Recording (5s)..."
     CHAT_TRANSCRIBING = "Transcribing..."
-    
+
     # ==========================================================================
     # FILE UPLOAD
     # ==========================================================================
     UPLOAD_ATTACHED = "📎 {filename} ({size} chars)"
     UPLOAD_SUCCESS = "Attached {filename}"
     UPLOAD_FAILED = "Upload failed: {error}"
-    
+
     # ==========================================================================
     # VOICE
     # ==========================================================================
@@ -321,7 +322,7 @@ class BaseLocale:
     VOICE_NO_SPEECH = "No speech detected"
     VOICE_ERROR = "Voice Error: {error}"
     VOICE_NOT_AVAILABLE = "TTS not available (pyttsx3 missing)"
-    
+
     # ==========================================================================
     # NOTIFICATIONS & MESSAGES
     # ==========================================================================
@@ -330,19 +331,19 @@ class BaseLocale:
     NOTIFY_MODEL_READY = "✅ Model ready: {model}"
     NOTIFY_MODEL_ACTIVE = "✅ Active model: {model}"
     NOTIFY_MODEL_SET = "✅ Active model set: {model}"
-    
+
     # Download notifications
     NOTIFY_DOWNLOAD_STARTING = "🚀 Starting download: {filename}..."
     NOTIFY_DOWNLOAD_STARTED = "✅ Download started! Check progress in your terminal."
     NOTIFY_DOWNLOAD_FAILED = "❌ Download failed: {error}"
     NOTIFY_DOWNLOAD_ERROR = "❌ Error: {error}"
     NOTIFY_HUB_CONNECTION_ERROR = "❌ Cannot connect to Hub. Is it running on port 8002?"
-    
+
     # Upload/attachment notifications
     NOTIFY_ATTACHED = "Attached {name}"
     NOTIFY_UPLOAD_FAILED = "Upload failed: {error}"
-    
-    # Voice notifications  
+
+    # Voice notifications
     NOTIFY_SOUNDDEVICE_MISSING = "Error: SoundDevice not found (Headless?)"
     NOTIFY_TRANSCRIBED = "Transcribed!"
     NOTIFY_NO_SPEECH = "No speech detected"
@@ -364,7 +365,7 @@ class BaseLocale:
     ENGAGE_THINKING_LONG = "Thinking deeply — fetching references and verifying facts..."
     ENGAGE_FETCHING_REFS = "Fetching references..."
     NOTIFY_VOICE_ERROR = "Voice Error: {error}"
-    
+
     # RAG notifications
     NOTIFY_RAG_ENABLED = "RAG mode enabled"
     NOTIFY_RAG_DISABLED = "RAG mode disabled"
@@ -378,12 +379,12 @@ class BaseLocale:
     NOTIFY_RAG_ENTER_URL = "Please enter a website URL"
     NOTIFY_RAG_ENTER_PATH = "Please enter a directory path"
     NOTIFY_RAG_FINDING_FILES = "📂 Finding files..."
-    
+
     # Version notifications
     NOTIFY_VERSION_UP_TO_DATE = "✅ Up to date! Version: {version}"
     NOTIFY_VERSION_CHECK_FAILED = "Version check failed: {error}"
     NOTIFY_UPDATE_MANUAL = "Update requires manual download currently. Opening GitHub..."
-    
+
     # Benchmark notifications
     NOTIFY_BENCHMARK_RUNNING = "🏃 Running benchmark... (this will take ~30 seconds)"
     NOTIFY_BENCHMARK_COMPLETE = "✅ Benchmark Complete!"
@@ -393,7 +394,7 @@ class BaseLocale:
 📊 Performance: {tokens_per_sec:.1f} tokens/sec
 📝 Generated: {tokens} tokens
 ⏱️ Time: {seconds:.1f} seconds"""
-    
+
     # Diagnostics
     NOTIFY_DIAGNOSTICS_RUNNING = "Running diagnostics..."
     NOTIFY_DIAGNOSTICS_FAILED = "Diagnostics failed: {error}"
@@ -403,14 +404,14 @@ class BaseLocale:
     DIAG_RAG_VECTORS = "{emoji} RAG: {count} vectors"
     DIAG_RAG_NOT_INIT = "{emoji} RAG: Not initialized"
     DIAG_MEMORY = "{emoji} Memory: {percent}% used"
-    
+
     # Generic
     NOTIFY_ERROR = "❌ Error: {error}"
     NOTIFY_SUCCESS = "✅ Success!"
     NOTIFY_WARNING = "⚠️ Warning: {message}"
     NOTIFY_INFO = "ℹ️ {message}"
     NOTIFY_ENTER_BOTH_FIELDS = "Please enter both Repository ID and Filename"
-    
+
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
@@ -464,13 +465,13 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
     TOOLTIP_ATTACH_FILE = "Attach file"
     TOOLTIP_VOICE_INPUT = "Voice input"
     TOOLTIP_SEND_MESSAGE = "Send message"
-    
+
     # ==========================================================================
     # ERRORS
     # ==========================================================================
     ERROR_WEBSITE_UNREACHABLE = "Cannot access website: {error}"
     ERROR_GENERIC = "An error occurred: {error}"
-    
+
     # ==========================================================================
     # LOADING / WAITING (Fun Rotating Messages)
     # ==========================================================================
@@ -484,7 +485,7 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
         "Brewing some fresh logic...",
         "Dreaming of electric sheep...",
         "Scanning the horizon for new ideas...",
-        "Maintaining flow state..."
+        "Maintaining flow state...",
     ]
 
     LOADING_THINKING = [
@@ -497,7 +498,7 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
         "Wait a second, let me double-check that logic...",
         "Almost there, just polishing the phrasing...",
         "Consulting the digital oracles...",
-        "Hold on, this is a juicy one..."
+        "Hold on, this is a juicy one...",
     ]
 
     LOADING_SWARM_THINKING = [
@@ -505,7 +506,7 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
         "Gathering consensus...",
         "Experts deliberating...",
         "Comparing parallel outputs...",
-        "Verifying with the swarm..."
+        "Verifying with the swarm...",
     ]
 
     LOADING_RAG_THINKING = [
@@ -513,7 +514,7 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
         "Retrieving relevant chunks...",
         "Consulting your project docs...",
         "Fact-checking against sources...",
-        "Reading the fine print..."
+        "Reading the fine print...",
     ]
 
     BATCH_PROGRESS_START = "🚀 Batch analysis started..."
@@ -523,15 +524,15 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
     BATCH_PROGRESS_WRITING = "💾 Writing analysis to {filename}..."
     BATCH_PROGRESS_COMPLETE = "✅ Batch analysis complete!"
     BATCH_ERROR_FILE = "❌ Error reading {filename}: {error}"
-    
+
     # ==========================================================================
     # HELPER METHODS
     # ==========================================================================
-    
+
     def format(self, key: str, **kwargs) -> str:
         """
         Get a string by key name and format with kwargs.
-        
+
         Usage:
             locale.format('NOTIFY_MODEL_LOADING', model='qwen2.5')
         """
@@ -540,7 +541,7 @@ I'm your AI assistant powered by NiceGUI. I can help you with:
             return template.format(**kwargs)
         except KeyError:
             return template
-    
+
     def get(self, key: str, default: str | None = None) -> str:
         """Get a string by key name, with optional default."""
         return getattr(self, key, default or key)

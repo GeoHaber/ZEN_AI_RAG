@@ -31,6 +31,7 @@ def build_performance_bar(page: ft.Page, state: dict) -> ft.Container:
         while True:
             try:
                 import httpx
+
                 async with httpx.AsyncClient() as client:
                     resp = await client.get("http://127.0.0.1:8002/metrics", timeout=3)
                     if resp.status_code == 200:
@@ -58,9 +59,9 @@ def build_performance_bar(page: ft.Page, state: dict) -> ft.Container:
     )
 
 
-
 def _build_quality_dashboard_part2(results_column, status_text):
     """Continue build_quality_dashboard logic."""
+
     async def on_run_judge(e):
         """Execute the quality benchmark and display scores."""
         status_text.value = "🧪 Running quality evaluation…"
@@ -69,6 +70,7 @@ def _build_quality_dashboard_part2(results_column, status_text):
 
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 # Get model info
                 resp = await client.get("http://127.0.0.1:8001/v1/models", timeout=10)
@@ -85,6 +87,7 @@ def _build_quality_dashboard_part2(results_column, status_text):
             for q in benchmark_qs:
                 try:
                     import httpx
+
                     async with httpx.AsyncClient() as client:
                         resp = await client.post(
                             "http://127.0.0.1:8002/api/chat",
@@ -95,27 +98,35 @@ def _build_quality_dashboard_part2(results_column, status_text):
                             data = resp.json()
                             answer = data.get("response", "")
                             latency = data.get("latency_ms", 0)
-                            scores.append({
-                                "question": q,
-                                "answer": answer[:200],
-                                "latency": latency,
-                                "has_answer": bool(answer.strip()),
-                            })
+                            scores.append(
+                                {
+                                    "question": q,
+                                    "answer": answer[:200],
+                                    "latency": latency,
+                                    "has_answer": bool(answer.strip()),
+                                }
+                            )
                 except Exception as exc:
-                    scores.append({"question": q, "answer": f"Error: {exc}",
-                                   "latency": 0, "has_answer": False})
+                    scores.append({"question": q, "answer": f"Error: {exc}", "latency": 0, "has_answer": False})
 
             # Display results
             quality_score = sum(1 for s in scores if s["has_answer"]) / max(len(scores), 1) * 100
             avg_latency = sum(s["latency"] for s in scores) / max(len(scores), 1)
 
             results_column.controls = [
-                ft.Row([
-                    metric_tile("🎯", f"{quality_score:.0f}%", "Quality Score",
-                                color=TH.success if quality_score >= 80 else TH.warning_c),
-                    metric_tile("⚡", f"{avg_latency:.0f}ms", "Avg Latency"),
-                    metric_tile("📝", str(len(scores)), "Questions"),
-                ], spacing=8),
+                ft.Row(
+                    [
+                        metric_tile(
+                            "🎯",
+                            f"{quality_score:.0f}%",
+                            "Quality Score",
+                            color=TH.success if quality_score >= 80 else TH.warning_c,
+                        ),
+                        metric_tile("⚡", f"{avg_latency:.0f}ms", "Avg Latency"),
+                        metric_tile("📝", str(len(scores)), "Questions"),
+                    ],
+                    spacing=8,
+                ),
                 ft.Divider(color=TH.divider, height=12),
             ]
 
@@ -126,12 +137,12 @@ def _build_quality_dashboard_part2(results_column, status_text):
                         title=ft.Text(s["question"], size=13),
                         subtitle=ft.Text(
                             f"{'✅' if s['has_answer'] else '❌'} · {s['latency']:.0f}ms",
-                            size=11, color=q_color,
+                            size=11,
+                            color=q_color,
                         ),
                         controls=[
                             ft.Container(
-                                content=ft.Text(s["answer"], size=12, color=TH.dim,
-                                                selectable=True),
+                                content=ft.Text(s["answer"], size=12, color=TH.dim, selectable=True),
                                 bgcolor=TH.code_bg,
                                 border_radius=8,
                                 padding=10,
@@ -154,18 +165,20 @@ def _build_quality_dashboard_part2(results_column, status_text):
             build_performance_bar(page, state),
             ft.Divider(color=TH.divider, height=8),
             section_title("Intelligence Judge", "⚖️"),
-            ft.Text("Run quality benchmarks against the active LLM.",
-                    size=12, color=TH.muted),
+            ft.Text("Run quality benchmarks against the active LLM.", size=12, color=TH.muted),
             spacer(8),
-            ft.Row([
-                ft.ElevatedButton(
-                    "🧪 Run Evaluation",
-                    on_click=lambda e: page.run_task(on_run_judge, e),
-                    bgcolor=TH.accent2,
-                    color=ft.Colors.WHITE,
-                ),
-                status_text,
-            ], spacing=12),
+            ft.Row(
+                [
+                    ft.Button(
+                        "🧪 Run Evaluation",
+                        on_click=lambda e: page.run_task(on_run_judge, e),
+                        bgcolor=TH.accent2,
+                        color=ft.Colors.WHITE,
+                    ),
+                    status_text,
+                ],
+                spacing=12,
+            ),
             ft.Divider(color=TH.divider, height=16),
             results_column,
         ],

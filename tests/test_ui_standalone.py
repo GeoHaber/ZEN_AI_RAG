@@ -68,12 +68,8 @@ sys.path.insert(0, str(project_root))
 # Import UI components
 try:
     from ui.modern_theme import ModernTheme as MT
-    from ui.modern_chat import (
-        ModernChatMessage,
-        ModernInputBar,
-        ModernTypingIndicator,
-        ModernWelcomeScreen
-    )
+    from ui.modern_chat import ModernChatMessage, ModernInputBar, ModernTypingIndicator, ModernWelcomeScreen
+
     UI_COMPONENTS_AVAILABLE = True
 except ImportError:
     UI_COMPONENTS_AVAILABLE = False
@@ -83,6 +79,7 @@ except ImportError:
 try:
     from nicegui import ui
     from nicegui.testing import User
+
     NICEGUI_AVAILABLE = True
 except ImportError:
     NICEGUI_AVAILABLE = False
@@ -92,6 +89,7 @@ except ImportError:
 # ==========================================================================
 # MOCK HELPERS
 # ==========================================================================
+
 
 def create_mock_app_state():
     """
@@ -115,28 +113,27 @@ def create_mock_app_state():
     # Mock settings
     mock_settings = Mock()
     mock_settings.appearance.dark_mode = False
-    mock_settings.appearance.theme = 'purple'
-    mock_settings.ai_model.local_model = 'qwen2.5-coder.gguf'
+    mock_settings.appearance.theme = "purple"
+    mock_settings.ai_model.local_model = "qwen2.5-coder.gguf"
     mock_state.settings = mock_settings
 
     # Mock backend
     mock_state.backend = Mock()
-    mock_state.backend.get_models = AsyncMock(return_value=['qwen2.5-coder.gguf', 'llama-3.2-3b.gguf'])
+    mock_state.backend.get_models = AsyncMock(return_value=["qwen2.5-coder.gguf", "llama-3.2-3b.gguf"])
 
     # Mock RAG
     mock_state.rag_system = Mock()
-    mock_state.rag_system.query = AsyncMock(return_value=[
-        {'text': 'Sample RAG result 1', 'score': 0.95},
-        {'text': 'Sample RAG result 2', 'score': 0.87}
-    ])
+    mock_state.rag_system.query = AsyncMock(
+        return_value=[{"text": "Sample RAG result 1", "score": 0.95}, {"text": "Sample RAG result 2", "score": 0.87}]
+    )
 
     # Mock arbitrator
     mock_state.arbitrator = Mock()
-    mock_state.arbitrator.query = AsyncMock(return_value='Consensus response from swarm')
+    mock_state.arbitrator.query = AsyncMock(return_value="Consensus response from swarm")
 
     # State attributes
-    mock_state.current_model = 'qwen2.5-coder.gguf'
-    mock_state.available_models = ['qwen2.5-coder.gguf', 'llama-3.2-3b.gguf']
+    mock_state.current_model = "qwen2.5-coder.gguf"
+    mock_state.available_models = ["qwen2.5-coder.gguf", "llama-3.2-3b.gguf"]
     mock_state.rag_enabled = False
     mock_state.conversation_history = []
     mock_state.chat_container = None
@@ -154,6 +151,7 @@ def create_mock_app_state():
 # ==========================================================================
 # TOGGLE BUTTON TESTS
 # ==========================================================================
+
 
 def test_toggle_button_visibility():
     """
@@ -179,20 +177,20 @@ def test_toggle_button_visibility():
 
     # Simulate toggle creation
     mock_toggle = Mock()
-    mock_toggle.props_dict = {'color': 'purple-6', 'keep-color': True}
-    mock_toggle.classes_list = ['mr-4', 'text-purple-600', 'dark:text-purple-400', 'font-medium']
-    mock_toggle.style_dict = {'min-width': '100px'}
-    mock_toggle.label = '📚 RAG'
-    mock_toggle.tooltip_text = 'Toggle RAG knowledge base'
+    mock_toggle.props_dict = {"color": "purple-6", "keep-color": True}
+    mock_toggle.classes_list = ["mr-4", "text-purple-600", "dark:text-purple-400", "font-medium"]
+    mock_toggle.style_dict = {"min-width": "100px"}
+    mock_toggle.label = "📚 RAG"
+    mock_toggle.tooltip_text = "Toggle RAG knowledge base"
     mock_toggle.value = False
 
     # Assertions
-    assert mock_toggle.props_dict['color'] == 'purple-6'
-    assert mock_toggle.props_dict['keep-color'] == True
-    assert 'text-purple-600' in mock_toggle.classes_list
-    assert mock_toggle.style_dict['min-width'] == '100px'
-    assert '📚 RAG' in mock_toggle.label
-    assert mock_toggle.tooltip_text == 'Toggle RAG knowledge base'
+    assert mock_toggle.props_dict["color"] == "purple-6"
+    assert mock_toggle.props_dict["keep-color"] == True
+    assert "text-purple-600" in mock_toggle.classes_list
+    assert mock_toggle.style_dict["min-width"] == "100px"
+    assert "📚 RAG" in mock_toggle.label
+    assert mock_toggle.tooltip_text == "Toggle RAG knowledge base"
 
     print("[PASS] Toggle button visibility test")
 
@@ -234,6 +232,7 @@ def test_toggle_state_change():
 # ==========================================================================
 # HAMBURGER MENU TESTS
 # ==========================================================================
+
 
 def test_hamburger_menu_drawer_opens():
     """
@@ -297,28 +296,28 @@ def test_drawer_navigation_items():
     """
     mock_drawer = Mock()
     mock_drawer.navigation_items = [
-        {'label': 'Chat', 'icon': 'chat'},
-        {'label': 'History', 'icon': 'history'},
-        {'label': 'Settings', 'icon': 'settings'},
-        {'label': 'Help', 'icon': 'help'}
+        {"label": "Chat", "icon": "chat"},
+        {"label": "History", "icon": "history"},
+        {"label": "Settings", "icon": "settings"},
+        {"label": "Help", "icon": "help"},
     ]
 
     # Assert all items present
     assert len(mock_drawer.navigation_items) == 4
 
     # Verify labels
-    labels = [item['label'] for item in mock_drawer.navigation_items]
-    assert 'Chat' in labels
-    assert 'History' in labels
-    assert 'Settings' in labels
-    assert 'Help' in labels
+    labels = [item["label"] for item in mock_drawer.navigation_items]
+    assert "Chat" in labels
+    assert "History" in labels
+    assert "Settings" in labels
+    assert "Help" in labels
 
     # Verify icons
-    icons = [item['icon'] for item in mock_drawer.navigation_items]
-    assert 'chat' in icons
-    assert 'history' in icons
-    assert 'settings' in icons
-    assert 'help' in icons
+    icons = [item["icon"] for item in mock_drawer.navigation_items]
+    assert "chat" in icons
+    assert "history" in icons
+    assert "settings" in icons
+    assert "help" in icons
 
     print("[PASS] Drawer navigation items test")
 
@@ -326,6 +325,7 @@ def test_drawer_navigation_items():
 # ==========================================================================
 # DARK MODE TESTS
 # ==========================================================================
+
 
 def test_dark_mode_toggle_icon_change():
     """
@@ -349,36 +349,37 @@ def test_dark_mode_toggle_icon_change():
 
     class MockDarkModeBtn:
         """MockDarkModeBtn class."""
+
         def __init__(self):
-            self.icon = 'dark_mode'  # Light mode showing moon
+            self.icon = "dark_mode"  # Light mode showing moon
             self.dark_mode_enabled = False
 
         def toggle(self):
             """Toggle."""
             if self.dark_mode_enabled:
                 self.dark_mode_enabled = False
-                self.icon = 'dark_mode'
+                self.icon = "dark_mode"
                 mock_state.settings.appearance.dark_mode = False
             else:
                 self.dark_mode_enabled = True
-                self.icon = 'light_mode'
+                self.icon = "light_mode"
                 mock_state.settings.appearance.dark_mode = True
 
     btn = MockDarkModeBtn()
 
     # Initial state (light mode)
-    assert btn.icon == 'dark_mode'
+    assert btn.icon == "dark_mode"
     assert btn.dark_mode_enabled == False
 
     # Toggle to dark mode
     btn.toggle()
-    assert btn.icon == 'light_mode'
+    assert btn.icon == "light_mode"
     assert btn.dark_mode_enabled == True
     assert mock_state.settings.appearance.dark_mode == True
 
     # Toggle back to light mode
     btn.toggle()
-    assert btn.icon == 'dark_mode'
+    assert btn.icon == "dark_mode"
     assert btn.dark_mode_enabled == False
     assert mock_state.settings.appearance.dark_mode == False
 
@@ -406,16 +407,16 @@ def test_dark_mode_transitions_smooth():
     # Mock CSS transition properties
     mock_element = Mock()
     mock_element.transition = {
-        'property': 'background-color, border-color, color, fill, stroke, opacity, box-shadow, transform',
-        'timing_function': 'cubic-bezier(0.4, 0, 0.2, 1)',
-        'duration': '200ms'
+        "property": "background-color, border-color, color, fill, stroke, opacity, box-shadow, transform",
+        "timing_function": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "duration": "200ms",
     }
 
     # Assertions
-    assert mock_element.transition['duration'] == '200ms'
-    assert 'cubic-bezier' in mock_element.transition['timing_function']
-    assert 'background-color' in mock_element.transition['property']
-    assert 'color' in mock_element.transition['property']
+    assert mock_element.transition["duration"] == "200ms"
+    assert "cubic-bezier" in mock_element.transition["timing_function"]
+    assert "background-color" in mock_element.transition["property"]
+    assert "color" in mock_element.transition["property"]
 
     print("[PASS] Dark mode smooth transitions test")
 
@@ -423,6 +424,7 @@ def test_dark_mode_transitions_smooth():
 # ==========================================================================
 # CHAT MESSAGE TESTS
 # ==========================================================================
+
 
 def test_chat_message_user_styling():
     """
@@ -448,18 +450,18 @@ def test_chat_message_user_styling():
 
     # Mock user message
     mock_user_msg = Mock()
-    mock_user_msg.role = 'user'
-    mock_user_msg.background = 'gradient-to-br from-purple-600 to-purple-700'
-    mock_user_msg.text_color = 'white'
-    mock_user_msg.alignment = 'right'
-    mock_user_msg.border_radius = 'rounded-2xl'
+    mock_user_msg.role = "user"
+    mock_user_msg.background = "gradient-to-br from-purple-600 to-purple-700"
+    mock_user_msg.text_color = "white"
+    mock_user_msg.alignment = "right"
+    mock_user_msg.border_radius = "rounded-2xl"
 
     # Assertions
-    assert mock_user_msg.role == 'user'
-    assert 'purple' in mock_user_msg.background
-    assert mock_user_msg.text_color == 'white'
-    assert mock_user_msg.alignment == 'right'
-    assert '2xl' in mock_user_msg.border_radius
+    assert mock_user_msg.role == "user"
+    assert "purple" in mock_user_msg.background
+    assert mock_user_msg.text_color == "white"
+    assert mock_user_msg.alignment == "right"
+    assert "2xl" in mock_user_msg.border_radius
 
     print("[PASS] User message styling test")
 
@@ -488,18 +490,18 @@ def test_chat_message_ai_styling():
 
     # Mock AI message (non-RAG)
     mock_ai_msg = Mock()
-    mock_ai_msg.role = 'assistant'
-    mock_ai_msg.background = 'bg-white dark:bg-slate-800'
-    mock_ai_msg.text_color = 'text-gray-900 dark:text-gray-100'
-    mock_ai_msg.alignment = 'left'
-    mock_ai_msg.border = 'border border-gray-100 dark:border-gray-700'
+    mock_ai_msg.role = "assistant"
+    mock_ai_msg.background = "bg-white dark:bg-slate-800"
+    mock_ai_msg.text_color = "text-gray-900 dark:text-gray-100"
+    mock_ai_msg.alignment = "left"
+    mock_ai_msg.border = "border border-gray-100 dark:border-gray-700"
     mock_ai_msg.has_rag = False
 
     # Assertions
-    assert mock_ai_msg.role == 'assistant'
-    assert 'bg-white' in mock_ai_msg.background or 'bg-slate' in mock_ai_msg.background
-    assert mock_ai_msg.alignment == 'left'
-    assert 'border' in mock_ai_msg.border
+    assert mock_ai_msg.role == "assistant"
+    assert "bg-white" in mock_ai_msg.background or "bg-slate" in mock_ai_msg.background
+    assert mock_ai_msg.alignment == "left"
+    assert "border" in mock_ai_msg.border
     assert mock_ai_msg.has_rag == False
 
     print("[PASS] AI message styling test")
@@ -525,18 +527,15 @@ def test_chat_message_rag_indicator():
     """
     # Mock RAG message
     mock_rag_msg = Mock()
-    mock_rag_msg.role = 'assistant'
+    mock_rag_msg.role = "assistant"
     mock_rag_msg.has_rag = True
-    mock_rag_msg.background = 'bg-blue-50 dark:bg-blue-900/20'
-    mock_rag_msg.sources = [
-        {'text': 'Source 1', 'score': 0.95},
-        {'text': 'Source 2', 'score': 0.87}
-    ]
+    mock_rag_msg.background = "bg-blue-50 dark:bg-blue-900/20"
+    mock_rag_msg.sources = [{"text": "Source 1", "score": 0.95}, {"text": "Source 2", "score": 0.87}]
     mock_rag_msg.sources_expandable = True
 
     # Assertions
     assert mock_rag_msg.has_rag == True
-    assert 'blue' in mock_rag_msg.background
+    assert "blue" in mock_rag_msg.background
     assert len(mock_rag_msg.sources) == 2
     assert mock_rag_msg.sources_expandable == True
 
@@ -546,6 +545,7 @@ def test_chat_message_rag_indicator():
 # ==========================================================================
 # INPUT BAR TESTS
 # ==========================================================================
+
 
 def test_input_bar_send_button():
     """
@@ -577,10 +577,7 @@ def test_input_bar_send_button():
         if not mock_input.value.strip():
             return
 
-        mock_state.conversation_history.append({
-            'role': 'user',
-            'content': mock_input.value
-        })
+        mock_state.conversation_history.append({"role": "user", "content": mock_input.value})
         mock_input.send_button_clicked = True
         mock_input.value = ""
 
@@ -594,8 +591,8 @@ def test_input_bar_send_button():
 
     # Assertions
     assert len(mock_state.conversation_history) == 1
-    assert mock_state.conversation_history[0]['role'] == 'user'
-    assert mock_state.conversation_history[0]['content'] == 'Hello AI'
+    assert mock_state.conversation_history[0]["role"] == "user"
+    assert mock_state.conversation_history[0]["content"] == "Hello AI"
     assert mock_input.send_button_clicked == True
     assert mock_input.value == ""  # Cleared after send
 
@@ -630,10 +627,7 @@ def test_input_bar_empty_message_rejected():
         if not mock_input.value.strip():
             return
 
-        mock_state.conversation_history.append({
-            'role': 'user',
-            'content': mock_input.value
-        })
+        mock_state.conversation_history.append({"role": "user", "content": mock_input.value})
 
     mock_input.on_send = send_message
 
@@ -689,6 +683,7 @@ def test_input_bar_file_upload_button():
 # TYPING INDICATOR TESTS
 # ==========================================================================
 
+
 def test_typing_indicator_shows_hides():
     """
     Test typing indicator appears/disappears correctly.
@@ -737,6 +732,7 @@ def test_typing_indicator_shows_hides():
 # WELCOME SCREEN TESTS
 # ==========================================================================
 
+
 def test_welcome_screen_feature_cards():
     """
     Test welcome screen shows 4 feature cards.
@@ -756,20 +752,20 @@ def test_welcome_screen_feature_cards():
     """
     mock_welcome = Mock()
     mock_welcome.feature_cards = [
-        {'icon': '🤖', 'title': '2 Local Models Available'},
-        {'icon': '📚', 'title': 'RAG Knowledge Base (Ready)'},
-        {'icon': '🌐', 'title': 'Multi-LLM Consensus (Ready)'},
-        {'icon': '🎨', 'title': 'Beautiful Claude-Inspired UI'}
+        {"icon": "🤖", "title": "2 Local Models Available"},
+        {"icon": "📚", "title": "RAG Knowledge Base (Ready)"},
+        {"icon": "🌐", "title": "Multi-LLM Consensus (Ready)"},
+        {"icon": "🎨", "title": "Beautiful Claude-Inspired UI"},
     ]
 
     # Assertions
     assert len(mock_welcome.feature_cards) == 4
 
-    titles = [card['title'] for card in mock_welcome.feature_cards]
-    assert any('Models' in t for t in titles)
-    assert any('RAG' in t for t in titles)
-    assert any('Multi-LLM' in t for t in titles)
-    assert any('UI' in t for t in titles)
+    titles = [card["title"] for card in mock_welcome.feature_cards]
+    assert any("Models" in t for t in titles)
+    assert any("RAG" in t for t in titles)
+    assert any("Multi-LLM" in t for t in titles)
+    assert any("UI" in t for t in titles)
 
     print("[PASS] Welcome screen feature cards test")
 
@@ -793,18 +789,18 @@ def test_welcome_screen_quick_actions():
     """
     mock_welcome = Mock()
     mock_welcome.quick_actions = [
-        {'label': '💡 Explain RAG', 'action': 'explain_rag'},
-        {'label': '🤖 List Models', 'action': 'list_models'},
-        {'label': '⚙️ Show Settings', 'action': 'show_settings'}
+        {"label": "💡 Explain RAG", "action": "explain_rag"},
+        {"label": "🤖 List Models", "action": "list_models"},
+        {"label": "⚙️ Show Settings", "action": "show_settings"},
     ]
 
     # Assertions
     assert len(mock_welcome.quick_actions) == 3
 
-    labels = [action['label'] for action in mock_welcome.quick_actions]
-    assert any('RAG' in l for l in labels)
-    assert any('Models' in l for l in labels)
-    assert any('Settings' in l for l in labels)
+    labels = [action["label"] for action in mock_welcome.quick_actions]
+    assert any("RAG" in l for l in labels)
+    assert any("Models" in l for l in labels)
+    assert any("Settings" in l for l in labels)
 
     print("[PASS] Welcome screen quick actions test")
 
@@ -812,6 +808,7 @@ def test_welcome_screen_quick_actions():
 # ==========================================================================
 # MODEL SELECTION TESTS
 # ==========================================================================
+
 
 def test_model_dropdown_populates():
     """
@@ -838,14 +835,14 @@ def test_model_dropdown_populates():
 
     # Assertions
     assert len(mock_dropdown.options) == 2
-    assert 'qwen2.5-coder.gguf' in mock_dropdown.options
-    assert 'llama-3.2-3b.gguf' in mock_dropdown.options
-    assert mock_dropdown.value == 'qwen2.5-coder.gguf'
+    assert "qwen2.5-coder.gguf" in mock_dropdown.options
+    assert "llama-3.2-3b.gguf" in mock_dropdown.options
+    assert mock_dropdown.value == "qwen2.5-coder.gguf"
 
     # Test model change
-    mock_dropdown.value = 'llama-3.2-3b.gguf'
+    mock_dropdown.value = "llama-3.2-3b.gguf"
     mock_state.current_model = mock_dropdown.value
-    assert mock_state.current_model == 'llama-3.2-3b.gguf'
+    assert mock_state.current_model == "llama-3.2-3b.gguf"
 
     print("[PASS] Model dropdown population test")
 
@@ -853,6 +850,7 @@ def test_model_dropdown_populates():
 # ==========================================================================
 # SETTINGS DIALOG TESTS
 # ==========================================================================
+
 
 def test_settings_dialog_opens():
     """
@@ -902,6 +900,7 @@ def test_settings_dialog_opens():
 # RUN ALL TESTS
 # ==========================================================================
 
+
 def _do_run_all_tests_setup():
     """Helper: setup phase for run_all_tests."""
 
@@ -927,7 +926,7 @@ def _do_run_all_tests_setup():
         test_welcome_screen_feature_cards,
         test_welcome_screen_quick_actions,
         test_model_dropdown_populates,
-        test_settings_dialog_opens
+        test_settings_dialog_opens,
     ]
     return tests
 
@@ -960,31 +959,31 @@ def run_all_tests():
         try:
             test()
             passed += 1
-        except AssertionError as e:
-            print(f"[FAIL] {test.__name__}: {e}")
+        except AssertionError:
+            # [X-Ray auto-fix] print(f"[FAIL] {test.__name__}: {e}")
             failed += 1
-        except Exception as e:
-            print(f"[SKIP] {test.__name__}: {e}")
+        except Exception:
+            # [X-Ray auto-fix] print(f"[SKIP] {test.__name__}: {e}")
             skipped += 1
 
     print()
     print("=" * 70)
     print("RESULTS")
     print("=" * 70)
-    print(f"Total:   {len(tests)}")
-    print(f"Passed:  {passed} [OK]")
-    print(f"Failed:  {failed} [X]")
-    print(f"Skipped: {skipped} [SKIP]")
+    # [X-Ray auto-fix] print(f"Total:   {len(tests)}")
+    # [X-Ray auto-fix] print(f"Passed:  {passed} [OK]")
+    # [X-Ray auto-fix] print(f"Failed:  {failed} [X]")
+    # [X-Ray auto-fix] print(f"Skipped: {skipped} [SKIP]")
     print()
 
     if failed == 0:
         print("[OK] All tests passed!")
         return True
     else:
-        print(f"[ERROR] {failed} test(s) failed")
+        # [X-Ray auto-fix] print(f"[ERROR] {failed} test(s) failed")
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

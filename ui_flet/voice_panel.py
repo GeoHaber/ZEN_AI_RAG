@@ -53,26 +53,27 @@ def build_voice_controls(
     )
 
 
-
-
 def __build_voice_lab_panel_part2_part2(client, resp):
     """Continue _build_voice_lab_panel_part2 logic."""
+
     async def on_check_devices(e):
         """Enumerate audio devices and display results."""
         status_text.value = "🔍 Checking audio devices…"
         page.update()
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    "http://127.0.0.1:8002/api/devices", timeout=10
-                )
+                resp = await client.get("http://127.0.0.1:8002/api/devices", timeout=10)
                 if resp.status_code == 200:
                     devices = resp.json()
-                    result_text.value = "\n".join(
-                        f"  {d.get('name', '?')} ({'input' if d.get('input') else 'output'})"
-                        for d in devices.get("devices", [])
-                    ) or "No devices found"
+                    result_text.value = (
+                        "\n".join(
+                            f"  {d.get('name', '?')} ({'input' if d.get('input') else 'output'})"
+                            for d in devices.get("devices", [])
+                        )
+                        or "No devices found"
+                    )
                     status_text.value = f"✅ Found {len(devices.get('devices', []))} devices"
                     status_text.color = TH.success
                 else:
@@ -86,58 +87,62 @@ def __build_voice_lab_panel_part2_part2(client, resp):
     return ft.Column(
         [
             section_title("Voice Lab", "🎙️"),
-            ft.Text("Test voice recording, TTS, and audio devices.",
-                    size=12, color=TH.muted),
+            ft.Text("Test voice recording, TTS, and audio devices.", size=12, color=TH.muted),
             spacer(12),
-
             # Recording section
             glass_card(
-                ft.Column([
-                    ft.Text("🎤 Speech-to-Text", size=14,
-                            weight=ft.FontWeight.BOLD, color=TH.text),
-                    ft.Row([
-                        duration_field,
-                        ft.ElevatedButton(
-                            "🎙️ Record",
-                            on_click=lambda e: page.run_task(on_record, e),
-                            bgcolor=TH.error_c,
-                            color=ft.Colors.WHITE,
+                ft.Column(
+                    [
+                        ft.Text("🎤 Speech-to-Text", size=14, weight=ft.FontWeight.BOLD, color=TH.text),
+                        ft.Row(
+                            [
+                                duration_field,
+                                ft.Button(
+                                    "🎙️ Record",
+                                    on_click=lambda e: page.run_task(on_record, e),
+                                    bgcolor=TH.error_c,
+                                    color=ft.Colors.WHITE,
+                                ),
+                            ],
+                            spacing=8,
                         ),
-                    ], spacing=8),
-                ], spacing=8),
+                    ],
+                    spacing=8,
+                ),
             ),
             spacer(8),
-
             # TTS section
             glass_card(
-                ft.Column([
-                    ft.Text("🔊 Text-to-Speech", size=14,
-                            weight=ft.FontWeight.BOLD, color=TH.text),
-                    ft.ElevatedButton(
-                        "🔊 Test TTS",
-                        on_click=lambda e: page.run_task(on_tts_test, e),
-                        bgcolor=TH.accent,
-                        color=ft.Colors.WHITE,
-                    ),
-                ], spacing=8),
+                ft.Column(
+                    [
+                        ft.Text("🔊 Text-to-Speech", size=14, weight=ft.FontWeight.BOLD, color=TH.text),
+                        ft.Button(
+                            "🔊 Test TTS",
+                            on_click=lambda e: page.run_task(on_tts_test, e),
+                            bgcolor=TH.accent,
+                            color=ft.Colors.WHITE,
+                        ),
+                    ],
+                    spacing=8,
+                ),
             ),
             spacer(8),
-
             # Device info
             glass_card(
-                ft.Column([
-                    ft.Text("🎧 Audio Devices", size=14,
-                            weight=ft.FontWeight.BOLD, color=TH.text),
-                    ft.ElevatedButton(
-                        "🔍 Check Devices",
-                        on_click=lambda e: page.run_task(on_check_devices, e),
-                        bgcolor=TH.accent2,
-                        color=ft.Colors.WHITE,
-                    ),
-                ], spacing=8),
+                ft.Column(
+                    [
+                        ft.Text("🎧 Audio Devices", size=14, weight=ft.FontWeight.BOLD, color=TH.text),
+                        ft.Button(
+                            "🔍 Check Devices",
+                            on_click=lambda e: page.run_task(on_check_devices, e),
+                            bgcolor=TH.accent2,
+                            color=ft.Colors.WHITE,
+                        ),
+                    ],
+                    spacing=8,
+                ),
             ),
             spacer(12),
-
             # Status & results
             status_text,
             result_text,
@@ -150,6 +155,7 @@ def __build_voice_lab_panel_part2_part2(client, resp):
 
 def _build_voice_lab_panel_part2(duration_field, result_text, status_text):
     """Continue build_voice_lab_panel logic."""
+
     async def on_record(e):
         """Toggle audio recording and process the result."""
         status_text.value = "🎙️ Recording…"
@@ -159,6 +165,7 @@ def _build_voice_lab_panel_part2(duration_field, result_text, status_text):
         try:
             duration = int(duration_field.value or "5")
             import httpx
+
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     "http://127.0.0.1:8002/api/stt",
@@ -185,6 +192,7 @@ def _build_voice_lab_panel_part2(duration_field, result_text, status_text):
         page.update()
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     "http://127.0.0.1:8002/api/tts",
@@ -213,8 +221,11 @@ def build_voice_lab_panel(page: ft.Page, state: dict) -> ft.Column:
 
     # Recording controls
     duration_field = ft.TextField(
-        label="Duration (s)", value="5", width=100,
-        border_color=TH.border, color=TH.text,
+        label="Duration (s)",
+        value="5",
+        width=100,
+        border_color=TH.border,
+        color=TH.text,
         keyboard_type=ft.KeyboardType.NUMBER,
     )
 

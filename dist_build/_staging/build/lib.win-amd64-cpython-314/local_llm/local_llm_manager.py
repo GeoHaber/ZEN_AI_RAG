@@ -18,7 +18,7 @@ try:
     from .llama_cpp_manager import LlamaCppManager, LlamaCppStatus
     from .model_card import ModelRegistry, ModelCard, ModelCategory
 except ImportError:
-    from llama_cpp_manager import LlamaCppManager, LlamaCppStatus
+    from llama_cpp_manager import LlamaCppManager
     from model_card import ModelRegistry, ModelCard, ModelCategory
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LocalLLMStatus:
     """Complete local LLM infrastructure status"""
+
     llama_cpp_ready: bool
     llama_cpp_status: Dict
     models_discovered: int
@@ -36,14 +37,11 @@ class LocalLLMStatus:
     def to_dict(self) -> dict:
         """Convert to JSON-serializable dict"""
         return {
-            'llama_cpp_ready': self.llama_cpp_ready,
-            'llama_cpp_status': self.llama_cpp_status,
-            'models_discovered': self.models_discovered,
-            'models': [m.to_card_dict() for m in self.models],
-            'duplicate_groups': {
-                k: [m.to_card_dict() for m in v]
-                for k, v in (self.duplicate_groups or {}).items()
-            }
+            "llama_cpp_ready": self.llama_cpp_ready,
+            "llama_cpp_status": self.llama_cpp_status,
+            "models_discovered": self.models_discovered,
+            "models": [m.to_card_dict() for m in self.models],
+            "duplicate_groups": {k: [m.to_card_dict() for m in v] for k, v in (self.duplicate_groups or {}).items()},
         }
 
 
@@ -59,7 +57,7 @@ class LocalLLMManager:
         """
         self._lock = RLock()
         self.llama_manager = LlamaCppManager()
-        self.registry = ModelRegistry(model_dir or Path('C:\\AI\\Models'))
+        self.registry = ModelRegistry(model_dir or Path("C:\\AI\\Models"))
         self._status = None
         self._selected_duplicates: Dict[str, ModelCard] = {}
 
@@ -84,9 +82,7 @@ class LocalLLMManager:
             if llama_ready:
                 logger.info(f"Found llama.cpp version {llama_status.version}")
                 if llama_status.needs_update:
-                    logger.warning(
-                        f"Update available: {llama_status.latest_version}"
-                    )
+                    logger.warning(f"Update available: {llama_status.latest_version}")
             else:
                 logger.warning("llama.cpp not found - models won't work without it")
 
@@ -99,10 +95,7 @@ class LocalLLMManager:
             duplicates = self.registry.get_duplicates()
             if duplicates:
                 for base_name, variants in duplicates.items():
-                    logger.warning(
-                        f"Found {len(variants)} variants of {base_name} - "
-                        "choose which to keep"
-                    )
+                    logger.warning(f"Found {len(variants)} variants of {base_name} - choose which to keep")
 
             # Build status
             self._status = LocalLLMStatus(
@@ -110,7 +103,7 @@ class LocalLLMManager:
                 llama_cpp_status=llama_status.to_dict(),
                 models_discovered=len(models),
                 models=models,
-                duplicate_groups=duplicates if duplicates else None
+                duplicate_groups=duplicates if duplicates else None,
             )
 
             return self._status
@@ -157,9 +150,7 @@ class LocalLLMManager:
         # Prompt user
         while True:
             try:
-                choice = input("Which variant to keep? (1-{0}): ".format(
-                    len(duplicate_group)
-                )).strip()
+                choice = input("Which variant to keep? (1-{0}): ".format(len(duplicate_group))).strip()
                 choice_idx = int(choice) - 1
 
                 if 0 <= choice_idx < len(duplicate_group):
@@ -214,11 +205,11 @@ class LocalLLMManager:
         # llama.cpp status
         print("\n[llama.cpp Server]")
         llama = status.llama_cpp_status
-        if llama['installed']:
+        if llama["installed"]:
             print(f"  ✓ Installed: {llama['version']}")
-            if llama['needs_update']:
+            if llama["needs_update"]:
                 print(f"  ⚠ Update available: {llama['latest_version']}")
-            if llama['running']:
+            if llama["running"]:
                 print(f"  ✓ Running (PID: {llama['pid']})")
             else:
                 print("  ✗ Not running")
@@ -251,17 +242,17 @@ class LocalLLMManager:
 
         # Recommendations
         print(f"\n[Model Recommendations]")
-        fast = self.get_recommendations('fast')
+        fast = self.get_recommendations("fast")
         print(f"  Fast: {len(fast)} models")
         if fast:
             print(f"    • {fast[0].name}")
 
-        coding = self.get_recommendations('coding')
+        coding = self.get_recommendations("coding")
         print(f"  Coding: {len(coding)} models")
         if coding:
             print(f"    • {coding[0].name}")
 
-        reasoning = self.get_recommendations('reasoning')
+        reasoning = self.get_recommendations("reasoning")
         print(f"  Reasoning: {len(reasoning)} models")
         if reasoning:
             print(f"    • {reasoning[0].name}")
@@ -269,12 +260,9 @@ class LocalLLMManager:
         print("\n" + "=" * 70 + "\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Quick test
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
     manager = LocalLLMManager()
     status = manager.initialize()
@@ -286,7 +274,7 @@ if __name__ == '__main__':
         print(f"Duplicates: {list(status.duplicate_groups.keys())}")
 
     print("\nRecommendations for 'coding':")
-    coding = manager.get_recommendations('coding')
+    coding = manager.get_recommendations("coding")
     for m in coding[:3]:
         print(f"  • {m.name}")
 

@@ -9,6 +9,7 @@ Tests:
 5. Anti-bot content detection
 6. Structured error returns
 """
+
 import pytest
 import asyncio
 from bs4 import BeautifulSoup
@@ -19,6 +20,7 @@ import time
 try:
     from zena_mode.scraper import WebsiteScraper, get_headers
     from zena_mode.web_scanner import WebCrawlScanner, CrawlabilityReport
+
     MODULES_AVAILABLE = True
 except ImportError:
     MODULES_AVAILABLE = False
@@ -79,7 +81,7 @@ class TestWebScanner:
         """
 
         # Mock the HTTP request
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_response = AsyncMock()
             mock_response.status_code = 200
             mock_response.text = mock_html
@@ -102,7 +104,7 @@ class TestWebScanner:
         </html>
         """
 
-        with patch('httpx.AsyncClient') as mock_client:
+        with patch("httpx.AsyncClient") as mock_client:
             mock_response = AsyncMock()
             mock_response.status_code = 200
             mock_response.text = mock_html
@@ -121,13 +123,10 @@ class TestScraperRetryLogic:
         scraper = WebsiteScraper("https://example.com")
 
         # Mock requests to return 429, then 200
-        responses = [
-            Mock(status_code=429),
-            Mock(status_code=200, text='<html><body>Success</body></html>')
-        ]
+        responses = [Mock(status_code=429), Mock(status_code=200, text="<html><body>Success</body></html>")]
 
-        with patch('requests.get', side_effect=responses):
-            with patch('time.sleep'):  # Skip actual delays in test
+        with patch("requests.get", side_effect=responses):
+            with patch("time.sleep"):  # Skip actual delays in test
                 result = scraper.scrape(max_pages=1)
 
                 # Should succeed after retry
@@ -137,16 +136,17 @@ class TestScraperRetryLogic:
     def test_retry_on_timeout(self):
         """Test that scraper retries on timeout."""
         import requests
+
         scraper = WebsiteScraper("https://example.com")
 
         # Mock first call to timeout, second to succeed
         responses = [
             requests.exceptions.Timeout("Connection timeout"),
-            Mock(status_code=200, text='<html><body>Success</body></html>')
+            Mock(status_code=200, text="<html><body>Success</body></html>"),
         ]
 
-        with patch('requests.get', side_effect=responses):
-            with patch('time.sleep'):  # Skip actual delays
+        with patch("requests.get", side_effect=responses):
+            with patch("time.sleep"):  # Skip actual delays
                 result = scraper.scrape(max_pages=1)
 
                 # Should succeed after retry
@@ -166,10 +166,10 @@ class TestScraperRetryLogic:
         responses = [
             Mock(status_code=429),
             Mock(status_code=429),
-            Mock(status_code=200, text='<html><body>Success</body></html>')
+            Mock(status_code=200, text="<html><body>Success</body></html>"),
         ]
 
-        with patch('requests.get', side_effect=responses), patch('time.sleep', side_effect=mock_sleep):
+        with patch("requests.get", side_effect=responses), patch("time.sleep", side_effect=mock_sleep):
             scraper.scrape(max_pages=1)
 
             # Verify exponential backoff pattern
@@ -204,7 +204,7 @@ class TestCookieBannerRemoval:
         """
 
         scraper = WebsiteScraper("https://example.com")
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
         text = scraper.clean_html(soup)
 
         # Cookie banner should be removed
@@ -233,7 +233,7 @@ class TestCookieBannerRemoval:
         """
 
         scraper = WebsiteScraper("https://example.com")
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
         text = scraper.clean_html(soup)
 
         assert "privacy policy" not in text.lower()
@@ -254,7 +254,7 @@ class TestCookieBannerRemoval:
         """
 
         scraper = WebsiteScraper("https://example.com")
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
         text = scraper.clean_html(soup)
 
         # Legitimate content about cookies should NOT be removed
@@ -268,39 +268,39 @@ class TestUserAgentRotation:
     def test_user_agent_is_realistic(self):
         """Test that User-Agent strings are realistic."""
         headers = get_headers()
-        user_agent = headers['User-Agent']
+        user_agent = headers["User-Agent"]
 
         # Should contain browser identifiers
-        assert any(browser in user_agent for browser in ['Chrome', 'Safari', 'Firefox'])
+        assert any(browser in user_agent for browser in ["Chrome", "Safari", "Firefox"])
         # Should contain platform
-        assert any(platform in user_agent for platform in ['Windows', 'Macintosh', 'X11', 'iPhone'])
+        assert any(platform in user_agent for platform in ["Windows", "Macintosh", "X11", "iPhone"])
         # Should look like a real browser
-        assert 'Mozilla/5.0' in user_agent
+        assert "Mozilla/5.0" in user_agent
 
     def test_headers_include_realistic_fields(self):
         """Test that headers include all realistic browser fields."""
         headers = get_headers()
 
         required_fields = [
-            'User-Agent',
-            'Accept',
-            'Accept-Language',
-            'Referer',
-            'DNT',
-            'Connection',
-            'Upgrade-Insecure-Requests'
+            "User-Agent",
+            "Accept",
+            "Accept-Language",
+            "Referer",
+            "DNT",
+            "Connection",
+            "Upgrade-Insecure-Requests",
         ]
 
         for field in required_fields:
             assert field in headers
 
         # Referer should be Google (looks legitimate)
-        assert headers['Referer'] == 'https://www.google.com/'
+        assert headers["Referer"] == "https://www.google.com/"
 
     def test_user_agent_rotation(self):
         """Test that User-Agent actually rotates."""
         # Generate 10 headers and verify we get different UAs
-        user_agents = [get_headers()['User-Agent'] for _ in range(10)]
+        user_agents = [get_headers()["User-Agent"] for _ in range(10)]
 
         # Should have at least 2 different UAs in 10 calls (statistically very likely)
         unique_uas = set(user_agents)
@@ -323,7 +323,7 @@ class TestAntiBotDetection:
         </html>
         """
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.text = mock_html
@@ -349,7 +349,7 @@ class TestAntiBotDetection:
         </html>
         """
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.text = mock_html
@@ -377,13 +377,13 @@ class TestStructuredReturns:
         </html>
         """
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.text = mock_html
             mock_get.return_value = mock_response
 
-            with patch('time.sleep'):  # Skip polite delays
+            with patch("time.sleep"):  # Skip polite delays
                 result = scraper.scrape(max_pages=1)
 
                 # Verify structure
@@ -414,7 +414,7 @@ class TestStructuredReturns:
             mock_report.can_crawl = False
             mock_report.reason = "Blocked by robots.txt"
 
-            with patch.object(scraper.scanner, 'scan', return_value=mock_report):
+            with patch.object(scraper.scanner, "scan", return_value=mock_report):
                 result = scraper.scrape(max_pages=1)
 
                 # Verify structure
@@ -449,7 +449,7 @@ class TestContentContainerPrioritization:
         """
 
         scraper = WebsiteScraper("https://example.com")
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
         text = scraper.clean_html(soup)
 
         # Article content should be present
@@ -476,7 +476,7 @@ class TestContentContainerPrioritization:
         """
 
         scraper = WebsiteScraper("https://example.com")
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
         text = scraper.clean_html(soup)
 
         # Main content should be present
@@ -497,15 +497,15 @@ class TestPoliteDelays:
         def mock_sleep(duration):
             sleep_calls.append(duration)
 
-        mock_html = '<html><body><p>Test content over 100 chars long so it gets saved. More text here to reach the minimum.</p></body></html>'
+        mock_html = "<html><body><p>Test content over 100 chars long so it gets saved. More text here to reach the minimum.</p></body></html>"
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.text = mock_html
             mock_get.return_value = mock_response
 
-            with patch('time.sleep', side_effect=mock_sleep):
+            with patch("time.sleep", side_effect=mock_sleep):
                 scraper.scrape(max_pages=3)
 
                 # Should have delays between requests (not before first request)

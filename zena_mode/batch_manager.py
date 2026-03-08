@@ -9,7 +9,7 @@ import logging
 from config_system import config
 from zena_mode.resource_manager import resource_manager
 
-logger = logging.getLogger('BatchManager')
+logger = logging.getLogger("BatchManager")
 
 
 class BatchManager:
@@ -22,24 +22,24 @@ class BatchManager:
     def __init__(self, path: Path = None):
         """Initialize instance."""
         self._lock = threading.RLock()
-        self.path = path or (config.BASE_DIR / 'jobs.json')
+        self.path = path or (config.BASE_DIR / "jobs.json")
         self._jobs: Dict[str, Dict[str, Any]] = {}
         self._load()
 
     def _load(self):
         try:
             if self.path.exists():
-                with open(self.path, 'r', encoding='utf-8') as f:
+                with open(self.path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    self._jobs = {j['id']: j for j in data}
+                    self._jobs = {j["id"]: j for j in data}
         except Exception as e:
             logger.warning(f"Failed to load jobs: {e}")
             self._jobs = {}
 
     def _save(self):
-        tmp = str(self.path) + '.tmp'
+        tmp = str(self.path) + ".tmp"
         try:
-            with open(tmp, 'w', encoding='utf-8') as f:
+            with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(list(self._jobs.values()), f, indent=2)
             Path(tmp).replace(self.path)
         except Exception as e:
@@ -50,14 +50,14 @@ class BatchManager:
         with self._lock:
             jid = str(uuid.uuid4())
             job = {
-                'id': jid,
-                'type': job_type,
-                'params': params,
-                'status': 'queued',
-                'created_at': time.time(),
-                'updated_at': time.time(),
-                'result': None,
-                'logs': []
+                "id": jid,
+                "type": job_type,
+                "params": params,
+                "status": "queued",
+                "created_at": time.time(),
+                "updated_at": time.time(),
+                "result": None,
+                "logs": [],
             }
             self._jobs[jid] = job
             self._save()
@@ -77,29 +77,30 @@ class BatchManager:
         job = self._jobs.get(jid)
         if not job:
             return
-        if job['status'] in ('running', 'completed'):
+        if job["status"] in ("running", "completed"):
             return
 
         def _run():
             """Run."""
             try:
-                job['status'] = 'running'
-                job['updated_at'] = time.time()
+                job["status"] = "running"
+                job["updated_at"] = time.time()
                 self._save()
                 # Dispatch by type
-                if job['type'] == 'code_review':
+                if job["type"] == "code_review":
                     from zena_mode.analysis import analyze_and_write_report
-                    res = analyze_and_write_report(job['params'].get('files', []), job_id=jid)
-                    job['result'] = res
-                    job['status'] = 'completed'
+
+                    res = analyze_and_write_report(job["params"].get("files", []), job_id=jid)
+                    job["result"] = res
+                    job["status"] = "completed"
                 else:
-                    job['logs'].append(f"Unknown job type: {job['type']}")
-                    job['status'] = 'failed'
+                    job["logs"].append(f"Unknown job type: {job['type']}")
+                    job["status"] = "failed"
             except Exception as e:
-                job['logs'].append(str(e))
-                job['status'] = 'failed'
+                job["logs"].append(str(e))
+                job["status"] = "failed"
             finally:
-                job['updated_at'] = time.time()
+                job["updated_at"] = time.time()
                 self._save()
 
         # Run in tracked thread

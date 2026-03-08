@@ -1,4 +1,3 @@
-
 import requests
 import time
 import subprocess
@@ -7,24 +6,27 @@ import logging
 import os
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("SwarmDiag")
 
 SWARM_LAUNCH_URL = "http://127.0.0.1:8002/swarm/launch"
 HEALTH_URL = "http://127.0.0.1:8005/health"
 MODEL_NAME = "tinyllama-1.1b-chat.Q4_K_M.gguf"
 
+
 def check_server_health():
     """Check server health."""
-    for _ in range(15): # Wait up to 30s
+    for _ in range(15):  # Wait up to 30s
         try:
             resp = requests.get("http://127.0.0.1:8002/health", timeout=2)
-            if resp.status_code == 200: return True
+            if resp.status_code == 200:
+                return True
         except Exception:
             pass
         time.sleep(2)
         logger.info("   ... waiting for Main Server (8002) ...")
     return False
+
 
 def diagnose_launch():
     """Diagnose launch."""
@@ -42,13 +44,10 @@ def diagnose_launch():
     logger.info(f"🚀 Sending Launch Request for {MODEL_NAME} on Port 8005...")
     start_time = time.time()
     try:
-        resp = requests.post(SWARM_LAUNCH_URL, json={
-            "model": MODEL_NAME,
-            "port": 8005
-        }, timeout=15)
-        
+        resp = requests.post(SWARM_LAUNCH_URL, json={"model": MODEL_NAME, "port": 8005}, timeout=15)
+
         logger.info(f"📥 Response ({resp.status_code}): {resp.text}")
-        
+
         if resp.status_code != 200:
             logger.error("❌ Launch API refused command.")
             return
@@ -59,7 +58,7 @@ def diagnose_launch():
 
     # 3. Monitor Port Binding
     logger.info("⏳ Waiting for Port 8005 to bind...")
-    
+
     for i in range(30):
         try:
             # Try specific health check
@@ -71,14 +70,16 @@ def diagnose_launch():
             else:
                 logger.warning(f"⚠️ Port active but returned {r.status_code}")
         except requests.exceptions.ConnectionError:
-             pass # Port likely closed
+            pass  # Port likely closed
         except requests.exceptions.ReadTimeout:
-             logger.warning("⚠️ Connection Timeout (Port open but hanging?)")
-        
+            logger.warning("⚠️ Connection Timeout (Port open but hanging?)")
+
         time.sleep(1)
-        if i % 5 == 0: logger.info(f"   ... waiting {i}s")
+        if i % 5 == 0:
+            logger.info(f"   ... waiting {i}s")
 
     logger.error("❌ Timed out waiting for Expert Health Check.")
+
 
 if __name__ == "__main__":
     diagnose_launch()

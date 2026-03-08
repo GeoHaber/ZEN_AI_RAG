@@ -113,9 +113,7 @@ def build_nav_rail(state: dict, on_panel_change) -> ft.Column:
                     ],
                     spacing=8,
                 ),
-                bgcolor=ft.Colors.with_opacity(0.08, TH.accent)
-                if is_active
-                else ft.Colors.TRANSPARENT,
+                bgcolor=ft.Colors.with_opacity(0.08, TH.accent) if is_active else ft.Colors.TRANSPARENT,
                 border_radius=8,
                 padding=ft.Padding.symmetric(vertical=8, horizontal=10),
                 on_click=lambda e, k=key: on_panel_change(k),
@@ -123,8 +121,6 @@ def build_nav_rail(state: dict, on_panel_change) -> ft.Column:
             )
         )
     return ft.Column(buttons, spacing=2)
-
-
 
 
 def __build_sidebar_part2_part2():
@@ -165,16 +161,18 @@ def __build_sidebar_part2_part2():
             )
 
     # Footer
-    controls.extend([
-        ft.Container(expand=True) if not (on_settings or on_gallery) else ft.Container(),
-        ft.Divider(color=TH.divider),
-        ft.Text(
-            "RAG · Qdrant · Local LLM · Voice",
-            size=9,
-            color=TH.muted,
-            text_align=ft.TextAlign.CENTER,
-        ),
-    ])
+    controls.extend(
+        [
+            ft.Container(expand=True) if not (on_settings or on_gallery) else ft.Container(),
+            ft.Divider(color=TH.divider),
+            ft.Text(
+                "RAG · Qdrant · Local LLM · Voice",
+                size=9,
+                color=TH.muted,
+                text_align=ft.TextAlign.CENTER,
+            ),
+        ]
+    )
 
     return ft.Container(
         content=ft.Column(controls, scroll=ft.ScrollMode.AUTO, spacing=6),
@@ -277,6 +275,7 @@ def build_theme_lang_controls(page: ft.Page, rebuild_fn):
         """Switch the application language and rebuild the UI."""
         try:
             from ui.locales import set_language
+
             set_language(e.control.value)
         except ImportError:
             pass  # nosec B110 — optional locales module

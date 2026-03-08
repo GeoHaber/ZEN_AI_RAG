@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Quick import test to diagnose ZEN_AI_RAG startup issues."""
+
 import sys
 from pathlib import Path
 
@@ -32,16 +33,17 @@ for module_name, items in tests:
         mod = __import__(module_name, fromlist=items.split(", "))
         for item in items.split(", "):
             getattr(mod, item.strip())
-        print(f"✓ {module_name}: {items}")
+        # [X-Ray auto-fix] print(f"✓ {module_name}: {items}")
     except Exception as e:
-        print(f"✗ {module_name}: {e}")
+        # [X-Ray auto-fix] print(f"✗ {module_name}: {e}")
         failed.append((module_name, str(e)))
 
 print("\n" + "=" * 60)
 if failed:
-    print(f"FAILED: {len(failed)} imports")
+    # [X-Ray auto-fix] print(f"FAILED: {len(failed)} imports")
     for mod, err in failed:
-        print(f"  - {mod}: {err[:80]}")
+        # [X-Ray auto-fix] print(f"  - {mod}: {err[:80]}")
+        pass
 else:
     print("All imports OK!")
 print("=" * 60)

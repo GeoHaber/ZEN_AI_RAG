@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -91,8 +91,7 @@ class EmbeddingManager:
         else:
             # Put general models first
             models_to_try.extend(
-                [m for m in EMBEDDING_MODELS if m[1] != "code"]
-                + [m for m in EMBEDDING_MODELS if m[1] == "code"]
+                [m for m in EMBEDDING_MODELS if m[1] != "code"] + [m for m in EMBEDDING_MODELS if m[1] == "code"]
             )
 
         for name, mtype, dim in models_to_try:
@@ -101,6 +100,7 @@ class EmbeddingManager:
                 device = self._device
                 if device is None:
                     import torch
+
                     device = "cuda" if torch.cuda.is_available() else "cpu"
 
                 model = SentenceTransformer(name, device=device)
@@ -114,7 +114,10 @@ class EmbeddingManager:
                 self._dim = model.get_sentence_embedding_dimension()
                 logger.info(
                     "Loaded %s — dim=%d, type=%s, device=%s",
-                    name, self._dim, mtype, device,
+                    name,
+                    self._dim,
+                    mtype,
+                    device,
                 )
                 return True
             except Exception as e:
@@ -155,9 +158,7 @@ class EmbeddingManager:
         """Encode a single text into an embedding vector."""
         return self.encode([text], normalize=normalize)[0]
 
-    def cosine_similarity(
-        self, query_vec: np.ndarray, corpus_vecs: np.ndarray
-    ) -> np.ndarray:
+    def cosine_similarity(self, query_vec: np.ndarray, corpus_vecs: np.ndarray) -> np.ndarray:
         """Compute cosine similarity between query and corpus.
 
         Assumes vectors are L2-normalised (dot product = cosine).

@@ -29,6 +29,7 @@ import asyncio
 # FIXTURES
 # ==========================================================================
 
+
 @pytest.fixture
 def mock_ui_container():
     """Mock NiceGUI container for testing."""
@@ -43,6 +44,7 @@ def mock_ui_container():
 def modern_theme():
     """Import ModernTheme for testing."""
     from ui.modern_theme import ModernTheme
+
     return ModernTheme
 
 
@@ -50,12 +52,14 @@ def modern_theme():
 def chat_components():
     """Import chat components for testing."""
     from ui import modern_chat
+
     return modern_chat
 
 
 # ==========================================================================
 # THEME TESTS
 # ==========================================================================
+
 
 class _TestModernThemeBase:
     """Base methods for TestModernTheme."""
@@ -108,7 +112,7 @@ class _TestModernThemeBase:
 
     def test_get_chat_bubble_user(self, modern_theme):
         """Test getting user chat bubble style."""
-        result = modern_theme.get_chat_bubble('user')
+        result = modern_theme.get_chat_bubble("user")
         assert modern_theme.ChatBubbles.USER in result
         assert "bg-purple-600" in result
         assert "text-white" in result
@@ -117,34 +121,33 @@ class _TestModernThemeBase:
 class TestModernTheme(_TestModernThemeBase):
     """Test ModernTheme color palette and utilities."""
 
-
     def test_get_chat_bubble_assistant(self, modern_theme):
         """Test getting AI chat bubble style."""
-        result = modern_theme.get_chat_bubble('assistant')
+        result = modern_theme.get_chat_bubble("assistant")
         assert modern_theme.ChatBubbles.AI in result
         assert "bg-gray-100" in result
 
     def test_get_chat_bubble_rag(self, modern_theme):
         """Test getting RAG-enhanced chat bubble style."""
-        result = modern_theme.get_chat_bubble('assistant', rag_enhanced=True)
+        result = modern_theme.get_chat_bubble("assistant", rag_enhanced=True)
         assert modern_theme.ChatBubbles.RAG in result
         assert "bg-blue-50" in result
         assert "border-blue-500" in result
 
     def test_get_chat_bubble_system(self, modern_theme):
         """Test getting system chat bubble style."""
-        result = modern_theme.get_chat_bubble('system')
+        result = modern_theme.get_chat_bubble("system")
         assert modern_theme.ChatBubbles.SYSTEM in result
 
     def test_get_button_primary(self, modern_theme):
         """Test getting primary button style."""
-        result = modern_theme.get_button('primary', 'md')
+        result = modern_theme.get_button("primary", "md")
         assert modern_theme.Buttons.PRIMARY in result
         assert "bg-purple-600" in result
 
     def test_get_button_secondary(self, modern_theme):
         """Test getting secondary button style."""
-        result = modern_theme.get_button('secondary', 'lg')
+        result = modern_theme.get_button("secondary", "lg")
         assert modern_theme.Buttons.SECONDARY in result
 
     def test_chat_bubble_classes(self, modern_theme):
@@ -173,79 +176,59 @@ class TestModernTheme(_TestModernThemeBase):
 # CHAT MESSAGE TESTS
 # ==========================================================================
 
+
 class TestModernChatMessage:
     """Test ModernChatMessage component."""
 
     def test_create_user_message(self, chat_components):
         """Test creating a user message."""
-        msg = chat_components.ModernChatMessage(
-            role='user',
-            content='Hello!',
-            avatar_text='U'
-        )
+        msg = chat_components.ModernChatMessage(role="user", content="Hello!", avatar_text="U")
 
-        assert msg.role == 'user'
-        assert msg.content == 'Hello!'
-        assert msg.avatar_text == 'U'
+        assert msg.role == "user"
+        assert msg.content == "Hello!"
+        assert msg.avatar_text == "U"
         assert msg.rag_enhanced is False
         assert msg.sources == []
 
     def test_create_ai_message(self, chat_components):
         """Test creating an AI message."""
-        msg = chat_components.ModernChatMessage(
-            role='assistant',
-            content='Hi there!',
-            avatar_text='Z'
-        )
+        msg = chat_components.ModernChatMessage(role="assistant", content="Hi there!", avatar_text="Z")
 
-        assert msg.role == 'assistant'
-        assert msg.content == 'Hi there!'
-        assert msg.avatar_text == 'Z'
+        assert msg.role == "assistant"
+        assert msg.content == "Hi there!"
+        assert msg.avatar_text == "Z"
 
     def test_create_rag_message(self, chat_components):
         """Test creating a RAG-enhanced message."""
-        sources = [
-            {'title': 'Doc 1', 'url': 'http://example.com', 'text': 'Content'}
-        ]
+        sources = [{"title": "Doc 1", "url": "http://example.com", "text": "Content"}]
 
         msg = chat_components.ModernChatMessage(
-            role='assistant',
-            content='RAG answer',
-            avatar_text='Z',
-            rag_enhanced=True,
-            sources=sources
+            role="assistant", content="RAG answer", avatar_text="Z", rag_enhanced=True, sources=sources
         )
 
         assert msg.rag_enhanced is True
         assert len(msg.sources) == 1
-        assert msg.sources[0]['title'] == 'Doc 1'
+        assert msg.sources[0]["title"] == "Doc 1"
 
     def test_create_system_message(self, chat_components):
         """Test creating a system message."""
-        msg = chat_components.ModernChatMessage(
-            role='system',
-            content='Connection established'
-        )
+        msg = chat_components.ModernChatMessage(role="system", content="Connection established")
 
-        assert msg.role == 'system'
-        assert msg.content == 'Connection established'
+        assert msg.role == "system"
+        assert msg.content == "Connection established"
 
     def test_default_avatar_text(self, chat_components):
         """Test default avatar text assignment."""
-        user_msg = chat_components.ModernChatMessage(role='user', content='Hi')
-        assert user_msg.avatar_text == 'U'
+        user_msg = chat_components.ModernChatMessage(role="user", content="Hi")
+        assert user_msg.avatar_text == "U"
 
-        ai_msg = chat_components.ModernChatMessage(role='assistant', content='Hello')
-        assert ai_msg.avatar_text == 'Z'
+        ai_msg = chat_components.ModernChatMessage(role="assistant", content="Hello")
+        assert ai_msg.avatar_text == "Z"
 
-    @patch('ui.modern_chat.ui')
+    @patch("ui.modern_chat.ui")
     def test_render_user_message(self, mock_ui, chat_components, mock_ui_container):
         """Test rendering a user message."""
-        msg = chat_components.ModernChatMessage(
-            role='user',
-            content='Test message',
-            avatar_text='U'
-        )
+        msg = chat_components.ModernChatMessage(role="user", content="Test message", avatar_text="U")
 
         # Mock ui.row, ui.column, ui.avatar, ui.label, ui.markdown
         mock_row = Mock()
@@ -281,15 +264,16 @@ class TestModernChatMessage:
         mock_ui.row.assert_called()
 
         # Verify ui.avatar was called (for user on right side)
-        mock_ui.avatar.assert_called_with('U', color='gray', text_color='white')
+        mock_ui.avatar.assert_called_with("U", color="gray", text_color="white")
 
         # Verify ui.markdown was called with content
-        mock_ui.markdown.assert_called_with('Test message')
+        mock_ui.markdown.assert_called_with("Test message")
 
 
 # ==========================================================================
 # TYPING INDICATOR TESTS
 # ==========================================================================
+
 
 class TestModernTypingIndicator:
     """Test ModernTypingIndicator component."""
@@ -299,7 +283,7 @@ class TestModernTypingIndicator:
         indicator = chat_components.ModernTypingIndicator()
         assert indicator.container is None
 
-    @patch('ui.modern_chat.ui')
+    @patch("ui.modern_chat.ui")
     def test_render_typing_indicator(self, mock_ui, chat_components, mock_ui_container):
         """Test rendering typing indicator."""
         indicator = chat_components.ModernTypingIndicator()
@@ -342,6 +326,7 @@ class TestModernTypingIndicator:
 # INPUT BAR TESTS
 # ==========================================================================
 
+
 class TestModernInputBar:
     """Test ModernInputBar component."""
 
@@ -352,16 +337,13 @@ class TestModernInputBar:
         on_voice = AsyncMock()
 
         input_bar = chat_components.ModernInputBar(
-            on_send=on_send,
-            on_upload=on_upload,
-            on_voice=on_voice,
-            placeholder='Type here...'
+            on_send=on_send, on_upload=on_upload, on_voice=on_voice, placeholder="Type here..."
         )
 
         assert input_bar.on_send == on_send
         assert input_bar.on_upload == on_upload
         assert input_bar.on_voice == on_voice
-        assert input_bar.placeholder == 'Type here...'
+        assert input_bar.placeholder == "Type here..."
         assert input_bar.input_field is None
         assert input_bar.attachment_preview is None
 
@@ -371,18 +353,18 @@ class TestModernInputBar:
 
         # Mock attachment preview
         input_bar.attachment_preview = Mock()
-        input_bar.attachment_preview.text = ''
+        input_bar.attachment_preview.text = ""
         input_bar.attachment_preview.props = Mock()
 
         # Show attachment
-        input_bar.show_attachment('test.txt', 1024)
+        input_bar.show_attachment("test.txt", 1024)
 
         # Verify text was set
-        assert 'test.txt' in input_bar.attachment_preview.text
-        assert '1,024' in input_bar.attachment_preview.text
+        assert "test.txt" in input_bar.attachment_preview.text
+        assert "1,024" in input_bar.attachment_preview.text
 
         # Verify props was called to make visible
-        input_bar.attachment_preview.props.assert_called_with('visible=true')
+        input_bar.attachment_preview.props.assert_called_with("visible=true")
 
     def test_hide_attachment(self, chat_components):
         """Test hiding attachment preview."""
@@ -390,17 +372,17 @@ class TestModernInputBar:
 
         # Mock attachment preview
         input_bar.attachment_preview = Mock()
-        input_bar.attachment_preview.text = 'File: test.txt'
+        input_bar.attachment_preview.text = "File: test.txt"
         input_bar.attachment_preview.props = Mock()
 
         # Hide attachment
         input_bar.hide_attachment()
 
         # Verify text was cleared
-        assert input_bar.attachment_preview.text == ''
+        assert input_bar.attachment_preview.text == ""
 
         # Verify props was called to hide
-        input_bar.attachment_preview.props.assert_called_with('visible=false')
+        input_bar.attachment_preview.props.assert_called_with("visible=false")
 
     @pytest.mark.asyncio
     async def test_handle_send_with_message(self, chat_components):
@@ -410,16 +392,16 @@ class TestModernInputBar:
 
         # Mock input field
         input_bar.input_field = Mock()
-        input_bar.input_field.value = '  Hello!  '
+        input_bar.input_field.value = "  Hello!  "
 
         # Handle send
         await input_bar._handle_send()
 
         # Verify on_send was called with trimmed message
-        on_send.assert_called_once_with('Hello!')
+        on_send.assert_called_once_with("Hello!")
 
         # Verify input was cleared
-        assert input_bar.input_field.value == ''
+        assert input_bar.input_field.value == ""
 
     @pytest.mark.asyncio
     async def test_handle_send_with_empty_message(self, chat_components):
@@ -429,7 +411,7 @@ class TestModernInputBar:
 
         # Mock input field with empty value
         input_bar.input_field = Mock()
-        input_bar.input_field.value = '   '
+        input_bar.input_field.value = "   "
 
         # Handle send
         await input_bar._handle_send()
@@ -442,33 +424,25 @@ class TestModernInputBar:
 # ACTION CHIPS TESTS
 # ==========================================================================
 
+
 class TestModernActionChips:
     """Test ModernActionChips component."""
 
     def test_create_action_chips(self, chat_components):
         """Test creating action chips."""
-        actions = [
-            {'label': 'Help', 'value': 'help'},
-            {'label': 'Examples', 'value': 'examples'}
-        ]
+        actions = [{"label": "Help", "value": "help"}, {"label": "Examples", "value": "examples"}]
         on_click = AsyncMock()
 
-        chips = chat_components.ModernActionChips(
-            actions=actions,
-            on_click=on_click
-        )
+        chips = chat_components.ModernActionChips(actions=actions, on_click=on_click)
 
         assert len(chips.actions) == 2
-        assert chips.actions[0]['label'] == 'Help'
+        assert chips.actions[0]["label"] == "Help"
         assert chips.on_click == on_click
 
-    @patch('ui.modern_chat.ui')
+    @patch("ui.modern_chat.ui")
     def test_render_action_chips(self, mock_ui, chat_components, mock_ui_container):
         """Test rendering action chips."""
-        actions = [
-            {'label': 'Action 1', 'value': 'action1'},
-            {'label': 'Action 2', 'value': 'action2'}
-        ]
+        actions = [{"label": "Action 1", "value": "action1"}, {"label": "Action 2", "value": "action2"}]
 
         chips = chat_components.ModernActionChips(actions=actions)
 
@@ -507,35 +481,34 @@ class TestModernActionChips:
 # WELCOME MESSAGE TESTS
 # ==========================================================================
 
+
 class TestModernWelcomeMessage:
     """Test ModernWelcomeMessage component."""
 
     def test_create_welcome_message(self, chat_components):
         """Test creating a welcome message."""
-        features = ['Feature 1', 'Feature 2', 'Feature 3']
+        features = ["Feature 1", "Feature 2", "Feature 3"]
 
         welcome = chat_components.ModernWelcomeMessage(
-            app_name='ZenAI',
-            features=features,
-            custom_message='Welcome to testing'
+            app_name="ZenAI", features=features, custom_message="Welcome to testing"
         )
 
-        assert welcome.app_name == 'ZenAI'
+        assert welcome.app_name == "ZenAI"
         assert len(welcome.features) == 3
-        assert welcome.custom_message == 'Welcome to testing'
+        assert welcome.custom_message == "Welcome to testing"
 
     def test_default_features(self, chat_components):
         """Test default features list."""
-        welcome = chat_components.ModernWelcomeMessage(app_name='ZenAI')
+        welcome = chat_components.ModernWelcomeMessage(app_name="ZenAI")
 
         # Should have default features
         assert len(welcome.features) > 0
-        assert any('AI' in f for f in welcome.features)
+        assert any("AI" in f for f in welcome.features)
 
-    @patch('ui.modern_chat.ui')
+    @patch("ui.modern_chat.ui")
     def test_render_welcome_message(self, mock_ui, chat_components, mock_ui_container):
         """Test rendering welcome message."""
-        welcome = chat_components.ModernWelcomeMessage(app_name='Test App')
+        welcome = chat_components.ModernWelcomeMessage(app_name="Test App")
 
         # Mock ui components
         mock_column = Mock()
@@ -557,12 +530,14 @@ class TestModernWelcomeMessage:
 # CSS TESTS
 # ==========================================================================
 
+
 class TestModernCSS:
     """Test modern CSS string."""
 
     def test_modern_css_defined(self):
         """Test that MODERN_CSS constant is defined."""
         from ui.modern_theme import MODERN_CSS
+
         assert MODERN_CSS is not None
         assert len(MODERN_CSS) > 0
 
@@ -570,33 +545,34 @@ class TestModernCSS:
         """Test that CSS contains animation definitions."""
         from ui.modern_theme import MODERN_CSS
 
-        assert '@keyframes fade-in' in MODERN_CSS
-        assert '@keyframes slide-up' in MODERN_CSS
-        assert '@keyframes typing-pulse' in MODERN_CSS
+        assert "@keyframes fade-in" in MODERN_CSS
+        assert "@keyframes slide-up" in MODERN_CSS
+        assert "@keyframes typing-pulse" in MODERN_CSS
 
     def test_css_contains_font_import(self):
         """Test that CSS imports Inter font."""
         from ui.modern_theme import MODERN_CSS
 
-        assert '@import url' in MODERN_CSS
-        assert 'Inter' in MODERN_CSS
+        assert "@import url" in MODERN_CSS
+        assert "Inter" in MODERN_CSS
 
     def test_css_contains_custom_scrollbar(self):
         """Test that CSS includes custom scrollbar styling."""
         from ui.modern_theme import MODERN_CSS
 
-        assert '::-webkit-scrollbar' in MODERN_CSS
+        assert "::-webkit-scrollbar" in MODERN_CSS
 
     def test_css_contains_dark_mode(self):
         """Test that CSS includes dark mode styles."""
         from ui.modern_theme import MODERN_CSS
 
-        assert '.dark' in MODERN_CSS
+        assert ".dark" in MODERN_CSS
 
 
 # ==========================================================================
 # INTEGRATION TESTS
 # ==========================================================================
+
 
 class TestIntegration:
     """Test integration between components."""
@@ -604,58 +580,68 @@ class TestIntegration:
     def test_import_modern_theme(self):
         """Test importing ModernTheme from ui module."""
         from ui import ModernTheme
+
         assert ModernTheme is not None
 
     def test_import_modern_css(self):
         """Test importing MODERN_CSS from ui module."""
         from ui import MODERN_CSS
+
         assert MODERN_CSS is not None
 
     def test_theme_chat_bubbles_accessible(self):
         """Test that ChatBubbles class is accessible."""
         from ui import ModernTheme
-        assert hasattr(ModernTheme, 'ChatBubbles')
-        assert hasattr(ModernTheme.ChatBubbles, 'USER_FULL')
-        assert hasattr(ModernTheme.ChatBubbles, 'AI_FULL')
-        assert hasattr(ModernTheme.ChatBubbles, 'RAG_FULL')
+
+        assert hasattr(ModernTheme, "ChatBubbles")
+        assert hasattr(ModernTheme.ChatBubbles, "USER_FULL")
+        assert hasattr(ModernTheme.ChatBubbles, "AI_FULL")
+        assert hasattr(ModernTheme.ChatBubbles, "RAG_FULL")
 
     def test_theme_buttons_accessible(self):
         """Test that Buttons class is accessible."""
         from ui import ModernTheme
-        assert hasattr(ModernTheme, 'Buttons')
-        assert hasattr(ModernTheme.Buttons, 'PRIMARY_FULL')
-        assert hasattr(ModernTheme.Buttons, 'SECONDARY_FULL')
+
+        assert hasattr(ModernTheme, "Buttons")
+        assert hasattr(ModernTheme.Buttons, "PRIMARY_FULL")
+        assert hasattr(ModernTheme.Buttons, "SECONDARY_FULL")
 
     def test_theme_cards_accessible(self):
         """Test that Cards class is accessible."""
         from ui import ModernTheme
-        assert hasattr(ModernTheme, 'Cards')
-        assert hasattr(ModernTheme.Cards, 'PADDED')
-        assert hasattr(ModernTheme.Cards, 'INFO')
+
+        assert hasattr(ModernTheme, "Cards")
+        assert hasattr(ModernTheme.Cards, "PADDED")
+        assert hasattr(ModernTheme.Cards, "INFO")
 
     def test_chat_message_class_exists(self):
         """Test that ModernChatMessage class can be imported."""
         from ui.modern_chat import ModernChatMessage
+
         assert ModernChatMessage is not None
 
     def test_typing_indicator_class_exists(self):
         """Test that ModernTypingIndicator class can be imported."""
         from ui.modern_chat import ModernTypingIndicator
+
         assert ModernTypingIndicator is not None
 
     def test_input_bar_class_exists(self):
         """Test that ModernInputBar class can be imported."""
         from ui.modern_chat import ModernInputBar
+
         assert ModernInputBar is not None
 
     def test_action_chips_class_exists(self):
         """Test that ModernActionChips class can be imported."""
         from ui.modern_chat import ModernActionChips
+
         assert ModernActionChips is not None
 
     def test_welcome_message_class_exists(self):
         """Test that ModernWelcomeMessage class can be imported."""
         from ui.modern_chat import ModernWelcomeMessage
+
         assert ModernWelcomeMessage is not None
 
 
@@ -663,21 +649,21 @@ class TestIntegration:
 # SUMMARY
 # ==========================================================================
 
-if __name__ == '__main__':
-    print('=' * 70)
-    print('MODERN UI COMPONENT TESTS')
-    print('=' * 70)
+if __name__ == "__main__":
+    print("=" * 70)
+    print("MODERN UI COMPONENT TESTS")
+    print("=" * 70)
     print()
-    print('Test Coverage:')
-    print('  - ModernTheme (21 tests)')
-    print('  - ModernChatMessage (7 tests)')
-    print('  - ModernTypingIndicator (3 tests)')
-    print('  - ModernInputBar (5 tests)')
-    print('  - ModernActionChips (2 tests)')
-    print('  - ModernWelcomeMessage (3 tests)')
-    print('  - CSS & Integration (15 tests)')
+    print("Test Coverage:")
+    print("  - ModernTheme (21 tests)")
+    print("  - ModernChatMessage (7 tests)")
+    print("  - ModernTypingIndicator (3 tests)")
+    print("  - ModernInputBar (5 tests)")
+    print("  - ModernActionChips (2 tests)")
+    print("  - ModernWelcomeMessage (3 tests)")
+    print("  - CSS & Integration (15 tests)")
     print()
-    print('Total: 56 tests')
+    print("Total: 56 tests")
     print()
-    print('Run: pytest tests/test_modern_ui_components.py -v')
-    print('=' * 70)
+    print("Run: pytest tests/test_modern_ui_components.py -v")
+    print("=" * 70)

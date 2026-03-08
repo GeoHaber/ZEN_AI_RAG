@@ -32,7 +32,7 @@ class ModernTheme:
     PURPLE_50 = "#F5F3FF"
     PURPLE_100 = "#EDE9FE"
     PURPLE_400 = "#A78BFA"
-    PURPLE_500 = "#8B5CF6"   # Primary purple
+    PURPLE_500 = "#8B5CF6"  # Primary purple
     PURPLE_600 = "#7C3AED"
     PURPLE_700 = "#6D28D9"
 
@@ -75,38 +75,38 @@ class ModernTheme:
     FONT_MONO = "'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace"
 
     # Font Sizes (using rem for accessibility)
-    TEXT_XS = "text-xs"      # 0.75rem - 12px
-    TEXT_SM = "text-sm"      # 0.875rem - 14px
+    TEXT_XS = "text-xs"  # 0.75rem - 12px
+    TEXT_SM = "text-sm"  # 0.875rem - 14px
     TEXT_BASE = "text-base"  # 1rem - 16px
-    TEXT_LG = "text-lg"      # 1.125rem - 18px
-    TEXT_XL = "text-xl"      # 1.25rem - 20px
-    TEXT_2XL = "text-2xl"    # 1.5rem - 24px
-    TEXT_3XL = "text-3xl"    # 1.875rem - 30px
+    TEXT_LG = "text-lg"  # 1.125rem - 18px
+    TEXT_XL = "text-xl"  # 1.25rem - 20px
+    TEXT_2XL = "text-2xl"  # 1.5rem - 24px
+    TEXT_3XL = "text-3xl"  # 1.875rem - 30px
 
     # Font Weights
-    FONT_LIGHT = "font-light"     # 300
-    FONT_NORMAL = "font-normal"   # 400
-    FONT_MEDIUM = "font-medium"   # 500
+    FONT_LIGHT = "font-light"  # 300
+    FONT_NORMAL = "font-normal"  # 400
+    FONT_MEDIUM = "font-medium"  # 500
     FONT_SEMIBOLD = "font-semibold"  # 600
-    FONT_BOLD = "font-bold"       # 700
+    FONT_BOLD = "font-bold"  # 700
 
     # Line Heights
-    LEADING_TIGHT = "leading-tight"      # 1.25
-    LEADING_NORMAL = "leading-normal"    # 1.5
+    LEADING_TIGHT = "leading-tight"  # 1.25
+    LEADING_NORMAL = "leading-normal"  # 1.5
     LEADING_RELAXED = "leading-relaxed"  # 1.625
-    LEADING_LOOSE = "leading-loose"      # 2
+    LEADING_LOOSE = "leading-loose"  # 2
 
     # ==========================================================================
     # SPACING (using Tailwind's 4px base unit)
     # ==========================================================================
 
-    P_1 = "p-1"    # 4px
-    P_2 = "p-2"    # 8px
-    P_3 = "p-3"    # 12px
-    P_4 = "p-4"    # 16px
-    P_5 = "p-5"    # 20px
-    P_6 = "p-6"    # 24px
-    P_8 = "p-8"    # 32px
+    P_1 = "p-1"  # 4px
+    P_2 = "p-2"  # 8px
+    P_3 = "p-3"  # 12px
+    P_4 = "p-4"  # 16px
+    P_5 = "p-5"  # 20px
+    P_6 = "p-6"  # 24px
+    P_8 = "p-8"  # 32px
 
     M_1 = "m-1"
     M_2 = "m-2"
@@ -170,7 +170,9 @@ class ModernTheme:
         PRIMARY_FULL = f"{BASE} {PRIMARY}"
 
         # Secondary (Gray)
-        SECONDARY = "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-100 dark:hover:bg-slate-600"
+        SECONDARY = (
+            "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-100 dark:hover:bg-slate-600"
+        )
         SECONDARY_FULL = f"{BASE} {SECONDARY}"
 
         # Ghost (Transparent with hover)

@@ -33,6 +33,7 @@ from zena_mode import server as engine_server
 # CATEGORY 1: PURE FUNCTIONS (No side effects - easiest to test)
 # ============================================================================
 
+
 class TestPureFunctions:
     """Test pure functions with no side effects."""
 
@@ -65,6 +66,7 @@ class TestPureFunctions:
 # CATEGORY 2: OUTPUT UTILITIES (Thread-safe print/exit)
 # ============================================================================
 
+
 class TestOutputUtilities:
     """Test safe_print() and safe_exit() functions."""
 
@@ -94,9 +96,11 @@ class TestOutputUtilities:
 
     def test_safe_exit_flushes_buffers(self):
         """Test safe_exit() flushes stdout/stderr before exit."""
-        with patch('sys.stdout.flush') as mock_stdout, \
-             patch('sys.stderr.flush') as mock_stderr, \
-             pytest.raises(SystemExit):
+        with (
+            patch("sys.stdout.flush") as mock_stdout,
+            patch("sys.stderr.flush") as mock_stderr,
+            pytest.raises(SystemExit),
+        ):
             engine_server.safe_exit(0, delay=0.01)
 
         mock_stdout.assert_called_once()
@@ -106,6 +110,7 @@ class TestOutputUtilities:
 # ============================================================================
 # CATEGORY 3: PROCESS MANAGEMENT (Global state manipulation)
 # ============================================================================
+
 
 class TestProcessManagement:
     """Test process registration and monitoring."""
@@ -157,7 +162,7 @@ class TestProcessManagement:
             "process": mock_process,
             "critical": True,
             "restarts": 0,
-            "max_restarts": 3
+            "max_restarts": 3,
         }
 
         crashed = engine_server.check_processes()
@@ -176,7 +181,7 @@ class TestProcessManagement:
             "process": mock_process,
             "critical": False,
             "restarts": 0,
-            "max_restarts": 1
+            "max_restarts": 1,
         }
 
         crashed = engine_server.check_processes()
@@ -192,7 +197,7 @@ class TestProcessManagement:
             "process": mock_process,
             "critical": False,
             "restarts": 0,
-            "max_restarts": 1
+            "max_restarts": 1,
         }
 
         engine_server.check_processes()
@@ -204,6 +209,7 @@ class TestProcessManagement:
 # CATEGORY 4: LAZY LOADING (Import caching)
 # ============================================================================
 
+
 class TestLazyLoading:
     """Test lazy import functions."""
 
@@ -212,7 +218,7 @@ class TestLazyLoading:
         # Reset cache
         engine_server._model_manager_cache = None
 
-        with patch('builtins.__import__', return_value=Mock()) as mock_import:
+        with patch("builtins.__import__", return_value=Mock()) as mock_import:
             # First call
             result1 = engine_server.get_model_manager()
             # Second call
@@ -220,7 +226,7 @@ class TestLazyLoading:
 
             # Import should only happen once for model_manager
             # (Filtering calls to only observe those for 'model_manager')
-            mm_calls = [c for c in mock_import.call_args_list if c[0][0] == 'model_manager']
+            mm_calls = [c for c in mock_import.call_args_list if c[0][0] == "model_manager"]
             assert len(mm_calls) == 1
             assert result1 is result2
 
@@ -228,27 +234,30 @@ class TestLazyLoading:
         """Test get_model_manager() raises ImportError if module missing."""
         engine_server._model_manager_cache = None
 
-        with patch('builtins.__import__', side_effect=ImportError("Module not found")):
+        with patch("builtins.__import__", side_effect=ImportError("Module not found")):
             # Note: We need to be careful with __import__ as many things use it
             # We use a wrapper to only raise on the target module
             def mocked_import(name, *args, **kwargs):
-                if name == 'model_manager':
+                if name == "model_manager":
                     raise ImportError("Module not found")
                 return MagicMock()
 
             # Using a more targetted patch or refined side_effect
-            with patch('builtins.__import__', side_effect=mocked_import), pytest.raises(ImportError, match="model_manager module not found"):
+            with (
+                patch("builtins.__import__", side_effect=mocked_import),
+                pytest.raises(ImportError, match="model_manager module not found"),
+            ):
                 engine_server.get_model_manager()
 
     def test_get_cached_voice_service_caches_import(self):
         """Test get_cached_voice_service() caches the module."""
         engine_server._voice_service_cache = None
 
-        with patch('builtins.__import__', return_value=Mock()) as mock_import:
+        with patch("builtins.__import__", return_value=Mock()) as mock_import:
             result1 = engine_server.get_cached_voice_service()
             result2 = engine_server.get_cached_voice_service()
 
-            vs_calls = [c for c in mock_import.call_args_list if c[0][0] == 'voice_service']
+            vs_calls = [c for c in mock_import.call_args_list if c[0][0] == "voice_service"]
             assert len(vs_calls) == 1
             assert result1 is result2
 
@@ -257,20 +266,22 @@ class TestLazyLoading:
 # CATEGORY 12: NEW TESTS (Expanding Coverage)
 # ============================================================================
 
+
 class TestNewUtilities:
     """Tests for newly added utility functions."""
 
-    @patch('psutil.process_iter')
+    @patch("psutil.process_iter")
     def test_kill_process_by_name(self, mock_iter):
         """Test kill_process_by_name() terminates correct processes."""
         mock_proc = Mock()
-        mock_proc.info = {'pid': 1111, 'name': 'llama-server.exe'}
-        
+        mock_proc.info = {"pid": 1111, "name": "llama-server.exe"}
+
         mock_iter.return_value = [mock_proc]
-        
+
         engine_server.kill_process_by_name("llama-server.exe")
-        
+
         mock_proc.terminate.assert_called_once()
+
 
 class TestConfiguration:
     """Test configuration functions."""
@@ -278,18 +289,19 @@ class TestConfiguration:
     def test_restart_with_model_updates_global_path(self):
         """Test restart_with_model() updates MODEL_PATH global."""
         # We need to mock the external dependencies of restart_with_model
-        with patch('zena_mode.server.kill_process_by_name'), \
-             patch('zena_mode.server.subprocess.Popen'), \
-             patch('zena_mode.server.os._exit'):
-            
+        with (
+            patch("zena_mode.server.kill_process_by_name"),
+            patch("zena_mode.server.subprocess.Popen"),
+            patch("zena_mode.server.os._exit"),
+        ):
             test_model = "test-model.gguf"
-            
+
             # Since restart_with_model calls os._exit, we should mock it
             engine_server.restart_with_model(test_model)
-            
-            # Note: In our implementation, we don't have the return value 
+
+            # Note: In our implementation, we don't have the return value
             # because it calls os._exit(0) at the end.
-            
+
             # Check if kill_process_by_name was called
             # and verify the logic indirectly if possible, or just mock it.
 
@@ -304,10 +316,11 @@ class TestConfiguration:
 # CATEGORY 6: PROCESS UTILITIES (Kill tree, scale swarm)
 # ============================================================================
 
+
 class TestProcessUtilities:
     """Test process management utilities."""
 
-    @patch('zena_mode.server.kill_process_tree')
+    @patch("zena_mode.server.kill_process_tree")
     def test_scale_swarm_decreases_expert_count(self, mock_kill):
         """Test scale_swarm() removes expert processes when scaling down."""
         # Setup 5 running experts
@@ -332,15 +345,16 @@ class TestProcessUtilities:
 # CATEGORY 13: ORCHESTRATOR TESTS (HTTP API)
 # ============================================================================
 
+
 class TestOrchestrator:
     """Tests for the ZenAIOrchestrator (HTTP Server) class."""
 
     def setup_method(self):
         """Prepare mock for Orchestrator without calling base __init__."""
         # This prevents the TypeError from BaseHTTPRequestHandler
-        with patch('http.server.BaseHTTPRequestHandler.__init__', return_value=None):
+        with patch("http.server.BaseHTTPRequestHandler.__init__", return_value=None):
             self.mock_request = Mock()
-            self.mock_client_address = ('127.0.0.1', 12345)
+            self.mock_client_address = ("127.0.0.1", 12345)
             self.mock_server = Mock()
             self.handler = engine_server.ZenAIOrchestrator(
                 self.mock_request, self.mock_client_address, self.mock_server
@@ -349,72 +363,71 @@ class TestOrchestrator:
             self.handler.rfile = Mock()
             self.handler.headers = {}
 
-    @patch('zena_mode.server.ZenAIOrchestrator.send_response')
-    @patch('zena_mode.server.ZenAIOrchestrator.send_header')
-    @patch('zena_mode.server.ZenAIOrchestrator.end_headers')
+    @patch("zena_mode.server.ZenAIOrchestrator.send_response")
+    @patch("zena_mode.server.ZenAIOrchestrator.send_header")
+    @patch("zena_mode.server.ZenAIOrchestrator.end_headers")
     def test_do_OPTIONS(self, mock_end, mock_header, mock_send):
         """Test OPTIONS request returns CORS headers."""
         self.handler.do_OPTIONS()
         mock_send.assert_called_with(200)
-        mock_header.assert_any_call('Access-Control-Allow-Origin', '*')
+        mock_header.assert_any_call("Access-Control-Allow-Origin", "*")
 
-    @patch('zena_mode.server.ZenAIOrchestrator.send_json_response')
+    @patch("zena_mode.server.ZenAIOrchestrator.send_json_response")
     def test_do_GET_list(self, mock_json):
         """Test /list returns current model list."""
-        with patch('zena_mode.server.MODEL_DIR') as mock_dir, \
-             patch('zena_mode.server.MODEL_PATH') as mock_path:
-            
+        with patch("zena_mode.server.MODEL_DIR") as mock_dir, patch("zena_mode.server.MODEL_PATH") as mock_path:
             mock_path.name = "active.gguf"
             mock_file = Mock(spec=Path)
             mock_file.name = "active.gguf"
             mock_dir.exists.return_value = True
             mock_dir.glob.return_value = [mock_file]
-            
-            self.handler.path = '/list'
+
+            self.handler.path = "/list"
             self.handler.do_GET()
-            
+
             mock_json.assert_called_once()
             args = mock_json.call_args[0]
             assert args[0] == 200
-            assert any(m['name'] == "active.gguf" and m['active'] for m in args[1])
+            assert any(m["name"] == "active.gguf" and m["active"] for m in args[1])
 
-    @patch('zena_mode.server.ZenAIOrchestrator.send_json_response')
+    @patch("zena_mode.server.ZenAIOrchestrator.send_json_response")
     def test_do_GET_status(self, mock_json):
         """Test /model/status returns loading status."""
-        with patch('zena_mode.server.MODEL_PATH') as mock_path:
+        with patch("zena_mode.server.MODEL_PATH") as mock_path:
             mock_path.name = "test.gguf"
-            engine_server.SERVER_PROCESS = Mock() # Simulated running server
-            
-            self.handler.path = '/model/status'
+            engine_server.SERVER_PROCESS = Mock()  # Simulated running server
+
+            self.handler.path = "/model/status"
             self.handler.do_GET()
-            
+
             mock_json.assert_called_once()
             status = mock_json.call_args[0][1]
-            assert status['model'] == "test.gguf"
-            assert status['loaded'] is True
+            assert status["model"] == "test.gguf"
+            assert status["loaded"] is True
 
-    @patch('zena_mode.server.restart_with_model')
-    @patch('zena_mode.server.ZenAIOrchestrator.send_json_response')
+    @patch("zena_mode.server.restart_with_model")
+    @patch("zena_mode.server.ZenAIOrchestrator.send_json_response")
     def test_do_POST_swap(self, mock_json, mock_restart):
         """Test /swap initiates model restart."""
-        self.handler.path = '/swap'
-        
+        self.handler.path = "/swap"
+
         # Mock request body
         body = json.dumps({"model": "new_model.gguf"}).encode()
         self.handler.rfile.read.return_value = body
-        self.handler.headers = {'Content-Length': str(len(body))}
-        
-        with patch('threading.Thread') as mock_thread:
+        self.handler.headers = {"Content-Length": str(len(body))}
+
+        with patch("threading.Thread") as mock_thread:
             self.handler.do_POST()
-            
+
             # Should have started a thread for restart
             mock_thread.assert_called_once()
-            assert mock_thread.call_args[1]['target'] == engine_server.restart_with_model
-            assert mock_thread.call_args[1]['args'] == ("new_model.gguf",)
-            
+            assert mock_thread.call_args[1]["target"] == engine_server.restart_with_model
+            assert mock_thread.call_args[1]["args"] == ("new_model.gguf",)
+
             mock_json.assert_called_with(200, {"status": "accepted"})
 
 
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__, "-v", "-s"])

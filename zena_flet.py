@@ -42,7 +42,9 @@ from ui_flet.theme import TH, setup_page_theme  # noqa: E402
 from ui_flet.state import get_state  # noqa: E402
 from ui_flet.persistence import apply_settings, save_settings  # noqa: E402
 from ui_flet.sidebar import (  # noqa: E402
-    build_sidebar, build_nav_rail, build_theme_lang_controls,
+    build_sidebar,
+    build_nav_rail,
+    build_theme_lang_controls,
 )
 from ui_flet.chat_panel import build_chat_panel  # noqa: E402
 from ui_flet.rag_panel import (  # noqa: E402
@@ -77,10 +79,9 @@ def _get_rag() -> object:
     global _rag_instance  # noqa: PLW0603
     if _rag_instance is None:
         from zena_mode.rag_pipeline import LocalRAG
+
         _rag_instance = LocalRAG()
     return _rag_instance
-
-
 
 
 def ___chat_send_part2_part2(m):
@@ -103,9 +104,7 @@ def __chat_send_part2(m):
             try:
                 rag = _get_rag()
                 loop = asyncio.get_running_loop()
-                context, results = await loop.run_in_executor(
-                    None, lambda: rag.hybrid_search(query.strip(), top_k=5)
-                )
+                context, results = await loop.run_in_executor(None, lambda: rag.hybrid_search(query.strip(), top_k=5))
                 sources = results if isinstance(results, list) else []
             except Exception as exc:
                 logger.warning("RAG search failed: %s", exc)
@@ -136,18 +135,24 @@ def __chat_send_part2(m):
             }
 
             # Add a placeholder assistant bubble for streaming
-            state["chat_history"].append({
-                "role": "assistant", "content": "", "sources": sources,
-            })
+            state["chat_history"].append(
+                {
+                    "role": "assistant",
+                    "content": "",
+                    "sources": sources,
+                }
+            )
             bubble_idx = len(state["chat_history"]) - 1
 
             async with httpx.AsyncClient(timeout=120) as client:
                 async with client.stream(
-                    "POST", "http://127.0.0.1:8001/v1/chat/completions",
+                    "POST",
+                    "http://127.0.0.1:8001/v1/chat/completions",
                     json=payload,
                 ) as resp:
                     if resp.status_code == 200:
                         import json as _json
+
                         async for line in resp.aiter_lines():
                             if not line.startswith("data: "):
                                 continue
@@ -161,9 +166,7 @@ def __chat_send_part2(m):
                                 if token:
                                     answer += token
                                     state["chat_history"][bubble_idx]["content"] = answer
-                                    messages_list.controls = [
-                                        _chat_bubble(m) for m in state["chat_history"]
-                                    ]
+                                    messages_list.controls = [_chat_bubble(m) for m in state["chat_history"]]
                                     page.update()
                             except (KeyError, _json.JSONDecodeError):
                                 continue
@@ -176,17 +179,22 @@ def __chat_send_part2(m):
             # Fallback: non-streaming via the ASGI server
             try:
                 import httpx
+
                 payload_fb = {
                     "message": query.strip(),
-                    "mode": "council" if state.get("council_mode") else
-                            "deep_thinking" if state.get("deep_thinking") else "fast",
+                    "mode": "council"
+                    if state.get("council_mode")
+                    else "deep_thinking"
+                    if state.get("deep_thinking")
+                    else "fast",
                 }
                 if context:
                     payload_fb["context"] = context[:8000]
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
                         "http://127.0.0.1:8002/api/chat",
-                        json=payload_fb, timeout=120,
+                        json=payload_fb,
+                        timeout=120,
                     )
                     if resp.status_code == 200:
                         answer = resp.json().get("response", "")
@@ -194,10 +202,7 @@ def __chat_send_part2(m):
                         answer = f"Backend error: {resp.status_code}"
             except Exception as exc2:
                 if context:
-                    answer = (
-                        f"**Context found:**\n\n{context[:2000]}\n\n"
-                        f"*(LLM unavailable — showing raw context)*"
-                    )
+                    answer = f"**Context found:**\n\n{context[:2000]}\n\n*(LLM unavailable — showing raw context)*"
                 else:
                     answer = f"Error: Could not reach backend — {exc2}"
 
@@ -206,21 +211,27 @@ def __chat_send_part2(m):
                 state["chat_history"][-1]["content"] = answer
                 state["chat_history"][-1]["sources"] = sources
             else:
-                state["chat_history"].append({
-                    "role": "assistant", "content": answer, "sources": sources,
-                })
+                state["chat_history"].append(
+                    {
+                        "role": "assistant",
+                        "content": answer,
+                        "sources": sources,
+                    }
+                )
 
     except Exception as exc:
-        state["chat_history"].append({
-            "role": "assistant", "content": f"❌ Error: {exc}",
-        })
+        state["chat_history"].append(
+            {
+                "role": "assistant",
+                "content": f"❌ Error: {exc}",
+            }
+        )
         logger.error("Chat error: %s", exc)
 
     ___chat_send_part2_part2(m)
 
 
-async def _chat_send(query: str, page: ft.Page, state: dict,
-                     messages_list: ft.ListView, thinking: ft.Row) -> None:
+async def _chat_send(query: str, page: ft.Page, state: dict, messages_list: ft.ListView, thinking: ft.Row) -> None:
     """Send a chat message: query RAG → stream answer → update UI."""
     if not query or not query.strip():
         return
@@ -228,6 +239,7 @@ async def _chat_send(query: str, page: ft.Page, state: dict,
     # Add user message
     state["chat_history"].append({"role": "user", "content": query.strip()})
     from ui_flet.chat_panel import _chat_bubble
+
     messages_list.controls = [_chat_bubble(m) for m in state["chat_history"]]
     thinking.visible = True
     __chat_send_part2(m)
@@ -238,6 +250,7 @@ async def _check_backend_health(page: ft.Page, state: dict) -> None:
     while True:
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 # Check ASGI server
                 try:
@@ -280,6 +293,7 @@ _PANEL_MAP = {
 #  REBUILD / LAYOUT
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _rebuild_app(page: ft.Page, state: dict, main_content: ft.Column) -> None:
     """Rebuild the sidebar + main content for the current panel."""
 
@@ -300,7 +314,8 @@ def _rebuild_app(page: ft.Page, state: dict, main_content: ft.Column) -> None:
     def open_settings():
         """Open the settings dialog with theme-toggle support."""
         dlg = build_settings_dialog(
-            page, state,
+            page,
+            state,
             on_theme_toggle=lambda: (TH.toggle(), _rebuild_app(page, state, main_content)),
         )
         page.open(dlg)
@@ -311,7 +326,11 @@ def _rebuild_app(page: ft.Page, state: dict, main_content: ft.Column) -> None:
         page.open(dlg)
 
     sidebar = build_sidebar(
-        page, state, theme_icon, lang_dd, nav_rail,
+        page,
+        state,
+        theme_icon,
+        lang_dd,
+        nav_rail,
         on_settings=open_settings,
         on_gallery=open_gallery,
     )
@@ -321,20 +340,17 @@ def _rebuild_app(page: ft.Page, state: dict, main_content: ft.Column) -> None:
     has_data = bool(state.get("rag_content"))
 
     if not has_data:
+
         def on_scan_done():
             """Handle scan completion: switch to chat panel and rebuild."""
             state["active_panel"] = "chat"
             _rebuild_app(page, state, main_content)
 
-        main_content.controls.append(
-            build_source_config_panel(page, state, on_scan_done)
-        )
+        main_content.controls.append(build_source_config_panel(page, state, on_scan_done))
     else:
         active = state.get("active_panel", "chat")
         builder = _PANEL_MAP.get(active, _PANEL_MAP["chat"])
-        main_content.controls.append(
-            ft.Container(content=builder(page, state), padding=30, expand=True)
-        )
+        main_content.controls.append(ft.Container(content=builder(page, state), padding=30, expand=True))
 
     page.controls.clear()
     page.add(ft.Row([sidebar, main_content], expand=True, spacing=0))
@@ -343,6 +359,7 @@ def _rebuild_app(page: ft.Page, state: dict, main_content: ft.Column) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  MAIN APPLICATION
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 async def main(page: ft.Page) -> None:
     """Main Flet application entry point."""

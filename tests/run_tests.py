@@ -22,51 +22,66 @@ from pathlib import Path
 from datetime import datetime
 import json
 
+
 # Colors for terminal output
 class Colors:
     """Colors class."""
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
+
 
 def print_header(text):
     """Print section header."""
-    print(f"\n{Colors.BOLD}{Colors.BLUE}{'='*70}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.BLUE}{text:^70}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.BLUE}{'='*70}{Colors.END}\n")
+    # [X-Ray auto-fix] print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.END}")
+    # [X-Ray auto-fix] print(f"{Colors.BOLD}{Colors.BLUE}{text:^70}{Colors.END}")
+    # [X-Ray auto-fix] print(f"{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.END}\n")
+
 
 def safe_unicode_print(text, color=""):
     """Print with fallback for Windows console encoding issues."""
     try:
-        print(text)
+        # [X-Ray auto-fix] print(text)
+        pass
     except UnicodeEncodeError:
         # Fallback to ASCII-safe symbols
         text = text.replace("✓", "[PASS]").replace("✗", "[FAIL]").replace("⚠", "[WARN]")
-        print(text)
+        # [X-Ray auto-fix] print(text)
+
 
 def print_success(text):
     """Print success message."""
     try:
-        print(f"{Colors.GREEN}✓ {text}{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.GREEN}✓ {text}{Colors.END}")
+        pass
     except UnicodeEncodeError:
-        print(f"{Colors.GREEN}[PASS] {text}{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.GREEN}[PASS] {text}{Colors.END}")
+        pass
+
 
 def print_error(text):
     """Print error message."""
     try:
-        print(f"{Colors.RED}✗ {text}{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.RED}✗ {text}{Colors.END}")
+        pass
     except UnicodeEncodeError:
-        print(f"{Colors.RED}[FAIL] {text}{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.RED}[FAIL] {text}{Colors.END}")
+        pass
+
 
 def print_warning(text):
     """Print warning message."""
     try:
-        print(f"{Colors.YELLOW}⚠ {text}{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.YELLOW}⚠ {text}{Colors.END}")
+        pass
     except UnicodeEncodeError:
-        print(f"{Colors.YELLOW}[WARN] {text}{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.YELLOW}[WARN] {text}{Colors.END}")
+        pass
+
 
 def run_command(cmd, description):
     """
@@ -79,8 +94,8 @@ def run_command(cmd, description):
     Returns:
         (success: bool, duration: float)
     """
-    print(f"\n{Colors.BOLD}Running: {description}{Colors.END}")
-    print(f"Command: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
+    # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Running: {description}{Colors.END}")
+    # [X-Ray auto-fix] print(f"Command: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
     print("-" * 70)
 
     start_time = time.time()
@@ -90,7 +105,8 @@ def run_command(cmd, description):
             cmd,
             capture_output=True,
             text=True,
-            timeout=300  # 5 minute timeout
+            timeout=300,  # 5 minute timeout,
+            shell=False,
         )
 
         duration = time.time() - start_time
@@ -116,15 +132,18 @@ def run_command(cmd, description):
         print_error(f"Exception: {e}")
         return False, duration
 
+
 def check_pytest_installed():
     """Ensure pytest is installed."""
     try:
         import pytest
+
         return True
     except ImportError:
         print_error("pytest is not installed!")
         print("\nInstall with: pip install pytest pytest-cov pytest-timeout")
         return False
+
 
 def run_unit_tests(fast=False, coverage=False):
     """
@@ -149,6 +168,7 @@ def run_unit_tests(fast=False, coverage=False):
 
     success, duration = run_command(cmd, "Unit Tests")
     return success
+
 
 def run_integration_tests(fast=False):
     """Run integration tests."""
@@ -178,6 +198,7 @@ def run_integration_tests(fast=False):
 
     return all_success
 
+
 def run_all_tests(fast=False):
     """Run ALL tests in the project."""
     print_header("FULL TEST SUITE - ALL FILES")
@@ -192,17 +213,20 @@ def run_all_tests(fast=False):
     success, duration = run_command(cmd, "All Tests")
     return success
 
+
 def generate_coverage_report():
     """Generate detailed coverage report."""
     print_header("COVERAGE REPORT")
 
     cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "tests/test_start_llm.py",
         "--cov=start_llm",
         "--cov-report=html",
         "--cov-report=term-missing",
-        "--cov-report=json"
+        "--cov-report=json",
     ]
 
     success, _ = run_command(cmd, "Coverage Analysis")
@@ -215,10 +239,9 @@ def generate_coverage_report():
         if coverage_file.exists():
             with open(coverage_file) as f:
                 data = json.load(f)
-                total_coverage = data['totals']['percent_covered']
+                total_coverage = data["totals"]["percent_covered"]
 
-            print(f"\n{Colors.BOLD}Total Coverage: {total_coverage:.1f}%{Colors.END}")
-
+            # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Total Coverage: {total_coverage:.1f}%{Colors.END}")
             if total_coverage >= 80:
                 print_success(f"Excellent coverage! (>80%)")
             elif total_coverage >= 60:
@@ -227,6 +250,7 @@ def generate_coverage_report():
                 print_error(f"Low coverage! Need more tests.")
 
     return success
+
 
 def watch_mode():
     """
@@ -244,6 +268,7 @@ def watch_mode():
 
     class TestRunner(FileSystemEventHandler):
         """TestRunner class."""
+
         def __init__(self):
             self.last_run = 0
             self.debounce = 2  # seconds
@@ -251,7 +276,7 @@ def watch_mode():
         def on_modified(self, event):
             """On modified."""
             # Only react to .py files
-            if not event.src_path.endswith('.py'):
+            if not event.src_path.endswith(".py"):
                 return
 
             # Debounce rapid changes
@@ -261,7 +286,7 @@ def watch_mode():
 
             self.last_run = now
 
-            print(f"\n{Colors.YELLOW}File changed: {event.src_path}{Colors.END}")
+            # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}File changed: {event.src_path}{Colors.END}")
             print("Re-running tests...\n")
 
             run_unit_tests(fast=True)
@@ -284,6 +309,7 @@ def watch_mode():
 
     observer.join()
 
+
 def save_test_results(results):
     """Save test results to history file."""
     history_file = Path("test_history.json")
@@ -302,8 +328,9 @@ def save_test_results(results):
     history["runs"] = history["runs"][-50:]
 
     # Save
-    with open(history_file, 'w') as f:
+    with open(history_file, "w") as f:
         json.dump(history, f, indent=2)
+
 
 def print_test_history():
     """Print recent test history."""
@@ -327,49 +354,28 @@ def print_test_history():
         icon = "✓" if success else "✗"
         color = Colors.GREEN if success else Colors.RED
 
-        print(f"{color}{icon}{Colors.END} {timestamp} - {duration:.1f}s")
+        # [X-Ray auto-fix] print(f"{color}{icon}{Colors.END} {timestamp} - {duration:.1f}s")
+
 
 def _do_main_setup():
     """Helper: setup phase for main."""
 
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Test runner with 'Trust but Verify' philosophy"
-    )
-    parser.add_argument(
-        "--fast",
-        action="store_true",
-        help="Skip slow tests"
-    )
-    parser.add_argument(
-        "--coverage",
-        action="store_true",
-        help="Generate coverage report"
-    )
-    parser.add_argument(
-        "--watch",
-        action="store_true",
-        help="Watch mode: re-run on file changes"
-    )
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Run ALL tests (not just start_llm.py)"
-    )
-    parser.add_argument(
-        "--history",
-        action="store_true",
-        help="Show test history"
-    )
+    parser = argparse.ArgumentParser(description="Test runner with 'Trust but Verify' philosophy")
+    parser.add_argument("--fast", action="store_true", help="Skip slow tests")
+    parser.add_argument("--coverage", action="store_true", help="Generate coverage report")
+    parser.add_argument("--watch", action="store_true", help="Watch mode: re-run on file changes")
+    parser.add_argument("--all", action="store_true", help="Run ALL tests (not just start_llm.py)")
+    parser.add_argument("--history", action="store_true", help="Show test history")
 
     args = parser.parse_args()
 
     # Print banner
-    print("\n" + "="*70)
-    print(f"{Colors.BOLD}TEST RUNNER - 'Trust but Verify' (Ronald Reagan){Colors.END}".center(80))
-    print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*70)
+    print("\n" + "=" * 70)
+    # [X-Ray auto-fix] print(f"{Colors.BOLD}TEST RUNNER - 'Trust but Verify' (Ronald Reagan){Colors.END}".center(80))
+    # [X-Ray auto-fix] print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 70)
 
     # Show history if requested
     if args.history:
@@ -420,26 +426,27 @@ def main():
 
     if all_success:
         print_success(f"ALL TESTS PASSED ✓")
-        print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
-        print(f"{Colors.GREEN}Code is verified and safe to commit.{Colors.END}\n")
+        # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.GREEN}Code is verified and safe to commit.{Colors.END}\n")
         exit_code = 0
     else:
         print_error(f"SOME TESTS FAILED ✗")
-        print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
-        print(f"{Colors.RED}Fix failures before committing code!{Colors.END}\n")
+        # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
+        # [X-Ray auto-fix] print(f"{Colors.RED}Fix failures before committing code!{Colors.END}\n")
         exit_code = 1
 
     # Save results to history
     results = {
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "success": all_success,
         "duration": total_duration,
         "fast_mode": args.fast,
-        "coverage": args.coverage
+        "coverage": args.coverage,
     }
     save_test_results(results)
 
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()

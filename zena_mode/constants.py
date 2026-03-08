@@ -6,20 +6,67 @@ zena_mode/constants.py — Shared constants and utilities
 Centralises stop words, sentence splitting, and token estimation
 used across query_processor, contextual_compressor, and evaluation.
 """
+
 from __future__ import annotations
 
 import re
 from typing import List
 
 # Shared stop words set
-STOP_WORDS: frozenset[str] = frozenset({
-    "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
-    "have", "has", "had", "do", "does", "did", "will", "would", "could",
-    "should", "may", "might", "can", "of", "to", "in", "for", "on", "at",
-    "by", "with", "from", "as", "this", "that", "these", "those", "it",
-    "what", "when", "where", "who", "why", "how", "which",
-    "and", "or", "but", "not", "no",
-})
+STOP_WORDS: frozenset[str] = frozenset(
+    {
+        "a",
+        "an",
+        "the",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "can",
+        "of",
+        "to",
+        "in",
+        "for",
+        "on",
+        "at",
+        "by",
+        "with",
+        "from",
+        "as",
+        "this",
+        "that",
+        "these",
+        "those",
+        "it",
+        "what",
+        "when",
+        "where",
+        "who",
+        "why",
+        "how",
+        "which",
+        "and",
+        "or",
+        "but",
+        "not",
+        "no",
+    }
+)
 
 # Pre-compiled patterns
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")

@@ -21,7 +21,6 @@ from llm_adapters import (
     AnthropicAdapter,
     HuggingFaceAdapter,
     GeminiAdapter,
-    LLMFactory,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,11 +34,7 @@ except Exception:
 # ─── Provider → Adapter mapping ──────────────────────────────
 
 ADAPTER_MAP: Dict[str, Type[BaseLLMAdapter]] = {
-    "Local (llama-cpp)": (
-        LocalLLMWrapperAdapter
-        if LocalLLMWrapperAdapter is not None
-        else LocalLlamaAdapter
-    ),
+    "Local (llama-cpp)": (LocalLLMWrapperAdapter if LocalLLMWrapperAdapter is not None else LocalLlamaAdapter),
     "Ollama": OllamaAdapter,
     "OpenAI": OpenAIAdapter,
     "Anthropic (Claude)": AnthropicAdapter,
@@ -97,9 +92,7 @@ def create_adapter(
             resolved = provider_stripped
         else:
             available = list(ADAPTER_MAP.keys())
-            raise ValueError(
-                f"Unknown provider: {provider}. Available: {available}"
-            )
+            raise ValueError(f"Unknown provider: {provider}. Available: {available}")
 
     adapter_cls = ADAPTER_MAP[resolved]
 

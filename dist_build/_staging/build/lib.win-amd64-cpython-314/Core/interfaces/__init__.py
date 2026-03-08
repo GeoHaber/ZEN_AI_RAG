@@ -13,11 +13,15 @@ from abc import ABC, abstractmethod
 from typing import AsyncIterator, List, Optional
 
 from Core.models import (
-    ChatRequest, ChatResponse,
-    QueryRequest, QueryResponse,
-    SearchRequest, SearchResponse,
+    ChatRequest,
+    ChatResponse,
+    QueryRequest,
+    QueryResponse,
+    SearchRequest,
+    SearchResponse,
     StatusResponse,
-    StreamChunk, StreamRequest,
+    StreamChunk,
+    StreamRequest,
 )
 
 

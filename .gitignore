@@ -75,3 +75,9 @@ docs/
 # Added by cleanup
 .ruff_cache/
 
+
+# X-Ray scan artifacts
+xray_report.json
+import_graph.html
+import_graph.dot
+NUL

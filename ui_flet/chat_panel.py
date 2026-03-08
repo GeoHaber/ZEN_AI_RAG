@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-
 def ___chat_bubble_part2_part2(align, bubble_bg, controls):
     """Continue __chat_bubble_part2 logic."""
     if sources:
@@ -37,8 +36,7 @@ def ___chat_bubble_part2_part2(align, bubble_bg, controls):
                 ft.Container(
                     content=ft.Row(
                         [
-                            ft.Icon(ft.Icons.DESCRIPTION_OUTLINED, size=12,
-                                    color=TH.accent),
+                            ft.Icon(ft.Icons.DESCRIPTION_OUTLINED, size=12, color=TH.accent),
                             ft.Text(
                                 title[:40],
                                 size=10,
@@ -107,13 +105,9 @@ def __chat_bubble_part2(content, role, sources):
             content,
             selectable=True,
             extension_set=ft.MarkdownExtensionSet.GITHUB_FLAVORED,
-            code_theme=ft.MarkdownCodeTheme.MONOKAI
-            if TH.is_dark()
-            else ft.MarkdownCodeTheme.GITHUB,
+            code_theme=ft.MarkdownCodeTheme.MONOKAI if TH.is_dark() else ft.MarkdownCodeTheme.GITHUB,
             code_style_sheet=ft.MarkdownStyleSheet(
-                code_text_style=ft.TextStyle(
-                    font_family=MONO_FONT, size=12
-                ),
+                code_text_style=ft.TextStyle(font_family=MONO_FONT, size=12),
             ),
         ),
     ]
@@ -135,6 +129,7 @@ def _chat_bubble(msg: dict) -> ft.Container:
 #  THINKING INDICATOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _thinking_indicator() -> ft.Row:
     """Animated thinking indicator shown while Zena generates a response."""
     return ft.Row(
@@ -150,6 +145,7 @@ def _thinking_indicator() -> ft.Row:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  CHAT HEADER
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _chat_header(rag_stats: ft.Text, on_clear) -> ft.Row:
     """Header row: Zena title + RAG stats + clear button."""
@@ -173,6 +169,7 @@ def _chat_header(rag_stats: ft.Text, on_clear) -> ft.Row:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  INPUT BAR
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _chat_input_bar(
     query_field: ft.TextField,
@@ -277,8 +274,7 @@ def _welcome_message(on_chip_click=None) -> ft.Container:
                     text_align=ft.TextAlign.CENTER,
                 ),
                 spacer(16),
-                ft.Text("Try asking:", size=12, color=TH.dim,
-                        text_align=ft.TextAlign.CENTER),
+                ft.Text("Try asking:", size=12, color=TH.dim, text_align=ft.TextAlign.CENTER),
                 chips,
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -296,6 +292,7 @@ def _welcome_message(on_chip_click=None) -> ft.Container:
 
 def _build_chat_panel_part2(history, messages_list, query_field, thinking):
     """Continue build_chat_panel logic."""
+
     def on_clear(e):
         """Clear the chat history and reset the conversation view."""
         state["chat_history"].clear()

@@ -3,6 +3,7 @@ Integration tests for enhanced arbitrage.py with SwarmArbitrator backend.
 
 Tests backward compatibility and new features.
 """
+
 import pytest
 import asyncio
 from unittest.mock import Mock, AsyncMock, patch
@@ -21,7 +22,7 @@ class TestArbitrageIntegration:
     @pytest.fixture
     def mock_config(self, tmp_path):
         """Mock config_system.config with proper DB path."""
-        with patch('zena_mode.arbitrage.config') as mock_cfg:
+        with patch("zena_mode.arbitrage.config") as mock_cfg:
             mock_cfg.SWARM_ENABLED = True
             mock_cfg.SWARM_SIZE = 4
             mock_cfg.llm_port = 8001
@@ -33,15 +34,15 @@ class TestArbitrageIntegration:
         """Test factory function returns instance."""
         arb = get_arbitrator()
         assert isinstance(arb, SwarmArbitrator)
-        assert hasattr(arb, 'ports')
-        assert hasattr(arb, 'endpoints')
-        assert hasattr(arb, 'discover_swarm')
-        assert hasattr(arb, 'get_cot_response')
+        assert hasattr(arb, "ports")
+        assert hasattr(arb, "endpoints")
+        assert hasattr(arb, "discover_swarm")
+        assert hasattr(arb, "get_cot_response")
 
     def test_arbitrator_has_enhanced_backend(self, mock_config):
         """Test arbitrator uses EnhancedSwarmArbitrator backend."""
         arb = SwarmArbitrator(ports=[8001])
-        assert hasattr(arb, '_enhanced')
+        assert hasattr(arb, "_enhanced")
         assert arb._enhanced is not None
 
     def test_arbitrator_backward_compatible_ports(self, mock_config):
@@ -58,19 +59,12 @@ class TestArbitrageIntegration:
         arb = SwarmArbitrator(ports=[8001])
 
         # Mock the _query_model method
-        mock_response = {
-            "content": "Test response",
-            "time": 0.5,
-            "model": "test-model",
-            "error": False
-        }
+        mock_response = {"content": "Test response", "time": 0.5, "model": "test-model", "error": False}
 
-        with patch.object(arb, '_query_model', return_value=mock_response):
+        with patch.object(arb, "_query_model", return_value=mock_response):
             result_chunks = []
             async for chunk in arb.get_cot_response(
-                text="What is 2+2?",
-                system_prompt="You are helpful",
-                verbose=False
+                text="What is 2+2?", system_prompt="You are helpful", verbose=False
             ):
                 result_chunks.append(chunk)
 
@@ -95,17 +89,13 @@ class TestArbitrageIntegration:
     async def test_query_model_uses_timeout(self, mock_config):
         """Test _query_model uses timeout from enhanced backend."""
         import httpx
+
         arb = SwarmArbitrator(ports=[8001])
 
         # Mock the enhanced backend's timeout method
-        mock_result = {
-            "content": "Test",
-            "time": 0.1,
-            "model": "test",
-            "error": False
-        }
+        mock_result = {"content": "Test", "time": 0.1, "model": "test", "error": False}
 
-        with patch.object(arb._enhanced, '_query_model_with_timeout', return_value=mock_result) as mock_timeout:
+        with patch.object(arb._enhanced, "_query_model_with_timeout", return_value=mock_result) as mock_timeout:
             async with httpx.AsyncClient() as client:
                 result = await arb._query_model(client, "http://test", [])
 
@@ -125,13 +115,9 @@ class TestArbitrageIntegration:
             {"content": "Answer A", "time": 0.6, "model": "model-3", "error": False},
         ]
 
-        with patch.object(arb, '_query_model', side_effect=responses):
+        with patch.object(arb, "_query_model", side_effect=responses):
             result_chunks = []
-            async for chunk in arb.get_cot_response(
-                text="Test query",
-                system_prompt="Test",
-                verbose=False
-            ):
+            async for chunk in arb.get_cot_response(text="Test query", system_prompt="Test", verbose=False):
                 result_chunks.append(chunk)
 
             # Should still produce results despite one failure
@@ -156,7 +142,7 @@ class TestArbitrageIntegration:
     def test_performance_tracking_initialized(self, mock_config):
         """Test performance tracker is initialized."""
         arb = SwarmArbitrator(ports=[8001])
-        assert hasattr(arb._enhanced, 'performance_tracker')
+        assert hasattr(arb._enhanced, "performance_tracker")
         assert arb._enhanced.performance_tracker is not None
 
 
@@ -166,7 +152,7 @@ class TestDiscoveryCompatibility:
     @pytest.fixture
     def mock_config_disabled(self, tmp_path):
         """Mock config with swarm disabled."""
-        with patch('zena_mode.arbitrage.config') as mock_cfg:
+        with patch("zena_mode.arbitrage.config") as mock_cfg:
             mock_cfg.SWARM_ENABLED = False
             mock_cfg.SWARM_SIZE = 0
             mock_cfg.llm_port = 8001
@@ -183,7 +169,7 @@ class TestDiscoveryCompatibility:
     @pytest.fixture
     def mock_config_enabled(self, tmp_path):
         """Mock config with swarm enabled."""
-        with patch('zena_mode.arbitrage.config') as mock_cfg:
+        with patch("zena_mode.arbitrage.config") as mock_cfg:
             mock_cfg.SWARM_ENABLED = True
             mock_cfg.SWARM_SIZE = 4
             mock_cfg.llm_port = 8001
@@ -204,7 +190,7 @@ class TestDiscoveryCompatibility:
             "http://127.0.0.1:8006/v1/chat/completions",
         ]
 
-        with patch.object(arb._enhanced, 'discover_swarm', new_callable=AsyncMock):
+        with patch.object(arb._enhanced, "discover_swarm", new_callable=AsyncMock):
             arb.discover_swarm()
 
             # State should sync from backend

@@ -13,6 +13,7 @@ Multi-tier intelligent routing system combining:
 Based on 2024-2025 production research from OpenAI, Anthropic, Stanford, ETH Zurich.
 Target: 90%+ queries < 200ms, 70%+ cost savings, 95%+ accuracy.
 """
+
 import asyncio
 import time
 import logging
@@ -29,6 +30,7 @@ logger = logging.getLogger("IntelligentRouter")
 try:
     from semantic_cache import SemanticCache, CacheConfig
     from mini_rag import MiniRAG, MiniRAGConfig
+
     CACHE_AVAILABLE = True
 except ImportError:
     CACHE_AVAILABLE = False
@@ -40,6 +42,7 @@ except ImportError:
 # =============================================================================
 class RoutingTier(Enum):
     """Routing tier for tracking."""
+
     CACHE = "cache"
     MINI_RAG = "mini_rag"
     FAST_LLM = "fast_llm"
@@ -74,7 +77,7 @@ class RouterConfig:
 
     # Cost tracking
     track_costs: bool = True
-    cost_per_token_fast: float = 0.00001    # $0.01 per 1M tokens
+    cost_per_token_fast: float = 0.00001  # $0.01 per 1M tokens
     cost_per_token_powerful: float = 0.00003  # $0.03 per 1M tokens
 
     # Monitoring
@@ -85,6 +88,7 @@ class RouterConfig:
 @dataclass
 class RoutingDecision:
     """Single routing decision record."""
+
     query: str
     query_hash: str
     tier: RoutingTier
@@ -105,13 +109,14 @@ class RoutingDecision:
             "confidence": self.confidence,
             "timestamp": self.timestamp.isoformat(),
             "success": self.success,
-            "error_msg": self.error_msg
+            "error_msg": self.error_msg,
         }
 
 
 @dataclass
 class RouterStats:
     """Router statistics."""
+
     total_queries: int = 0
     tier_counts: Dict[str, int] = field(default_factory=dict)
     total_cost_usd: float = 0.0
@@ -140,10 +145,9 @@ class RouterStats:
             "total_cost_usd": self.total_cost_usd,
             "error_rate": f"{self.errors / self.total_queries * 100:.2f}%",
             "tier_distribution": {
-                tier: f"{count / self.total_queries * 100:.1f}%"
-                for tier, count in self.tier_counts.items()
+                tier: f"{count / self.total_queries * 100:.1f}%" for tier, count in self.tier_counts.items()
             },
-            "cost_savings_vs_all_powerful": self._calculate_savings()
+            "cost_savings_vs_all_powerful": self._calculate_savings(),
         }
 
     def _calculate_savings(self) -> str:
@@ -170,11 +174,7 @@ class IntelligentRouter:
     4. Route to appropriate LLM(s) (Tier 3/4)
     """
 
-    def __init__(
-        self,
-        config: Optional[RouterConfig] = None,
-        swarm_arbitrator: Optional[object] = None
-    ):
+    def __init__(self, config: Optional[RouterConfig] = None, swarm_arbitrator: Optional[object] = None):
         """Initialize instance."""
         self.config = config or RouterConfig()
         self.swarm = swarm_arbitrator  # Reference to SwarmArbitrator
@@ -209,9 +209,9 @@ class IntelligentRouter:
     # Main Routing Method
     # =========================================================================
 
+
 def _route_part1_part2(self, query):
     """Route part1 part 2."""
-
 
     # =========================================================================
     # Helper Methods
@@ -220,7 +220,8 @@ def _route_part1_part2(self, query):
     def _hash_query(self, query: str) -> str:
         """Generate hash of query."""
         import hashlib
-        normalized = ' '.join(query.lower().strip().split())
+
+        normalized = " ".join(query.lower().strip().split())
         return hashlib.sha256(normalized.encode()).hexdigest()[:16]
 
     def _record_decision(self, decision: RoutingDecision):
@@ -255,10 +256,10 @@ def _route_part1_part2(self, query):
             data = {
                 "summary": self.get_stats(),
                 "history": [d.to_dict() for d in self.routing_history[-1000:]],  # Last 1000
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
 
             logger.info(f"[Router] Exported history to {filepath}")
@@ -270,48 +271,43 @@ def _route_part1_part2(self, query):
 def _route_part1_part3(self):
     """Route part1 part 3."""
 
-
     def print_performance_report(self):
         """Print detailed performance report."""
         stats = self.get_stats()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("INTELLIGENT ROUTER PERFORMANCE REPORT")
-        print("="*70)
+        print("=" * 70)
 
-        print(f"\n📊 Overall Statistics:")
-        print(f"  Total Queries:    {stats['total_queries']}")
-        print(f"  Avg Latency:      {stats.get('avg_latency_ms', 0):.1f}ms")
-        print(f"  Avg Cost:         ${stats.get('avg_cost_usd', 0):.6f}")
-        print(f"  Total Cost:       ${stats.get('total_cost_usd', 0):.4f}")
-        print(f"  Error Rate:       {stats.get('error_rate', '0%')}")
-        print(f"  Cost Savings:     {stats.get('cost_savings_vs_all_powerful', '0%')}")
-
-        print(f"\n🎯 Tier Distribution:")
-        for tier, percentage in stats.get('tier_distribution', {}).items():
-            print(f"  {tier:20s}: {percentage}")
-
-        if 'cache_stats' in stats:
-            cache_stats = stats['cache_stats']
-            print(f"\n⚡ Cache Performance:")
-            print(f"  Hit Rate:         {cache_stats.get('hit_rate', '0%')}")
-            print(f"  Total Entries:    {cache_stats.get('total_entries', 0)}")
-            print(f"  Exact Matches:    {cache_stats.get('exact_matches', 0)}")
-            print(f"  Semantic Matches: {cache_stats.get('semantic_matches', 0)}")
-
-        if 'mini_rag_stats' in stats:
-            rag_stats = stats['mini_rag_stats']
-            print(f"\n📚 Mini RAG Performance:")
-            print(f"  Hit Rate:         {rag_stats.get('hit_rate', '0%')}")
-            print(f"  Total Entries:    {rag_stats.get('total_entries', 0)}")
-            print(f"  High Conf Hits:   {rag_stats.get('high_confidence_hits', 0)}")
-
-        print("\n" + "="*70)
+        # [X-Ray auto-fix] print(f"\n📊 Overall Statistics:")
+        # [X-Ray auto-fix] print(f"  Total Queries:    {stats['total_queries']}")
+        # [X-Ray auto-fix] print(f"  Avg Latency:      {stats.get('avg_latency_ms', 0):.1f}ms")
+        # [X-Ray auto-fix] print(f"  Avg Cost:         ${stats.get('avg_cost_usd', 0):.6f}")
+        # [X-Ray auto-fix] print(f"  Total Cost:       ${stats.get('total_cost_usd', 0):.4f}")
+        # [X-Ray auto-fix] print(f"  Error Rate:       {stats.get('error_rate', '0%')}")
+        # [X-Ray auto-fix] print(f"  Cost Savings:     {stats.get('cost_savings_vs_all_powerful', '0%')}")
+        # [X-Ray auto-fix] print(f"\n🎯 Tier Distribution:")
+        for tier, percentage in stats.get("tier_distribution", {}).items():
+            # [X-Ray auto-fix] print(f"  {tier:20s}: {percentage}")
+            pass
+        if "cache_stats" in stats:
+            cache_stats = stats["cache_stats"]
+            # [X-Ray auto-fix] print(f"\n⚡ Cache Performance:")
+            # [X-Ray auto-fix] print(f"  Hit Rate:         {cache_stats.get('hit_rate', '0%')}")
+            # [X-Ray auto-fix] print(f"  Total Entries:    {cache_stats.get('total_entries', 0)}")
+            # [X-Ray auto-fix] print(f"  Exact Matches:    {cache_stats.get('exact_matches', 0)}")
+            # [X-Ray auto-fix] print(f"  Semantic Matches: {cache_stats.get('semantic_matches', 0)}")
+        if "mini_rag_stats" in stats:
+            rag_stats = stats["mini_rag_stats"]
+            # [X-Ray auto-fix] print(f"\n📚 Mini RAG Performance:")
+            # [X-Ray auto-fix] print(f"  Hit Rate:         {rag_stats.get('hit_rate', '0%')}")
+            # [X-Ray auto-fix] print(f"  Total Entries:    {rag_stats.get('total_entries', 0)}")
+            # [X-Ray auto-fix] print(f"  High Conf Hits:   {rag_stats.get('high_confidence_hits', 0)}")
+        print("\n" + "=" * 70)
 
 
 def _route_part1(self, query):
     """Route part 1."""
-
 
     decision = RoutingDecision(
         query=query[:100],
@@ -321,16 +317,12 @@ def _route_part1(self, query):
         cost_usd=0.0,
         confidence=0.0,
         success=False,
-        error_msg=str(e)
+        error_msg=str(e),
     )
     self._record_decision(decision)
 
-
     async def route(
-        self,
-        query: str,
-        system_prompt: str = "You are a helpful AI assistant.",
-        stream: bool = True
+        self, query: str, system_prompt: str = "You are a helpful AI assistant.", stream: bool = True
     ) -> AsyncGenerator[str, None]:
         """
         Main routing method - the brain of the system.
@@ -362,7 +354,7 @@ def _route_part1(self, query):
                         tier=RoutingTier.CACHE,
                         latency_ms=latency_ms,
                         cost_usd=0.0,  # No cost for cache
-                        confidence=confidence
+                        confidence=confidence,
                     )
                     self._record_decision(decision)
 
@@ -388,17 +380,13 @@ def _route_part1(self, query):
                             tier=RoutingTier.MINI_RAG,
                             latency_ms=latency_ms,
                             cost_usd=0.0,  # No LLM cost
-                            confidence=confidence
+                            confidence=confidence,
                         )
                         self._record_decision(decision)
 
                         # Cache this answer
                         if self.cache:
-                            self.cache.put(
-                                query, answer,
-                                source="mini_rag",
-                                confidence=confidence
-                            )
+                            self.cache.put(query, answer, source="mini_rag", confidence=confidence)
 
                         # Show mini RAG indicator
                         yield f"📚 **Knowledge Base** ({category}, {confidence:.0%} confidence)\n\n"
@@ -415,11 +403,7 @@ def _route_part1(self, query):
                 tier = RoutingTier.FAST_LLM  # Will be updated by swarm
                 response_text = ""
 
-                async for chunk in self.swarm.get_consensus(
-                    query,
-                    system_prompt=system_prompt,
-                    verbose=False
-                ):
+                async for chunk in self.swarm.get_consensus(query, system_prompt=system_prompt, verbose=False):
                     response_text += chunk
                     yield chunk
 
@@ -438,17 +422,13 @@ def _route_part1(self, query):
                         tier=tier,
                         latency_ms=latency_ms,
                         cost_usd=cost_usd,
-                        confidence=0.8  # Default
+                        confidence=0.8,  # Default
                     )
                     self._record_decision(decision)
 
                     # Cache high-quality LLM responses
                     if self.cache and len(response_text) > 20:
-                        self.cache.put(
-                            query, response_text,
-                            source="llm",
-                            confidence=0.8
-                        )
+                        self.cache.put(query, response_text, source="llm", confidence=0.8)
 
             else:
                 # No swarm available - error
@@ -461,7 +441,7 @@ def _route_part1(self, query):
                     cost_usd=0.0,
                     confidence=0.0,
                     success=False,
-                    error_msg="No swarm arbitrator"
+                    error_msg="No swarm arbitrator",
                 )
                 self._record_decision(decision)
 
@@ -469,6 +449,7 @@ def _route_part1(self, query):
             logger.error(f"[Router] Error routing query: {e}")
             yield f"❌ **Error:** {str(e)}\n"
         _route_part1(self, query)
+
     _route_part1_part2(self, query)
     _route_part1_part3(self)
 
@@ -477,8 +458,7 @@ def _route_part1(self, query):
 # Factory Functions
 # =============================================================================
 def create_intelligent_router(
-    swarm_arbitrator: Optional[object] = None,
-    config: Optional[RouterConfig] = None
+    swarm_arbitrator: Optional[object] = None, config: Optional[RouterConfig] = None
 ) -> IntelligentRouter:
     """Create intelligent router with default configuration."""
     return IntelligentRouter(config=config, swarm_arbitrator=swarm_arbitrator)
@@ -489,6 +469,7 @@ def create_intelligent_router(
 # =============================================================================
 if __name__ == "__main__":
     import logging
+
     logging.basicConfig(level=logging.INFO)
 
     # Create router (without swarm for testing cache/rag only)
@@ -505,12 +486,11 @@ if __name__ == "__main__":
         ]
 
         for query in test_queries:
-            print(f"\n{'='*70}")
-            print(f"Query: {query}")
-            print(f"{'='*70}")
-
+            # [X-Ray auto-fix] print(f"\n{'=' * 70}")
+            # [X-Ray auto-fix] print(f"Query: {query}")
+            # [X-Ray auto-fix] print(f"{'=' * 70}")
             async for chunk in router.route(query):
-                print(chunk, end='', flush=True)
+                print(chunk, end="", flush=True)
 
             print("\n")
 

@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-import sys
 import threading
 import time
 from pathlib import Path
@@ -42,10 +41,13 @@ from rag_core.reranker import RerankerManager
 try:
     from .profiler import profile_execution
 except ImportError:
+
     def profile_execution(name):
         def decorator(fn):
             return fn
+
         return decorator
+
 
 try:
     from .rag_db import RAGDatabase
@@ -67,6 +69,7 @@ def _lazy_load_qdrant():
         return
     from qdrant_client import QdrantClient as _QC
     from qdrant_client.models import Distance as _D, VectorParams as _VP, PointStruct as _PS
+
     QdrantClient, Distance, VectorParams, PointStruct = _QC, _D, _VP, _PS
 
 
@@ -154,6 +157,7 @@ class LocalRAGv2:
 
         try:
             from .universal_extractor import UniversalExtractor
+
             self.extractor = UniversalExtractor()
         except ImportError:
             self.extractor = None
@@ -185,21 +189,25 @@ class LocalRAGv2:
         try:
             points, _ = self.qdrant.scroll(
                 collection_name=self.collection_name,
-                limit=10000, with_payload=True, with_vectors=False,
+                limit=10000,
+                with_payload=True,
+                with_vectors=False,
             )
             self.chunks = []
             self.chunk_hashes = set()
             for p in points:
                 text = p.payload.get("text", "")
                 text_hash = hashlib.sha256(text.encode()).hexdigest()
-                self.chunks.append({
-                    "text": text,
-                    "url": p.payload.get("url"),
-                    "title": p.payload.get("title"),
-                    "metadata": p.payload.get("metadata", {}),
-                    "hash": text_hash,
-                    "qdrant_id": p.id,
-                })
+                self.chunks.append(
+                    {
+                        "text": text,
+                        "url": p.payload.get("url"),
+                        "title": p.payload.get("title"),
+                        "metadata": p.payload.get("metadata", {}),
+                        "hash": text_hash,
+                        "qdrant_id": p.id,
+                    }
+                )
                 self.chunk_hashes.add(text_hash)
             if self.chunks:
                 self._bm25.build([c["text"] for c in self.chunks])
@@ -224,8 +232,9 @@ class LocalRAGv2:
         except Exception:
             return 0
 
-    def chunk_documents(self, documents: List[Dict], chunk_size: int = 800,
-                        overlap: int = 50, filter_junk: bool = True) -> List[Dict]:
+    def chunk_documents(
+        self, documents: List[Dict], chunk_size: int = 800, overlap: int = 50, filter_junk: bool = True
+    ) -> List[Dict]:
         self.chunker.config.CHUNK_SIZE = chunk_size
         self.chunker.config.CHUNK_OVERLAP = overlap
         all_chunks = []
@@ -236,23 +245,27 @@ class LocalRAGv2:
             meta = {"url": doc.get("url"), "title": doc.get("title")}
             strategy = getattr(config.rag, "chunk_strategy", "sentence")
             doc_chunks = self.chunker.chunk_document(
-                content, metadata=meta, strategy=strategy, filter_junk=filter_junk,
+                content,
+                metadata=meta,
+                strategy=strategy,
+                filter_junk=filter_junk,
             )
             for c in doc_chunks:
                 chunk_text = c.text.strip()
                 if len(chunk_text) > 20:
-                    all_chunks.append({
-                        "url": c.metadata.get("url"),
-                        "title": c.metadata.get("title"),
-                        "text": chunk_text,
-                        "chunk_index": c.chunk_index,
-                        "metadata": doc.get("metadata", {}),  # ZEN: metadata propagation
-                    })
+                    all_chunks.append(
+                        {
+                            "url": c.metadata.get("url"),
+                            "title": c.metadata.get("title"),
+                            "text": chunk_text,
+                            "chunk_index": c.chunk_index,
+                            "metadata": doc.get("metadata", {}),  # ZEN: metadata propagation
+                        }
+                    )
         return all_chunks
 
     @profile_execution("RAG Indexing")
-    def build_index(self, documents: List[Dict], dedup_threshold: Optional[float] = None,
-                    filter_junk: bool = True):
+    def build_index(self, documents: List[Dict], dedup_threshold: Optional[float] = None, filter_junk: bool = True):
         if not self.qdrant:
             logger.warning("[RAG] Skipping indexing: Storage not available")
             return
@@ -282,7 +295,7 @@ class LocalRAGv2:
 
                 BATCH_SIZE = 32
                 for i in range(0, len(doc_chunks), BATCH_SIZE):
-                    batch = doc_chunks[i: i + BATCH_SIZE]
+                    batch = doc_chunks[i : i + BATCH_SIZE]
                     texts = [c["text"] for c in batch]
                     embeddings = self._embed_mgr.encode(texts, batch_size=BATCH_SIZE)
 
@@ -297,7 +310,8 @@ class LocalRAGv2:
                         try:
                             hits = self.qdrant.query_points(
                                 collection_name=self.collection_name,
-                                query=embedding.tolist(), limit=1,
+                                query=embedding.tolist(),
+                                limit=1,
                                 score_threshold=threshold,
                             ).points
                             if hits:
@@ -315,22 +329,28 @@ class LocalRAGv2:
                         points.append(PointStruct(id=point_id, vector=embedding.tolist(), payload=payload))
 
                         self.chunk_hashes.add(text_hash)
-                        self.chunks.append({
-                            "text": text, "url": chunk.get("url"),
-                            "title": chunk.get("title"),
-                            "metadata": chunk.get("metadata", {}),
-                            "hash": text_hash, "qdrant_id": point_id,
-                        })
+                        self.chunks.append(
+                            {
+                                "text": text,
+                                "url": chunk.get("url"),
+                                "title": chunk.get("title"),
+                                "metadata": chunk.get("metadata", {}),
+                                "hash": text_hash,
+                                "qdrant_id": point_id,
+                            }
+                        )
 
                         # Prepare for SQLite batch insert
                         if self.db and doc_id is not None:
-                            db_chunks.append({
-                                "doc_id": doc_id,
-                                "chunk_index": chunk.get("chunk_index", 0),
-                                "text": text,
-                                "vector": embedding,
-                                "metadata": chunk.get("metadata", {}),
-                            })
+                            db_chunks.append(
+                                {
+                                    "doc_id": doc_id,
+                                    "chunk_index": chunk.get("chunk_index", 0),
+                                    "text": text,
+                                    "vector": embedding,
+                                    "metadata": chunk.get("metadata", {}),
+                                }
+                            )
 
                     if points:
                         self.qdrant.upsert(collection_name=self.collection_name, points=points)
@@ -366,7 +386,8 @@ class LocalRAGv2:
                 try:
                     hits = self.qdrant.query_points(
                         collection_name=self.collection_name,
-                        query=embedding.tolist(), limit=1,
+                        query=embedding.tolist(),
+                        limit=1,
                         score_threshold=threshold,
                     ).points
                     if hits:
@@ -374,17 +395,29 @@ class LocalRAGv2:
                 except Exception:
                     pass
                 point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
-                points.append(PointStruct(
-                    id=point_id, vector=embedding.tolist(),
-                    payload={"text": text, "url": chunk.get("url"),
-                             "title": chunk.get("title"), "metadata": chunk.get("metadata", {})},
-                ))
+                points.append(
+                    PointStruct(
+                        id=point_id,
+                        vector=embedding.tolist(),
+                        payload={
+                            "text": text,
+                            "url": chunk.get("url"),
+                            "title": chunk.get("title"),
+                            "metadata": chunk.get("metadata", {}),
+                        },
+                    )
+                )
                 self.chunk_hashes.add(text_hash)
-                self.chunks.append({
-                    "text": text, "url": chunk.get("url"),
-                    "title": chunk.get("title"), "metadata": chunk.get("metadata", {}),
-                    "hash": text_hash, "qdrant_id": point_id,
-                })
+                self.chunks.append(
+                    {
+                        "text": text,
+                        "url": chunk.get("url"),
+                        "title": chunk.get("title"),
+                        "metadata": chunk.get("metadata", {}),
+                        "hash": text_hash,
+                        "qdrant_id": point_id,
+                    }
+                )
             if points:
                 self.qdrant.upsert(collection_name=self.collection_name, points=points)
                 self._bm25.build([c["text"] for c in self.chunks])
@@ -407,16 +440,20 @@ class LocalRAGv2:
         q_vec = self._embed_mgr.encode_single(query, normalize=True)
         hits = self.qdrant.query_points(
             collection_name=self.collection_name,
-            query=q_vec.tolist(), limit=limit,
+            query=q_vec.tolist(),
+            limit=limit,
         ).points
 
-        results = [{
-            "text": h.payload.get("text"),
-            "url": h.payload.get("url"),
-            "title": h.payload.get("title"),
-            "metadata": h.payload.get("metadata", {}),
-            "score": h.score,
-        } for h in hits]
+        results = [
+            {
+                "text": h.payload.get("text"),
+                "url": h.payload.get("url"),
+                "title": h.payload.get("title"),
+                "metadata": h.payload.get("metadata", {}),
+                "score": h.score,
+            }
+            for h in hits
+        ]
 
         if rerank:
             results = self.rerank(query, results, top_k=k)
@@ -424,8 +461,7 @@ class LocalRAGv2:
         self._cache.set(query, [r for r in results])
         return results
 
-    def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5,
-                      rerank: bool = True) -> List[Dict]:
+    def hybrid_search(self, query: str, k: int = 5, alpha: float = 0.5, rerank: bool = True) -> List[Dict]:
         if not self.chunks:
             return []
 
@@ -437,7 +473,8 @@ class LocalRAGv2:
             q_vec = self._embed_mgr.encode_single(query, normalize=True)
             hits = self.qdrant.query_points(
                 collection_name=self.collection_name,
-                query=q_vec.tolist(), limit=k_search,
+                query=q_vec.tolist(),
+                limit=k_search,
             ).points
             id_to_idx = {c["qdrant_id"]: i for i, c in enumerate(self.chunks)}
             for rank, hit in enumerate(hits):
@@ -456,8 +493,10 @@ class LocalRAGv2:
         # Stage 3: RRF Fusion via rag_core
         if dense_scores and bm25_scores:
             fused = reciprocal_rank_fusion(
-                dense_scores, bm25_scores,
-                k=60, weights=[alpha, 1.0 - alpha],
+                dense_scores,
+                bm25_scores,
+                k=60,
+                weights=[alpha, 1.0 - alpha],
             )
         elif dense_scores:
             fused = dense_scores
@@ -571,10 +610,15 @@ class AsyncLocalRAGv2(LocalRAGv2):
 
 # ── Standalone helper ──────────────────────────────────────────────────────
 
+
 @profile_execution("RAG Retrieval Logic")
 def generate_rag_response(
-    query: str, rag: LocalRAGv2, llm_backend,
-    use_hybrid: bool = True, k: int = 5, alpha: float = 0.6,
+    query: str,
+    rag: LocalRAGv2,
+    llm_backend,
+    use_hybrid: bool = True,
+    k: int = 5,
+    alpha: float = 0.6,
 ) -> Generator[str, None, None]:
     if use_hybrid:
         candidates = rag.hybrid_search(query, k=k * 3, alpha=alpha)

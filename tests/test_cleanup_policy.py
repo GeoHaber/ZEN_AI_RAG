@@ -2,6 +2,7 @@
 """
 Tests for cleanup_policy.py
 """
+
 import pytest
 import time
 from pathlib import Path
@@ -24,12 +25,7 @@ class TestUploadCleanupPolicy:
 
     def test_initialization(self, temp_upload_dir):
         """Test policy initializes correctly."""
-        policy = UploadCleanupPolicy(
-            temp_upload_dir,
-            max_age_hours=24,
-            max_files=100,
-            max_size_mb=500
-        )
+        policy = UploadCleanupPolicy(temp_upload_dir, max_age_hours=24, max_files=100, max_size_mb=500)
         assert policy.upload_dir == temp_upload_dir
         assert policy.max_age_hours == 24
         assert policy.max_files == 100
@@ -40,9 +36,9 @@ class TestUploadCleanupPolicy:
         policy = UploadCleanupPolicy(temp_upload_dir)
         stats = policy.get_stats()
 
-        assert stats['count'] == 0
-        assert stats['size_mb'] == 0.0
-        assert stats['oldest_hours'] == 0.0
+        assert stats["count"] == 0
+        assert stats["size_mb"] == 0.0
+        assert stats["oldest_hours"] == 0.0
 
     def test_get_stats_with_files(self, temp_upload_dir):
         """Test stats with files."""
@@ -53,9 +49,9 @@ class TestUploadCleanupPolicy:
         policy = UploadCleanupPolicy(temp_upload_dir)
         stats = policy.get_stats()
 
-        assert stats['count'] == 3
-        assert stats['size_mb'] >= 0  # Allow 0 for very small files
-        assert stats['oldest_hours'] >= 0
+        assert stats["count"] == 3
+        assert stats["size_mb"] >= 0  # Allow 0 for very small files
+        assert stats["oldest_hours"] >= 0
 
     def test_cleanup_old_files(self, temp_upload_dir):
         """Test cleanup removes old files."""
@@ -66,6 +62,7 @@ class TestUploadCleanupPolicy:
         # Make it old (modify mtime)
         old_time = time.time() - (25 * 3600)  # 25 hours ago
         import os
+
         os.utime(old_file, (old_time, old_time))
 
         # Create recent file
@@ -75,7 +72,7 @@ class TestUploadCleanupPolicy:
         policy = UploadCleanupPolicy(temp_upload_dir, max_age_hours=24)
         result = policy.cleanup()
 
-        assert result['deleted'] == 1
+        assert result["deleted"] == 1
         assert not old_file.exists()
         assert recent_file.exists()
 
@@ -90,8 +87,8 @@ class TestUploadCleanupPolicy:
         policy = UploadCleanupPolicy(temp_upload_dir, max_files=3)
         result = policy.cleanup()
 
-        assert result['deleted'] == 2
-        remaining = list(temp_upload_dir.glob('*.txt'))
+        assert result["deleted"] == 2
+        remaining = list(temp_upload_dir.glob("*.txt"))
         assert len(remaining) == 3
 
     def test_cleanup_by_size(self, temp_upload_dir):
@@ -105,17 +102,17 @@ class TestUploadCleanupPolicy:
         policy = UploadCleanupPolicy(temp_upload_dir, max_size_mb=2)
         result = policy.cleanup()
 
-        assert result['deleted'] >= 1
+        assert result["deleted"] >= 1
         stats = policy.get_stats()
-        assert stats['size_mb'] <= 2
+        assert stats["size_mb"] <= 2
 
     def test_cleanup_nonexistent_dir(self):
         """Test cleanup handles nonexistent directory."""
         policy = UploadCleanupPolicy(Path("/nonexistent/path"))
         result = policy.cleanup()
 
-        assert result['deleted'] == 0
-        assert result['freed_mb'] == 0.0
+        assert result["deleted"] == 0
+        assert result["freed_mb"] == 0.0
 
     def test_thread_safety(self, temp_upload_dir):
         """Test policy is thread-safe."""
@@ -148,5 +145,5 @@ class TestUploadCleanupPolicy:
         # Should complete without errors
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

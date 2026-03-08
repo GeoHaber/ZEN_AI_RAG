@@ -32,6 +32,7 @@ sys.path.append(str(Path(__file__).parent))
 
 # ─── Helper: split aggregated text back into per-source blocks ──
 
+
 def _split_aggregated_text(content: str, sources: List[dict]) -> List[str]:
     """Split content_extractor output into per-source text blocks."""
     header_pattern = re.compile(r"^=== (?:PAGE|FILE): .+? ===$", re.MULTILINE)
@@ -53,6 +54,7 @@ def _split_aggregated_text(content: str, sources: List[dict]) -> List[str]:
 
 # ─── MockRAG ─────────────────────────────────────────────
 
+
 class _MockRAG:
     """Lightweight in-memory RAG for local testing."""
 
@@ -68,9 +70,7 @@ class _MockRAG:
         self.docs.append({"text": text, "source": str(path), "collection": collection})
         return True, f"Mock indexed: {path}"
 
-    async def search_context(
-        self, query: str, collection: str = "default", top_k: int = 3, **kwargs
-    ):
+    async def search_context(self, query: str, collection: str = "default", top_k: int = 3, **kwargs):
         q = query.lower()
         results = []
         for d in self.docs:
@@ -85,12 +85,14 @@ class _MockRAG:
                 if match_count:
                     score = min(0.5 + 0.1 * match_count, 0.8)
             if score > 0:
-                results.append({
-                    "text": d.get("text", "")[:1000],
-                    "score": score,
-                    "source": d.get("source"),
-                    "collection": d.get("collection"),
-                })
+                results.append(
+                    {
+                        "text": d.get("text", "")[:1000],
+                        "score": score,
+                        "source": d.get("source"),
+                        "collection": d.get("collection"),
+                    }
+                )
         results.sort(key=lambda r: r["score"], reverse=True)
         return results[:top_k]
 
@@ -115,6 +117,7 @@ class _MockRAG:
 
 
 # ─── RAGIntegration ─────────────────────────────────────
+
 
 class RAGIntegration:
     """Wrapper around RAG manager for document handling and retrieval."""
@@ -191,9 +194,7 @@ class RAGIntegration:
             return []
         try:
             if hasattr(self.rag_manager, "hybrid_search"):
-                results = await asyncio.to_thread(
-                    self.rag_manager.hybrid_search, query, k=top_k, rerank=True
-                )
+                results = await asyncio.to_thread(self.rag_manager.hybrid_search, query, k=top_k, rerank=True)
                 return [
                     {
                         "text": r.get("text", ""),
@@ -204,9 +205,7 @@ class RAGIntegration:
                     for r in results
                     if r.get("score", 0) >= score_threshold
                 ]
-            results = await self.rag_manager.search_context(
-                query, collection=collection_name, top_k=top_k
-            )
+            results = await self.rag_manager.search_context(query, collection=collection_name, top_k=top_k)
             return [r for r in results if r.get("score", 0) >= score_threshold]
         except Exception as exc:
             logger.error(f"Search failed: {exc}")
@@ -230,11 +229,13 @@ class RAGIntegration:
             if sources:
                 blocks = _split_aggregated_text(content, sources)
                 for src, block_text in zip(sources, blocks):
-                    documents.append({
-                        "content": block_text,
-                        "url": src.get("path", source_name),
-                        "title": src.get("title", source_name),
-                    })
+                    documents.append(
+                        {
+                            "content": block_text,
+                            "url": src.get("path", source_name),
+                            "title": src.get("title", source_name),
+                        }
+                    )
             else:
                 documents.append({"content": content, "url": source_name, "title": source_name})
             if not documents:
@@ -244,11 +245,13 @@ class RAGIntegration:
                 total = sum(len(d["content"]) for d in documents)
                 return True, f"✅ Indexed {len(documents)} sources ({total:,} chars)"
             for doc in documents:
-                self.rag_manager.docs.append({
-                    "text": doc.get("content", ""),
-                    "source": doc.get("url", "unknown"),
-                    "collection": "default",
-                })
+                self.rag_manager.docs.append(
+                    {
+                        "text": doc.get("content", ""),
+                        "source": doc.get("url", "unknown"),
+                        "collection": "default",
+                    }
+                )
             return True, f"Indexed {len(documents)} sources (in-memory)"
         except Exception as exc:
             return False, f"Indexing failed: {exc}"
@@ -268,7 +271,7 @@ class RAGIntegration:
             return "", []
         parts, total = [], 0
         for i, r in enumerate(results):
-            block = f"[Source {i+1}: {r.get('source','?')} | Score: {r.get('score',0):.2f}]\n{r.get('text','')}"
+            block = f"[Source {i + 1}: {r.get('source', '?')} | Score: {r.get('score', 0):.2f}]\n{r.get('text', '')}"
             if total + len(block) > max_context_chars:
                 break
             parts.append(block)
@@ -280,7 +283,7 @@ class RAGIntegration:
             return ""
         parts, total = [], 0
         for r in results:
-            fmt = f"[Score: {r.get('score',0):.2f}] {r.get('text','')} (Source: {r.get('source','?')})"
+            fmt = f"[Score: {r.get('score', 0):.2f}] {r.get('text', '')} (Source: {r.get('source', '?')})"
             if total + len(fmt) + 2 > max_tokens:
                 break
             parts.append(fmt)
@@ -337,7 +340,9 @@ async def get_rag() -> RAGIntegration:
 
 
 if __name__ == "__main__":
+
     async def _test():
         rag = await get_rag()
         print(f"RAG Stats: {rag.get_stats()}")
+
     asyncio.run(_test())

@@ -20,32 +20,25 @@ DEFAULT_STATE: dict[str, Any] = {
     "rag_source_name": "",
     "rag_source_type": "",
     "rag_enabled": True,
-
     # ── UI navigation ────────────────────────────────────────────────────
     "active_panel": "chat",
-
     # ── Chat ──────────────────────────────────────────────────────────────
     "chat_history": [],
     "is_streaming": False,
     "attachment": None,
-
     # ── Models ────────────────────────────────────────────────────────────
     "active_model": "",
     "available_models": [],
-
     # ── Smart mode ────────────────────────────────────────────────────────
     "council_mode": False,
     "deep_thinking": False,
     "quiet_cot": False,
-
     # ── Voice ─────────────────────────────────────────────────────────────
     "voice_recording": False,
     "tts_enabled": False,
-
     # ── Backend health ────────────────────────────────────────────────────
     "llm_online": False,
     "backend_online": False,
-
     # ── Onboarding ────────────────────────────────────────────────────────
     "onboarded": False,
 }

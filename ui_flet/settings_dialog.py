@@ -34,11 +34,9 @@ def _settings_section(title: str, icon: str, controls: list[ft.Control]) -> ft.E
     )
 
 
-
-
-
 def ___build_settings_dialog_part2_part2_part2(chat_section, system_section):
     """Continue __build_settings_dialog_part2_part2 logic."""
+
     def on_close(e):
         """Close the settings dialog without saving."""
         page.close(dlg)
@@ -59,12 +57,14 @@ def ___build_settings_dialog_part2_part2_part2(chat_section, system_section):
 
     dlg = ft.AlertDialog(
         modal=True,
-        title=ft.Row([
-            ft.Icon(ft.Icons.SETTINGS, color=TH.accent),
-            ft.Text("Settings", size=20, weight=ft.FontWeight.BOLD, color=TH.text),
-            ft.Container(expand=True),
-            ft.IconButton(icon=ft.Icons.CLOSE, icon_color=TH.muted, on_click=on_close),
-        ]),
+        title=ft.Row(
+            [
+                ft.Icon(ft.Icons.SETTINGS, color=TH.accent),
+                ft.Text("Settings", size=20, weight=ft.FontWeight.BOLD, color=TH.text),
+                ft.Container(expand=True),
+                ft.IconButton(icon=ft.Icons.CLOSE, icon_color=TH.muted, on_click=on_close),
+            ]
+        ),
         content=ft.Container(
             content=ft.Column(
                 [
@@ -85,8 +85,7 @@ def ___build_settings_dialog_part2_part2_part2(chat_section, system_section):
         ),
         actions=[
             ft.TextButton("Cancel", on_click=on_close),
-            ft.ElevatedButton("Save", on_click=on_save_click,
-                              bgcolor=TH.accent, color=ft.Colors.WHITE),
+            ft.Button("Save", on_click=on_save_click, bgcolor=TH.accent, color=ft.Colors.WHITE),
         ],
         actions_alignment=ft.MainAxisAlignment.END,
         shape=ft.RoundedRectangleBorder(radius=16),
@@ -101,20 +100,27 @@ def __build_settings_dialog_part2_part2(chat_controls, rag_section, rag_switch, 
     # ── 8. System ────────────────────────────────────────────────────────
     system_controls = [
         ft.TextField(
-            label="API Port", value=str(getattr(config, "mgmt_port", 8002)) if config else "8002",
-            width=120, border_color=TH.border, color=TH.text,
+            label="API Port",
+            value=str(getattr(config, "mgmt_port", 8002)) if config else "8002",
+            width=120,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
         ft.TextField(
             label="Models Directory",
             value=str(getattr(config, "MODEL_DIR", "C:/AI/Models")) if config else "C:/AI/Models",
-            border_color=TH.border, color=TH.text,
+            border_color=TH.border,
+            color=TH.text,
         ),
         ft.Switch(label="Check for Updates", value=True),
         ft.Switch(label="Auto-Start Backend", value=True),
         ft.Dropdown(
-            label="Log Level", value="INFO", width=160,
-            border_color=TH.border, color=TH.text,
+            label="Log Level",
+            value="INFO",
+            width=160,
+            border_color=TH.border,
+            color=TH.text,
             options=[ft.dropdown.Option(lv) for lv in ["DEBUG", "INFO", "WARNING", "ERROR"]],
         ),
     ]
@@ -124,7 +130,18 @@ def __build_settings_dialog_part2_part2(chat_controls, rag_section, rag_switch, 
     return ___build_settings_dialog_part2_part2_part2(chat_section, system_section)
 
 
-def _build_settings_dialog_part2(appearance_section, config, council_switch, dark_switch, deep_switch, external_section, lang_dd, lang_section, model_section, quiet_cot_switch):
+def _build_settings_dialog_part2(
+    appearance_section,
+    config,
+    council_switch,
+    dark_switch,
+    deep_switch,
+    external_section,
+    lang_dd,
+    lang_section,
+    model_section,
+    quiet_cot_switch,
+):
     """Continue build_settings_dialog logic."""
     tts_switch = ft.Switch(label="Text-to-Speech Enabled", value=state.get("tts_enabled", False))
     voice_controls = [
@@ -132,8 +149,11 @@ def _build_settings_dialog_part2(appearance_section, config, council_switch, dar
         ft.Slider(min=0.5, max=2.0, value=1.0, divisions=15, label="Voice Speed: {value}x"),
         ft.Switch(label="Auto-Speak Responses", value=False),
         ft.TextField(
-            label="Recording Duration (s)", value="5", width=120,
-            border_color=TH.border, color=TH.text,
+            label="Recording Duration (s)",
+            value="5",
+            width=120,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
     ]
@@ -144,18 +164,27 @@ def _build_settings_dialog_part2(appearance_section, config, council_switch, dar
     rag_controls = [
         rag_switch,
         ft.TextField(
-            label="Chunk Size", value=str(getattr(config, "rag", None) and config.rag.chunk_size or 500),
-            width=120, border_color=TH.border, color=TH.text,
+            label="Chunk Size",
+            value=str(getattr(config, "rag", None) and config.rag.chunk_size or 500),
+            width=120,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
         ft.TextField(
-            label="Similarity Threshold", value="0.95",
-            width=140, border_color=TH.border, color=TH.text,
+            label="Similarity Threshold",
+            value="0.95",
+            width=140,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
         ft.TextField(
-            label="Max Results", value="10",
-            width=120, border_color=TH.border, color=TH.text,
+            label="Max Results",
+            value="10",
+            width=120,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
         ft.Switch(label="Auto-Index on Scan", value=True),
@@ -170,16 +199,20 @@ def _build_settings_dialog_part2(appearance_section, config, council_switch, dar
         ft.Switch(label="Show Token Count", value=False),
         ft.Switch(label="Save Conversations", value=True),
         ft.TextField(
-            label="History Days", value="30", width=120,
-            border_color=TH.border, color=TH.text,
+            label="History Days",
+            value="30",
+            width=120,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
     ]
     return __build_settings_dialog_part2_part2(chat_controls, rag_section, rag_switch, tts_switch, voice_section)
 
 
-
-def _build_settings_dialog_part2(appearance_section, config, council_switch, dark_switch, lang_dd, lang_section, model_controls):
+def _build_settings_dialog_part2(
+    appearance_section, config, council_switch, dark_switch, lang_dd, lang_section, model_controls
+):
     """Continue build_settings_dialog logic."""
     deep_switch = ft.Switch(label="Deep Thinking (CoT)", value=state.get("deep_thinking", False))
     quiet_cot_switch = ft.Switch(label="Quiet CoT", value=state.get("quiet_cot", False))
@@ -190,66 +223,98 @@ def _build_settings_dialog_part2(appearance_section, config, council_switch, dar
     external_controls = [
         ft.Switch(label="Enable External LLMs", value=False),
         ft.TextField(
-            label="Anthropic API Key", hint_text="sk-ant-…",
-            prefix_icon=ft.Icons.KEY, password=True, can_reveal_password=True,
-            border_color=TH.border, color=TH.text,
+            label="Anthropic API Key",
+            hint_text="sk-ant-…",
+            prefix_icon=ft.Icons.KEY,
+            password=True,
+            can_reveal_password=True,
+            border_color=TH.border,
+            color=TH.text,
         ),
         ft.TextField(
-            label="Google API Key", hint_text="AIza…",
-            prefix_icon=ft.Icons.KEY, password=True, can_reveal_password=True,
-            border_color=TH.border, color=TH.text,
+            label="Google API Key",
+            hint_text="AIza…",
+            prefix_icon=ft.Icons.KEY,
+            password=True,
+            can_reveal_password=True,
+            border_color=TH.border,
+            color=TH.text,
         ),
         ft.TextField(
-            label="Grok API Key", hint_text="xai-…",
-            prefix_icon=ft.Icons.KEY, password=True, can_reveal_password=True,
-            border_color=TH.border, color=TH.text,
+            label="Grok API Key",
+            hint_text="xai-…",
+            prefix_icon=ft.Icons.KEY,
+            password=True,
+            can_reveal_password=True,
+            border_color=TH.border,
+            color=TH.text,
         ),
     ]
     external_section = _settings_section("External LLMs", ft.Icons.CLOUD_OUTLINED, external_controls)
 
     # ── 5. Voice ─────────────────────────────────────────────────────────
-    return _build_settings_dialog_part2(appearance_section, config, council_switch, dark_switch, deep_switch, external_section, lang_dd, lang_section, model_section, quiet_cot_switch)
-
+    return _build_settings_dialog_part2(
+        appearance_section,
+        config,
+        council_switch,
+        dark_switch,
+        deep_switch,
+        external_section,
+        lang_dd,
+        lang_section,
+        model_section,
+        quiet_cot_switch,
+    )
 
 
 def _build_settings_dialog_part2(config, dark_switch, lang_dd, lang_section):
     """Continue build_settings_dialog logic."""
-    appearance_section = _settings_section("Appearance", ft.Icons.PALETTE_OUTLINED, [
-        dark_switch,
-        ft.Text("Toggle between dark and light themes", size=11, color=TH.muted),
-    ])
+    appearance_section = _settings_section(
+        "Appearance",
+        ft.Icons.PALETTE_OUTLINED,
+        [
+            dark_switch,
+            ft.Text("Toggle between dark and light themes", size=11, color=TH.muted),
+        ],
+    )
 
     # ── 3. AI Model ──────────────────────────────────────────────────────
     model_controls = [
         ft.TextField(
             label="Default Model",
             value=getattr(config, "default_model", "model.gguf") if config else "model.gguf",
-            border_color=TH.border, color=TH.text,
+            border_color=TH.border,
+            color=TH.text,
         ),
         ft.TextField(
             label="Temperature",
             value="0.7",
             width=120,
-            border_color=TH.border, color=TH.text,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
         ft.TextField(
             label="Max Tokens",
             value="2048",
             width=140,
-            border_color=TH.border, color=TH.text,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
         ft.TextField(
             label="Context Window",
             value=str(getattr(config, "context_size", 4096)) if config else "4096",
             width=140,
-            border_color=TH.border, color=TH.text,
+            border_color=TH.border,
+            color=TH.text,
             keyboard_type=ft.KeyboardType.NUMBER,
         ),
     ]
     council_switch = ft.Switch(label="Council / Swarm Mode", value=state.get("council_mode", False))
-    return _build_settings_dialog_part2(appearance_section, config, council_switch, dark_switch, lang_dd, lang_section, model_controls)
+    return _build_settings_dialog_part2(
+        appearance_section, config, council_switch, dark_switch, lang_dd, lang_section, model_controls
+    )
 
 
 def build_settings_dialog(
@@ -296,10 +361,14 @@ def build_settings_dialog(
         ],
         on_change=lambda e: on_language_change(e.control.value) if on_language_change else None,
     )
-    lang_section = _settings_section("Language", ft.Icons.TRANSLATE, [
-        lang_dd,
-        ft.Text("Choose the interface language", size=11, color=TH.muted),
-    ])
+    lang_section = _settings_section(
+        "Language",
+        ft.Icons.TRANSLATE,
+        [
+            lang_dd,
+            ft.Text("Choose the interface language", size=11, color=TH.muted),
+        ],
+    )
 
     # ── 2. Appearance ────────────────────────────────────────────────────
     dark_switch = ft.Switch(

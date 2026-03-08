@@ -9,17 +9,17 @@ from .base import BaseLocale
 
 class RomanianLocale(BaseLocale):
     """Romanian (Română) locale."""
-    
+
     LANGUAGE_CODE = "ro"
     LANGUAGE_NAME = "Romanian"
     LANGUAGE_NATIVE = "Română"
-    
+
     # ==========================================================================
     # APP METADATA
     # ==========================================================================
     APP_TITLE = "ZenAI"
     APP_SUBTITLE = "Asistentul Tău AI Local"
-    
+
     # ==========================================================================
     # NAVIGATION
     # ==========================================================================
@@ -31,7 +31,7 @@ class RomanianLocale(BaseLocale):
     NAV_HF_DOWNLOAD = "📥 Descarcă de pe Hugging Face"
     NAV_LOCAL_MODELS = "📂 Modele Locale"
     NAV_NO_LOCAL_MODELS = "Nu s-au găsit modele locale"
-    
+
     # ==========================================================================
     # BUTTONS
     # ==========================================================================
@@ -48,7 +48,7 @@ class RomanianLocale(BaseLocale):
     BTN_OK = "OK"
     BTN_YES = "Da"
     BTN_NO = "Nu"
-    
+
     # ==========================================================================
     # MODEL CATALOG
     # ==========================================================================
@@ -63,14 +63,14 @@ class RomanianLocale(BaseLocale):
     MODEL_SELECT_VARIANT = "Selectează varianta modelului"
     MODEL_LOADING_VARIANTS = "Se încarcă variantele..."
     MODEL_NO_VARIANTS = "Nu s-au găsit variante"
-    
+
     # Speed ratings
     MODEL_SPEED_FAST = "⚡ Foarte Rapid"
     MODEL_SPEED_GOOD = "🚀 Rapid"
     MODEL_SPEED_MEDIUM = "⏱️ Mediu"
     MODEL_SPEED_SLOW = "🐢 Lent"
     MODEL_SPEED_VERY_SLOW = "🦥 Foarte Lent"
-    
+
     # ==========================================================================
     # ENGINE / AI
     # ==========================================================================
@@ -83,7 +83,7 @@ class RomanianLocale(BaseLocale):
     ENGINE_SCANNING_SWARM = "Se scanează roiul..."
     ENGINE_EXPERTS_ONLINE = "{count} Experți Online"
     ENGINE_STANDALONE = "Mod Independent ZenAI"
-    
+
     # ==========================================================================
     # SYSTEM
     # ==========================================================================
@@ -92,7 +92,7 @@ class RomanianLocale(BaseLocale):
     SYS_DIAGNOSTICS = "Diagnosticare"
     SYS_UPDATE_ENGINE = "Actualizează Motorul"
     SYS_GET_UPDATE = "Obține Actualizare (GitHub)"
-    
+
     # ==========================================================================
     # SETTINGS
     # ==========================================================================
@@ -102,7 +102,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_SAVED = "Setările au fost salvate cu succes"
     SETTINGS_RESET_CONFIRM = "Ești sigur că vrei să resetezi toate setările?"
     SETTINGS_LANGUAGE_CHANGED = "Limba schimbată în {lang}. Reîmprospătează pagina pentru aplicare."
-    
+
     SETTINGS_CAT_LANGUAGE = "🌐 Limbă"
     SETTINGS_CAT_APPEARANCE = "🎨 Aspect"
     SETTINGS_CAT_AI_MODEL = "🤖 Model AI"
@@ -110,7 +110,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_CAT_RAG = "📚 RAG"
     SETTINGS_CAT_CHAT = "💬 Chat"
     SETTINGS_CAT_SYSTEM = "⚙️ Sistem"
-    
+
     SETTINGS_UI_LANGUAGE = "Limba Interfeței"
     SETTINGS_UI_LANGUAGE_DESC = "Selectează limba pentru interfața utilizatorului"
     SETTINGS_DARK_MODE = "Mod Întunecat"
@@ -125,7 +125,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_CHAT_DENSITY_SPACIOUS = "Spațios"
     SETTINGS_SHOW_AVATARS = "Afișează Avataruri"
     SETTINGS_ANIMATE_MESSAGES = "Animează Mesajele"
-    
+
     SETTINGS_DEFAULT_MODEL = "Model Implicit"
     SETTINGS_DEFAULT_MODEL_DESC = "Modelul de încărcat la pornire"
     SETTINGS_TEMPERATURE = "Temperatură"
@@ -134,7 +134,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_MAX_TOKENS_DESC = "Lungimea maximă a răspunsului"
     SETTINGS_CONTEXT_WINDOW = "Fereastră de Context"
     SETTINGS_CONTEXT_WINDOW_DESC = "Cât istoric de conversație să rețină"
-    
+
     SETTINGS_TTS_ENABLED = "Text-în-Voce"
     SETTINGS_TTS_ENABLED_DESC = "Activează ieșirea vocală"
     SETTINGS_VOICE_SPEED = "Viteza Vocii"
@@ -143,7 +143,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_AUTO_SPEAK_DESC = "Citește automat răspunsurile cu voce tare"
     SETTINGS_RECORDING_DURATION = "Durata Înregistrării"
     SETTINGS_RECORDING_DURATION_DESC = "Timp de înregistrare vocală (secunde)"
-    
+
     SETTINGS_RAG_ENABLED = "Activează RAG"
     SETTINGS_RAG_ENABLED_DESC = "Folosește baza de cunoștințe pentru răspunsuri"
     SETTINGS_CHUNK_SIZE = "Dimensiune Fragment"
@@ -152,7 +152,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_SIMILARITY_THRESHOLD_DESC = "Scor minim de relevanță (0.0-1.0)"
     SETTINGS_MAX_RESULTS = "Rezultate Maxime"
     SETTINGS_MAX_RESULTS_DESC = "Numărul de surse de recuperat"
-    
+
     SETTINGS_SHOW_TIMESTAMPS = "Afișează Marcaje Temporale"
     SETTINGS_SHOW_TIMESTAMPS_DESC = "Afișează ora pe fiecare mesaj"
     SETTINGS_AUTO_SCROLL = "Derulare Automată"
@@ -161,7 +161,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_STREAM_RESPONSES_DESC = "Afișează răspunsul pe măsură ce este generat"
     SETTINGS_SAVE_CONVERSATIONS = "Salvează Conversațiile"
     SETTINGS_SAVE_CONVERSATIONS_DESC = "Reține istoricul între sesiuni"
-    
+
     SETTINGS_API_PORT = "Port API"
     SETTINGS_API_PORT_DESC = "Portul serverului backend LLM"
     SETTINGS_MODELS_DIRECTORY = "Director Modele"
@@ -172,7 +172,7 @@ class RomanianLocale(BaseLocale):
     SETTINGS_AUTO_START_BACKEND_DESC = "Lansează serverul LLM cu aplicația"
     SETTINGS_LOG_LEVEL = "Nivel Jurnal"
     SETTINGS_LOG_LEVEL_DESC = "Verbozitatea jurnalelor aplicației"
-    
+
     # ==========================================================================
     # RAG / SCAN & LEARN
     # ==========================================================================
@@ -191,7 +191,7 @@ class RomanianLocale(BaseLocale):
     RAG_ANSWERED_FROM_SOURCE = "**🔍 Răspuns din Sursa de Date**"
     RAG_VIEW_SOURCES = "📂 Vezi Datele Sursă"
     RAG_LABEL = "Context Local"
-    
+
     # ==========================================================================
     # CHAT INTERFACE
     # ==========================================================================
@@ -207,14 +207,14 @@ class RomanianLocale(BaseLocale):
     CHAT_READY = "Pregătit"
     CHAT_RECORDING = "🔴 Înregistrez (5s)..."
     CHAT_TRANSCRIBING = "Transcriu..."
-    
+
     # ==========================================================================
     # FILE UPLOAD
     # ==========================================================================
     UPLOAD_ATTACHED = "📎 {filename} ({size} caractere)"
     UPLOAD_SUCCESS = "{filename} atașat"
     UPLOAD_FAILED = "Încărcare eșuată: {error}"
-    
+
     # ==========================================================================
     # VOICE
     # ==========================================================================
@@ -224,7 +224,7 @@ class RomanianLocale(BaseLocale):
     VOICE_NO_SPEECH = "Nu s-a detectat voce"
     VOICE_ERROR = "Eroare Voce: {error}"
     VOICE_NOT_AVAILABLE = "TTS indisponibil (lipsește pyttsx3)"
-    
+
     # ==========================================================================
     # NOTIFICATIONS & MESSAGES
     # ==========================================================================
@@ -233,25 +233,25 @@ class RomanianLocale(BaseLocale):
     NOTIFY_MODEL_READY = "✅ Model pregătit: {model}"
     NOTIFY_MODEL_ACTIVE = "✅ Model activ: {model}"
     NOTIFY_MODEL_SET = "✅ Model activ setat: {model}"
-    
+
     # Download notifications
     NOTIFY_DOWNLOAD_STARTING = "🚀 Se începe descărcarea: {filename}..."
     NOTIFY_DOWNLOAD_STARTED = "✅ Descărcare începută! Verifică progresul în terminal."
     NOTIFY_DOWNLOAD_FAILED = "❌ Descărcare eșuată: {error}"
     NOTIFY_DOWNLOAD_ERROR = "❌ Eroare: {error}"
     NOTIFY_HUB_CONNECTION_ERROR = "❌ Nu se poate conecta la Hub. Rulează pe portul 8002?"
-    
+
     # Upload/attachment notifications
     NOTIFY_ATTACHED = "{name} atașat"
     NOTIFY_UPLOAD_FAILED = "Încărcare eșuată: {error}"
-    
-    # Voice notifications  
+
+    # Voice notifications
     NOTIFY_SOUNDDEVICE_MISSING = "Eroare: SoundDevice negăsit (Mod headless?)"
     NOTIFY_TRANSCRIBED = "Transcris!"
     NOTIFY_NO_SPEECH = "Nu s-a detectat voce"
     NOTIFY_TRANSCRIPTION_FAILED = "Transcriere Eșuată: {error}"
     NOTIFY_VOICE_ERROR = "Eroare Voce: {error}"
-    
+
     # RAG notifications
     NOTIFY_RAG_ENABLED = "Mod RAG activat"
     NOTIFY_RAG_DISABLED = "Mod RAG dezactivat"
@@ -265,12 +265,12 @@ class RomanianLocale(BaseLocale):
     NOTIFY_RAG_ENTER_URL = "Te rog introdu un URL de site web"
     NOTIFY_RAG_ENTER_PATH = "Te rog introdu o cale de director"
     NOTIFY_RAG_FINDING_FILES = "📂 Se caută fișierele..."
-    
+
     # Version notifications
     NOTIFY_VERSION_UP_TO_DATE = "✅ La zi! Versiune: {version}"
     NOTIFY_VERSION_CHECK_FAILED = "Verificare versiune eșuată: {error}"
     NOTIFY_UPDATE_MANUAL = "Actualizarea necesită descărcare manuală momentan. Se deschide GitHub..."
-    
+
     # Benchmark notifications
     NOTIFY_BENCHMARK_RUNNING = "🏃 Se rulează benchmark... (va dura ~30 secunde)"
     NOTIFY_BENCHMARK_COMPLETE = "✅ Benchmark Complet!"
@@ -280,7 +280,7 @@ class RomanianLocale(BaseLocale):
 📊 Performanță: {tokens_per_sec:.1f} tokeni/sec
 📝 Generați: {tokens} tokeni
 ⏱️ Timp: {seconds:.1f} secunde"""
-    
+
     # Diagnostics
     NOTIFY_DIAGNOSTICS_RUNNING = "Se rulează diagnosticarea..."
     NOTIFY_DIAGNOSTICS_FAILED = "Diagnosticare eșuată: {error}"
@@ -290,14 +290,14 @@ class RomanianLocale(BaseLocale):
     DIAG_RAG_VECTORS = "{emoji} RAG: {count} vectori"
     DIAG_RAG_NOT_INIT = "{emoji} RAG: Neinițializat"
     DIAG_MEMORY = "{emoji} Memorie: {percent}% folosită"
-    
+
     # Generic
     NOTIFY_ERROR = "❌ Eroare: {error}"
     NOTIFY_SUCCESS = "✅ Succes!"
     NOTIFY_WARNING = "⚠️ Avertisment: {message}"
     NOTIFY_INFO = "ℹ️ {message}"
     NOTIFY_ENTER_BOTH_FIELDS = "Te rog introdu atât ID-ul Repository-ului cât și Numele Fișierului"
-    
+
     # ==========================================================================
     # WELCOME MESSAGES
     # ==========================================================================
@@ -351,7 +351,7 @@ Sunt asistentul tău AI alimentat de NiceGUI. Te pot ajuta cu:
     TOOLTIP_ATTACH_FILE = "Atașează fișier"
     TOOLTIP_VOICE_INPUT = "Intrare vocală"
     TOOLTIP_SEND_MESSAGE = "Trimite mesajul"
-    
+
     # ==========================================================================
     # ERRORS
     # ==========================================================================
@@ -368,7 +368,7 @@ Sunt asistentul tău AI alimentat de NiceGUI. Te pot ajuta cu:
         "Stai o secundă, să verific logica...",
         "Aproape gata, mai cizelez puțin frazarea...",
         "Consult oracolul digital...",
-        "Stai așa, asta e o întrebare interesantă..."
+        "Stai așa, asta e o întrebare interesantă...",
     ]
 
     LOADING_SWARM_THINKING = [
@@ -376,7 +376,7 @@ Sunt asistentul tău AI alimentat de NiceGUI. Te pot ajuta cu:
         "Adun consensul...",
         "Experții deliberează...",
         "Compar rezultatele paralele...",
-        "Verific cu roiul..."
+        "Verific cu roiul...",
     ]
 
     LOADING_RAG_THINKING = [
@@ -384,7 +384,7 @@ Sunt asistentul tău AI alimentat de NiceGUI. Te pot ajuta cu:
         "Recuperez fragmente relevante...",
         "Consult documentele proiectului...",
         "Verific faptele cu sursele...",
-        "Citesc detaliile..."
+        "Citesc detaliile...",
     ]
 
     # ======================================================================
