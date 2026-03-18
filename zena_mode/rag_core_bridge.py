@@ -319,7 +319,7 @@ class LocalRAGv2:
                         except Exception:
                             pass
 
-                        point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
+                        point_id = int(hashlib.sha256(text_hash.encode()).hexdigest()[:16], 16)
                         payload = {
                             "text": text,
                             "url": chunk.get("url"),
@@ -394,7 +394,7 @@ class LocalRAGv2:
                         continue
                 except Exception:
                     pass
-                point_id = int(hashlib.md5(text_hash.encode()).hexdigest()[:16], 16)
+                point_id = int(hashlib.sha256(text_hash.encode()).hexdigest()[:16], 16)
                 points.append(
                     PointStruct(
                         id=point_id,

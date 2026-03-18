@@ -5,8 +5,9 @@ import os
 from pathlib import Path
 
 # --- Config ---
-# Path to the model used for testing
-MODEL_PATH = Path("C:/AI/Models/qwen2.5-0.5b-instruct-q5_k_m.gguf")
+from test_utils import _default_models_dir
+_MODELS_DIR = _default_models_dir()
+MODEL_PATH = _MODELS_DIR / "qwen2.5-0.5b-instruct-q5_k_m.gguf"
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 BIN_DIR = ROOT_DIR / "_bin"
 PARALLEL_EXE = BIN_DIR / "llama-parallel.exe"

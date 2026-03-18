@@ -12,10 +12,11 @@ if str(root) not in sys.path:
     sys.path.append(str(root))
 
 from zena_mode.arbitrage import SwarmArbitrator
+from test_utils import _default_models_dir
 
 # Configuration
-MODEL_DIR = Path(r"C:\AI\Models")
-START_LLM_SCRIPT = Path(r"C:\Users\dvdze\Documents\_Python\Dev\ZEN_AI_RAG\start_llm.py")
+MODEL_DIR = _default_models_dir()
+START_LLM_SCRIPT = Path(__file__).resolve().parent.parent / "start_llm.py"
 PORTS = [8001] + list(range(8005, 8011))  # Ports for up to 7 experts
 REF_PORT = 8001
 

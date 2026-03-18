@@ -29,6 +29,7 @@ FieldCondition = None
 MatchValue = None
 np = None
 DEPS_AVAILABLE = True  # Assume true, check later or wrap in try/except during lazy load
+_deps_lock = threading.Lock()  # Thread-safe guard for lazy loading
 
 
 # Optional: BM25 for hybrid search
@@ -151,66 +152,49 @@ class SemanticCache:
 class _LocalRAGBase:
     """Base methods for LocalRAG."""
 
-
-def _do_do_init___setup_setup(cache_dir):
-    """Helper: setup phase for _do_init___setup."""
-
-    self.cache_dir = cache_dir or config.BASE_DIR / "rag_storage"
-    self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-    self._lock = threading.Lock()
-
-    # Initialize Embedding Model
-    self._lazy_load_deps()
-
-    # Resolve Model Name from Config
-    profile = config.rag.embedding_model  # e.g. "balanced"
-    model_name = config.embedding_config.MODELS.get(profile)
-    if not model_name:
-        logger.warning(f"[RAG] Unknown profile '{profile}', falling back to 'fast'")
-        model_name = config.embedding_config.MODELS["fast"]
-
-    device = "cuda" if config.rag.use_gpu and hasattr(config.rag, "use_gpu") else "cpu"
-    # Since torch is lazy loaded, we check availability inside try block
-
-    logger.info(f"[RAG] Loading transformer: {model_name} (Target Device: {device})")
-
-    try:
-        # Check for GPU if requested
-        import torch
-
-        if device == "cuda" and not torch.cuda.is_available():
-            logger.warning("[RAG] GPU requested but not available. Falling back to CPU.")
-            device = "cpu"
-
-        self.model = SentenceTransformer(model_name, device=device)
-    except Exception as e:
-        logger.error(f"[RAG] Failed to load {model_name}: {e}")
-        fallback = config.embedding_config.fallback_model
-        fallback_name = config.embedding_config.MODELS[fallback]
-        if model_name != fallback_name:
-            logger.info(f"[RAG] Attempting fallback to: {fallback_name}")
-            try:
-                self.model = SentenceTransformer(fallback_name, device="cpu")
-            except Exception as ex:
-                logger.critical(f"[RAG] Fallback failed: {ex}")
-                raise ex
-        else:
-            raise e
-
-    return device
-
-    return device
-
-
-def _do_do_init___setup_init(cache_dir):
-    """Helper: setup phase for _do_init___setup."""
-
-    _do_do_init___setup_setup(cache_dir)
-
     def __init__(self, cache_dir: Optional[Path] = None):
-        """Initialize instance."""
-        device = _do_init___setup(cache_dir)
+        """Initialize the RAG base with embedding model, Qdrant, and BM25."""
+        self.cache_dir = cache_dir or config.BASE_DIR / "rag_storage"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        self._lock = threading.Lock()
+
+        # Initialize Embedding Model
+        self._lazy_load_deps()
+
+        # Resolve Model Name from Config
+        profile = config.rag.embedding_model  # e.g. "balanced"
+        model_name = config.embedding_config.MODELS.get(profile)
+        if not model_name:
+            logger.warning(f"[RAG] Unknown profile '{profile}', falling back to 'fast'")
+            model_name = config.embedding_config.MODELS["fast"]
+
+        device = "cuda" if config.rag.use_gpu and hasattr(config.rag, "use_gpu") else "cpu"
+
+        logger.info(f"[RAG] Loading transformer: {model_name} (Target Device: {device})")
+
+        try:
+            import torch
+
+            if device == "cuda" and not torch.cuda.is_available():
+                logger.warning("[RAG] GPU requested but not available. Falling back to CPU.")
+                device = "cpu"
+
+            self.model = SentenceTransformer(model_name, device=device)
+        except Exception as e:
+            logger.error(f"[RAG] Failed to load {model_name}: {e}")
+            fallback = config.embedding_config.fallback_model
+            fallback_name = config.embedding_config.MODELS[fallback]
+            if model_name != fallback_name:
+                logger.info(f"[RAG] Attempting fallback to: {fallback_name}")
+                try:
+                    self.model = SentenceTransformer(fallback_name, device="cpu")
+                except Exception as ex:
+                    logger.critical(f"[RAG] Fallback failed: {ex}")
+                    raise ex
+            else:
+                raise e
+
         # Enable Half Precision on GPU
         if device == "cuda":
             try:
@@ -231,11 +215,11 @@ def _do_do_init___setup_init(cache_dir):
             self.read_only = False
         except Exception as e:
             if "already accessed by another instance" in str(e):
-                logger.warning(f"[RAG] ⚠️ Storage LOCKED by another process. Running in DEGRADED mode (Metadata only).")
+                logger.warning("[RAG] Storage LOCKED by another process. Running in DEGRADED mode (Metadata only).")
                 self.qdrant = None
                 self.read_only = True
             else:
-                logger.error(f"[RAG] ❌ Failed to initialize Qdrant: {e}")
+                logger.error(f"[RAG] Failed to initialize Qdrant: {e}")
                 raise
 
         # Standard In-memory buffers for quick lookups and BM25
@@ -266,7 +250,7 @@ def _do_do_init___setup_init(cache_dir):
             self.extractor = None
 
     def _lazy_load_deps(self):
-        """Lazy load heavy dependencies to prevent startup freeze."""
+        """Lazy load heavy dependencies to prevent startup freeze (thread-safe)."""
         global \
             SentenceTransformer, \
             CrossEncoder, \
@@ -283,19 +267,24 @@ def _do_do_init___setup_init(cache_dir):
         if SentenceTransformer is not None:
             return
 
-        try:
-            logger.info("[RAG] Lazy loading heavy dependencies (SentenceTransformers, Qdrant)...")
-            from sentence_transformers import SentenceTransformer, CrossEncoder
-            from qdrant_client import QdrantClient
-            from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
-            import numpy as np
+        with _deps_lock:
+            # Double-check after acquiring lock
+            if SentenceTransformer is not None:
+                return
 
-            DEPS_AVAILABLE = True
-            logger.info("[RAG] Dependencies loaded.")
-        except ImportError as e:
-            DEPS_AVAILABLE = False
-            logger.warning(f"[RAG] Dependencies missing: {e}")
-            raise ImportError(f"RAG dependencies missing: {e}")
+            try:
+                logger.info("[RAG] Lazy loading heavy dependencies (SentenceTransformers, Qdrant)...")
+                from sentence_transformers import SentenceTransformer, CrossEncoder
+                from qdrant_client import QdrantClient
+                from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+                import numpy as np
+
+                DEPS_AVAILABLE = True
+                logger.info("[RAG] Dependencies loaded.")
+            except ImportError as e:
+                DEPS_AVAILABLE = False
+                logger.warning(f"[RAG] Dependencies missing: {e}")
+                raise ImportError(f"RAG dependencies missing: {e}")
 
     def warmup(self):
         """Pre-load heavy models into memory to avoid first-query lag."""
@@ -318,17 +307,20 @@ def _do_do_init___setup_init(cache_dir):
         except Exception:
             return 0
 
-
-def _do_init___setup_part1():
-    """Do init   setup part 1."""
-
     def close(self):
         """Explicitly close the Qdrant client to release storage locks."""
         try:
             if hasattr(self, "qdrant"):
+                if hasattr(self.qdrant, "close"):
+                    self.qdrant.close()
+                elif hasattr(self.qdrant, "_client") and hasattr(self.qdrant._client, "close"):
+                    self.qdrant._client.close()
                 del self.qdrant
         except Exception:
             pass
+
+    def __del__(self):
+        self.close()
 
     def _rebuild_bm25(self):
         """Rebuild BM25 index for keyword search."""
@@ -341,27 +333,6 @@ def _do_init___setup_part1():
             logger.debug(f"[RAG] BM25 Index rebuilt with {len(self.chunks)} items")
         except Exception as e:
             logger.error(f"[RAG] BM25 rebuild failed: {e}")
-
-
-def _do_init___setup(cache_dir):
-    """Helper: setup phase for __init__."""
-    _do_do_init___setup_init(cache_dir)
-
-    def close(self):
-        """Explicitly close the Qdrant client to release storage locks."""
-        try:
-            if hasattr(self, "qdrant"):
-                # In newer qdrant-client versions, the client has a close method
-                if hasattr(self.qdrant, "close"):
-                    self.qdrant.close()
-                elif hasattr(self.qdrant, "_client") and hasattr(self.qdrant._client, "close"):
-                    self.qdrant._client.close()
-                del self.qdrant
-        except Exception:
-            pass
-
-    def __del__(self):
-        self.close()
 
     def _init_collection(self):
         """Initialize Qdrant collection if not exists."""
@@ -427,8 +398,6 @@ def _do_init___setup(cache_dir):
     def _tokenize(self, text: str) -> List[str]:
         """Standard tokenizer for BM25 and processing."""
         return self._tokenizer_pattern.findall(text.lower())
-
-    _do_init___setup_part1()
 
 
 class LocalRAG(_LocalRAGBase):

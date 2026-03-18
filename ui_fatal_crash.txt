@@ -1,0 +1,158 @@
+Timestamp: Wed Mar 18 18:30:54 2026
+Traceback (most recent call last):
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\main.py", line 318, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+                         ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\main.py", line 372, in _main
+    config.hook.pytest_runtestloop(session=session)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\logging.py", line 801, in pytest_runtestloop
+    return (yield)  # Run all the tests.
+            ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\terminal.py", line 707, in pytest_runtestloop
+    result = yield
+             ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\main.py", line 396, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\warnings.py", line 89, in pytest_runtest_protocol
+    return (yield)
+            ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\assertion\__init__.py", line 192, in pytest_runtest_protocol
+    return (yield)
+            ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\unittest.py", line 587, in pytest_runtest_protocol
+    return (yield)
+            ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\faulthandler.py", line 102, in pytest_runtest_protocol
+    return (yield)
+            ^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\runner.py", line 118, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\runner.py", line 137, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\runner.py", line 251, in call_and_report
+    ihook.pytest_runtest_logreport(report=report)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\terminal.py", line 685, in pytest_runtest_logreport
+    self._write_progress_information_filling_space()
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\terminal.py", line 785, in _write_progress_information_filling_space
+    self.write(msg.rjust(fill), flush=True, **{color: True})
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\terminal.py", line 525, in write
+    self._tw.write(content, flush=flush, **markup)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\_io\terminalwriter.py", line 164, in write
+    self.write_raw(msg, flush=flush)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\_io\terminalwriter.py", line 180, in write_raw
+    self.flush()
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\_io\terminalwriter.py", line 187, in flush
+    self._file.flush()
+OSError: [Errno 22] Invalid argument
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pytest\__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\config\__init__.py", line 223, in console_main
+    code = main()
+           ^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\config\__init__.py", line 199, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\main.py", line 365, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\main.py", line 338, in wrap_session
+    config.notify_exception(excinfo, config.option)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\config\__init__.py", line 1221, in notify_exception
+    res = self.hook.pytest_internalerror(excrepr=excrepr, excinfo=excinfo)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\terminal.py", line 581, in pytest_internalerror
+    self.write_line("INTERNALERROR> " + line)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\terminal.py", line 537, in write_line
+    self._tw.line(line, **markup)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\_io\terminalwriter.py", line 183, in line
+    self.write(s, **markup)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\_io\terminalwriter.py", line 164, in write
+    self.write_raw(msg, flush=flush)
+  File "C:\Users\dvdze\AppData\Local\Programs\Python\Python312\Lib\site-packages\_pytest\_io\terminalwriter.py", line 168, in write_raw
+    self._file.write(msg)
+OSError: [Errno 22] Invalid argument

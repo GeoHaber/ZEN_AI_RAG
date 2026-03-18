@@ -1,6 +1,7 @@
 [tool.ruff]
 line-length = 120
 target-version = "py310"
+exclude = ["dist_build", "__pycache__", "conversation_cache", "qdrant_storage", "rag_storage", "rag_verification_storage"]
 
 [tool.ruff.lint]
 ignore = [

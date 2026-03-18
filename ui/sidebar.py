@@ -129,7 +129,8 @@ def render_models(locale, actions, app_state, dialogs):
     """Render Model Manager."""
     # Get current models by scanning directory
     try:
-        models_dir = Path("C:/AI/Models")
+        from config import MODEL_DIR
+        models_dir = MODEL_DIR
         if models_dir.exists():
             current_models = [f.name for f in models_dir.glob("*.gguf") if f.is_file()]
             current_models.sort(key=lambda x: x.lower())

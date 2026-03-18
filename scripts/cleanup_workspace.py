@@ -22,7 +22,7 @@ class Colors:
     END = "\033[0m"
 
 
-ROOT = Path("c:/Users/dvdze/Documents/_Python/Dev/ZEN_AI_RAG")
+ROOT = Path(__file__).resolve().parent.parent
 
 # Files to move to docs/
 DOCS_FILES = {

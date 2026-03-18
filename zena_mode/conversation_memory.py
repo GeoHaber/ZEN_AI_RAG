@@ -188,6 +188,16 @@ class ConversationDB:
             self.conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp)")
             self.conn.execute("CREATE INDEX IF NOT EXISTS idx_summaries_session ON summaries(session_id)")
 
+    @staticmethod
+    def _safe_json_loads(data, default=None):
+        """Parse JSON safely, returning default on failure."""
+        if not data:
+            return default if default is not None else {}
+        try:
+            return json.loads(data)
+        except (json.JSONDecodeError, TypeError):
+            return default if default is not None else {}
+
     def add_message(self, msg: Message, vector: Optional["np.ndarray"] = None) -> int:
         """Add a message to the database."""
         with self._lock:
@@ -231,7 +241,7 @@ class ConversationDB:
                         content=row["content"],
                         timestamp=datetime.fromisoformat(row["timestamp"]),
                         session_id=row["session_id"],
-                        metadata=json.loads(row["metadata"]) if row["metadata"] else {},
+                        metadata=self._safe_json_loads(row["metadata"], {}),
                     )
                 )
             return messages
@@ -284,7 +294,7 @@ class ConversationDB:
             self.conn.commit()
             return cursor.lastrowid
 
-    def get_all_vectors(self, session_id: str) -> List[Tuple[int, np.ndarray, str]]:
+    def get_all_vectors(self, session_id: str) -> List[Tuple[int, "np.ndarray", str]]:
         """Get all message vectors for FAISS index building."""
         with self._lock:
             cursor = self.conn.execute(
@@ -321,7 +331,7 @@ class ConversationDB:
                     start_time=datetime.fromisoformat(row["start_time"]),
                     end_time=datetime.fromisoformat(row["end_time"]),
                     message_count=row["message_count"],
-                    topics=json.loads(row["topics"]) if row["topics"] else [],
+                    topics=self._safe_json_loads(row["topics"], []),
                 )
                 for row in cursor
             ]
@@ -377,7 +387,7 @@ class ConversationMemory:
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
 
         # Per-session FAISS indexes (lightweight, rebuilt on demand)
-        self._indexes: Dict[str, faiss.IndexFlatIP] = {}
+        self._indexes: Dict[str, "faiss.IndexFlatIP"] = {}
         self._index_data: Dict[str, List[Tuple[int, str]]] = {}  # id -> content mapping
 
         # In-memory recent messages cache (for speed)
@@ -387,7 +397,7 @@ class ConversationMemory:
 
         logger.info(f"[ConvMemory] Initialized at {self.cache_dir}")
 
-    def _get_or_create_index(self, session_id: str) -> Tuple[faiss.IndexFlatIP, List]:
+    def _get_or_create_index(self, session_id: str) -> Tuple["faiss.IndexFlatIP", List]:
         """Get or create FAISS index for a session."""
         if session_id in self._indexes:
             return

@@ -370,7 +370,7 @@ class TestOrchestrator:
         """Test OPTIONS request returns CORS headers."""
         self.handler.do_OPTIONS()
         mock_send.assert_called_with(200)
-        mock_header.assert_any_call("Access-Control-Allow-Origin", "*")
+        mock_header.assert_any_call("Access-Control-Allow-Origin", "http://127.0.0.1:8080")
 
     @patch("zena_mode.server.ZenAIOrchestrator.send_json_response")
     def test_do_GET_list(self, mock_json):

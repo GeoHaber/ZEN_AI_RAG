@@ -109,7 +109,7 @@ def __build_settings_dialog_part2_part2(chat_controls, rag_section, rag_switch, 
         ),
         ft.TextField(
             label="Models Directory",
-            value=str(getattr(config, "MODEL_DIR", "C:/AI/Models")) if config else "C:/AI/Models",
+            value=str(getattr(config, "MODEL_DIR", str(Path(__file__).resolve().parent.parent / "models"))) if config else str(Path(__file__).resolve().parent.parent / "models"),
             border_color=TH.border,
             color=TH.text,
         ),

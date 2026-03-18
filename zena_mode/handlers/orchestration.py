@@ -61,8 +61,12 @@ class OrchestrationHandler:
                 m_path = config.MODEL_DIR / model_name
 
             if not m_path.exists():
-                # 3. Check in central store explicit fallback (just in case)
-                central = Path("C:/AI/Models") / model_name
+                # 3. Check in central store via config (portable)
+                try:
+                    from config import MODEL_DIR as _cfg_model_dir
+                    central = _cfg_model_dir / model_name
+                except Exception:
+                    central = m_path  # no-op fallback
                 if central.exists():
                     m_path = central
                 else:

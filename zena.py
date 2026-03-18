@@ -3,38 +3,22 @@
 zena.py - Zena AI Chat Interface
 Elegant, professional chatbot with RAG capabilities
 """
+import sys
+import uuid
 
-# Local_LLM core modules
-from Local_LLM.llama_cpp_manager import LlamaCppManager
-from Local_LLM.local_llm_manager import LocalLLMManager
-from Local_LLM.metrics import FIFO_Memory, start_metrics_server, set_fifo_depth, observe_inference
-from Local_LLM.verification_oracle import Evidence, EvidenceType
-from Local_LLM.trust_verify_supervisor import TrustScore, ConfidenceLevel
-from Local_LLM.model_card import ModelRegistry, ModelCard, ModelCategory
-from Local_LLM.enhanced_model_card import ModelMetadata
-from Local_LLM.install_checks import verify_python_native_compatibility
-from Local_LLM.cli_nonblocking import input_nonblocking, dedupe_preserve_order
+from nicegui import app, ui
 
-# Initialize Local_LLM managers
-llama_manager = LlamaCppManager()
-local_llm_manager = LocalLLMManager()
-fifo_memory = FIFO_Memory()
-model_registry = ModelRegistry()
-start_metrics_server(port=8000)
-
-# Install-time check
-verify_python_native_compatibility(["llama_cpp"])
-
-
-# Example: Model metadata and trust/verification
-def verify_and_score_response(response, worker_id="default", task_type="chat"):
-    """Verify and score response."""
-    # Evidence and trust scoring
-    evidence = Evidence(type=EvidenceType.DIRECT)
-    trust = TrustScore(
-        worker_id=worker_id, task_type=task_type, confidence=ConfidenceLevel.CERTAIN.value, basis="LocalLLM"
-    )
-    return evidence, trust
+from config_system import config, EMOJI, is_dark_mode
+from ui_state import UIState
+from ui.bootstrap import setup_crash_handler, setup_logging, initialize_services
+from ui.background import start_background_gateways, run_system_checks
+from ui.handlers import UIHandlers
+from ui.rag_interface import setup_rag_dialog
+from ui.layout import build_page
+from ui.theme_setup import setup_app_theme
+from ui.testing import register_test_endpoints
+from ui.styles import Styles
+from ui.locales import get_locale
 
 
 # --- Modular Setup ---
@@ -64,10 +48,20 @@ def mount_static():
 
 
 def get_backend():
-    from async_backend import AsyncZenAIBackend
-    from mock_backend import MockAsyncBackend
-
-    return MockAsyncBackend() if "--mock" in sys.argv else AsyncZenAIBackend()
+    try:
+        from async_backend import AsyncZenAIBackend
+        if "--mock" not in sys.argv:
+            return AsyncZenAIBackend()
+    except ImportError:
+        pass
+    try:
+        from mock_backend import MockAsyncBackend
+        return MockAsyncBackend()
+    except ImportError:
+        pass
+    # Minimal fallback so the UI can still render
+    from _backend_stub import StubBackend
+    return StubBackend()
 
 
 app_state = setup_app()

@@ -1,7 +1,11 @@
 import logging
 from zena_mode.handlers.base import BaseZenHandler
 from config_system import config
-import model_manager
+
+try:
+    import model_manager
+except ImportError:
+    model_manager = None  # type: ignore[assignment]
 
 logger = logging.getLogger("ZenAI.Handler.Models")
 

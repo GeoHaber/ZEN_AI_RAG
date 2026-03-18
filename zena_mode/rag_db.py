@@ -137,7 +137,10 @@ class RAGDatabase:
             vec_bytes = row["vector"]
             vector = np.frombuffer(vec_bytes, dtype=np.float32) if vec_bytes else None
 
-            meta = json.loads(row["metadata"]) if row["metadata"] else {}
+            try:
+                meta = json.loads(row["metadata"]) if row["metadata"] else {}
+            except json.JSONDecodeError:
+                meta = {}
 
             results.append(
                 {

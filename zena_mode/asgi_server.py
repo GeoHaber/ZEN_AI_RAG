@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 # Request size limiter
-MAX_REQUEST_SIZE = config.get("MAX_FILE_SIZE", 10 * 1024 * 1024)  # 10MB default
+MAX_REQUEST_SIZE = getattr(config, "MAX_FILE_SIZE", 10 * 1024 * 1024)  # 10MB default
 
 
 @app.middleware("http")
@@ -364,8 +364,9 @@ async def launch_swarm_expert(req: LaunchRequest):
         m_path = config.MODEL_DIR / req.model
 
     if not m_path.exists():
-        # Fallback to C:/AI/Models explicit check
-        central = Path("C:/AI/Models") / req.model
+        # Fallback: check central model dir from env
+        central_dir = Path(os.environ.get("ZENAI_MODEL_DIR", str(config.MODEL_DIR)))
+        central = central_dir / req.model
         if central.exists():
             m_path = central
         else:

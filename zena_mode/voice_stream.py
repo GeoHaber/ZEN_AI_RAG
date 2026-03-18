@@ -65,27 +65,27 @@ class VoiceStreamHandler:
         """Handle control messages."""
         try:
             data = json.loads(message)
-            cmd = data.get("command")
-
-            if cmd == "client_info":
-                file_log(f"CLIENT INFO: {data}")
-
-            if cmd == "stop":
-                file_log("Stop command received.")
-                # Finalize transcription
-                result = processor.finish()
-
-                # ALWAYS send final response to close loop
-                final_text = result["text"] if result else ""
-                file_log(f"Final Result: {final_text}")
-
-                await websocket.send(json.dumps({"type": "transcription", "text": final_text, "is_final": True}))
-            elif cmd == "clear":
-                processor.finish()
-                await websocket.send(json.dumps({"status": "cleared"}))
-
         except json.JSONDecodeError:
-            pass
+            file_log(f"[Voice] Ignoring non-JSON control message: {message[:80]}")
+            return
+        cmd = data.get("command")
+
+        if cmd == "client_info":
+            file_log(f"CLIENT INFO: {data}")
+
+        if cmd == "stop":
+            file_log("Stop command received.")
+            # Finalize transcription
+            result = processor.finish()
+
+            # ALWAYS send final response to close loop
+            final_text = result["text"] if result else ""
+            file_log(f"Final Result: {final_text}")
+
+            await websocket.send(json.dumps({"type": "transcription", "text": final_text, "is_final": True}))
+        elif cmd == "clear":
+            processor.finish()
+            await websocket.send(json.dumps({"status": "cleared"}))
 
     async def _handle_audio_chunk(self, websocket, processor, chunk: bytes):
         """Process binary audio chunk."""

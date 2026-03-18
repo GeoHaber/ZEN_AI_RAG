@@ -18,7 +18,14 @@ from typing import Optional, Dict
 from config_system import config, EMOJI
 from utils import safe_print, is_port_active, wait_for_port, ProcessManager
 from zena_mode.resource_detect import HardwareProfiler
-from local_llm import LocalLLMManager, LocalLLMStatus
+
+try:
+    from local_llm import LocalLLMManager, LocalLLMStatus
+except ImportError:
+    LocalLLMManager = None  # type: ignore[assignment,misc]
+    LocalLLMStatus = None  # type: ignore[assignment,misc]
+    import logging as _ll_log
+    _ll_log.getLogger(__name__).warning("local_llm package not found — LLM management disabled")
 
 logger = logging.getLogger("ZenCore")
 
@@ -139,68 +146,20 @@ class ZenHeart:
 
             time.sleep(2)
 
+    def pacemaker(self) -> bool:
+        """Active Health Probe (HTTP Check)."""
+        if not self.server_process:
+            return False
+        try:
+            resp = requests.get(f"http://127.0.0.1:{config.llm_port}/health", timeout=2)
+            if resp.status_code == 200:
+                self.health_checks_failed = 0
+                return True
+        except Exception:
+            pass
 
-def _do_do_ignite_setup_setup():
-    """Helper: setup phase for _do_ignite_setup."""
-
-    # 1. Sense Hardware
-    profile = HardwareProfiler.get_profile()
-    config.host = "127.0.0.1"  # Always bind all for docker/local friendliness
-
-    # 2. Tune Hardware (VRAM Governor)
-    gpu_layers = config.gpu_layers
-    if profile["type"] == "NVIDIA" and config.gpu_layers == -1:
-        # Iron-Clad Governor: Free VRAM - 500MB
-        safe_vram = max(0, profile["free_vram_mb"] - 500)
-        if safe_vram < 500:
-            gpu_layers = 0
-        else:
-            gpu_layers = min(99, int(safe_vram / 120))
-        safe_print(
-            f"{EMOJI['hardware']} Nvidia Governor: {profile['free_vram_mb']}MB Free -> {gpu_layers} layers safe."
-        )
-
-    elif profile["type"] == "AMD" and config.gpu_layers == -1:
-        # Standard Governor: 70% of Total VRAM
-        safe_vram = int(profile["vram_mb"] * 0.70)
-        gpu_layers = max(0, int(safe_vram / 120))
-        safe_print(f"{EMOJI['hardware']} AMD Governor: {profile['vram_mb']}MB Total -> {gpu_layers} layers (est).")
-
-    # 3. CPU Threading
-    threads = max(1, profile["threads"] - 1)
-
-    # 4. Construct Command
-    model_path = config.MODEL_DIR / config.default_model
-    cmd = [
-        str(config.BIN_DIR / "llama-server.exe"),
-        "--model",
-        str(model_path),
-        "--host",
-        config.host,
-        "--port",
-        str(config.llm_port),
-        "--n-gpu-layers",
-        str(gpu_layers),
-        "--threads",
-        str(threads),
-        "--ctx-size",
-        str(config.context_size),
-        "--batch-size",
-        str(config.batch_size),
-        "--parallel",
-        str(getattr(config, "parallel", 1)),  # Safe fallback
-        "--log-disable",  # We handle logs via pipe
-    ]
-
-    logger.info(f"Igniting Engine: {' '.join(cmd)}")
-
-    return cmd
-
-    return cmd
-
-
-def _do_ignite_setup_part1():
-    """Do ignite setup part 1."""
+        self.health_checks_failed += 1
+        return False
 
     def flatline(self):
         """Kill the engine (Process Death)."""
@@ -208,22 +167,67 @@ def _do_ignite_setup_part1():
             ProcessManager.kill_tree(self.server_process.pid)
             self.server_process = None
 
+    @staticmethod
+    def _build_engine_cmd():
+        """Build the llama-server command with hardware-tuned parameters."""
+        # 1. Sense Hardware
+        profile = HardwareProfiler.get_profile()
+        config.host = "127.0.0.1"
 
-def _do_ignite_setup():
-    """Helper: setup phase for ignite."""
-    _do_do_ignite_setup_setup()
+        # 2. Tune Hardware (VRAM Governor)
+        gpu_layers = config.gpu_layers
+        if profile["type"] == "NVIDIA" and config.gpu_layers == -1:
+            safe_vram = max(0, profile["free_vram_mb"] - 500)
+            if safe_vram < 500:
+                gpu_layers = 0
+            else:
+                gpu_layers = min(99, int(safe_vram / 120))
+            safe_print(
+                f"{EMOJI['hardware']} Nvidia Governor: {profile['free_vram_mb']}MB Free -> {gpu_layers} layers safe."
+            )
+        elif profile["type"] == "AMD" and config.gpu_layers == -1:
+            safe_vram = int(profile["vram_mb"] * 0.70)
+            gpu_layers = max(0, int(safe_vram / 120))
+            safe_print(f"{EMOJI['hardware']} AMD Governor: {profile['vram_mb']}MB Total -> {gpu_layers} layers (est).")
+
+        # 3. CPU Threading
+        threads = max(1, profile["threads"] - 1)
+
+        # 4. Construct Command
+        model_path = config.MODEL_DIR / config.default_model
+        cmd = [
+            str(config.BIN_DIR / "llama-server.exe"),
+            "--model",
+            str(model_path),
+            "--host",
+            config.host,
+            "--port",
+            str(config.llm_port),
+            "--n-gpu-layers",
+            str(gpu_layers),
+            "--threads",
+            str(threads),
+            "--ctx-size",
+            str(config.context_size),
+            "--batch-size",
+            str(config.batch_size),
+            "--parallel",
+            str(getattr(config, "parallel", 1)),
+            "--log-disable",
+        ]
+
+        logger.info(f"Igniting Engine: {' '.join(cmd)}")
+        return cmd
 
     def ignite(self):
-        """
-        Starts the llama-server engine with optimal hardware settings.
-        Replaces the logic formerly in start_llm.py
-        """
-        cmd = _do_ignite_setup()
-        # 5. Guard: Clean port
+        """Start the llama-server engine with optimal hardware settings."""
+        cmd = self._build_engine_cmd()
+
+        # Guard: Clean port
         if is_port_active(config.llm_port):
             ProcessManager.prune(ports=[config.llm_port], auto_confirm=True)
 
-        # 6. Launch
+        # Launch
         try:
             creation_flags = (
                 subprocess.CREATE_NEW_CONSOLE | subprocess.HIGH_PRIORITY_CLASS if sys.platform == "win32" else 0
@@ -233,7 +237,7 @@ def _do_ignite_setup():
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=False,  # Binary for Relay
+                text=False,
                 creationflags=creation_flags,
                 shell=False,
             )
@@ -253,24 +257,6 @@ def _do_ignite_setup():
         except Exception as e:
             logger.error(f"Failed to ignite engine: {e}")
             raise
-
-    def pacemaker(self) -> bool:
-        """Active Health Probe (HTTP Check)."""
-        if not self.server_process:
-            return False
-        try:
-            # Simple health check endpoint (slot info is lightweight)
-            resp = requests.get(f"http://127.0.0.1:{config.llm_port}/health", timeout=2)
-            if resp.status_code == 200:
-                self.health_checks_failed = 0
-                return True
-        except Exception:
-            pass
-
-        self.health_checks_failed += 1
-        return False
-
-    _do_ignite_setup_part1()
 
 
 # Global Singleton

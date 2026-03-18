@@ -133,6 +133,10 @@ _CRASH_LOG = _SCRIPT_DIR / "crash_log.txt"
 # This fixes "Open with Python" from Windows 11 File Explorer.
 os.chdir(_SCRIPT_DIR)
 sys.path.insert(0, str(_SCRIPT_DIR))
+# Ensure the in-tree local_llm package is discoverable
+_STAGING_DIR = _SCRIPT_DIR / "dist_build" / "_staging"
+if _STAGING_DIR.is_dir() and str(_STAGING_DIR) not in sys.path:
+    sys.path.insert(1, str(_STAGING_DIR))
 BASE_DIR = _SCRIPT_DIR
 
 # --- IMMEDIATE BREADCRUMBS (DIAGNOSTIC) ---
@@ -168,6 +172,11 @@ def catch_import_errors():
 config, EMOJI, safe_print, HardwareProfiler, prune_zombies, kill_process_tree, logger, DiagnosticRunner = (
     catch_import_errors()
 )
+
+# --- Load config from JSON and validate critical paths ---
+from config_system import load_config, validate_paths
+config = load_config()
+config = validate_paths(config)
 
 # --- DEBUGGING: Add File Logging (Safeguarded) ---
 try:

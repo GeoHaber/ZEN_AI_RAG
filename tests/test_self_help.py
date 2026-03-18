@@ -34,7 +34,7 @@ class TestSelfHelpRAG(unittest.TestCase):
         content = ""
         candidates = [
             Path("USER_MANUAL.md"),
-            Path(r"C:\Users\dvdze\.gemini\antigravity\brain\e4f4e7b2-992b-4c43-ab83-263c2a3d9a5e\USER_MANUAL.md"),
+            Path(__file__).resolve().parent.parent / "USER_MANUAL.md",
         ]
 
         for p in candidates:

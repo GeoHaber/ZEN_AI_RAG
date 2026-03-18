@@ -214,6 +214,10 @@ def start_server():
             zena_script = str(config.BASE_DIR / "zena.py")
             ui_env = os.environ.copy()
             ui_env["ZENA_SKIP_PRUNE"] = "1"
+            # Propagate staging path so local_llm is importable in the child
+            staging_dir = str(config.BASE_DIR / "dist_build" / "_staging")
+            prev = ui_env.get("PYTHONPATH", "")
+            ui_env["PYTHONPATH"] = staging_dir + (os.pathsep + prev if prev else "")
 
             safe_print("[*] Launching UI...")
             # We don't track UI in Heart yet, maybe TODO?

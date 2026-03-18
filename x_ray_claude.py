@@ -559,11 +559,12 @@ class LLMHelper:
             from Core.services.inference_engine import FIFOLlamaCppInference
 
             model_path = None
-            possible_models = [
-                Path(r"C:\AI\Models\qwen2.5-coder-7b-instruct-q4_k_m.gguf"),
-                Path(r"C:\AI\Models\Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"),
-                Path(r"C:\AI\Models\Phi-3.5-mini-instruct-Q4_K_M.gguf"),
-            ]
+            # Discover models via config or env (portable)
+            _env_model_dir = os.environ.get("ZENAI_MODEL_DIR", "")
+            _central_dir = Path(_env_model_dir) if _env_model_dir else None
+            possible_models = []
+            if _central_dir and _central_dir.is_dir():
+                possible_models.extend(sorted(_central_dir.glob("*.gguf")))
             # Also check project-local models/
             models_dir = self._root / "models"
             if models_dir.is_dir():

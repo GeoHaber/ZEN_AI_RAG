@@ -13,7 +13,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 BIN_DIR = ROOT_DIR / "_bin"
 CLI_EXE = BIN_DIR / "llama-cli.exe"
-MODELS_DIR = Path("C:/AI/Models")
+from test_utils import _default_models_dir
+MODELS_DIR = _default_models_dir()
 LOG_FILE = ROOT_DIR / "soak_report.log"
 
 PROMPTS = [

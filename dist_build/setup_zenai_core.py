@@ -42,7 +42,7 @@ HERE = Path(__file__).parent
 PROJECT_ROOT = HERE.parent
 
 # rag_core source — check env var, then common locations
-RAG_CORE_ROOT = Path(os.environ.get("RAG_CORE_ROOT", r"C:\Users\dvdze\Documents\_Python\Projects\rag_core"))
+RAG_CORE_ROOT = Path(os.environ.get("RAG_CORE_ROOT", str(PROJECT_ROOT.parent / "rag_core")))
 # Also check sibling project layout
 if not (RAG_CORE_ROOT / "rag_core").exists():
     for candidate in [

@@ -1,7 +1,7 @@
 {
-  "bin_dir": "C:\\Users\\dvdze\\Documents\\_Python\\Dev\\ZEN_AI_RAG\\_bin",
-  "model_dir": "C:\\AI\\Models",
-  "central_model_dir": "C:\\AI\\Models",
+  "bin_dir": "_bin",
+  "model_dir": "models",
+  "central_model_dir": "models",
   "log_file": "zenai_debug.log",
   "rag_cache_dir": "rag_cache",
   "host": "127.0.0.1",

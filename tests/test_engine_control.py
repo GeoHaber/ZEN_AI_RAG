@@ -7,8 +7,8 @@ import psutil
 from pathlib import Path
 
 # --- Config ---
-# Adjust this to the actual model found in C:/AI/Models
-MODEL_DIR = Path("C:/AI/Models")
+from test_utils import _default_models_dir
+MODEL_DIR = _default_models_dir()
 MODEL_PATH = MODEL_DIR / "qwen2.5-0.5b-instruct-q5_k_m.gguf"
 
 if not MODEL_PATH.exists():

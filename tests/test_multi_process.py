@@ -8,7 +8,9 @@ import psutil
 from pathlib import Path
 
 # --- Config ---
-MODEL_PATH = Path("C:/AI/Models/qwen2.5-0.5b-instruct-q5_k_m.gguf")
+from test_utils import _default_models_dir
+_MODELS_DIR = _default_models_dir()
+MODEL_PATH = _MODELS_DIR / "qwen2.5-0.5b-instruct-q5_k_m.gguf"
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 START_SCRIPT = ROOT_DIR / "start_llm.py"
 

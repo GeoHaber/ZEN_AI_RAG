@@ -6,9 +6,10 @@ Centralized configuration for all application constants
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Set, Dict
+from typing import Set, Dict, Optional
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -131,10 +132,22 @@ class AppConfig:
     TTS_MAX_WORKERS: int = 4
     GENERIC_MAX_WORKERS: int = 4
 
-    # --- Paths ---
+    # --- Paths (env-configurable for portability) ---
     BASE_DIR: Path = field(default_factory=lambda: Path(__file__).parent)
-    BIN_DIR: Path = field(default_factory=lambda: Path(__file__).parent / "_bin")
-    MODEL_DIR: Path = field(default_factory=lambda: Path("C:/AI/Models"))
+    BIN_DIR: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("ZENAI_BIN_DIR", str(Path(__file__).parent / "_bin"))
+        )
+    )
+    MODEL_DIR: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("ZENAI_MODEL_DIR", str(Path(__file__).parent / "models"))
+        )
+    )
+
+    def get_api_url(self) -> str:
+        """Return the full LLM chat completions endpoint."""
+        return f"{self.LLM_API_URL}/v1/chat/completions"
 
     @classmethod
     def from_json(cls, path: Path) -> "AppConfig":
@@ -147,7 +160,24 @@ class AppConfig:
             rag_data = data.pop("rag", None)
             emb_data = data.pop("embedding_config", None)
 
-            config_data = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
+            # Build case-insensitive field lookup (json may use model_dir, code uses MODEL_DIR)
+            _field_map = {k.lower(): k for k in cls.__dataclass_fields__}
+            config_data = {}
+            for k, v in data.items():
+                canon = _field_map.get(k.lower()) or _field_map.get(k)
+                if canon:
+                    config_data[canon] = v
+
+            # Convert string paths to Path objects for known Path fields
+            # Relative paths are resolved against the project root
+            _project_root = Path(__file__).parent
+            _path_fields = {"BASE_DIR", "BIN_DIR", "MODEL_DIR", "RAG_CACHE_DIR"}
+            for pf in _path_fields:
+                if pf in config_data and isinstance(config_data[pf], str):
+                    p = Path(config_data[pf])
+                    if not p.is_absolute():
+                        p = _project_root / p
+                    config_data[pf] = p
 
             if rag_data and isinstance(rag_data, dict):
                 config_data["rag"] = RAGConfig(
@@ -213,10 +243,163 @@ EMOJI = {
     "recovery": "🔄",
 }
 
+# ---------------------------------------------------------------------------
+#  External LLM provider config (used by settings.py and UI)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ExternalLLMConfig:
+    """Configuration for external LLM providers (Anthropic, Google, xAI)."""
+    enabled: bool = False
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-3-5-sonnet-20241022"
+    google_api_key: str = ""
+    google_model: str = "gemini-pro"
+    xai_api_key: str = ""
+    xai_model: str = "grok-beta"
+    use_consensus: bool = False
+    cost_tracking_enabled: bool = False
+    budget_limit: float = 50.0
+
+
+# ---------------------------------------------------------------------------
+#  Singleton config and helpers
+# ---------------------------------------------------------------------------
+
 config = AppConfig()
+
+_SETTINGS_PATH = Path(__file__).parent / "data" / "user_settings.json"
 
 
 def load_config(config_path: Path = Path("config.json")) -> AppConfig:
     global config
     config = AppConfig.from_json(config_path)
     return config
+
+
+def get_settings() -> AppConfig:
+    """Return the current app config (alias used by UI code)."""
+    return config
+
+
+def is_dark_mode() -> bool:
+    """Read dark_mode preference from user_settings.json."""
+    try:
+        if _SETTINGS_PATH.exists():
+            data = json.loads(_SETTINGS_PATH.read_text(encoding="utf-8"))
+            return bool(data.get("dark_mode", False))
+    except Exception:
+        pass
+    return False
+
+
+def set_dark_mode(value: bool) -> None:
+    """Persist dark_mode preference to user_settings.json."""
+    try:
+        _SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        data: dict = {}
+        if _SETTINGS_PATH.exists():
+            data = json.loads(_SETTINGS_PATH.read_text(encoding="utf-8"))
+        data["dark_mode"] = value
+        _SETTINGS_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception as e:
+        logger.warning(f"[Config] Failed to save dark_mode: {e}")
+
+
+# ---------------------------------------------------------------------------
+#  Path validation & interactive directory picker
+# ---------------------------------------------------------------------------
+
+def _pick_directory(prompt_msg: str) -> Optional[Path]:
+    """Ask the user to pick a directory.
+
+    Tries tkinter (GUI) first, falls back to console input.
+    Returns None if the user cancels.
+    """
+    # Try GUI picker
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        chosen = filedialog.askdirectory(title=prompt_msg)
+        root.destroy()
+        if chosen:
+            return Path(chosen)
+        return None
+    except Exception:
+        pass  # No display / tkinter unavailable
+
+    # Fallback: console prompt
+    try:
+        print(f"\n{prompt_msg}")
+        raw = input("Enter full path (or press Enter to skip): ").strip()
+        if raw:
+            p = Path(raw)
+            if p.is_dir():
+                return p
+            print(f"  Directory not found: {p}")
+    except (EOFError, KeyboardInterrupt):
+        pass
+    return None
+
+
+def validate_paths(cfg: AppConfig, config_path: Path = Path("config.json")) -> AppConfig:
+    """Check that critical directories exist; prompt user to pick if not.
+
+    Persists any user-chosen paths back into *config_path* so the picker
+    only appears once.
+    """
+    changed = False
+
+    # --- MODEL_DIR ---
+    if not cfg.MODEL_DIR.is_dir():
+        logger.warning(f"[Config] MODEL_DIR not found: {cfg.MODEL_DIR}")
+        picked = _pick_directory(
+            f"Models directory not found ({cfg.MODEL_DIR}).\n"
+            "Please select the folder where your .gguf model files are stored."
+        )
+        if picked and picked.is_dir():
+            cfg.MODEL_DIR = picked
+            changed = True
+        else:
+            # Create a local models/ folder as last resort
+            local_models = cfg.BASE_DIR / "models"
+            local_models.mkdir(parents=True, exist_ok=True)
+            cfg.MODEL_DIR = local_models
+            changed = True
+            logger.info(f"[Config] Created local models dir: {local_models}")
+
+    # --- BIN_DIR ---
+    if not cfg.BIN_DIR.is_dir():
+        logger.warning(f"[Config] BIN_DIR not found: {cfg.BIN_DIR}")
+        picked = _pick_directory(
+            f"llama.cpp binaries directory not found ({cfg.BIN_DIR}).\n"
+            "Please select the folder containing llama-server(.exe)."
+        )
+        if picked and picked.is_dir():
+            cfg.BIN_DIR = picked
+            changed = True
+        else:
+            # Create the default _bin/ so downstream code doesn't crash
+            local_bin = cfg.BASE_DIR / "_bin"
+            local_bin.mkdir(parents=True, exist_ok=True)
+            cfg.BIN_DIR = local_bin
+            changed = True
+            logger.info(f"[Config] Created local _bin dir: {local_bin}")
+
+    # Persist changes so the picker doesn't reappear
+    if changed:
+        try:
+            data: dict = {}
+            if config_path.exists():
+                data = json.loads(config_path.read_text(encoding="utf-8"))
+            data["model_dir"] = str(cfg.MODEL_DIR)
+            data["bin_dir"] = str(cfg.BIN_DIR)
+            config_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+            logger.info(f"[Config] Saved updated paths to {config_path}")
+        except Exception as e:
+            logger.warning(f"[Config] Could not persist path changes: {e}")
+
+    return cfg
