@@ -65,6 +65,7 @@ class EnhancedRAGService:
         self._confidence_scorer = None
         self._follow_up_generator = None
         self._metrics_tracker = None
+        self._query_rewriter = None
         self._parent_retriever = None
         self._graph_rag = None
 
@@ -106,6 +107,7 @@ class EnhancedRAGService:
         self._init_confidence_scorer()
         self._init_follow_up_generator()
         self._init_metrics_tracker()
+        self._init_query_rewriter()
         self._init_parent_retriever()
         self._init_graph_rag(knowledge_graph)
 
@@ -136,6 +138,17 @@ class EnhancedRAGService:
             logger.warning("[EnhancedRAG] Not initialized, returning empty")
             return {"answer": "", "sources": [], "metadata": {"error": "not_initialized"}}
 
+        # Step 0: Rewrite query for better retrieval
+        rewritten_query = query
+        if self._query_rewriter:
+            try:
+                rewrite_result = self._query_rewriter.rewrite(query)
+                if rewrite_result.rewrites:
+                    rewritten_query = rewrite_result.rewrites[0]
+                    logger.info(f"[EnhancedRAG] Rewrote query: '{query[:40]}' → '{rewritten_query[:40]}'")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] Query rewrite failed: {e}")
+
         # Step 1: Route query to optimal pipeline
         routing = self._route_query(query, context, force_strategy)
         logger.info(
@@ -143,9 +156,9 @@ class EnhancedRAGService:
             f"(confidence: {routing.get('confidence', 0):.2f})"
         )
 
-        # Step 2: Execute the determined pipeline
+        # Step 2: Execute the determined pipeline (use rewritten query for retrieval)
         try:
-            result = self._execute_pipeline(query, top_k, routing)
+            result = self._execute_pipeline(rewritten_query, top_k, routing)
         except Exception as e:
             logger.error(f"[EnhancedRAG] Pipeline failed: {e}")
             result = {"answer": "", "sources": [], "metadata": {"error": str(e)}}
@@ -539,9 +552,16 @@ class EnhancedRAGService:
     def _init_metrics_tracker(self):
         try:
             from Core.metrics_tracker import MetricsTracker
-            self._metrics_tracker = MetricsTracker.instance()
+            self._metrics_tracker = MetricsTracker()
         except Exception as e:
             logger.debug(f"[EnhancedRAG] MetricsTracker init failed: {e}")
+
+    def _init_query_rewriter(self):
+        try:
+            from Core.query_rewriter import QueryRewriter
+            self._query_rewriter = QueryRewriter(llm_fn=self._llm_fn)
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] QueryRewriter init failed: {e}")
 
     @staticmethod
     def _format_sources(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

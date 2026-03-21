@@ -349,6 +349,10 @@ class UIHandlers:
                     confidence = rag_metadata.get("confidence", {}) if isinstance(rag_metadata, dict) else {}
                     conflicts = rag_metadata.get("conflicts", {}) if isinstance(rag_metadata, dict) else {}
                     follow_ups = rag_metadata.get("follow_up_questions", []) if isinstance(rag_metadata, dict) else []
+                    crag_info = rag_metadata.get("crag", {}) if isinstance(rag_metadata, dict) else {}
+                    flare_info = rag_metadata.get("flare", {}) if isinstance(rag_metadata, dict) else {}
+                    graph_info = rag_metadata.get("graph_rag", {}) if isinstance(rag_metadata, dict) else {}
+                    dedup_info = rag_metadata.get("dedup", {}) if isinstance(rag_metadata, dict) else {}
 
                     if confidence:
                         score = confidence.get("score", "-")
@@ -359,6 +363,14 @@ class UIHandlers:
                         ui.label(f"Hallucination: {h_status}").classes(Styles.LABEL_XS)
                     if conflicts and conflicts.get("has_conflicts"):
                         ui.label(f"Conflicts: {conflicts.get('count', 0)} detected").classes(Styles.LABEL_XS + " text-orange-500")
+                    if crag_info:
+                        ui.label(f"CRAG: grade={crag_info.get('grade', '-')}, corrections={crag_info.get('corrections', 0)}").classes(Styles.LABEL_XS)
+                    if flare_info:
+                        ui.label(f"FLARE: {flare_info.get('iterations', 0)} iters, {len(flare_info.get('sub_queries', []))} sub-queries").classes(Styles.LABEL_XS)
+                    if graph_info:
+                        ui.label(f"GraphRAG: {graph_info.get('strategy', '-')}, {graph_info.get('communities_used', 0)} communities").classes(Styles.LABEL_XS)
+                    if dedup_info:
+                        ui.label(f"Dedup: removed {dedup_info.get('removed', 0)}, conflicts {dedup_info.get('conflicts', 0)}").classes(Styles.LABEL_XS)
 
                     if follow_ups:
                         ui.label("Follow-ups:").classes("text-xs font-semibold mt-1 " + Styles.TEXT_PRIMARY)

@@ -81,7 +81,7 @@ class FLARERetriever:
             return FLAREResult(final_answer="", iterations=0)
 
         chunks = list(initial_chunks or [])
-        result = FLAREResult(total_chunks_retrieved=len(chunks))
+        result = FLAREResult(final_answer="", total_chunks_retrieved=len(chunks))
 
         for iteration in range(self.max_iterations):
             # Generate with current context
