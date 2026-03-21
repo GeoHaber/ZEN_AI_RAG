@@ -59,6 +59,12 @@ class EnhancedRAGService:
         self._flare = None
         self._compressor = None
         self._reranker = None
+        self._deduplicator = None
+        self._conflict_detector = None
+        self._hallucination_detector = None
+        self._confidence_scorer = None
+        self._follow_up_generator = None
+        self._metrics_tracker = None
         self._parent_retriever = None
         self._graph_rag = None
 
@@ -93,6 +99,13 @@ class EnhancedRAGService:
         self._init_crag()
         self._init_flare()
         self._init_compressor()
+        self._init_reranker()
+        self._init_deduplicator()
+        self._init_conflict_detector()
+        self._init_hallucination_detector()
+        self._init_confidence_scorer()
+        self._init_follow_up_generator()
+        self._init_metrics_tracker()
         self._init_parent_retriever()
         self._init_graph_rag(knowledge_graph)
 
@@ -137,10 +150,16 @@ class EnhancedRAGService:
             logger.error(f"[EnhancedRAG] Pipeline failed: {e}")
             result = {"answer": "", "sources": [], "metadata": {"error": str(e)}}
 
+        # Post-generation quality checks & enrichment
+        result = self._post_process(query, result)
+
         elapsed = time.time() - start_time
         result.setdefault("metadata", {})
         result["metadata"]["latency_ms"] = round(elapsed * 1000, 2)
         result["metadata"]["routing"] = routing
+
+        # Record metrics
+        self._record_metrics(query, result, elapsed)
 
         return result
 
@@ -192,7 +211,7 @@ class EnhancedRAGService:
             "use_flare": False,
             "use_crag": False,
             "use_knowledge_graph": False,
-            "top_k": top_k if 'top_k' in dir() else 10,
+            "top_k": 10,
             "pipeline": ["retrieve", "rerank", "generate"],
         }
 
@@ -252,6 +271,41 @@ class EnhancedRAGService:
             chunks = self._parent_retriever.get_parent_context(chunks)
             metadata["stages"].append("parent_expansion")
 
+        # Stage: Deduplication
+        if self._deduplicator and len(chunks) > 1:
+            try:
+                dedup_result = self._deduplicator.deduplicate(chunks)
+                removed = len(chunks) - len(dedup_result.unique_chunks)
+                chunks = dedup_result.unique_chunks
+                metadata["dedup"] = {
+                    "removed": removed,
+                    "conflicts": len(dedup_result.conflicts),
+                }
+                metadata["stages"].append("dedup")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] Dedup failed: {e}")
+
+        # Stage: Reranking
+        if self._reranker and chunks:
+            try:
+                chunks = self._reranker.rerank(query, chunks, top_k=effective_top_k)
+                metadata["stages"].append("rerank")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] Rerank failed: {e}")
+
+        # Stage: Conflict detection
+        if self._conflict_detector and chunks:
+            try:
+                conflict_report = self._conflict_detector.detect(chunks)
+                metadata["conflicts"] = {
+                    "has_conflicts": conflict_report.has_conflicts,
+                    "count": len(conflict_report.conflicts) if hasattr(conflict_report, 'conflicts') else 0,
+                    "consensus_facts": len(conflict_report.consensus_facts) if hasattr(conflict_report, 'consensus_facts') else 0,
+                }
+                metadata["stages"].append("conflict_check")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] ConflictDetector failed: {e}")
+
         # Stage: Contextual compression
         if routing.get("use_contextual_compression") and self._compressor:
             chunks = self._compressor.compress(query, chunks)
@@ -306,6 +360,72 @@ class EnhancedRAGService:
             "sources": self._format_sources(chunks),
             "metadata": metadata,
         }
+
+    def _post_process(self, query: str, result: Dict[str, Any]) -> Dict[str, Any]:
+        """Run post-generation quality checks and enrichment."""
+        answer = result.get("answer", "")
+        sources = result.get("sources", [])
+        metadata = result.setdefault("metadata", {})
+        stages = metadata.setdefault("stages", [])
+
+        if not answer:
+            return result
+
+        # Hallucination detection
+        if self._hallucination_detector:
+            try:
+                report = self._hallucination_detector.detect(answer, sources, query)
+                metadata["hallucination"] = {
+                    "is_clean": report.is_clean,
+                    "probability": round(report.probability, 3),
+                    "flagged_claims": len(report.flagged_claims),
+                }
+                stages.append("hallucination_check")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] Hallucination check failed: {e}")
+
+        # Confidence scoring
+        if self._confidence_scorer:
+            try:
+                quality = self._confidence_scorer.assess(answer, query, sources)
+                metadata["confidence"] = {
+                    "score": round(quality.confidence, 3),
+                    "risk_level": quality.risk_level,
+                }
+                stages.append("confidence_score")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] Confidence scoring failed: {e}")
+
+        # Follow-up question generation
+        if self._follow_up_generator:
+            try:
+                follow_ups = self._follow_up_generator.generate(answer, query, sources)
+                metadata["follow_up_questions"] = follow_ups[:3]
+                stages.append("follow_up_gen")
+            except Exception as e:
+                logger.debug(f"[EnhancedRAG] Follow-up generation failed: {e}")
+
+        return result
+
+    def _record_metrics(self, query: str, result: Dict[str, Any], elapsed: float):
+        """Record pipeline run to MetricsTracker."""
+        if not self._metrics_tracker:
+            return
+        try:
+            from Core.metrics_tracker import QueryEvent
+            metadata = result.get("metadata", {})
+            confidence = metadata.get("confidence", {})
+            hallucination = metadata.get("hallucination", {})
+            event = QueryEvent(
+                query=query[:200],
+                latency=elapsed,
+                cache_tier=0,
+                quality_score=confidence.get("score", 0.0),
+                hallucination_probability=hallucination.get("probability", 0.0),
+            )
+            self._metrics_tracker.record_query(event)
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] Metrics recording failed: {e}")
 
     # ─── Component Initialization ──────────────────────────
 
@@ -373,6 +493,55 @@ class EnhancedRAGService:
                 )
             except Exception as e:
                 logger.debug(f"[EnhancedRAG] GraphRAG init failed: {e}")
+
+    def _init_reranker(self):
+        try:
+            from Core.reranker_advanced import AdvancedReranker
+            self._reranker = AdvancedReranker()
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] Reranker init failed: {e}")
+
+    def _init_deduplicator(self):
+        try:
+            from Core.smart_deduplicator import SmartDeduplicator
+            self._deduplicator = SmartDeduplicator()
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] Deduplicator init failed: {e}")
+
+    def _init_conflict_detector(self):
+        try:
+            from Core.conflict_detector import ConflictDetector
+            self._conflict_detector = ConflictDetector()
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] ConflictDetector init failed: {e}")
+
+    def _init_hallucination_detector(self):
+        try:
+            from Core.hallucination_detector_v2 import AdvancedHallucinationDetector
+            self._hallucination_detector = AdvancedHallucinationDetector()
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] HallucinationDetector init failed: {e}")
+
+    def _init_confidence_scorer(self):
+        try:
+            from Core.confidence_scorer import AnswerQualityAssessor
+            self._confidence_scorer = AnswerQualityAssessor()
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] ConfidenceScorer init failed: {e}")
+
+    def _init_follow_up_generator(self):
+        try:
+            from Core.follow_up_generator import FollowUpGenerator
+            self._follow_up_generator = FollowUpGenerator(llm_fn=self._llm_fn)
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] FollowUpGenerator init failed: {e}")
+
+    def _init_metrics_tracker(self):
+        try:
+            from Core.metrics_tracker import MetricsTracker
+            self._metrics_tracker = MetricsTracker.instance()
+        except Exception as e:
+            logger.debug(f"[EnhancedRAG] MetricsTracker init failed: {e}")
 
     @staticmethod
     def _format_sources(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

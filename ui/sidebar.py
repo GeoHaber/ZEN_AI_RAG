@@ -106,6 +106,8 @@ def render_rag(locale, app_state, actions):
             app_state["rag_last_intent_label"] = ui.label("Intent: -").classes(Styles.LABEL_MUTED + " text-xs")
             app_state["rag_last_stages_label"] = ui.label("Stages: -").classes(Styles.LABEL_MUTED + " text-xs")
             app_state["rag_last_latency_label"] = ui.label("Latency: -").classes(Styles.LABEL_MUTED + " text-xs")
+            app_state["rag_last_confidence_label"] = ui.label("Confidence: -").classes(Styles.LABEL_MUTED + " text-xs")
+            app_state["rag_last_hallucination_label"] = ui.label("Hallucination: -").classes(Styles.LABEL_MUTED + " text-xs")
 
     ui.separator().classes("mb-4")
 

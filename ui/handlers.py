@@ -3,6 +3,7 @@ import logging
 import requests
 import io
 import random
+import time
 from nicegui import ui
 from config_system import config, EMOJI
 from ui.locales import get_locale, L
@@ -335,20 +336,48 @@ class UIHandlers:
                     intent = routing.get("intent", "-") if isinstance(routing, dict) else "-"
                     stages = rag_metadata.get("stages", []) if isinstance(rag_metadata, dict) else []
                     latency = rag_metadata.get("latency_ms", "-") if isinstance(rag_metadata, dict) else "-"
+                    mode = routing.get("mode", self.app_state.get("rag_pipeline_mode", "classic")) if isinstance(routing, dict) else self.app_state.get("rag_pipeline_mode", "classic")
 
                     ui.label("RAG Pipeline").classes("text-xs font-semibold " + Styles.TEXT_PRIMARY)
+                    ui.label(f"Mode: {mode}").classes(Styles.LABEL_XS)
                     ui.label(f"Intent: {intent}").classes(Styles.LABEL_XS)
                     ui.label(f"Stages: {', '.join(stages) if stages else '-'}").classes(Styles.LABEL_XS)
                     ui.label(f"Latency: {latency} ms").classes(Styles.LABEL_XS)
 
+                    # Quality checks (enhanced pipeline)
+                    hallucination = rag_metadata.get("hallucination", {}) if isinstance(rag_metadata, dict) else {}
+                    confidence = rag_metadata.get("confidence", {}) if isinstance(rag_metadata, dict) else {}
+                    conflicts = rag_metadata.get("conflicts", {}) if isinstance(rag_metadata, dict) else {}
+                    follow_ups = rag_metadata.get("follow_up_questions", []) if isinstance(rag_metadata, dict) else []
+
+                    if confidence:
+                        score = confidence.get("score", "-")
+                        risk = confidence.get("risk_level", "-")
+                        ui.label(f"Confidence: {score} ({risk})").classes(Styles.LABEL_XS)
+                    if hallucination:
+                        h_status = "Clean" if hallucination.get("is_clean") else f"Prob: {hallucination.get('probability', '-')}"
+                        ui.label(f"Hallucination: {h_status}").classes(Styles.LABEL_XS)
+                    if conflicts and conflicts.get("has_conflicts"):
+                        ui.label(f"Conflicts: {conflicts.get('count', 0)} detected").classes(Styles.LABEL_XS + " text-orange-500")
+
+                    if follow_ups:
+                        ui.label("Follow-ups:").classes("text-xs font-semibold mt-1 " + Styles.TEXT_PRIMARY)
+                        for fq in follow_ups[:3]:
+                            ui.label(f"  {fq}").classes(Styles.LABEL_XS)
+
                     if "rag_last_mode_label" in self.app_state:
-                        mode = self.app_state.get("rag_pipeline_mode", "classic")
                         self.app_state["rag_last_mode_label"].text = f"Mode: {mode}"
                         self.app_state["rag_last_intent_label"].text = f"Intent: {intent}"
                         self.app_state["rag_last_stages_label"].text = (
                             f"Stages: {', '.join(stages) if stages else '-'}"
                         )
                         self.app_state["rag_last_latency_label"].text = f"Latency: {latency} ms"
+                    if "rag_last_confidence_label" in self.app_state:
+                        if confidence:
+                            self.app_state["rag_last_confidence_label"].text = f"Confidence: {confidence.get('score', '-')} ({confidence.get('risk_level', '-')})"
+                        if hallucination:
+                            h_text = "Clean" if hallucination.get("is_clean") else f"Prob: {hallucination.get('probability', '-')}"
+                            self.app_state["rag_last_hallucination_label"].text = f"Hallucination: {h_text}"
 
             if relevant_chunks:
                 with (
@@ -505,6 +534,7 @@ class UIHandlers:
             relevant_chunks = []
             if use_rag:
                 try:
+                    rag_query_start = time.time()
                     # Show Skeletons
                     rag_skeleton.visible = True
                     with rag_skeleton:
@@ -534,6 +564,14 @@ class UIHandlers:
                         logger.info(f"[RAG][Enhanced] Sources: {len(relevant_chunks)}")
                         if answer:
                             precomputed_answer = answer
+                        if isinstance(rag_metadata, dict):
+                            routing = rag_metadata.get("routing", {})
+                            if not isinstance(routing, dict):
+                                routing = {}
+                            routing["mode"] = "enhanced"
+                            rag_metadata["routing"] = routing
+                            if "latency_ms" not in rag_metadata:
+                                rag_metadata["latency_ms"] = round((time.time() - rag_query_start) * 1000, 2)
                     else:
                         logger.info(f"[RAG] Searching knowledge base for: '{prompt[:50]}...'")
                         # Use hybrid search for better reliability (Semantic + BM25)
@@ -544,6 +582,14 @@ class UIHandlers:
                         else:
                             relevant_chunks = await asyncio.to_thread(self.rag_system.hybrid_search, prompt, k=5, alpha=0.5)
                         logger.info(f"[RAG] Found {len(relevant_chunks)} relevant chunks")
+                        rag_metadata = {
+                            "routing": {
+                                "intent": "classic",
+                                "mode": "classic",
+                            },
+                            "stages": ["hybrid_search", "context_prompt", "stream_generate"],
+                            "latency_ms": round((time.time() - rag_query_start) * 1000, 2),
+                        }
 
                     # Hide Skeletons immediately after search matches
                     rag_skeleton.visible = False

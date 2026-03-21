@@ -95,6 +95,8 @@ def _do_nebula_page_setup():
         "rag_last_intent": "-",
         "rag_last_stages": "-",
         "rag_last_latency": "-",
+        "rag_last_confidence": "-",
+        "rag_last_hallucination": "-",
         "open_rag_dialog": lambda: rag_dialog.open() if "rag_dialog" in locals() else None,
     }
 
