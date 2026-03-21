@@ -78,6 +78,17 @@ def render_rag(locale, app_state, actions):
             )
             ui.label(locale.SETTINGS_RAG_ENABLED_DESC).classes(Styles.LABEL_MUTED + " ml-10 -mt-1 text-xs")
 
+            # RAG Pipeline Mode
+            ui.select(
+                {
+                    "classic": "Classic RAG",
+                    "enhanced": "Enhanced RAG (SOTA)",
+                },
+                value=app_state.get("rag_pipeline_mode", "classic"),
+                on_change=actions.on_rag_mode_change,
+                label="Pipeline",
+            ).classes("w-full").props("dense outlined")
+
             # Scan Button
             scan_btn = (
                 ui.button(locale.RAG_START_SCAN, icon="search", on_click=actions.open_rag_scan)
@@ -86,6 +97,15 @@ def render_rag(locale, app_state, actions):
             )
             scan_btn.set_visibility(rag_enabled_val)
             app_state["rag_scan_btn"] = scan_btn
+
+            ui.separator().classes("my-2")
+
+            # Last RAG run summary (updated live by handlers)
+            ui.label("Last RAG Result").classes("text-xs font-semibold " + Styles.TEXT_PRIMARY)
+            app_state["rag_last_mode_label"] = ui.label("Mode: -").classes(Styles.LABEL_MUTED + " text-xs")
+            app_state["rag_last_intent_label"] = ui.label("Intent: -").classes(Styles.LABEL_MUTED + " text-xs")
+            app_state["rag_last_stages_label"] = ui.label("Stages: -").classes(Styles.LABEL_MUTED + " text-xs")
+            app_state["rag_last_latency_label"] = ui.label("Latency: -").classes(Styles.LABEL_MUTED + " text-xs")
 
     ui.separator().classes("mb-4")
 

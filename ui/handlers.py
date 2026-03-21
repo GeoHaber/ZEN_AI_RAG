@@ -25,6 +25,7 @@ class UIHandlers:
         self.universal_extractor = universal_extractor
         self.conversation_memory = conversation_memory
         self.async_backend = async_backend
+        self.enhanced_rag_service = None
 
         # Register Global Event Listeners
         # We use ui.on() for page-level custom events, as client.on() is deprecated/removed in this version
@@ -34,6 +35,126 @@ class UIHandlers:
         except Exception as e:
             logger.warning(f"Failed to register voice_data listener: {e}")
         self.locale = get_locale()
+        self._init_enhanced_rag_service()
+
+    def _init_enhanced_rag_service(self):
+        """Initialize EnhancedRAGService with bridge functions to LocalRAG + LLM API."""
+        try:
+            from Core.services.enhanced_rag_service import EnhancedRAGService
+
+            if self.rag_system is None:
+                return
+
+            def retrieve_fn(query, top_k=10):
+                if hasattr(self.rag_system, "hybrid_search"):
+                    return self.rag_system.hybrid_search(query, k=top_k, alpha=0.5)
+                if hasattr(self.rag_system, "search"):
+                    return self.rag_system.search(query, k=top_k)
+                return []
+
+            def generate_fn(query, chunks):
+                try:
+                    context = "\n\n".join(
+                        f"[{i}] {c.get('title', 'Untitled')}\n{c.get('text', '')}"
+                        for i, c in enumerate(chunks[:8], 1)
+                    )
+                    user_prompt = f"SOURCES:\n{context}\n\nUSER QUESTION: {query}\n\nANSWER:"
+                    payload = {
+                        "messages": [
+                            {"role": "system", "content": "You are ZenAI, a helpful assistant."},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        "stream": False,
+                        "temperature": 0.5,
+                        "max_tokens": 1024,
+                    }
+                    response = requests.post(
+                        f"{config.LLM_API_URL}/v1/chat/completions",
+                        json=payload,
+                        timeout=60,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    return (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
+                except Exception as e:
+                    logger.warning(f"[EnhancedRAG] generate_fn fallback: {e}")
+                    return ""
+
+            def llm_fn(prompt):
+                try:
+                    payload = {
+                        "messages": [
+                            {"role": "system", "content": "You are ZenAI, a helpful assistant."},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "stream": False,
+                        "temperature": 0.4,
+                        "max_tokens": 512,
+                    }
+                    response = requests.post(
+                        f"{config.LLM_API_URL}/v1/chat/completions",
+                        json=payload,
+                        timeout=60,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    return (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
+                except Exception as e:
+                    logger.warning(f"[EnhancedRAG] llm_fn failed: {e}")
+                    return ""
+
+            def embed_fn(text):
+                try:
+                    if hasattr(self.rag_system, "_embed_mgr"):
+                        vec = self.rag_system._embed_mgr.encode_single(text, normalize=True)
+                        return vec.tolist() if hasattr(vec, "tolist") else vec
+                except Exception:
+                    pass
+                return []
+
+            def search_by_embedding_fn(embedding, top_k=10):
+                try:
+                    if not getattr(self.rag_system, "qdrant", None):
+                        return []
+                    hits = self.rag_system.qdrant.query_points(
+                        collection_name=self.rag_system.collection_name,
+                        query=embedding,
+                        limit=top_k,
+                    ).points
+                    return [
+                        {
+                            "text": h.payload.get("text", ""),
+                            "url": h.payload.get("url", ""),
+                            "title": h.payload.get("title", "Untitled"),
+                            "score": h.score,
+                            "metadata": h.payload.get("metadata", {}),
+                        }
+                        for h in hits
+                    ]
+                except Exception as e:
+                    logger.warning(f"[EnhancedRAG] search_by_embedding failed: {e}")
+                    return []
+
+            service = EnhancedRAGService()
+            service.initialize(
+                retrieve_fn=retrieve_fn,
+                generate_fn=generate_fn,
+                llm_fn=llm_fn,
+                embed_fn=embed_fn,
+                search_by_embedding_fn=search_by_embedding_fn,
+            )
+            self.enhanced_rag_service = service
+            logger.info("[EnhancedRAG] UI service initialized")
+        except Exception as e:
+            logger.warning(f"[EnhancedRAG] UI init skipped: {e}")
 
     async def handle_send(self, text: str):
         """Processes the send action from the UI."""
@@ -147,7 +268,16 @@ class UIHandlers:
         # Auto-scroll to bottom
         self.ui_state.safe_scroll()
 
-    async def _stream_response_continued(self, final_prompt, full_text, msg_ui, relevant_chunks, sources_ui):
+    async def _stream_response_continued(
+        self,
+        final_prompt,
+        full_text,
+        msg_ui,
+        relevant_chunks,
+        sources_ui,
+        precomputed_answer=None,
+        rag_metadata=None,
+    ):
         """Continue stream_response logic."""
         try:
             chunk_count = 0
@@ -171,24 +301,55 @@ class UIHandlers:
 
             asyncio.create_task(distraction_loop())
 
-            async with self.async_backend:
-                async for chunk in self.async_backend.send_message_async(
-                    final_prompt, cancellation_event=self.ui_state.cancellation_event
-                ):
-                    if not self.ui_state.is_valid:
-                        break
-                    if chunk_count == 0:
-                        thinking_active = False
-                    chunk_count += 1
-                    full_text += chunk
-                    msg_ui.content = full_text
-                    msg_ui.classes(remove=Styles.LOADING_PULSE)
-                    self.ui_state.safe_update(msg_ui)
-                    await asyncio.sleep(0.02)
+            if precomputed_answer is not None:
+                thinking_active = False
+                full_text += precomputed_answer
+                msg_ui.content = full_text
+                msg_ui.classes(remove=Styles.LOADING_PULSE)
+                self.ui_state.safe_update(msg_ui)
+            else:
+                async with self.async_backend:
+                    async for chunk in self.async_backend.send_message_async(
+                        final_prompt, cancellation_event=self.ui_state.cancellation_event
+                    ):
+                        if not self.ui_state.is_valid:
+                            break
+                        if chunk_count == 0:
+                            thinking_active = False
+                        chunk_count += 1
+                        full_text += chunk
+                        msg_ui.content = full_text
+                        msg_ui.classes(remove=Styles.LOADING_PULSE)
+                        self.ui_state.safe_update(msg_ui)
+                        await asyncio.sleep(0.02)
 
             thinking_active = False
 
             # Sources disclosure
+            if rag_metadata:
+                with (
+                    sources_ui,
+                    ui.card().classes("w-full rounded-xl mt-2 p-2 " + Styles.CARD_INFO),
+                ):
+                    routing = rag_metadata.get("routing", {}) if isinstance(rag_metadata, dict) else {}
+                    intent = routing.get("intent", "-") if isinstance(routing, dict) else "-"
+                    stages = rag_metadata.get("stages", []) if isinstance(rag_metadata, dict) else []
+                    latency = rag_metadata.get("latency_ms", "-") if isinstance(rag_metadata, dict) else "-"
+
+                    ui.label("RAG Pipeline").classes("text-xs font-semibold " + Styles.TEXT_PRIMARY)
+                    ui.label(f"Intent: {intent}").classes(Styles.LABEL_XS)
+                    ui.label(f"Stages: {', '.join(stages) if stages else '-'}").classes(Styles.LABEL_XS)
+                    ui.label(f"Latency: {latency} ms").classes(Styles.LABEL_XS)
+
+                    if "rag_last_mode_label" in self.app_state:
+                        mode = self.app_state.get("rag_pipeline_mode", "classic")
+                        self.app_state["rag_last_mode_label"].text = f"Mode: {mode}"
+                        self.app_state["rag_last_intent_label"].text = f"Intent: {intent}"
+                        self.app_state["rag_last_stages_label"].text = (
+                            f"Stages: {', '.join(stages) if stages else '-'}"
+                        )
+                        self.app_state["rag_last_latency_label"].text = f"Latency: {latency} ms"
+
             if relevant_chunks:
                 with (
                     sources_ui,
@@ -329,6 +490,8 @@ class UIHandlers:
 
             full_text = ""
             final_prompt = prompt
+            precomputed_answer = None
+            rag_metadata = None
 
             if self.conversation_memory:
                 try:
@@ -356,15 +519,31 @@ class UIHandlers:
                                 ui.skeleton().classes("h-3 w-40 rounded bg-gray-200 dark:bg-slate-700")
                                 ui.skeleton().classes("h-3 w-56 rounded bg-gray-100 dark:bg-slate-800")
 
-                    logger.info(f"[RAG] Searching knowledge base for: '{prompt[:50]}...'")
-                    # Use hybrid search for better reliability (Semantic + BM25)
-                    # OFFLOAD TO THREAD to prevent blocking event loop (fixes "Connection Lost")
-                    # (Now using native async wrapper)
-                    if hasattr(self.rag_system, "hybrid_search_async"):
-                        relevant_chunks = await self.rag_system.hybrid_search_async(prompt, k=5, alpha=0.5)
+                    pipeline_mode = self.app_state.get("rag_pipeline_mode", "classic")
+
+                    if pipeline_mode == "enhanced" and self.enhanced_rag_service is not None:
+                        logger.info(f"[RAG][Enhanced] Querying enhanced pipeline for: '{prompt[:50]}...'")
+                        enhanced_result = await asyncio.to_thread(
+                            self.enhanced_rag_service.query,
+                            prompt,
+                            5,
+                        )
+                        relevant_chunks = enhanced_result.get("sources", []) or []
+                        rag_metadata = enhanced_result.get("metadata", {}) or {}
+                        answer = (enhanced_result.get("answer") or "").strip()
+                        logger.info(f"[RAG][Enhanced] Sources: {len(relevant_chunks)}")
+                        if answer:
+                            precomputed_answer = answer
                     else:
-                        relevant_chunks = await asyncio.to_thread(self.rag_system.hybrid_search, prompt, k=5, alpha=0.5)
-                    logger.info(f"[RAG] Found {len(relevant_chunks)} relevant chunks")
+                        logger.info(f"[RAG] Searching knowledge base for: '{prompt[:50]}...'")
+                        # Use hybrid search for better reliability (Semantic + BM25)
+                        # OFFLOAD TO THREAD to prevent blocking event loop (fixes "Connection Lost")
+                        # (Now using native async wrapper)
+                        if hasattr(self.rag_system, "hybrid_search_async"):
+                            relevant_chunks = await self.rag_system.hybrid_search_async(prompt, k=5, alpha=0.5)
+                        else:
+                            relevant_chunks = await asyncio.to_thread(self.rag_system.hybrid_search, prompt, k=5, alpha=0.5)
+                        logger.info(f"[RAG] Found {len(relevant_chunks)} relevant chunks")
 
                     # Hide Skeletons immediately after search matches
                     rag_skeleton.visible = False
@@ -380,18 +559,27 @@ class UIHandlers:
                         full_text = f"{EMOJI['success']} {self.locale.RAG_ANSWERED_FROM_SOURCE + ': ' + str(len(relevant_chunks)) + ' docs'}\n\n"
                         msg_ui.content = full_text
 
-                        context_parts = []
-                        for i, c in enumerate(relevant_chunks, 1):
-                            context_parts.append(f"[{i}] Source: {c.get('title', 'Untitled')}\n{c['text']}")
+                        if precomputed_answer is None:
+                            context_parts = []
+                            for i, c in enumerate(relevant_chunks, 1):
+                                context_parts.append(f"[{i}] Source: {c.get('title', 'Untitled')}\n{c['text']}")
 
-                        context = "\n\n".join(context_parts)
-                        final_prompt = f"SOURCES:\n{context}\n\nUSER QUESTION: {prompt}\n\nANSWER:"
+                            context = "\n\n".join(context_parts)
+                            final_prompt = f"SOURCES:\n{context}\n\nUSER QUESTION: {prompt}\n\nANSWER:"
                 except Exception as e:
                     logger.error(f"[RAG] Query failed: {e}")
                     rag_skeleton.visible = False
                     rag_skeleton.clear()
 
-        await _stream_response_continued(self, final_prompt, full_text, msg_ui, relevant_chunks, sources_ui)
+        await self._stream_response_continued(
+            final_prompt,
+            full_text,
+            msg_ui,
+            relevant_chunks,
+            sources_ui,
+            precomputed_answer=precomputed_answer,
+            rag_metadata=rag_metadata,
+        )
 
     def extract_text(self, raw_data, filename):
         """Extracts text from raw bytes using the UniversalExtractor."""

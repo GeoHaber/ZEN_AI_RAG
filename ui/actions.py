@@ -71,6 +71,13 @@ class _UIActionsBase:
             self.app_state["rag_scan_btn"].set_visibility(e.value)
         ui.notify(f"RAG {'Enabled' if e.value else 'Disabled'}", color="positive" if e.value else "info")
 
+    def on_rag_mode_change(self, e):
+        """Handle RAG pipeline mode selection (classic/enhanced)."""
+        mode = e.value if isinstance(e.value, str) else "classic"
+        self.app_state["rag_pipeline_mode"] = mode
+        mode_name = "Enhanced RAG (SOTA)" if mode == "enhanced" else "Classic RAG"
+        ui.notify(f"RAG pipeline: {mode_name}", color="info", position="bottom-right")
+
     def open_rag_scan(self):
         """Open the RAG knowledge base scanner dialog."""
         if "open_rag_dialog" in self.app_state:

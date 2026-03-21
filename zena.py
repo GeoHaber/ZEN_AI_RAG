@@ -90,6 +90,11 @@ def _do_nebula_page_setup():
     setup_app_theme()
     app_state = {
         "rag_enabled": ZENA_CONFIG.get("rag_enabled", True) if ZENA_MODE else False,
+        "rag_pipeline_mode": "classic",
+        "rag_last_mode": "-",
+        "rag_last_intent": "-",
+        "rag_last_stages": "-",
+        "rag_last_latency": "-",
         "open_rag_dialog": lambda: rag_dialog.open() if "rag_dialog" in locals() else None,
     }
 
