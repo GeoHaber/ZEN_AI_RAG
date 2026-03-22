@@ -119,6 +119,7 @@ class MetricsTracker:
             if not queries:
                 return MetricsSummary(
                     total_documents_indexed=len(indexes),
+                    avg_indexing_time_ms=sum(e.processing_time_ms for e in indexes) / len(indexes) if indexes else 0,
                     total_chunks_created=sum(e.chunks_created for e in indexes),
                 )
 

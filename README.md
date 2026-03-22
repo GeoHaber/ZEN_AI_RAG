@@ -133,8 +133,11 @@ python -m pytest tests/test_core_modules.py -v
 # Enhanced RAG integration tests (38 tests)
 python -m pytest tests/test_enhanced_rag.py -v
 
-# Both test suites
-python -m pytest tests/test_core_modules.py tests/test_enhanced_rag.py -v
+# Deep audit tests — KnowledgeGraph, Pydantic models, pipeline integration (67 tests)
+python -m pytest tests/test_deep_audit.py -v
+
+# All three test suites (199 tests)
+python -m pytest tests/test_core_modules.py tests/test_enhanced_rag.py tests/test_deep_audit.py -v
 
 # With coverage
 python run_tests.py --coverage

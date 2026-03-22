@@ -431,8 +431,8 @@ class EnhancedRAGService:
             hallucination = metadata.get("hallucination", {})
             event = QueryEvent(
                 query=query[:200],
-                latency=elapsed,
-                cache_tier=0,
+                latency_ms=round(elapsed * 1000, 2),
+                cache_hit=False,
                 quality_score=confidence.get("score", 0.0),
                 hallucination_probability=hallucination.get("probability", 0.0),
             )
