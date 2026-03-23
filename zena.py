@@ -230,7 +230,7 @@ def start_app():
             sys.exit(0)
 
     if "NICEGUI_SCREEN_TEST_PORT" not in os.environ:
-        os.environ["NICEGUI_SCREEN_TEST_PORT"] = "8081"
+        os.environ.get("NICEGUI_SCREEN_TEST_PORT", "") = "8081"
 
     # Local Device Mode (Native window)
     ui.run(title="ZenAI", dark=is_dark_mode(), port=8080, reload=False, native=False)

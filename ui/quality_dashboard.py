@@ -23,7 +23,10 @@ class QualityDashboard:
     def _load_report(self):
         if self.report_path.exists():
             with open(self.report_path, "r") as f:
-                return json.load(f)
+                try:
+                    return json.load(f)
+                except json.JSONDecodeError:
+                    pass  # handle malformed JSON
         return None
 
     def _save_to_history(self, report):
@@ -31,7 +34,10 @@ class QualityDashboard:
         history = []
         if self.history_path.exists():
             with open(self.history_path, "r") as f:
-                history = json.load(f)
+                try:
+                    history = json.load(f)
+                except json.JSONDecodeError:
+                    history = {}
 
         history.append(
             {"timestamp": report["timestamp"], "score": report["avg_quality_score"], "latency": report["avg_latency"]}

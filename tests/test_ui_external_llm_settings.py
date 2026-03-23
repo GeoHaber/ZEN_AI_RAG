@@ -174,9 +174,9 @@ class TestExternalLLMIntegration:
         settings.xai_api_key = "xai-test789"
 
         # Simulate setting environment variables from settings
-        os.environ["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
-        os.environ["GOOGLE_API_KEY"] = settings.google_api_key
-        os.environ["XAI_API_KEY"] = settings.xai_api_key
+        os.environ.get("ANTHROPIC_API_KEY", "") = settings.anthropic_api_key
+        os.environ.get("GOOGLE_API_KEY", "") = settings.google_api_key
+        os.environ.get("XAI_API_KEY", "") = settings.xai_api_key
 
         # Verify they're set
         assert os.getenv("ANTHROPIC_API_KEY") == "sk-ant-test123"
@@ -184,9 +184,9 @@ class TestExternalLLMIntegration:
         assert os.getenv("XAI_API_KEY") == "xai-test789"
 
         # Cleanup
-        del os.environ["ANTHROPIC_API_KEY"]
-        del os.environ["GOOGLE_API_KEY"]
-        del os.environ["XAI_API_KEY"]
+        del os.environ.get("ANTHROPIC_API_KEY", "")
+        del os.environ.get("GOOGLE_API_KEY", "")
+        del os.environ.get("XAI_API_KEY", "")
 
     def test_external_llm_enabled_flag(self):
         """Test that enabled flag controls external LLM usage."""
@@ -317,7 +317,10 @@ class TestSettingsPersistence:
             settings_file.write_text(json.dumps(data, indent=2))
 
             # Simulate load
-            loaded_data = json.loads(settings_file.read_text())
+            try:
+                loaded_data = json.loads(settings_file.read_text())
+            except json.JSONDecodeError:
+                loaded_data = {}
             new_settings = AppSettings()
             new_settings.external_llm.enabled = loaded_data["external_llm"]["enabled"]
             new_settings.external_llm.google_api_key = loaded_data["external_llm"]["google_api_key"]

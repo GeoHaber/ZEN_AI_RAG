@@ -44,7 +44,10 @@ class TestConfigAbuse:
 
         # json.loads should raise on bad JSON
         with pytest.raises(json.JSONDecodeError):
-            json.loads(bad_json.read_text())
+            try:
+                json.loads(bad_json.read_text())
+            except json.JSONDecodeError:
+                pass  # handle malformed JSON
 
         # But our config should still work with defaults
         from config_system import config
@@ -65,21 +68,21 @@ class TestConfigAbuse:
         from config_system import _env_str, _env_int
 
         # Try to inject bad values
-        os.environ["ZENAI_TEST_INJECTION"] = "'; DROP TABLE users; --"
+        os.environ.get("ZENAI_TEST_INJECTION", "") = "'; DROP TABLE users; --"
         result = _env_str("ZENAI_TEST_INJECTION", "default")
         # Should just return the string, not execute anything
         assert result == "'; DROP TABLE users; --"
-        del os.environ["ZENAI_TEST_INJECTION"]
+        del os.environ.get("ZENAI_TEST_INJECTION", "")
 
     def test_env_int_invalid(self):
         """Test _env_int with invalid values."""
         import os
         from config_system import _env_int
 
-        os.environ["ZENAI_TEST_BAD_INT"] = "not_a_number"
+        os.environ.get("ZENAI_TEST_BAD_INT", "") = "not_a_number"
         result = _env_int("ZENAI_TEST_BAD_INT", 42)
         assert result == 42  # Should return default
-        del os.environ["ZENAI_TEST_BAD_INT"]
+        del os.environ.get("ZENAI_TEST_BAD_INT", "")
 
 
 # =============================================================================

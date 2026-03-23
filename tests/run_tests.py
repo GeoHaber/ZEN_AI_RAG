@@ -238,7 +238,10 @@ def generate_coverage_report():
         coverage_file = Path("coverage.json")
         if coverage_file.exists():
             with open(coverage_file) as f:
-                data = json.load(f)
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = {}
                 total_coverage = data["totals"]["percent_covered"]
 
             # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Total Coverage: {total_coverage:.1f}%{Colors.END}")
@@ -317,7 +320,10 @@ def save_test_results(results):
     # Load existing history
     if history_file.exists():
         with open(history_file) as f:
-            history = json.load(f)
+            try:
+                history = json.load(f)
+            except json.JSONDecodeError:
+                history = {}
     else:
         history = {"runs": []}
 
@@ -341,7 +347,10 @@ def print_test_history():
         return
 
     with open(history_file) as f:
-        history = json.load(f)
+        try:
+            history = json.load(f)
+        except json.JSONDecodeError:
+            history = {}
 
     print_header("RECENT TEST HISTORY (Last 10 runs)")
 

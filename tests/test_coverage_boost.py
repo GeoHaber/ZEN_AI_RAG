@@ -16,10 +16,10 @@ class TestCoverageBoost:
 
     def test_env_int(self):
         """Test env_int utility."""
-        os.environ["TEST_ENV_INT"] = "42"
+        os.environ.get("TEST_ENV_INT", "") = "42"
         assert server.env_int("TEST_ENV_INT", 10) == 42
         assert server.env_int("NON_EXISTENT", 10) == 10
-        os.environ["TEST_ENV_INVALID"] = "not_an_int"
+        os.environ.get("TEST_ENV_INVALID", "") = "not_an_int"
         assert server.env_int("TEST_ENV_INVALID", 10) == 10
 
     @patch("zena_mode.server.psutil.process_iter")

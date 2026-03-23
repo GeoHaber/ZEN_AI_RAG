@@ -101,7 +101,10 @@ class TestMessageSending:
                     continue
                 import json
 
-                data = json.loads(line[6:])
+                try:
+                    data = json.loads(line[6:])
+                except json.JSONDecodeError:
+                    data = {}
                 content = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
                 if content:
                     yield content

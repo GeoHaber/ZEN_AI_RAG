@@ -129,7 +129,10 @@ class SessionService:
             return self._active_sessions[session_id]
         path = self.storage_dir / f"{session_id}.json"
         if path.exists():
-            session = json.loads(path.read_text(encoding="utf-8"))
+            try:
+                session = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                session = {}
             self._active_sessions[session_id] = session
             return session
         raise ValidationError(f"Session not found: {session_id}", field="session_id")

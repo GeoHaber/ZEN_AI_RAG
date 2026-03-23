@@ -301,7 +301,10 @@ class TestEdgeCaseInputs:
 
         # Should serialize and deserialize
         serialized = json.dumps(nested)
-        deserialized = json.loads(serialized)
+        try:
+            deserialized = json.loads(serialized)
+        except json.JSONDecodeError:
+            deserialized = {}
         assert deserialized == nested
 
     def test_binary_in_string(self):

@@ -105,7 +105,10 @@ class SwarmTuner:
         config_data = {}
         if self.config_path.exists():
             with open(self.config_path, "r") as f:
-                config_data = json.load(f)
+                try:
+                    config_data = json.load(f)
+                except json.JSONDecodeError:
+                    config_data = {}
 
         if "zena_mode" not in config_data:
             config_data["zena_mode"] = {}

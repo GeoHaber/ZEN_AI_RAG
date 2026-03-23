@@ -266,7 +266,7 @@ class ModelMetadata:
                     self.freshness_rating = "stable"
                 else:
                     self.freshness_rating = "dated"
-            except:
+            except Exception:
                 pass
 
         # Calculate popularity metrics
