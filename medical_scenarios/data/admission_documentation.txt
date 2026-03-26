@@ -1,0 +1,11 @@
+Admission Documentation Requirements
+
+On patient admission the following must be documented:
+- Identity and demographic data; next of kin or emergency contact.
+- Presenting complaint and history of present illness.
+- Allergies and current medications (reconciliation).
+- Vital signs and initial physical examination findings.
+- Preliminary diagnosis and plan (investigations, treatment, level of care).
+- Consent for treatment and, if applicable, consent for procedures.
+- Nursing assessment and care plan.
+- Time and signature of admitting clinician. All entries must be dated and signed.

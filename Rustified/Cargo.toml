@@ -1,0 +1,20 @@
+[package]
+name = "rag_rat_launcher"
+version = "3.3.0"
+edition = "2021"
+authors = ["RAG_RAT Team"]
+description = "RAG_RAT Pro — Launcher executable for local Streamlit app"
+
+[[bin]]
+name = "rag_rat"
+path = "src/main.rs"
+
+[dependencies]
+# Minimal dependencies for launcher
+# No external deps needed — uses stdlib for networking & process spawning
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true  # Strip symbols for smaller binary

@@ -1,0 +1,10 @@
+Standard Precautions for Infection Control
+
+Standard precautions apply to all patients regardless of diagnosis. They include:
+- Hand hygiene before and after patient contact and after contact with potentially contaminated surfaces.
+- Use of personal protective equipment (PPE): gloves for contact with body fluids or contaminated surfaces; gown and face protection when splash or spray is likely.
+- Safe handling of sharps; no recapping; dispose in puncture-resistant containers.
+- Respiratory hygiene and cough etiquette (tissue, mask if coughing).
+- Environmental cleaning and disinfection of patient equipment and high-touch surfaces.
+- Safe handling of linen and waste.
+Transmission-based precautions (contact, droplet, airborne) are added when specific pathogens are known or suspected.

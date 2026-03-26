@@ -1,0 +1,1762 @@
+{
+  "wired": [
+    {
+      "url": "/api/chat",
+      "cardinality": "1:many",
+      "ui_actions": [
+        {
+          "file": "static/voice_lab.html",
+          "line": 277,
+          "call_type": "fetch",
+          "url": "/api/chat",
+          "method": "POST"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 163,
+          "route": "/api/chat",
+          "method": "POST",
+          "framework": "fastapi",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 591,
+          "route": "/api/chat",
+          "method": "POST",
+          "framework": "fastapi",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 163,
+          "route": "/api/chat",
+          "method": "POST",
+          "framework": "express",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 591,
+          "route": "/api/chat",
+          "method": "POST",
+          "framework": "express",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/handlers/chat.py",
+          "line": 15,
+          "route": "/api/chat",
+          "method": "ANY",
+          "framework": "xray_custom",
+          "receives_input": false
+        }
+      ]
+    },
+    {
+      "url": "/api/devices",
+      "cardinality": "1:many",
+      "ui_actions": [
+        {
+          "file": "static/voice_lab.html",
+          "line": 130,
+          "call_type": "fetch",
+          "url": "/api/devices",
+          "method": "UNKNOWN"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 387,
+          "route": "/api/devices",
+          "method": "GET",
+          "framework": "fastapi",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 387,
+          "route": "/api/devices",
+          "method": "GET",
+          "framework": "express",
+          "receives_input": false
+        }
+      ]
+    },
+    {
+      "url": "/api/record",
+      "cardinality": "1:1",
+      "ui_actions": [
+        {
+          "file": "static/voice_lab.html",
+          "line": 242,
+          "call_type": "fetch",
+          "url": "/api/record",
+          "method": "POST"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "zena_mode/handlers/voice.py",
+          "line": 68,
+          "route": "/api/record",
+          "method": "ANY",
+          "framework": "xray_custom",
+          "receives_input": false
+        }
+      ]
+    },
+    {
+      "url": "/api/test-llm",
+      "cardinality": "1:many",
+      "ui_actions": [
+        {
+          "file": "static/voice_lab.html",
+          "line": 211,
+          "call_type": "fetch",
+          "url": "/api/test-llm",
+          "method": "UNKNOWN"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 249,
+          "route": "/api/test-llm",
+          "method": "GET",
+          "framework": "fastapi",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 249,
+          "route": "/api/test-llm",
+          "method": "GET",
+          "framework": "express",
+          "receives_input": false
+        },
+        {
+          "file": "zena_mode/handlers/health.py",
+          "line": 33,
+          "route": "/api/test-llm",
+          "method": "ANY",
+          "framework": "xray_custom",
+          "receives_input": false
+        }
+      ]
+    },
+    {
+      "url": "/api/tts",
+      "cardinality": "1:many",
+      "ui_actions": [
+        {
+          "file": "static/voice_lab.html",
+          "line": 384,
+          "call_type": "fetch",
+          "url": "/api/tts",
+          "method": "POST"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 552,
+          "route": "/api/tts",
+          "method": "POST",
+          "framework": "fastapi",
+          "receives_input": true
+        },
+        {
+          "file": "zena_mode/asgi_server.py",
+          "line": 552,
+          "route": "/api/tts",
+          "method": "POST",
+          "framework": "express",
+          "receives_input": true
+        }
+      ]
+    }
+  ],
+  "orphan_ui": [
+    {
+      "file": "static/voice_lab.html",
+      "line": 165,
+      "call_type": "fetch",
+      "url": "/api/test-audio",
+      "method": "POST"
+    },
+    {
+      "file": "static/voice_lab.html",
+      "line": 185,
+      "call_type": "fetch",
+      "url": "/api/test-loopback",
+      "method": "POST"
+    },
+    {
+      "file": "static/voice_lab.html",
+      "line": 307,
+      "call_type": "fetch",
+      "url": "/api/tts-voices",
+      "method": "UNKNOWN"
+    }
+  ],
+  "orphan_backend": [
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 625,
+      "route": "/",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 625,
+      "route": "/",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/server_stub.py",
+      "line": 38,
+      "route": "/",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 123,
+      "route": "/api/chat/swarm",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 123,
+      "route": "/api/chat/swarm",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 570,
+      "route": "/api/stt",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 570,
+      "route": "/api/stt",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": true
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 470,
+      "route": "/api/version",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 470,
+      "route": "/api/version",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 81,
+      "route": "/detokenize",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 81,
+      "route": "/detokenize",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 53,
+      "route": "/health",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 53,
+      "route": "/health",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 54,
+      "route": "/health",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "tools/run_local_check.py",
+      "line": 12,
+      "route": "/health",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 240,
+      "route": "/health",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 240,
+      "route": "/health",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/health.py",
+      "line": 19,
+      "route": "/health",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 280,
+      "route": "/list",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 280,
+      "route": "/list",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/models.py",
+      "line": 21,
+      "route": "/list",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 76,
+      "route": "/metrics",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 76,
+      "route": "/metrics",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 269,
+      "route": "/metrics",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 269,
+      "route": "/metrics",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/health.py",
+      "line": 49,
+      "route": "/metrics",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/server_stub.py",
+      "line": 45,
+      "route": "/models/available",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "tests/test_async_model_management.py",
+      "line": 40,
+      "route": "/models/download",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 312,
+      "route": "/models/download",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 312,
+      "route": "/models/download",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/handlers/models.py",
+      "line": 51,
+      "route": "/models/download",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "tests/test_async_model_management.py",
+      "line": 15,
+      "route": "/models/load",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 290,
+      "route": "/models/popular",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 290,
+      "route": "/models/popular",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/handlers/models.py",
+      "line": 28,
+      "route": "/models/popular",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 301,
+      "route": "/models/search",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 301,
+      "route": "/models/search",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": true
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 258,
+      "route": "/startup/progress",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 258,
+      "route": "/startup/progress",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/health.py",
+      "line": 40,
+      "route": "/startup/progress",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 327,
+      "route": "/swap",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 327,
+      "route": "/swap",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/orchestration.py",
+      "line": 19,
+      "route": "/swap",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 354,
+      "route": "/swarm/launch",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 354,
+      "route": "/swarm/launch",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/orchestration.py",
+      "line": 43,
+      "route": "/swarm/launch",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 111,
+      "route": "/swarm/list",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 75,
+      "route": "/swarm/scale",
+      "method": "GET",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 336,
+      "route": "/swarm/scale",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 336,
+      "route": "/swarm/scale",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/orchestration.py",
+      "line": 31,
+      "route": "/swarm/scale",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "ui/testing.py",
+      "line": 14,
+      "route": "/test/click/{element_id}",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "ui/testing.py",
+      "line": 14,
+      "route": "/test/click/{element_id}",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "ui/testing.py",
+      "line": 53,
+      "route": "/test/send",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "ui/testing.py",
+      "line": 53,
+      "route": "/test/send",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "ui/testing.py",
+      "line": 48,
+      "route": "/test/state",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "ui/testing.py",
+      "line": 48,
+      "route": "/test/state",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 55,
+      "route": "/tokenize",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 55,
+      "route": "/tokenize",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 196,
+      "route": "/v1/cache/clear",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 196,
+      "route": "/v1/cache/clear",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/chat.py",
+      "line": 44,
+      "route": "/v1/chat/completions",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/chat.py",
+      "line": 44,
+      "route": "/v1/chat/completions",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 207,
+      "route": "/v1/compact",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 207,
+      "route": "/v1/compact",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/chat.py",
+      "line": 125,
+      "route": "/v1/completions",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/chat.py",
+      "line": 125,
+      "route": "/v1/completions",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 94,
+      "route": "/v1/count_tokens",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 94,
+      "route": "/v1/count_tokens",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 225,
+      "route": "/v1/diagnostics",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 225,
+      "route": "/v1/diagnostics",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 243,
+      "route": "/v1/diagnostics/crashes",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 243,
+      "route": "/v1/diagnostics/crashes",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 252,
+      "route": "/v1/diagnostics/profiles",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 252,
+      "route": "/v1/diagnostics/profiles",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 24,
+      "route": "/v1/embeddings",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/inference.py",
+      "line": 24,
+      "route": "/v1/embeddings",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 40,
+      "route": "/v1/feedback",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 40,
+      "route": "/v1/feedback",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 104,
+      "route": "/v1/feedback/adjustments",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 104,
+      "route": "/v1/feedback/adjustments",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 85,
+      "route": "/v1/feedback/history",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 85,
+      "route": "/v1/feedback/history",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 95,
+      "route": "/v1/feedback/model/{model_name}",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 95,
+      "route": "/v1/feedback/model/{model_name}",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 79,
+      "route": "/v1/feedback/stats",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 79,
+      "route": "/v1/feedback/stats",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/chat.py",
+      "line": 194,
+      "route": "/v1/infill",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/chat.py",
+      "line": 194,
+      "route": "/v1/infill",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 266,
+      "route": "/v1/lora/load",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 266,
+      "route": "/v1/lora/load",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 335,
+      "route": "/v1/lora/status",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 335,
+      "route": "/v1/lora/status",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 307,
+      "route": "/v1/lora/unload",
+      "method": "DELETE",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 307,
+      "route": "/v1/lora/unload",
+      "method": "DELETE",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 527,
+      "route": "/v1/marketplace/curated",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 527,
+      "route": "/v1/marketplace/curated",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 514,
+      "route": "/v1/marketplace/hardware",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 514,
+      "route": "/v1/marketplace/hardware",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 589,
+      "route": "/v1/marketplace/local",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 589,
+      "route": "/v1/marketplace/local",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 542,
+      "route": "/v1/marketplace/recommended",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 542,
+      "route": "/v1/marketplace/recommended",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 574,
+      "route": "/v1/marketplace/search",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 574,
+      "route": "/v1/marketplace/search",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 607,
+      "route": "/v1/marketplace/summary",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 607,
+      "route": "/v1/marketplace/summary",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 561,
+      "route": "/v1/marketplace/trending",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 561,
+      "route": "/v1/marketplace/trending",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 77,
+      "route": "/v1/metrics",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 77,
+      "route": "/v1/metrics",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 53,
+      "route": "/v1/model/info",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 53,
+      "route": "/v1/model/info",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 44,
+      "route": "/v1/models",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 44,
+      "route": "/v1/models",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 621,
+      "route": "/v1/models/{model_id}",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 621,
+      "route": "/v1/models/{model_id}",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 258,
+      "route": "/v1/models/available",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 258,
+      "route": "/v1/models/available",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 231,
+      "route": "/v1/models/classify-difficulty",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 231,
+      "route": "/v1/models/classify-difficulty",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 192,
+      "route": "/v1/models/difficulty",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 192,
+      "route": "/v1/models/difficulty",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 166,
+      "route": "/v1/models/domains",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 166,
+      "route": "/v1/models/domains",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 425,
+      "route": "/v1/models/downloads",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 425,
+      "route": "/v1/models/downloads",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 121,
+      "route": "/v1/models/history",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 121,
+      "route": "/v1/models/history",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 170,
+      "route": "/v1/models/history/compare",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 170,
+      "route": "/v1/models/history/compare",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 266,
+      "route": "/v1/models/history/trend",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/feedback_routes.py",
+      "line": 266,
+      "route": "/v1/models/history/trend",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 455,
+      "route": "/v1/models/performance",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 455,
+      "route": "/v1/models/performance",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 293,
+      "route": "/v1/models/preset/{preset_name}",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 293,
+      "route": "/v1/models/preset/{preset_name}",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 287,
+      "route": "/v1/models/presets",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 287,
+      "route": "/v1/models/presets",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 435,
+      "route": "/v1/models/profiles",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 435,
+      "route": "/v1/models/profiles",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 351,
+      "route": "/v1/models/pull",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": true
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 351,
+      "route": "/v1/models/pull",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": true
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 410,
+      "route": "/v1/models/pull/{task_id}",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 410,
+      "route": "/v1/models/pull/{task_id}",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 559,
+      "route": "/v1/models/rag/rankings",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 559,
+      "route": "/v1/models/rag/rankings",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 536,
+      "route": "/v1/models/rag/status",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 536,
+      "route": "/v1/models/rag/status",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 217,
+      "route": "/v1/models/reload",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 217,
+      "route": "/v1/models/reload",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 48,
+      "route": "/v1/models/route",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 48,
+      "route": "/v1/models/route",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 456,
+      "route": "/v1/models/route/rag",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 456,
+      "route": "/v1/models/route/rag",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 323,
+      "route": "/v1/models/route/strategy",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 323,
+      "route": "/v1/models/route/strategy",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 305,
+      "route": "/v1/models/strategies",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 305,
+      "route": "/v1/models/strategies",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 399,
+      "route": "/v1/models/strategies/custom",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 399,
+      "route": "/v1/models/strategies/custom",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 444,
+      "route": "/v1/models/strategies/custom/{strategy_name}",
+      "method": "DELETE",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 444,
+      "route": "/v1/models/strategies/custom/{strategy_name}",
+      "method": "DELETE",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 268,
+      "route": "/v1/models/swap-cost",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 268,
+      "route": "/v1/models/swap-cost",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 255,
+      "route": "/v1/models/swap-history",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/routing_routes.py",
+      "line": 255,
+      "route": "/v1/models/swap-history",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 141,
+      "route": "/v1/models/switch",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/models.py",
+      "line": 141,
+      "route": "/v1/models/switch",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/rag_chat.py",
+      "line": 82,
+      "route": "/v1/rag/chat",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/rag_chat.py",
+      "line": 82,
+      "route": "/v1/rag/chat",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 444,
+      "route": "/v1/state/{slot_name}",
+      "method": "DELETE",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 444,
+      "route": "/v1/state/{slot_name}",
+      "method": "DELETE",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 386,
+      "route": "/v1/state/load",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 386,
+      "route": "/v1/state/load",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 350,
+      "route": "/v1/state/save",
+      "method": "POST",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 350,
+      "route": "/v1/state/save",
+      "method": "POST",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 427,
+      "route": "/v1/state/slots",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 427,
+      "route": "/v1/state/slots",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 159,
+      "route": "/v1/stats",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 159,
+      "route": "/v1/stats",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 461,
+      "route": "/v1/system/hardware",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "server/routers/admin.py",
+      "line": 461,
+      "route": "/v1/system/hardware",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/voice.py",
+      "line": 18,
+      "route": "/voice/devices",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 399,
+      "route": "/voice/lab",
+      "method": "GET",
+      "framework": "fastapi",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/asgi_server.py",
+      "line": 399,
+      "route": "/voice/lab",
+      "method": "GET",
+      "framework": "express",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/voice.py",
+      "line": 45,
+      "route": "/voice/lab",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/voice.py",
+      "line": 132,
+      "route": "/voice/speak",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/voice.py",
+      "line": 34,
+      "route": "/voice/status",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/voice.py",
+      "line": 114,
+      "route": "/voice/synthesize",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/handlers/voice.py",
+      "line": 100,
+      "route": "/voice/transcribe",
+      "method": "ANY",
+      "framework": "xray_custom",
+      "receives_input": false
+    },
+    {
+      "file": "zena_mode/gateway_whatsapp.py",
+      "line": 30,
+      "route": "/webhook",
+      "method": "POST",
+      "framework": "flask",
+      "receives_input": true
+    }
+  ],
+  "summary": {
+    "total_ui_actions": 8,
+    "total_handlers": 205,
+    "wired_count": 5,
+    "orphan_ui_count": 3,
+    "orphan_backend_count": 192,
+    "cardinality": {
+      "1:1": 1,
+      "1:many": 4,
+      "many:1": 0
+    }
+  },
+  "frameworks_detected": [
+    "express",
+    "fastapi",
+    "flask",
+    "xray_custom"
+  ]
+}

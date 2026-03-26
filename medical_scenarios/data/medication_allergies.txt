@@ -1,0 +1,9 @@
+Recording and Communicating Medication Allergies
+
+Medication allergies must be recorded and communicated as follows:
+- Document in the patient record: allergen name, reaction type (e.g. rash, anaphylaxis), and date if known.
+- Enter in the pharmacy/EMR allergy module and mark as verified where possible.
+- Display allergies prominently (e.g. wristband, chart cover, EHR banner).
+- Re-check allergies at each encounter and before prescribing or administering any drug.
+- Communicate allergies during handover and when transferring care.
+- If reaction is unclear (e.g. intolerance vs allergy), document as reported and clarify with patient or family. Never dismiss an allergy without documentation.

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from zena_mode.handlers.base import BaseZenHandler
 from zena_mode.voice_manager import get_voice_manager
@@ -57,12 +58,89 @@ class VoiceHandler:
                 handler.send_json_response(500, {"error": str(e)})
             return True
 
+        # GET /api/tts-voices - List available TTS voices (edge-tts neural)
+        elif path == "/api/tts-voices":
+            try:
+                from Core.tts_engine import TTSEngine
+                loop = asyncio.new_event_loop()
+                try:
+                    voices = loop.run_until_complete(TTSEngine.list_voices())
+                finally:
+                    loop.close()
+                result = {
+                    "voices": [
+                        {"id": v.get("name", ""), "name": v.get("name", ""), "gender": v.get("gender", "Unknown")}
+                        for v in voices
+                    ]
+                }
+                handler.send_json_response(200, result)
+            except Exception as e:
+                logger.error(f"TTS voices listing failed: {e}")
+                handler.send_json_response(500, {"error": str(e), "voices": []})
+            return True
+
         return False
 
     @staticmethod
     def handle_post(handler: BaseZenHandler):
         """Routing for POST requests related to voice."""
         path = handler.path
+
+        # POST /api/test-audio - Play a test tone on the selected speaker
+        if path == "/api/test-audio":
+            try:
+                import sounddevice as sd
+                from zena_mode.production_microphone_healer import MicrophoneHealer
+
+                params = handler.parse_json_body()
+                device_id = params.get("device_id")
+                if device_id is not None:
+                    device_id = int(device_id)
+
+                healer = MicrophoneHealer()
+                tone_bytes = healer.generate_test_tone(frequency=1000, duration=0.3)
+
+                import io
+                from scipy.io import wavfile
+
+                wav_buf = io.BytesIO(tone_bytes)
+                rate, audio = wavfile.read(wav_buf)
+                audio_float = audio.astype("float32") / 32768.0
+
+                sd.play(audio_float, samplerate=rate, device=device_id)
+                sd.wait()
+                handler.send_json_response(200, {"status": "ok", "msg": "Test tone played"})
+            except Exception as e:
+                logger.error(f"test-audio failed: {e}")
+                handler.send_json_response(500, {"status": "error", "msg": str(e)})
+            return True
+
+        # POST /api/test-loopback - Play tone and listen for it
+        elif path == "/api/test-loopback":
+            try:
+                from zena_mode.production_microphone_healer import MicrophoneHealer
+
+                params = handler.parse_json_body()
+                input_id = params.get("input_id")
+                output_id = params.get("output_id")
+                if input_id is not None:
+                    input_id = int(input_id)
+                if output_id is not None:
+                    output_id = int(output_id)
+
+                device_id = input_id if input_id is not None else (output_id or 0)
+                healer = MicrophoneHealer()
+                success, confidence, reason = healer.verify_loopback(device_id)
+                handler.send_json_response(200, {
+                    "status": "ok",
+                    "success": success,
+                    "magnitude": confidence * 100,
+                    "msg": reason,
+                })
+            except Exception as e:
+                logger.error(f"test-loopback failed: {e}")
+                handler.send_json_response(500, {"status": "error", "msg": str(e)})
+            return True
 
         # POST /api/record - Record audio and transcribe
         if path == "/api/record":

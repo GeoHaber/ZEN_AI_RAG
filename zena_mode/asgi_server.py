@@ -567,6 +567,79 @@ async def text_to_speech(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/tts-voices")
+async def tts_voices():
+    """List available TTS voices from edge-tts."""
+    try:
+        from Core.tts_engine import TTSEngine
+
+        voices = await TTSEngine.list_voices()
+        return {
+            "voices": [
+                {"id": v.get("name", ""), "name": v.get("name", ""), "gender": v.get("gender", "Unknown")}
+                for v in voices
+            ]
+        }
+    except Exception as e:
+        logger.error(f"tts-voices failed: {e}")
+        return {"voices": [], "error": str(e)}
+
+
+@app.post("/api/test-audio")
+async def test_audio(request: Request):
+    """Play a test tone on the selected output device."""
+    try:
+        import sounddevice as sd
+        from zena_mode.production_microphone_healer import MicrophoneHealer
+        import io
+        from scipy.io import wavfile
+
+        data = await request.json()
+        device_id = data.get("device_id")
+        if device_id is not None:
+            device_id = int(device_id)
+
+        healer = MicrophoneHealer()
+        tone_bytes = healer.generate_test_tone(frequency=1000, duration=0.3)
+        wav_buf = io.BytesIO(tone_bytes)
+        rate, audio = wavfile.read(wav_buf)
+        audio_float = audio.astype("float32") / 32768.0
+        sd.play(audio_float, samplerate=rate, device=device_id)
+        sd.wait()
+        return {"status": "ok", "msg": "Test tone played"}
+    except Exception as e:
+        logger.error(f"test-audio failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/test-loopback")
+async def test_loopback(request: Request):
+    """Play tone and record to verify loopback."""
+    try:
+        from zena_mode.production_microphone_healer import MicrophoneHealer
+
+        data = await request.json()
+        input_id = data.get("input_id")
+        output_id = data.get("output_id")
+        if input_id is not None:
+            input_id = int(input_id)
+        if output_id is not None:
+            output_id = int(output_id)
+
+        device_id = input_id if input_id is not None else (output_id or 0)
+        healer = MicrophoneHealer()
+        success, confidence, reason = healer.verify_loopback(device_id)
+        return {
+            "status": "ok",
+            "success": success,
+            "magnitude": confidence * 100,
+            "msg": reason,
+        }
+    except Exception as e:
+        logger.error(f"test-loopback failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/stt")
 async def speech_to_text(request: Request):
     """Convert speech to text."""

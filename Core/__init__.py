@@ -19,6 +19,30 @@ Industry-best RAG enhancements (2024-2026 SOTA):
   query_router — Adaptive intent-based pipeline routing
   parent_document_retrieval — Small-to-big hierarchical retrieval
   graph_rag — Microsoft-style community detection & global Q&A
+
+Modules ported from ZEN_RAG (2026-03):
+  answer_verification_sota — SOTA answer verification
+  chunking_strategies — Advanced chunking strategies
+  conflict_resolver — Conflict resolution engine
+  data_analyst_agent — SQL data analysis agent
+  deduplication — 4-tier deduplication (hash→boilerplate→structural→semantic)
+  deep_risk_analyzer — Risk assessment
+  enhanced_rag_wrapper — SOTA orchestration wrapper
+  evaluation_harness — Evaluation harness
+  fact_checker — Fact validation
+  human_loop_resolver — Human-in-the-loop conflict resolution
+  ingestion_conflict_detector — At-ingestion conflict detection
+  llm_updater — Model update management
+  model_marketplace — HuggingFace model marketplace
+  query_processor — Query processing utilities
+  reranker — Base reranker
+  research_agent — Multi-step research workflows
+  semantic_cache — Semantic caching
+  sql_router — SQL query routing
+  stat_pipeline — Statistical analysis pipeline (STAT)
+  stat_router — STAT destination routing
+  streaming — Streaming utilities
+  tts_engine — Text-to-speech engine
 """
 
 from Core.models import (
@@ -103,4 +127,27 @@ __all__ = [
     "query_router",
     "parent_document_retrieval",
     "graph_rag",
+    # Modules ported from ZEN_RAG (lazy-importable)
+    "answer_verification_sota",
+    "chunking_strategies",
+    "conflict_resolver",
+    "data_analyst_agent",
+    "deduplication",
+    "deep_risk_analyzer",
+    "enhanced_rag_wrapper",
+    "evaluation_harness",
+    "fact_checker",
+    "human_loop_resolver",
+    "ingestion_conflict_detector",
+    "llm_updater",
+    "model_marketplace",
+    "query_processor",
+    "reranker",
+    "research_agent",
+    "semantic_cache",
+    "sql_router",
+    "stat_pipeline",
+    "stat_router",
+    "streaming",
+    "tts_engine",
 ]

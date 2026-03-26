@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zena Chatbot Demo</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Main Page Content Strategy -->
+    <main
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f4f8; font-family: 'Inter', sans-serif; text-align: center; padding: 20px;">
+        <h1 style="color: #1e293b; margin-bottom: 10px;">Spitalul Clinic Județean de Urgență Bihor</h1>
+        <p style="color: #64748b; max-width: 600px;">Aceasta este o pagină demo pentru chatbot-ul Zena. Interacționați
+            cu widget-ul din colțul din dreapta jos.</p>
+    </main>
+
+    <!-- Zena Chat Widget -->
+    <div id="zena-widget" class="zena-widget">
+
+        <!-- Toggle Button (Floating Action Button) -->
+        <button id="zena-toggle-btn" class="zena-toggle-btn" aria-label="Deschide chatul">
+            <div class="zena-avatar-sm">
+                <img src="https://ui-avatars.com/api/?name=Zena+Bot&background=0284c7&color=fff" alt="Zena">
+            </div>
+            <span class="zena-btn-text">Ai nevoie de ajutor?</span>
+            <i class="ri-chat-3-fill"></i>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="zena-window" class="zena-window hidden">
+            <!-- Header -->
+            <header class="zena-header">
+                <div class="zena-header-info">
+                    <div class="zena-avatar-lg">
+                        <i class="ri-customer-service-2-fill" style="font-size: 28px;"></i>
+                        <span class="zena-status-dot"></span>
+                    </div>
+                    <div>
+                        <h2 class="zena-name">Zena</h2>
+                        <span class="zena-role">Asistent Virtual</span>
+                    </div>
+                </div>
+                <div class="zena-header-actions">
+                    <button id="zena-mic-btn" class="zena-icon-btn" aria-label="Activează vocea" title="Comandă Vocală">
+                        <i class="ri-mic-line"></i>
+                    </button>
+                    <button id="zena-close-btn" class="zena-icon-btn" aria-label="Închide" title="Închide Chatul">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Messages Area -->
+            <div id="zena-messages" class="zena-messages">
+                <!-- Welcome Message (Injected by JS) -->
+            </div>
+
+            <!-- Quick Actions (Suggested Questions) -->
+            <div id="zena-quick-actions" class="zena-quick-actions">
+                <!-- Buttons injected by JS -->
+            </div>
+
+            <!-- Input Area -->
+            <footer class="zena-input-area">
+                <button id="zena-mic-input-btn" class="zena-icon-btn-secondary" aria-label="Dictare mesaj">
+                    <i class="ri-mic-line"></i>
+                </button>
+                <input type="text" id="zena-input" placeholder="Scrie un mesaj..." autocomplete="off">
+                <button id="zena-send-btn" aria-label="Trimite">
+                    <i class="ri-send-plane-fill"></i>
+                </button>
+            </footer>
+
+            <div class="zena-footer-note">
+                Powered by AI &bull; Spitalul Județean
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

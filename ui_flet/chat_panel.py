@@ -5,6 +5,10 @@ ui_flet/chat_panel.py — Zena RAG Chat Panel
 
 Provides the primary chat interface: message list, streaming responses,
 RAG source display, typing indicator, and the floating input bar.
+
+Two builders:
+- ``build_chat_panel``    — legacy (dict-based state + send_fn callback)
+- ``build_chat_panel_v2`` — modern (``AppState`` + ``ConcreteBackend``)
 """
 
 from __future__ import annotations
@@ -386,3 +390,215 @@ def build_chat_panel(
     query_field.on_submit = on_send
 
     return _build_chat_panel_part2(history, messages_list, query_field, thinking)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  V2 BUILDER — works with AppState + ConcreteBackend
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def _rag_metadata_card(result) -> ft.Container:
+    """Render RAG metadata (mode, confidence, hallucination, stages)."""
+    rows = []
+    if result.mode:
+        rows.append(ft.Text(f"Mode: {result.mode}", size=10, color=TH.dim))
+    if result.confidence:
+        pct = f"{result.confidence:.0%}"
+        rows.append(ft.Text(f"Confidence: {pct}", size=10, color=TH.success))
+    if result.hallucination_score:
+        h_pct = f"{result.hallucination_score:.0%}"
+        color = TH.error_c if result.hallucination_score > 0.5 else TH.warning_c
+        rows.append(ft.Text(f"Hallucination risk: {h_pct}", size=10, color=color))
+    if result.conflicts:
+        rows.append(
+            ft.Text(f"⚠ {len(result.conflicts)} conflict(s)", size=10, color=TH.warning_c)
+        )
+    if result.stages:
+        rows.append(
+            ft.Text(f"Stages: {' → '.join(result.stages)}", size=10, color=TH.dim)
+        )
+    if result.latency_ms:
+        rows.append(ft.Text(f"Latency: {result.latency_ms:.0f}ms", size=10, color=TH.dim))
+
+    if not rows:
+        return ft.Container()
+    return ft.Container(
+        content=ft.Column(rows, spacing=2),
+        bgcolor=TH.bar_bg,
+        border_radius=8,
+        padding=ft.Padding.symmetric(vertical=6, horizontal=10),
+    )
+
+
+def build_chat_panel_v2(
+    page: ft.Page,
+    state,
+    backend,
+) -> ft.Column:
+    """Build chat panel using AppState + ConcreteBackend.
+
+    Parameters
+    ----------
+    page   : Flet page
+    state  : ``AppState`` instance
+    backend: ``ConcreteBackend`` instance from ``backend_impl``
+    """
+    messages_list = ft.ListView(
+        controls=[],
+        expand=True,
+        spacing=10,
+        padding=10,
+        auto_scroll=True,
+    )
+
+    thinking = _thinking_indicator()
+
+    query_field = ft.TextField(
+        hint_text="Ask Zena about your data…",
+        prefix_icon=ft.Icons.CHAT_BUBBLE_OUTLINE,
+        border_color=TH.border,
+        color=TH.text,
+        focused_border_color=TH.accent,
+        expand=True,
+        autofocus=True,
+    )
+
+    # Populate existing messages
+    history = state.messages or []
+    if history:
+        messages_list.controls = [_chat_bubble(m) for m in history]
+    else:
+        def _on_chip_initial(text):
+            query_field.value = text
+            _on_send(None)
+        messages_list.controls = [_welcome_message(on_chip_click=_on_chip_initial)]
+
+    async def _send_message(query: str):
+        if not query or not query.strip():
+            return
+        user_msg = {"role": "user", "content": query}
+        state.messages.append(user_msg)
+        messages_list.controls.append(_chat_bubble(user_msg))
+        thinking.visible = True
+        page.update()
+
+        try:
+            result = await backend.chat(
+                query,
+                session_id=state.session_id,
+                temperature=state.setting_temperature,
+                max_tokens=state.setting_max_tokens,
+                rag_enabled=state.rag_enabled,
+                rag_mode=state.rag_pipeline_mode,
+            )
+            ai_msg = {
+                "role": "assistant",
+                "content": result.answer,
+                "sources": result.sources,
+            }
+            state.messages.append(ai_msg)
+            messages_list.controls.append(_chat_bubble(ai_msg))
+            meta = _rag_metadata_card(result)
+            if meta.content:
+                messages_list.controls.append(meta)
+        except Exception as exc:
+            err_msg = {"role": "system", "content": f"Error: {exc}"}
+            messages_list.controls.append(_chat_bubble(err_msg))
+        finally:
+            thinking.visible = False
+            page.update()
+
+    async def _send_council(query: str):
+        user_msg = {"role": "user", "content": f"[Council] {query}"}
+        state.messages.append(user_msg)
+        messages_list.controls.append(_chat_bubble(user_msg))
+        thinking.visible = True
+        page.update()
+        try:
+            result = await backend.council_chat(query)
+            consensus = result.get("consensus_answer", "No consensus reached.")
+            individuals = result.get("individual_responses", [])
+            ai_msg = {"role": "assistant", "content": consensus}
+            state.messages.append(ai_msg)
+            messages_list.controls.append(_chat_bubble(ai_msg))
+            if individuals:
+                expert_texts = []
+                for resp in individuals[:5]:
+                    name = resp.get("expert", resp.get("name", "Expert"))
+                    answer = resp.get("answer", resp.get("response", ""))[:200]
+                    expert_texts.append(f"**{name}:** {answer}")
+                detail_msg = {"role": "system", "content": "\n\n".join(expert_texts)}
+                messages_list.controls.append(_chat_bubble(detail_msg))
+        except Exception as exc:
+            err_msg = {"role": "system", "content": f"Council error: {exc}"}
+            messages_list.controls.append(_chat_bubble(err_msg))
+        finally:
+            thinking.visible = False
+            page.update()
+
+    def _on_send(e):
+        text = query_field.value
+        if not text or not text.strip():
+            return
+        query_field.value = ""
+        page.update()
+        if state.council_mode:
+            page.run_task(_send_council, text)
+        else:
+            page.run_task(_send_message, text)
+
+    query_field.on_submit = _on_send
+
+    def on_clear(e):
+        state.messages.clear()
+        def _on_chip_reset(text):
+            query_field.value = text
+            _on_send(None)
+        messages_list.controls = [_welcome_message(on_chip_click=_on_chip_reset)]
+        page.update()
+
+    rag_stats = ft.Text("", size=11, color=TH.muted)
+    if state.rag_source_name:
+        rag_stats.value = f"📚 {state.rag_source_name}"
+        n = len(state.rag_sources)
+        if n:
+            rag_stats.value += f" · {n} chunks"
+
+    mode_chips = ft.Row(
+        [
+            ft.Container(
+                content=ft.Text(
+                    f"{'Enhanced' if state.rag_pipeline_mode == 'enhanced' else 'Classic'} RAG",
+                    size=10,
+                    color=TH.accent if state.rag_enabled else TH.muted,
+                ),
+                bgcolor=TH.chip,
+                border_radius=12,
+                padding=ft.Padding.symmetric(vertical=2, horizontal=8),
+            ),
+            ft.Container(
+                content=ft.Text(
+                    "Council" if state.council_mode else "Direct",
+                    size=10,
+                    color=TH.accent2 if state.council_mode else TH.muted,
+                ),
+                bgcolor=TH.chip,
+                border_radius=12,
+                padding=ft.Padding.symmetric(vertical=2, horizontal=8),
+            ),
+        ],
+        spacing=4,
+    )
+
+    return ft.Column(
+        [
+            _chat_header(rag_stats, on_clear),
+            mode_chips,
+            ft.Divider(color=TH.divider, height=10),
+            messages_list,
+            thinking,
+            _chat_input_bar(query_field, _on_send),
+        ],
+        spacing=8,
+        expand=True,
+    )

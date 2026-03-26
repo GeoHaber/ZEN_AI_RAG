@@ -127,6 +127,20 @@ class TH(metaclass=_THMeta):
         cls._dark = dark
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Flet Theme builder
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def build_flet_theme(dark: bool = True) -> ft.Theme:
+    """Return a Flet ``Theme`` object matching the current TH palette."""
+    palette = TH._DARK if dark else TH._LIGHT
+    return ft.Theme(
+        color_scheme_seed=palette["accent"],
+        font_family=FONT_FAMILY,
+    )
+
+
 def setup_page_theme(page: ft.Page) -> None:
     """Apply the TH colour scheme to a Flet page."""
     page.title = "ZenAI — Intelligent Assistant"

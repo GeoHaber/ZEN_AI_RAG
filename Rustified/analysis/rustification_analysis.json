@@ -1,0 +1,420 @@
+{
+  "analysis_date": "C:\\Users\\Yo930\\Desktop\\_Python\\Projects\\RAG_RAT",
+  "summary": {
+    "total_files": 220,
+    "total_lines": 75479,
+    "total_functions": 1855,
+    "total_classes": 490,
+    "avg_lines_per_file": 343,
+    "avg_complexity": 36
+  },
+  "async_count": 750,
+  "priority_modules": [
+    {
+      "module": "tests/test_api_server_v35_features.py",
+      "score": 8272,
+      "reasons": [
+        "async (79 funcs)",
+        "cpu-intensive (1 types)",
+        "i/o (4 types)",
+        "high-complexity (929)"
+      ]
+    },
+    {
+      "module": "_archive/api_server_monolith_backup.py",
+      "score": 6763,
+      "reasons": [
+        "async (63 funcs)",
+        "cpu-intensive (3 types)",
+        "i/o (4 types)",
+        "high-complexity (231)"
+      ]
+    },
+    {
+      "module": "tests/test_chat_with_data.py",
+      "score": 4110,
+      "reasons": [
+        "async (39 funcs)",
+        "i/o (4 types)",
+        "high-complexity (103)"
+      ]
+    },
+    {
+      "module": "tests/test_adapter_behavior.py",
+      "score": 3514,
+      "reasons": [
+        "async (33 funcs)",
+        "i/o (4 types)",
+        "high-complexity (147)"
+      ]
+    },
+    {
+      "module": "tests/test_api_server_v34_features.py",
+      "score": 3461,
+      "reasons": [
+        "async (33 funcs)",
+        "i/o (3 types)",
+        "high-complexity (119)"
+      ]
+    },
+    {
+      "module": "_archive/phase1_dead_code/ADAPTIVE_FIFO_QUICK_REFERENCE.py",
+      "score": 2580,
+      "reasons": [
+        "async (23 funcs)",
+        "cpu-intensive (1 types)",
+        "i/o (4 types)"
+      ]
+    },
+    {
+      "module": "tests/test_application_interface.py",
+      "score": 2400,
+      "reasons": [
+        "async (22 funcs)",
+        "i/o (4 types)"
+      ]
+    },
+    {
+      "module": "zena_mode/asgi_server.py",
+      "score": 2300,
+      "reasons": [
+        "async (21 funcs)",
+        "i/o (4 types)"
+      ]
+    },
+    {
+      "module": "tests/test_stress.py",
+      "score": 2150,
+      "reasons": [
+        "async (20 funcs)",
+        "i/o (3 types)"
+      ]
+    },
+    {
+      "module": "llm_adapters.py",
+      "score": 1908,
+      "reasons": [
+        "async (17 funcs)",
+        "i/o (4 types)",
+        "high-complexity (86)"
+      ]
+    },
+    {
+      "module": "API/local_api.py",
+      "score": 1900,
+      "reasons": [
+        "async (17 funcs)",
+        "i/o (4 types)"
+      ]
+    },
+    {
+      "module": "tests/test_email_stress.py",
+      "score": 1900,
+      "reasons": [
+        "async (17 funcs)",
+        "i/o (4 types)"
+      ]
+    },
+    {
+      "module": "server/routers/admin.py",
+      "score": 1850,
+      "reasons": [
+        "async (17 funcs)",
+        "i/o (3 types)"
+      ]
+    },
+    {
+      "module": "_archive/api_server_pre_rearch.py",
+      "score": 1808,
+      "reasons": [
+        "async (16 funcs)",
+        "i/o (4 types)",
+        "high-complexity (83)"
+      ]
+    },
+    {
+      "module": "tests/test_api_server_v2.py",
+      "score": 1623,
+      "reasons": [
+        "async (14 funcs)",
+        "i/o (4 types)",
+        "high-complexity (232)"
+      ]
+    },
+    {
+      "module": "_archive/local_adapters_pre_rearch.py",
+      "score": 1607,
+      "reasons": [
+        "async (14 funcs)",
+        "i/o (4 types)",
+        "high-complexity (72)"
+      ]
+    },
+    {
+      "module": "zena_mode/swarm_arbitrator.py",
+      "score": 1571,
+      "reasons": [
+        "async (12 funcs)",
+        "cpu-intensive (2 types)",
+        "i/o (4 types)",
+        "high-complexity (112)"
+      ]
+    },
+    {
+      "module": "local_adapters.py",
+      "score": 1506,
+      "reasons": [
+        "async (13 funcs)",
+        "i/o (4 types)",
+        "high-complexity (69)"
+      ]
+    },
+    {
+      "module": "server/routers/routing_routes.py",
+      "score": 1500,
+      "reasons": [
+        "async (13 funcs)",
+        "i/o (4 types)"
+      ]
+    },
+    {
+      "module": "_archive/local_adapters_pre_fifo.py",
+      "score": 1400,
+      "reasons": [
+        "async (12 funcs)",
+        "i/o (4 types)"
+      ]
+    }
+  ],
+  "async_modules": [
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "verify_api_key"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "_idle_sleep_loop"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "lifespan"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "health"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "list_models"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "chat_completions"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "embeddings"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "tokenize"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "detokenize"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "count_tokens"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "model_info"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "reload_model"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "prometheus_metrics"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "completions"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "_complete_response"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "_stream_response"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "stats"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "switch_model"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "clear_cache"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "compact_endpoint"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "diagnostics"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "crash_history_endpoint"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "profiles_endpoint"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "load_lora"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "unload_lora"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "lora_status"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "infill"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "pull_model"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "pull_status"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "list_downloads"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "save_state"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "load_state"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "list_state_slots"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "delete_state_slot"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "available_models"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "system_hardware"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "list_presets"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "apply_preset"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "get_model_profiles"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "model_performance"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "route_query"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "list_domains"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "difficulty_scores"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "classify_difficulty"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "swap_history"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "swap_cost_analysis"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "list_strategies"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "route_with_strategy"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "create_custom_strategy"
+    },
+    {
+      "file": "_archive/api_server_monolith_backup.py",
+      "function": "delete_custom_strategy"
+    }
+  ],
+  "rustification_strategy": {
+    "phase_1_analysis": {
+      "description": "Basic module identification and dependency mapping",
+      "priority": "critical_path_modules",
+      "estimated_effort": "1-2 weeks"
+    },
+    "phase_2_bindings": {
+      "description": "Create Rust bindings via PyO3/maturin for high-impact modules",
+      "candidates": [
+        "Core modules",
+        "performance_critical functions"
+      ],
+      "estimated_effort": "2-3 weeks"
+    },
+    "phase_3_benchmark": {
+      "description": "Benchmark Python vs Rust implementations",
+      "metrics": [
+        "execution_time",
+        "memory_usage",
+        "throughput"
+      ],
+      "estimated_effort": "1 week"
+    },
+    "phase_4_migration": {
+      "description": "Gradual migration to Rust implementations",
+      "rollback_capability": "Keep Python fallbacks",
+      "estimated_effort": "ongoing"
+    }
+  }
+}

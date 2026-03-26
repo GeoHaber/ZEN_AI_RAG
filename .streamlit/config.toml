@@ -1,0 +1,18 @@
+# Dark base theme — sidebar + main area both dark by default.
+# Custom CSS in test_redesigned_settings.py provides the final polish
+# and handles light/dark toggle via st.session_state.dark_mode.
+
+[theme]
+primaryColor = "#667eea"
+backgroundColor = "#0c0c14"
+secondaryBackgroundColor = "#12121c"
+textColor = "#e8e8f0"
+font = "sans serif"
+base = "dark"
+
+[server]
+headless = true
+
+[client]
+showSidebarNavigation = true
+toolbarMode = "minimal"

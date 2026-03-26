@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Core/services/rag_query_throughput/python",
+    "implementation": "python",
+    "duration_ms": 50.43344001751393,
+    "memory_peak_mb": 0,
+    "memory_avg_mb": 0.0,
+    "iterations": 5,
+    "timestamp": "2026-02-17T11:04:18.332218",
+    "payload_size": 0,
+    "success": true,
+    "error": null
+  },
+  {
+    "name": "Core/services/rag_query_throughput/rust",
+    "implementation": "rust",
+    "duration_ms": 12.391480011865497,
+    "memory_peak_mb": 0.00390625,
+    "memory_avg_mb": 0.00078125,
+    "iterations": 5,
+    "timestamp": "2026-02-17T11:04:18.409696",
+    "payload_size": 0,
+    "success": true,
+    "error": null
+  }
+]

@@ -1,0 +1,12 @@
+Discharge Summary Requirements
+
+A discharge summary must be completed for every patient leaving the hospital or care unit. It should include:
+- Patient identification and admission date; discharge date and destination.
+- Summary of admission diagnosis and principal diagnosis at discharge.
+- Brief history of present illness and hospital course.
+- Procedures performed and key investigations with results.
+- Discharge medications with changes from admission; reconciliation.
+- Allergies and relevant past medical history.
+- Follow-up plan: appointments, referrals, pending results, patient instructions.
+- Code status and advance directives if relevant.
+- Signature of responsible clinician and date. Copy to primary care and patient as per policy.

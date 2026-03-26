@@ -1,0 +1,1855 @@
+{
+  "dead_functions": [
+    {
+      "name": "rag_chat",
+      "file": "server/routers/rag_chat.py",
+      "line": 83,
+      "lines": 177
+    },
+    {
+      "name": "voice_lab",
+      "file": "zena_mode/asgi_server.py",
+      "line": 400,
+      "lines": 150
+    },
+    {
+      "name": "demo_page",
+      "file": "ui/modern_ui_demo.py",
+      "line": 184,
+      "lines": 142
+    },
+    {
+      "name": "debug_audio_page",
+      "file": "ui/debug_audio_page.py",
+      "line": 44,
+      "lines": 124
+    },
+    {
+      "name": "route_query",
+      "file": "server/routers/routing_routes.py",
+      "line": 49,
+      "lines": 115
+    },
+    {
+      "name": "register_test_endpoints",
+      "file": "ui/testing.py",
+      "line": 11,
+      "lines": 101
+    },
+    {
+      "name": "start_scan",
+      "file": "ui/rag_interface.py",
+      "line": 171,
+      "lines": 100
+    },
+    {
+      "name": "compare_profiling_runs",
+      "file": "server/routers/feedback_routes.py",
+      "line": 171,
+      "lines": 93
+    },
+    {
+      "name": "add_microphone_permission_check",
+      "file": "ui/microphone_checker.py",
+      "line": 8,
+      "lines": 92
+    },
+    {
+      "name": "model_info",
+      "file": "server/routers/models.py",
+      "line": 54,
+      "lines": 85
+    },
+    {
+      "name": "stream_answer_to_streamlit",
+      "file": "Core/streaming.py",
+      "line": 173,
+      "lines": 83
+    },
+    {
+      "name": "prometheus_metrics",
+      "file": "server/routers/admin.py",
+      "line": 78,
+      "lines": 79
+    },
+    {
+      "name": "show_intro_modal",
+      "file": "ui_components/intro_manager.py",
+      "line": 103,
+      "lines": 79
+    },
+    {
+      "name": "route_for_rag",
+      "file": "server/routers/routing_routes.py",
+      "line": 457,
+      "lines": 77
+    },
+    {
+      "name": "verify_answer",
+      "file": "Core/fact_checker.py",
+      "line": 138,
+      "lines": 76
+    },
+    {
+      "name": "route_with_strategy",
+      "file": "server/routers/routing_routes.py",
+      "line": 324,
+      "lines": 73
+    },
+    {
+      "name": "completions",
+      "file": "server/routers/chat.py",
+      "line": 126,
+      "lines": 66
+    },
+    {
+      "name": "add_advanced_microphone_panel",
+      "file": "ui/microphone_checker.py",
+      "line": 102,
+      "lines": 64
+    },
+    {
+      "name": "build_db_contents_panel",
+      "file": "ui_flet/rag_panel.py",
+      "line": 684,
+      "lines": 63
+    },
+    {
+      "name": "score_answer",
+      "file": "Core/answer_verification_sota.py",
+      "line": 384,
+      "lines": 61
+    },
+    {
+      "name": "run_upgrade",
+      "file": "Core/llm_updater.py",
+      "line": 171,
+      "lines": 61
+    },
+    {
+      "name": "run_single_cli",
+      "file": "tests/crash_test_cli.py",
+      "line": 50,
+      "lines": 61
+    },
+    {
+      "name": "build_settings_dialog",
+      "file": "ui_flet/settings_dialog.py",
+      "line": 320,
+      "lines": 60
+    },
+    {
+      "name": "build_chat_panel",
+      "file": "ui_flet/chat_panel.py",
+      "line": 334,
+      "lines": 59
+    },
+    {
+      "name": "route_and_answer",
+      "file": "Core/sql_router.py",
+      "line": 296,
+      "lines": 58
+    },
+    {
+      "name": "summarize_old_messages",
+      "file": "zena_mode/conversation_memory.py",
+      "line": 751,
+      "lines": 58
+    },
+    {
+      "name": "check_llama_version",
+      "file": "ui/actions.py",
+      "line": 351,
+      "lines": 57
+    },
+    {
+      "name": "build_data_inspector_panel",
+      "file": "ui_flet/rag_panel.py",
+      "line": 620,
+      "lines": 57
+    },
+    {
+      "name": "detect_conflict_for_human",
+      "file": "Core/human_loop_resolver.py",
+      "line": 109,
+      "lines": 56
+    },
+    {
+      "name": "pull_model",
+      "file": "server/routers/models.py",
+      "line": 352,
+      "lines": 56
+    },
+    {
+      "name": "apply_preset",
+      "file": "server/routers/models.py",
+      "line": 294,
+      "lines": 55
+    },
+    {
+      "name": "build_theme_lang_controls",
+      "file": "ui_flet/sidebar.py",
+      "line": 252,
+      "lines": 55
+    },
+    {
+      "name": "infill",
+      "file": "server/routers/chat.py",
+      "line": 195,
+      "lines": 53
+    },
+    {
+      "name": "build_source_config_panel",
+      "file": "ui_flet/rag_panel.py",
+      "line": 560,
+      "lines": 53
+    },
+    {
+      "name": "run_instance",
+      "file": "tests/nightly_soak_test.py",
+      "line": 66,
+      "lines": 52
+    },
+    {
+      "name": "generate_rag_response_async",
+      "file": "zena_mode/rag_pipeline.py",
+      "line": 809,
+      "lines": 52
+    },
+    {
+      "name": "model_performance",
+      "file": "server/routers/models.py",
+      "line": 456,
+      "lines": 51
+    },
+    {
+      "name": "check_and_install_dependencies",
+      "file": "startup/dependency_check.py",
+      "line": 232,
+      "lines": 51
+    },
+    {
+      "name": "enrich_model",
+      "file": "dist_build/_staging/local_llm/enhanced_model_card.py",
+      "line": 499,
+      "lines": 50
+    },
+    {
+      "name": "create_audio_test_panel",
+      "file": "ui/injectable_voice.py",
+      "line": 179,
+      "lines": 49
+    },
+    {
+      "name": "scan_social",
+      "file": "src/social_scanner.py",
+      "line": 688,
+      "lines": 48
+    },
+    {
+      "name": "initialize_services",
+      "file": "ui/bootstrap.py",
+      "line": 87,
+      "lines": 48
+    },
+    {
+      "name": "get_css_variables",
+      "file": "ui/theme.py",
+      "line": 203,
+      "lines": 48
+    },
+    {
+      "name": "verify_loopback",
+      "file": "zena_mode/production_microphone_healer.py",
+      "line": 212,
+      "lines": 45
+    },
+    {
+      "name": "index_content",
+      "file": "rag_integration.py",
+      "line": 216,
+      "lines": 42
+    },
+    {
+      "name": "create_custom_strategy",
+      "file": "server/routers/routing_routes.py",
+      "line": 400,
+      "lines": 42
+    },
+    {
+      "name": "llm_server",
+      "file": "tests/test_llm_lifecycle.py",
+      "line": 18,
+      "lines": 42
+    },
+    {
+      "name": "index_file",
+      "file": "Core/services/document_service.py",
+      "line": 110,
+      "lines": 41
+    },
+    {
+      "name": "validate_provider",
+      "file": "src/llm_backend.py",
+      "line": 226,
+      "lines": 41
+    },
+    {
+      "name": "check_backend_health",
+      "file": "ui/handlers.py",
+      "line": 962,
+      "lines": 41
+    },
+    {
+      "name": "build_analytics_tab",
+      "file": "ui/data_inspector.py",
+      "line": 101,
+      "lines": 40
+    },
+    {
+      "name": "load_file_to_dataframe",
+      "file": "Core/data_analyst_agent.py",
+      "line": 641,
+      "lines": 39
+    },
+    {
+      "name": "quantization_human",
+      "file": "ui/formatters.py",
+      "line": 162,
+      "lines": 39
+    },
+    {
+      "name": "bar_row",
+      "file": "ui_flet/widgets.py",
+      "line": 107,
+      "lines": 39
+    },
+    {
+      "name": "load_lora",
+      "file": "server/routers/admin.py",
+      "line": 267,
+      "lines": 38
+    },
+    {
+      "name": "reload_model",
+      "file": "server/routers/models.py",
+      "line": 218,
+      "lines": 38
+    },
+    {
+      "name": "run_internal_check",
+      "file": "ui/handlers.py",
+      "line": 923,
+      "lines": 38
+    },
+    {
+      "name": "chat_swarm",
+      "file": "zena_mode/asgi_server.py",
+      "line": 124,
+      "lines": 37
+    },
+    {
+      "name": "submit_feedback",
+      "file": "server/routers/feedback_routes.py",
+      "line": 41,
+      "lines": 36
+    },
+    {
+      "name": "difficulty_scores",
+      "file": "server/routers/routing_routes.py",
+      "line": 193,
+      "lines": 36
+    },
+    {
+      "name": "build_model_gallery",
+      "file": "ui_flet/model_panel.py",
+      "line": 209,
+      "lines": 36
+    },
+    {
+      "name": "enrich_with_popularity",
+      "file": "Core/model_marketplace.py",
+      "line": 765,
+      "lines": 35
+    },
+    {
+      "name": "api_version",
+      "file": "server/routers/admin.py",
+      "line": 471,
+      "lines": 35
+    },
+    {
+      "name": "start_backend_server",
+      "file": "ui/background.py",
+      "line": 18,
+      "lines": 35
+    },
+    {
+      "name": "build_page",
+      "file": "ui/layout.py",
+      "line": 172,
+      "lines": 35
+    },
+    {
+      "name": "health",
+      "file": "backend_impl.py",
+      "line": 572,
+      "lines": 34
+    },
+    {
+      "name": "load_uploaded_file",
+      "file": "Core/data_analyst_agent.py",
+      "line": 682,
+      "lines": 34
+    },
+    {
+      "name": "open_judge",
+      "file": "ui/actions.py",
+      "line": 316,
+      "lines": 34
+    },
+    {
+      "name": "format_context",
+      "file": "dist_build/_staging/rag_core/engine.py",
+      "line": 359,
+      "lines": 33
+    },
+    {
+      "name": "profiling_trend",
+      "file": "server/routers/feedback_routes.py",
+      "line": 267,
+      "lines": 33
+    },
+    {
+      "name": "build_nav_rail",
+      "file": "ui_flet/sidebar.py",
+      "line": 112,
+      "lines": 32
+    },
+    {
+      "name": "build_voice_controls",
+      "file": "ui_flet/voice_panel.py",
+      "line": 22,
+      "lines": 32
+    },
+    {
+      "name": "get_all_chunks",
+      "file": "zena_mode/rag_db.py",
+      "line": 124,
+      "lines": 32
+    },
+    {
+      "name": "swap_cost_analysis",
+      "file": "server/routers/routing_routes.py",
+      "line": 269,
+      "lines": 31
+    },
+    {
+      "name": "hub_server",
+      "file": "tests/conftest.py",
+      "line": 126,
+      "lines": 31
+    },
+    {
+      "name": "nli_side_effect",
+      "file": "tests/test_rag_precision.py",
+      "line": 126,
+      "lines": 31
+    },
+    {
+      "name": "get_response_stream",
+      "file": "zena_mode/dispatcher.py",
+      "line": 69,
+      "lines": 31
+    },
+    {
+      "name": "check_mlx_model_usable",
+      "file": "adapters/mlx_adapter.py",
+      "line": 119,
+      "lines": 30
+    },
+    {
+      "name": "build_sidebar",
+      "file": "ui_flet/sidebar.py",
+      "line": 220,
+      "lines": 30
+    },
+    {
+      "name": "benchmark",
+      "file": "backend_impl.py",
+      "line": 607,
+      "lines": 29
+    },
+    {
+      "name": "benchmark_single",
+      "file": "tests/crash_test_scalability.py",
+      "line": 90,
+      "lines": 29
+    },
+    {
+      "name": "emoji",
+      "file": "ui/icons.py",
+      "line": 133,
+      "lines": 29
+    },
+    {
+      "name": "embeddings",
+      "file": "server/routers/inference.py",
+      "line": 25,
+      "lines": 28
+    },
+    {
+      "name": "download_custom",
+      "file": "ui/dialogs_factory.py",
+      "line": 36,
+      "lines": 27
+    },
+    {
+      "name": "api_key_auth",
+      "file": "zena_mode/asgi_server.py",
+      "line": 53,
+      "lines": 27
+    },
+    {
+      "name": "launch_swarm_expert",
+      "file": "zena_mode/asgi_server.py",
+      "line": 355,
+      "lines": 27
+    },
+    {
+      "name": "clear_all",
+      "file": "zena_mode/rag_db.py",
+      "line": 162,
+      "lines": 27
+    },
+    {
+      "name": "scan_folder",
+      "file": "backend_impl.py",
+      "line": 377,
+      "lines": 26
+    },
+    {
+      "name": "scan_email",
+      "file": "backend_impl.py",
+      "line": 404,
+      "lines": 26
+    },
+    {
+      "name": "format_conflict_for_ui",
+      "file": "Core/human_loop_resolver.py",
+      "line": 189,
+      "lines": 26
+    },
+    {
+      "name": "available_models",
+      "file": "server/routers/models.py",
+      "line": 259,
+      "lines": 26
+    },
+    {
+      "name": "show_onboarding",
+      "file": "ui_flet/onboarding.py",
+      "line": 83,
+      "lines": 26
+    },
+    {
+      "name": "whatsapp_webhook",
+      "file": "zena_mode/gateway_whatsapp.py",
+      "line": 31,
+      "lines": 26
+    },
+    {
+      "name": "unload_lora",
+      "file": "server/routers/admin.py",
+      "line": 308,
+      "lines": 25
+    },
+    {
+      "name": "get_message",
+      "file": "src/local_adapters.py",
+      "line": 248,
+      "lines": 25
+    },
+    {
+      "name": "mbox_file",
+      "file": "tests/test_email_ingestor.py",
+      "line": 19,
+      "lines": 25
+    },
+    {
+      "name": "multi_page_pdf",
+      "file": "tests/test_pdf_extraction.py",
+      "line": 38,
+      "lines": 25
+    },
+    {
+      "name": "mock_responses",
+      "file": "tests/test_swarm_arbitrator.py",
+      "line": 64,
+      "lines": 25
+    },
+    {
+      "name": "large_file_content",
+      "file": "tests/test_ui_workflow.py",
+      "line": 51,
+      "lines": 25
+    },
+    {
+      "name": "file_size",
+      "file": "ui/formatters.py",
+      "line": 13,
+      "lines": 25
+    },
+    {
+      "name": "get_chunker",
+      "file": "Core/chunking_strategies.py",
+      "line": 455,
+      "lines": 24
+    },
+    {
+      "name": "profiling_history",
+      "file": "server/routers/feedback_routes.py",
+      "line": 122,
+      "lines": 24
+    },
+    {
+      "name": "profile_async_execution",
+      "file": "zena_mode/profiler.py",
+      "line": 90,
+      "lines": 24
+    },
+    {
+      "name": "record_user_judgment",
+      "file": "Core/human_loop_resolver.py",
+      "line": 216,
+      "lines": 23
+    },
+    {
+      "name": "suggest_system_preference",
+      "file": "Core/human_loop_resolver.py",
+      "line": 302,
+      "lines": 23
+    },
+    {
+      "name": "list_domains",
+      "file": "server/routers/routing_routes.py",
+      "line": 167,
+      "lines": 23
+    },
+    {
+      "name": "lifespan",
+      "file": "src/api_server.py",
+      "line": 230,
+      "lines": 23
+    },
+    {
+      "name": "kg_with_data",
+      "file": "tests/test_enhanced_rag.py",
+      "line": 377,
+      "lines": 23
+    },
+    {
+      "name": "context_window",
+      "file": "ui/formatters.py",
+      "line": 207,
+      "lines": 23
+    },
+    {
+      "name": "route_and_execute",
+      "file": "zena_mode/model_orchestrator.py",
+      "line": 53,
+      "lines": 23
+    },
+    {
+      "name": "get_cached_queries",
+      "file": "Core/semantic_cache.py",
+      "line": 210,
+      "lines": 22
+    },
+    {
+      "name": "check_model_update",
+      "file": "src/version_checker.py",
+      "line": 58,
+      "lines": 22
+    },
+    {
+      "name": "rag_instance",
+      "file": "tests/test_break_it.py",
+      "line": 114,
+      "lines": 22
+    },
+    {
+      "name": "search_by_embedding_fn",
+      "file": "ui/handlers.py",
+      "line": 124,
+      "lines": 22
+    },
+    {
+      "name": "available",
+      "file": "x_ray_claude.py",
+      "line": 513,
+      "lines": 21
+    },
+    {
+      "name": "find_near_duplicates",
+      "file": "dist_build/_staging/rag_core/dedup.py",
+      "line": 46,
+      "lines": 21
+    },
+    {
+      "name": "get_hardware_summary",
+      "file": "src/utils_hardware.py",
+      "line": 272,
+      "lines": 21
+    },
+    {
+      "name": "ram_estimate",
+      "file": "ui/formatters.py",
+      "line": 108,
+      "lines": 21
+    },
+    {
+      "name": "create_sidebar",
+      "file": "ui/sidebar.py",
+      "line": 390,
+      "lines": 21
+    },
+    {
+      "name": "generate_voice",
+      "file": "zena_mode/model_orchestrator.py",
+      "line": 91,
+      "lines": 21
+    },
+    {
+      "name": "retrieve_similar",
+      "file": "zena_mode/swarm_arbitrator.py",
+      "line": 349,
+      "lines": 21
+    },
+    {
+      "name": "resolve_batch",
+      "file": "Core/ingestion_conflict_detector.py",
+      "line": 232,
+      "lines": 20
+    },
+    {
+      "name": "check_llamacpp_update",
+      "file": "Core/llm_updater.py",
+      "line": 125,
+      "lines": 20
+    },
+    {
+      "name": "rag_routing_status",
+      "file": "server/routers/routing_routes.py",
+      "line": 537,
+      "lines": 20
+    },
+    {
+      "name": "check_microphone",
+      "file": "ui/microphone_checker.py",
+      "line": 76,
+      "lines": 20
+    },
+    {
+      "name": "show_intro_in_sidebar",
+      "file": "ui_components/intro_manager.py",
+      "line": 184,
+      "lines": 20
+    },
+    {
+      "name": "check_project_dependencies",
+      "file": "zena_mode/directory_scanner.py",
+      "line": 170,
+      "lines": 20
+    },
+    {
+      "name": "chat_stream",
+      "file": "backend_impl.py",
+      "line": 311,
+      "lines": 19
+    },
+    {
+      "name": "contextualize_single",
+      "file": "Core/contextual_retrieval.py",
+      "line": 152,
+      "lines": 19
+    },
+    {
+      "name": "run_judge",
+      "file": "ui/quality_dashboard.py",
+      "line": 51,
+      "lines": 19
+    },
+    {
+      "name": "enqueue",
+      "file": "zena_mode/batch_manager.py",
+      "line": 48,
+      "lines": 19
+    },
+    {
+      "name": "store_consensus",
+      "file": "zena_mode/swarm_arbitrator.py",
+      "line": 329,
+      "lines": 19
+    },
+    {
+      "name": "rag_dedup",
+      "file": "backend_impl.py",
+      "line": 480,
+      "lines": 18
+    },
+    {
+      "name": "quick_research",
+      "file": "Core/research_agent.py",
+      "line": 348,
+      "lines": 18
+    },
+    {
+      "name": "list_sessions",
+      "file": "Core/services/session_service.py",
+      "line": 106,
+      "lines": 18
+    },
+    {
+      "name": "classify_difficulty",
+      "file": "server/routers/routing_routes.py",
+      "line": 232,
+      "lines": 18
+    },
+    {
+      "name": "rag_model_rankings",
+      "file": "server/routers/routing_routes.py",
+      "line": 560,
+      "lines": 18
+    },
+    {
+      "name": "strip_thinking_blocks",
+      "file": "src/compact_tokens.py",
+      "line": 123,
+      "lines": 18
+    },
+    {
+      "name": "model_parameters",
+      "file": "ui/formatters.py",
+      "line": 88,
+      "lines": 18
+    },
+    {
+      "name": "speed_rating",
+      "file": "ui/formatters.py",
+      "line": 142,
+      "lines": 18
+    },
+    {
+      "name": "eta",
+      "file": "ui/formatters.py",
+      "line": 256,
+      "lines": 18
+    },
+    {
+      "name": "inference_guard_generator",
+      "file": "Core/inference_guard.py",
+      "line": 520,
+      "lines": 17
+    },
+    {
+      "name": "check_all_updates",
+      "file": "Core/llm_updater.py",
+      "line": 147,
+      "lines": 17
+    },
+    {
+      "name": "get_model_profiles",
+      "file": "server/routers/models.py",
+      "line": 436,
+      "lines": 17
+    },
+    {
+      "name": "get_latest_versions",
+      "file": "startup/dependency_check.py",
+      "line": 285,
+      "lines": 17
+    },
+    {
+      "name": "run_command_bg",
+      "file": "ui/handlers.py",
+      "line": 927,
+      "lines": 17
+    },
+    {
+      "name": "get_thinking_message",
+      "file": "ui/loading_messages.py",
+      "line": 101,
+      "lines": 17
+    },
+    {
+      "name": "check_backend",
+      "file": "ui/microphone_checker.py",
+      "line": 129,
+      "lines": 17
+    },
+    {
+      "name": "rag_cleanup",
+      "file": "backend_impl.py",
+      "line": 463,
+      "lines": 16
+    },
+    {
+      "name": "export_history",
+      "file": "scripts/intelligent_router.py",
+      "line": 253,
+      "lines": 16
+    },
+    {
+      "name": "marketplace_recommended",
+      "file": "server/routers/models.py",
+      "line": 543,
+      "lines": 16
+    },
+    {
+      "name": "print_report",
+      "file": "Core/evaluation_harness.py",
+      "line": 282,
+      "lines": 15
+    },
+    {
+      "name": "get_feedback_statistics",
+      "file": "Core/human_loop_resolver.py",
+      "line": 272,
+      "lines": 15
+    },
+    {
+      "name": "tier",
+      "file": "Core/model_marketplace.py",
+      "line": 74,
+      "lines": 15
+    },
+    {
+      "name": "compact_endpoint",
+      "file": "server/routers/admin.py",
+      "line": 208,
+      "lines": 15
+    },
+    {
+      "name": "diagnostics",
+      "file": "server/routers/admin.py",
+      "line": 226,
+      "lines": 15
+    },
+    {
+      "name": "marketplace_local",
+      "file": "server/routers/models.py",
+      "line": 590,
+      "lines": 15
+    },
+    {
+      "name": "list_strategies",
+      "file": "server/routers/routing_routes.py",
+      "line": 306,
+      "lines": 15
+    },
+    {
+      "name": "count_files_in_path",
+      "file": "src/content_extractor.py",
+      "line": 80,
+      "lines": 15
+    },
+    {
+      "name": "mock_llm_api",
+      "file": "tests/conftest.py",
+      "line": 19,
+      "lines": 15
+    },
+    {
+      "name": "temp_rag",
+      "file": "tests/test_hybrid_rag.py",
+      "line": 9,
+      "lines": 15
+    },
+    {
+      "name": "monkey_thread",
+      "file": "tests/test_monkey.py",
+      "line": 471,
+      "lines": 15
+    },
+    {
+      "name": "sample_pdf",
+      "file": "tests/test_pdf_extraction.py",
+      "line": 21,
+      "lines": 15
+    },
+    {
+      "name": "open_voice_lab",
+      "file": "ui/actions.py",
+      "line": 300,
+      "lines": 15
+    },
+    {
+      "name": "start_background_gateways",
+      "file": "ui/background.py",
+      "line": 55,
+      "lines": 15
+    },
+    {
+      "name": "text_to_speech",
+      "file": "zena_mode/asgi_server.py",
+      "line": 553,
+      "lines": 15
+    },
+    {
+      "name": "speech_to_text",
+      "file": "zena_mode/asgi_server.py",
+      "line": 571,
+      "lines": 15
+    },
+    {
+      "name": "rag_search",
+      "file": "backend_impl.py",
+      "line": 438,
+      "lines": 14
+    },
+    {
+      "name": "get_enhanced_rag_service",
+      "file": "Core/enhanced_rag_wrapper.py",
+      "line": 551,
+      "lines": 14
+    },
+    {
+      "name": "list_state_slots",
+      "file": "server/routers/admin.py",
+      "line": 428,
+      "lines": 14
+    },
+    {
+      "name": "mutator",
+      "file": "tests/test_chaos.py",
+      "line": 122,
+      "lines": 14
+    },
+    {
+      "name": "build_task",
+      "file": "tests/test_rag_pipeline.py",
+      "line": 235,
+      "lines": 14
+    },
+    {
+      "name": "run_system_checks",
+      "file": "ui/background.py",
+      "line": 72,
+      "lines": 14
+    },
+    {
+      "name": "reader",
+      "file": "tests/test_break_it.py",
+      "line": 73,
+      "lines": 13
+    },
+    {
+      "name": "predict_side_effect",
+      "file": "tests/test_rag_precision.py",
+      "line": 68,
+      "lines": 13
+    },
+    {
+      "name": "create_modern_chat_container",
+      "file": "ui/modern_chat.py",
+      "line": 382,
+      "lines": 13
+    },
+    {
+      "name": "extract_entities_and_claims",
+      "file": "Core/conflict_resolver.py",
+      "line": 189,
+      "lines": 12
+    },
+    {
+      "name": "stage_single_module",
+      "file": "dist_build/setup_zenai_core.py",
+      "line": 88,
+      "lines": 12
+    },
+    {
+      "name": "pull_status",
+      "file": "server/routers/models.py",
+      "line": 411,
+      "lines": 12
+    },
+    {
+      "name": "marketplace_curated",
+      "file": "server/routers/models.py",
+      "line": 528,
+      "lines": 12
+    },
+    {
+      "name": "marketplace_search",
+      "file": "server/routers/models.py",
+      "line": 575,
+      "lines": 12
+    },
+    {
+      "name": "verify_api_key",
+      "file": "src/api_server.py",
+      "line": 191,
+      "lines": 12
+    },
+    {
+      "name": "indexer",
+      "file": "tests/test_break_it.py",
+      "line": 202,
+      "lines": 12
+    },
+    {
+      "name": "run_uvicorn",
+      "file": "zena_mode/server.py",
+      "line": 118,
+      "lines": 12
+    },
+    {
+      "name": "next_step",
+      "file": "zena_mode/tutorial.py",
+      "line": 89,
+      "lines": 12
+    },
+    {
+      "name": "load_model",
+      "file": "backend_impl.py",
+      "line": 520,
+      "lines": 11
+    },
+    {
+      "name": "speak",
+      "file": "backend_impl.py",
+      "line": 548,
+      "lines": 11
+    },
+    {
+      "name": "format_context_for_llm",
+      "file": "rag_integration.py",
+      "line": 99,
+      "lines": 11
+    },
+    {
+      "name": "ensure_package",
+      "file": "utils.py",
+      "line": 247,
+      "lines": 11
+    },
+    {
+      "name": "wrapper",
+      "file": "Core/inference_guard.py",
+      "line": 524,
+      "lines": 11
+    },
+    {
+      "name": "load_embeddings",
+      "file": "dist_build/_staging/rag_core/embeddings.py",
+      "line": 174,
+      "lines": 11
+    },
+    {
+      "name": "delete_state_slot",
+      "file": "server/routers/admin.py",
+      "line": 445,
+      "lines": 11
+    },
+    {
+      "name": "feedback_routing_adjustments",
+      "file": "server/routers/feedback_routes.py",
+      "line": 105,
+      "lines": 11
+    },
+    {
+      "name": "check_scan_path_allowed",
+      "file": "src/content_extractor.py",
+      "line": 47,
+      "lines": 11
+    },
+    {
+      "name": "empty_pdf",
+      "file": "tests/test_pdf_extraction.py",
+      "line": 65,
+      "lines": 11
+    },
+    {
+      "name": "start_tour",
+      "file": "ui/actions.py",
+      "line": 39,
+      "lines": 11
+    },
+    {
+      "name": "build_context",
+      "file": "backend_impl.py",
+      "line": 649,
+      "lines": 10
+    },
+    {
+      "name": "save_report",
+      "file": "Core/evaluation_harness.py",
+      "line": 298,
+      "lines": 10
+    },
+    {
+      "name": "inference_guard",
+      "file": "Core/inference_guard.py",
+      "line": 508,
+      "lines": 10
+    },
+    {
+      "name": "clear_resolved",
+      "file": "Core/ingestion_conflict_detector.py",
+      "line": 349,
+      "lines": 10
+    },
+    {
+      "name": "get_available_providers",
+      "file": "Core/tools/web_search.py",
+      "line": 259,
+      "lines": 10
+    },
+    {
+      "name": "check_model_updates",
+      "file": "dist_build/_staging/local_llm/local_llm_manager.py",
+      "line": 166,
+      "lines": 10
+    },
+    {
+      "name": "marketplace_hardware",
+      "file": "server/routers/models.py",
+      "line": 515,
+      "lines": 10
+    },
+    {
+      "name": "marketplace_trending",
+      "file": "server/routers/models.py",
+      "line": 562,
+      "lines": 10
+    },
+    {
+      "name": "swap_history",
+      "file": "server/routers/routing_routes.py",
+      "line": 256,
+      "lines": 10
+    },
+    {
+      "name": "save_config",
+      "file": "src/config_enhanced.py",
+      "line": 336,
+      "lines": 10
+    },
+    {
+      "name": "mock_hub_api",
+      "file": "tests/conftest.py",
+      "line": 37,
+      "lines": 10
+    },
+    {
+      "name": "worker",
+      "file": "tests/test_chaos.py",
+      "line": 97,
+      "lines": 10
+    },
+    {
+      "name": "save_phase2_results",
+      "file": "tests/test_external_llm_real.py",
+      "line": 314,
+      "lines": 10
+    },
+    {
+      "name": "update_injection_status",
+      "file": "ui/debug_audio_page.py",
+      "line": 87,
+      "lines": 10
+    },
+    {
+      "name": "update_status",
+      "file": "ui/injectable_voice.py",
+      "line": 216,
+      "lines": 10
+    },
+    {
+      "name": "get_llm_config",
+      "file": "ui_flet/state.py",
+      "line": 173,
+      "lines": 10
+    },
+    {
+      "name": "rag_stats",
+      "file": "backend_impl.py",
+      "line": 453,
+      "lines": 9
+    },
+    {
+      "name": "voice_devices",
+      "file": "backend_impl.py",
+      "line": 560,
+      "lines": 9
+    },
+    {
+      "name": "save_message",
+      "file": "backend_impl.py",
+      "line": 639,
+      "lines": 9
+    },
+    {
+      "name": "cache_stats",
+      "file": "backend_impl.py",
+      "line": 662,
+      "lines": 9
+    },
+    {
+      "name": "eval_stats",
+      "file": "backend_impl.py",
+      "line": 672,
+      "lines": 9
+    },
+    {
+      "name": "is_dark_mode",
+      "file": "config_system.py",
+      "line": 285,
+      "lines": 9
+    },
+    {
+      "name": "nli_model",
+      "file": "Core/hallucination_detector_v2.py",
+      "line": 67,
+      "lines": 9
+    },
+    {
+      "name": "dismiss",
+      "file": "Core/ingestion_conflict_detector.py",
+      "line": 222,
+      "lines": 9
+    },
+    {
+      "name": "recommended_gpu_layers",
+      "file": "Core/model_marketplace.py",
+      "line": 105,
+      "lines": 9
+    },
+    {
+      "name": "all_queries",
+      "file": "Core/rag_models.py",
+      "line": 82,
+      "lines": 9
+    },
+    {
+      "name": "get_download_url",
+      "file": "dist_build/_staging/local_llm/llama_cpp_manager.py",
+      "line": 345,
+      "lines": 9
+    },
+    {
+      "name": "lora_status",
+      "file": "server/routers/admin.py",
+      "line": 336,
+      "lines": 9
+    },
+    {
+      "name": "marketplace_summary",
+      "file": "server/routers/models.py",
+      "line": 608,
+      "lines": 9
+    },
+    {
+      "name": "get_model",
+      "file": "server/routers/models.py",
+      "line": 622,
+      "lines": 9
+    },
+    {
+      "name": "mock_config",
+      "file": "tests/test_arbitrage_integration.py",
+      "line": 23,
+      "lines": 9
+    },
+    {
+      "name": "mock_config_disabled",
+      "file": "tests/test_arbitrage_integration.py",
+      "line": 153,
+      "lines": 9
+    },
+    {
+      "name": "mock_config_enabled",
+      "file": "tests/test_arbitrage_integration.py",
+      "line": 170,
+      "lines": 9
+    },
+    {
+      "name": "fresh_tracker",
+      "file": "tests/test_deep_audit.py",
+      "line": 263,
+      "lines": 9
+    },
+    {
+      "name": "set_attachment",
+      "file": "tests/test_state_management.py",
+      "line": 55,
+      "lines": 9
+    },
+    {
+      "name": "navigate_to_app",
+      "file": "tests/test_ui_chaos.py",
+      "line": 9,
+      "lines": 9
+    },
+    {
+      "name": "mock_llm_response",
+      "file": "tests/test_ui_workflow.py",
+      "line": 33,
+      "lines": 9
+    },
+    {
+      "name": "start_new_chat",
+      "file": "ui/actions.py",
+      "line": 29,
+      "lines": 9
+    },
+    {
+      "name": "run_update",
+      "file": "ui/dialogs_factory.py",
+      "line": 85,
+      "lines": 9
+    },
+    {
+      "name": "list_devices",
+      "file": "zena_mode/asgi_server.py",
+      "line": 388,
+      "lines": 9
+    },
+    {
+      "name": "stop_hub",
+      "file": "zena_mode/server_stub.py",
+      "line": 116,
+      "lines": 9
+    },
+    {
+      "name": "check_health",
+      "file": "async_backend.py",
+      "line": 92,
+      "lines": 8
+    },
+    {
+      "name": "hallucination_detector",
+      "file": "Core/answer_refinement.py",
+      "line": 66,
+      "lines": 8
+    },
+    {
+      "name": "get_changelog_url",
+      "file": "Core/llm_updater.py",
+      "line": 234,
+      "lines": 8
+    },
+    {
+      "name": "fmt_downloads",
+      "file": "Core/model_marketplace.py",
+      "line": 807,
+      "lines": 8
+    },
+    {
+      "name": "tier_label",
+      "file": "Core/model_marketplace.py",
+      "line": 91,
+      "lines": 8
+    },
+    {
+      "name": "total_removed",
+      "file": "Core/smart_deduplicator.py",
+      "line": 39,
+      "lines": 8
+    },
+    {
+      "name": "profiles_endpoint",
+      "file": "server/routers/admin.py",
+      "line": 253,
+      "lines": 8
+    },
+    {
+      "name": "safe_unicode_print",
+      "file": "tests/run_tests.py",
+      "line": 45,
+      "lines": 8
+    },
+    {
+      "name": "writer",
+      "file": "tests/test_break_it.py",
+      "line": 64,
+      "lines": 8
+    },
+    {
+      "name": "modifier",
+      "file": "tests/test_chaos.py",
+      "line": 374,
+      "lines": 8
+    },
+    {
+      "name": "mock_get",
+      "file": "tests/test_swarm.py",
+      "line": 20,
+      "lines": 8
+    },
+    {
+      "name": "pcb",
+      "file": "ui_flet/rag_panel.py",
+      "line": 119,
+      "lines": 8
+    },
+    {
+      "name": "startup_progress",
+      "file": "zena_mode/asgi_server.py",
+      "line": 259,
+      "lines": 8
+    },
+    {
+      "name": "popular_models",
+      "file": "zena_mode/asgi_server.py",
+      "line": 291,
+      "lines": 8
+    },
+    {
+      "name": "search_models",
+      "file": "zena_mode/asgi_server.py",
+      "line": 302,
+      "lines": 8
+    },
+    {
+      "name": "get_knowledge_base_stats",
+      "file": "API/local_api.py",
+      "line": 332,
+      "lines": 7
+    },
+    {
+      "name": "decorator",
+      "file": "Core/inference_guard.py",
+      "line": 510,
+      "lines": 7
+    },
+    {
+      "name": "coerce_float",
+      "file": "Core/rag_models.py",
+      "line": 65,
+      "lines": 7
+    },
+    {
+      "name": "get_chat_history",
+      "file": "Core/interfaces/application_interface.py",
+      "line": 171,
+      "lines": 7
+    },
+    {
+      "name": "clear_chat_session",
+      "file": "Core/interfaces/application_interface.py",
+      "line": 179,
+      "lines": 7
+    },
+    {
+      "name": "mock_python_rag_query",
+      "file": "Rustified/benchmarks/benchmark_harness.py",
+      "line": 306,
+      "lines": 7
+    },
+    {
+      "name": "mock_rust_rag_query",
+      "file": "Rustified/benchmarks/benchmark_harness.py",
+      "line": 314,
+      "lines": 7
+    },
+    {
+      "name": "feedback_history",
+      "file": "server/routers/feedback_routes.py",
+      "line": 86,
+      "lines": 7
+    },
+    {
+      "name": "list_downloads",
+      "file": "server/routers/models.py",
+      "line": 426,
+      "lines": 7
+    },
+    {
+      "name": "get_rust_status",
+      "file": "src/content_extractor_rust_bridge.py",
+      "line": 231,
+      "lines": 7
+    },
+    {
+      "name": "searcher",
+      "file": "tests/test_break_it.py",
+      "line": 215,
+      "lines": 7
+    },
+    {
+      "name": "try_acquire",
+      "file": "tests/test_chaos.py",
+      "line": 192,
+      "lines": 7
+    },
+    {
+      "name": "temp_upload_dir",
+      "file": "tests/test_cleanup_policy.py",
+      "line": 18,
+      "lines": 7
+    },
+    {
+      "name": "rag_environment",
+      "file": "tests/test_email_rag_e2e.py",
+      "line": 21,
+      "lines": 7
+    },
+    {
+      "name": "mock_ui_container",
+      "file": "tests/test_modern_ui_components.py",
+      "line": 34,
+      "lines": 7
+    },
+    {
+      "name": "arbitrator",
+      "file": "tests/test_parity.py",
+      "line": 9,
+      "lines": 7
+    },
+    {
+      "name": "get_text_side_effect",
+      "file": "tests/test_pdf_image_extraction.py",
+      "line": 42,
+      "lines": 7
+    },
+    {
+      "name": "search_task",
+      "file": "tests/test_rag_pipeline.py",
+      "line": 210,
+      "lines": 7
+    },
+    {
+      "name": "run_server",
+      "file": "tests/test_server_hardening.py",
+      "line": 15,
+      "lines": 7
+    },
+    {
+      "name": "temp_db",
+      "file": "tests/test_swarm_arbitrator.py",
+      "line": 36,
+      "lines": 7
+    },
+    {
+      "name": "total_score",
+      "file": "zena_mode/production_microphone_healer.py",
+      "line": 51,
+      "lines": 7
+    },
+    {
+      "name": "get_content_deduplicator",
+      "file": "Core/deduplication.py",
+      "line": 358,
+      "lines": 6
+    },
+    {
+      "name": "get_similarity_deduplicator",
+      "file": "Core/deduplication.py",
+      "line": 366,
+      "lines": 6
+    },
+    {
+      "name": "get_metrics_tracker",
+      "file": "Core/metrics_tracker.py",
+      "line": 163,
+      "lines": 6
+    },
+    {
+      "name": "fmt_likes",
+      "file": "Core/model_marketplace.py",
+      "line": 817,
+      "lines": 6
+    },
+    {
+      "name": "get_template_library",
+      "file": "Core/prompt_focus.py",
+      "line": 685,
+      "lines": 6
+    },
+    {
+      "name": "reset_stats",
+      "file": "Core/semantic_cache.py",
+      "line": 203,
+      "lines": 6
+    },
+    {
+      "name": "crash_history_endpoint",
+      "file": "server/routers/admin.py",
+      "line": 244,
+      "lines": 6
+    },
+    {
+      "name": "feedback_model_summary",
+      "file": "server/routers/feedback_routes.py",
+      "line": 96,
+      "lines": 6
+    },
+    {
+      "name": "delete_custom_strategy",
+      "file": "server/routers/routing_routes.py",
+      "line": 445,
+      "lines": 6
+    },
+    {
+      "name": "get_inference_status",
+      "file": "src/inference_guard_rust_bridge.py",
+      "line": 204,
+      "lines": 6
+    },
+    {
+      "name": "catching_worker",
+      "file": "tests/test_chaos.py",
+      "line": 237,
+      "lines": 6
+    },
+    {
+      "name": "fake_llm",
+      "file": "tests/test_core_modules.py",
+      "line": 662,
+      "lines": 6
+    },
+    {
+      "name": "kg",
+      "file": "tests/test_deep_audit.py",
+      "line": 36,
+      "lines": 6
+    },
+    {
+      "name": "temp_rag_dir",
+      "file": "tests/test_real_rag_e2e.py",
+      "line": 87,
+      "lines": 6
+    },
+    {
+      "name": "open_rag_scan",
+      "file": "ui/actions.py",
+      "line": 81,
+      "lines": 6
+    },
+    {
+      "name": "update_metrics",
+      "file": "ui/dashboard.py",
+      "line": 27,
+      "lines": 6
+    },
+    {
+      "name": "tokens_per_second",
+      "file": "ui/formatters.py",
+      "line": 280,
+      "lines": 6
+    },
+    {
+      "name": "swap",
+      "file": "ui/model_gallery.py",
+      "line": 96,
+      "lines": 6
+    },
+    {
+      "name": "toggle_dark",
+      "file": "ui/modern_ui_demo.py",
+      "line": 202,
+      "lines": 6
+    },
+    {
+      "name": "limit_request_size",
+      "file": "zena_mode/asgi_server.py",
+      "line": 35,
+      "lines": 6
+    },
+    {
+      "name": "swap_model",
+      "file": "zena_mode/asgi_server.py",
+      "line": 328,
+      "lines": 6
+    },
+    {
+      "name": "can_load_model",
+      "file": "zena_mode/resource_manager.py",
+      "line": 144,
+      "lines": 6
+    },
+    {
+      "name": "push_engagement",
+      "file": "ui_state.py",
+      "line": 100,
+      "lines": 5
+    },
+    {
+      "name": "set_animation",
+      "file": "ui_state.py",
+      "line": 106,
+      "lines": 5
+    },
+    {
+      "name": "get_cache_stats",
+      "file": "Core/enhanced_rag_wrapper.py",
+      "line": 528,
+      "lines": 5
+    },
+    {
+      "name": "get_evaluation_stats",
+      "file": "Core/enhanced_rag_wrapper.py",
+      "line": 534,
+      "lines": 5
+    },
+    {
+      "name": "clear_cache",
+      "file": "Core/enhanced_rag_wrapper.py",
+      "line": 540,
+      "lines": 5
+    },
+    {
+      "name": "get_retrieval_evaluator",
+      "file": "Core/evaluation.py",
+      "line": 210,
+      "lines": 5
+    },
+    {
+      "name": "config_ops",
+      "file": "Rustified/benchmarks/run_python_baselines.py",
+      "line": 309,
+      "lines": 5
+    },
+    {
+      "name": "event_loop",
+      "file": "tests/conftest.py",
+      "line": 160,
+      "lines": 5
+    },
+    {
+      "name": "modern_theme",
+      "file": "tests/test_modern_ui_components.py",
+      "line": 44,
+      "lines": 5
+    },
+    {
+      "name": "chat_components",
+      "file": "tests/test_modern_ui_components.py",
+      "line": 52,
+      "lines": 5
+    },
+    {
+      "name": "gb_to_display",
+      "file": "ui/formatters.py",
+      "line": 40,
+      "lines": 5
+    },
+    {
+      "name": "get_metrics",
+      "file": "zena_mode/asgi_server.py",
+      "line": 270,
+      "lines": 5
+    },
+    {
+      "name": "ntotal",
+      "file": "zena_mode/rag_core_bridge.py",
+      "line": 229,
+      "lines": 5
+    }
+  ],
+  "total_defined": 980,
+  "total_dead": 308,
+  "total_called": 2494
+}
