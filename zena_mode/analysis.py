@@ -5,13 +5,11 @@ from typing import List, Dict, Any
 import logging
 
 from config_system import config
-import security
 
 logger = logging.getLogger("Analysis")
 
 
 def analyze_file(path: Path) -> Dict[str, Any]:
-    """Analyze file."""
     result = {"path": str(path), "issues": []}
     try:
         if not path.exists() or not path.is_file():
@@ -30,11 +28,22 @@ def analyze_file(path: Path) -> Dict[str, Any]:
             for node in ast.walk(tree):
                 if isinstance(node, ast.Global):
                     result["issues"].append(
-                        {"severity": "warning", "message": "global usage found", "line": node.lineno}
+                        {
+                            "severity": "warning",
+                            "message": "global usage found",
+                            "line": node.lineno,
+                        }
                     )
-                if isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("eval", "exec"):
+                if isinstance(node, ast.Call) and getattr(node.func, "id", "") in (
+                    "eval",
+                    "exec",
+                ):
                     result["issues"].append(
-                        {"severity": "error", "message": f"uses {node.func.id}()", "line": node.lineno}
+                        {
+                            "severity": "error",
+                            "message": f"uses {node.func.id}()",
+                            "line": node.lineno,
+                        }
                     )
         except Exception as e:
             result["issues"].append({"severity": "warning", "message": f"AST parse failed: {e}"})
@@ -53,19 +62,27 @@ def analyze_file(path: Path) -> Dict[str, Any]:
 
 
 def analyze_and_write_report(files: List[str], job_id: str = None) -> Dict[str, Any]:
-    """Analyze and write report."""
     report = {"job_id": job_id, "files": [], "summary": {}}
     for f in files:
-        # validate path
+        # validate path — ensure it's under BASE_DIR to prevent path traversal
         try:
-            p = Path(f)
-            # For safety, ensure path is under config.BASE_DIR or absolute validated
-            valid = security.validate_path(p)
-            if not valid:
-                report["files"].append({"path": f, "issues": [{"severity": "error", "message": "Path not allowed"}]})
+            p = Path(f).resolve()
+            base = Path(config.BASE_DIR).resolve()
+            if not str(p).startswith(str(base)):
+                report["files"].append(
+                    {
+                        "path": f,
+                        "issues": [{"severity": "error", "message": "Path not allowed"}],
+                    }
+                )
                 continue
         except Exception:
-            report["files"].append({"path": f, "issues": [{"severity": "error", "message": "Invalid path"}]})
+            report["files"].append(
+                {
+                    "path": f,
+                    "issues": [{"severity": "error", "message": "Invalid path"}],
+                }
+            )
             continue
 
         res = analyze_file(p)

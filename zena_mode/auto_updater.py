@@ -5,19 +5,34 @@ import re
 from pathlib import Path
 from typing import List, Dict
 from config_system import config
-from huggingface_hub import HfApi
 
 logger = logging.getLogger("AutoUpdater")
+
+
+def _local_only_skip_hf() -> bool:
+    """True when RAG_LOCAL_ONLY=1: skip all HuggingFace API/hub calls."""
+    return getattr(config.rag, "local_only", False) or os.environ.get("RAG_LOCAL_ONLY", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
 
 
 class ModelScout:
     """
     Intelligence layer to discover high-performing GGUF models on Hugging Face.
+    When RAG_LOCAL_ONLY=1, no HuggingFace calls are made (returns empty).
     """
 
     def __init__(self):
-        """Initialize instance."""
-        self.api = HfApi()
+        self.api = None
+        if not _local_only_skip_hf():
+            try:
+                from huggingface_hub import HfApi
+
+                self.api = HfApi()
+            except Exception:
+                self.api = None
         self.categories = {
             "coding": ["qwen", "codellama", "deepseek-coder"],
             "reasoning": ["meta-llama", "mistral", "phi-3"],
@@ -27,7 +42,10 @@ class ModelScout:
     def find_shiny_models(self, category: str = "coding", limit: int = 3) -> List[Dict]:
         """
         Scour Hugging Face for trending/best models in a given category.
+        When RAG_LOCAL_ONLY=1 or no API, returns [] (no HuggingFace calls).
         """
+        if _local_only_skip_hf() or self.api is None:
+            return []
         try:
             keywords = self.categories.get(category.lower(), ["llama"])
             models = self.api.list_models(
@@ -44,7 +62,12 @@ class ModelScout:
                 # Basic quality filtering: must have many downloads and recent updates
                 if m.downloads > 1000:
                     shiny_list.append(
-                        {"id": m.modelId, "downloads": m.downloads, "likes": m.likes, "last_modified": m.lastModified}
+                        {
+                            "id": m.modelId,
+                            "downloads": m.downloads,
+                            "likes": m.likes,
+                            "last_modified": m.lastModified,
+                        }
                     )
 
             return sorted(shiny_list, key=lambda x: x["downloads"], reverse=True)[:limit]
@@ -89,7 +112,11 @@ def check_for_updates(current_tag: str = "unknown") -> dict:
 
                 if is_newer(latest_tag, current_tag):
                     logger.info(f"✨ Shiny new version found: {latest_tag} (Current: {current_tag})")
-                    return {"tag": latest_tag, "url": data.get("html_url"), "assets": data.get("assets", [])}
+                    return {
+                        "tag": latest_tag,
+                        "url": data.get("html_url"),
+                        "assets": data.get("assets", []),
+                    }
     except Exception as e:
         logger.error(f"Failed to check for llama.cpp updates: {e}")
 
@@ -129,7 +156,10 @@ async def get_local_version() -> str:
 
     try:
         proc = await asyncio.create_subprocess_exec(
-            str(bin_path), "--version", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            str(bin_path),
+            "--version",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await proc.communicate()
         version_str = stdout.decode().strip() or stderr.decode().strip()

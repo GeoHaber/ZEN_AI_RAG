@@ -14,6 +14,7 @@ Architecture:
 - Semantic search for relevant past conversations
 """
 
+from __future__ import annotations
 import logging
 import sqlite3
 import json
@@ -80,7 +81,6 @@ class Message:
     metadata: Dict = field(default_factory=dict)
 
     def to_dict(self) -> Dict:
-        """To dict."""
         return {
             "role": self.role,
             "content": self.content,
@@ -91,7 +91,6 @@ class Message:
 
     @classmethod
     def from_dict(cls, data: Dict) -> "Message":
-        """From dict."""
         return cls(
             role=data["role"],
             content=data["content"],
@@ -112,7 +111,6 @@ class ConversationSummary:
     topics: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict:
-        """To dict."""
         return {
             "summary_text": self.summary_text,
             "start_time": self.start_time.isoformat(),
@@ -129,7 +127,6 @@ class ConversationDB:
     """SQLite storage for conversation history."""
 
     def __init__(self, db_path: Path):
-        """Initialize instance."""
         self.db_path = db_path
         self.conn = None
         self._lock = threading.RLock()
@@ -188,16 +185,6 @@ class ConversationDB:
             self.conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp)")
             self.conn.execute("CREATE INDEX IF NOT EXISTS idx_summaries_session ON summaries(session_id)")
 
-    @staticmethod
-    def _safe_json_loads(data, default=None):
-        """Parse JSON safely, returning default on failure."""
-        if not data:
-            return default if default is not None else {}
-        try:
-            return json.loads(data)
-        except (json.JSONDecodeError, TypeError):
-            return default if default is not None else {}
-
     def add_message(self, msg: Message, vector: Optional["np.ndarray"] = None) -> int:
         """Add a message to the database."""
         with self._lock:
@@ -241,7 +228,7 @@ class ConversationDB:
                         content=row["content"],
                         timestamp=datetime.fromisoformat(row["timestamp"]),
                         session_id=row["session_id"],
-                        metadata=self._safe_json_loads(row["metadata"], {}),
+                        metadata=json.loads(row["metadata"]) if row["metadata"] else {},
                     )
                 )
             return messages
@@ -271,7 +258,12 @@ class ConversationDB:
             )
             self.conn.commit()
 
-    def add_summary(self, session_id: str, summary: ConversationSummary, vector: Optional["np.ndarray"] = None) -> int:
+    def add_summary(
+        self,
+        session_id: str,
+        summary: ConversationSummary,
+        vector: Optional["np.ndarray"] = None,
+    ) -> int:
         """Store a conversation summary."""
         with self._lock:
             vector_blob = vector.tobytes() if vector is not None else None
@@ -294,7 +286,7 @@ class ConversationDB:
             self.conn.commit()
             return cursor.lastrowid
 
-    def get_all_vectors(self, session_id: str) -> List[Tuple[int, "np.ndarray", str]]:
+    def get_all_vectors(self, session_id: str) -> List[Tuple[int, np.ndarray, str]]:
         """Get all message vectors for FAISS index building."""
         with self._lock:
             cursor = self.conn.execute(
@@ -307,10 +299,9 @@ class ConversationDB:
 
             results = []
             for row in cursor:
-                if not row["vector"]:
-                    continue
-                vec = np.frombuffer(row["vector"], dtype=np.float32)
-                results.append((row["id"], vec, row["content"]))
+                if row["vector"]:
+                    vec = np.frombuffer(row["vector"], dtype=np.float32)
+                    results.append((row["id"], vec, row["content"]))
             return results
 
     def get_summaries(self, session_id: str) -> List[ConversationSummary]:
@@ -331,7 +322,7 @@ class ConversationDB:
                     start_time=datetime.fromisoformat(row["start_time"]),
                     end_time=datetime.fromisoformat(row["end_time"]),
                     message_count=row["message_count"],
-                    topics=self._safe_json_loads(row["topics"], []),
+                    topics=json.loads(row["topics"]) if row["topics"] else [],
                 )
                 for row in cursor
             ]
@@ -369,7 +360,6 @@ class ConversationMemory:
     """
 
     def __init__(self, cache_dir: Optional[Path] = None, config: Optional[MemoryConfig] = None):
-        """Initialize instance."""
         if not DEPS_AVAILABLE:
             raise ImportError("Install: pip install sentence-transformers faiss-cpu")
 
@@ -387,7 +377,7 @@ class ConversationMemory:
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
 
         # Per-session FAISS indexes (lightweight, rebuilt on demand)
-        self._indexes: Dict[str, "faiss.IndexFlatIP"] = {}
+        self._indexes: Dict[str, faiss.IndexFlatIP] = {}
         self._index_data: Dict[str, List[Tuple[int, str]]] = {}  # id -> content mapping
 
         # In-memory recent messages cache (for speed)
@@ -397,25 +387,29 @@ class ConversationMemory:
 
         logger.info(f"[ConvMemory] Initialized at {self.cache_dir}")
 
-    def _get_or_create_index(self, session_id: str) -> Tuple["faiss.IndexFlatIP", List]:
+    def _get_or_create_index(self, session_id: str) -> Tuple[faiss.IndexFlatIP, List]:
         """Get or create FAISS index for a session."""
-        if session_id in self._indexes:
-            return
+        if session_id not in self._indexes:
+            self._indexes[session_id] = faiss.IndexFlatIP(self.embedding_dim)
+            self._index_data[session_id] = []
 
-        self._indexes[session_id] = faiss.IndexFlatIP(self.embedding_dim)
-        self._index_data[session_id] = []
-
-        # Load existing vectors from DB
-        vectors_data = self.db.get_all_vectors(session_id)
-        if vectors_data:
-            vectors = np.vstack([v[1] for v in vectors_data]).astype("float32")
-            faiss.normalize_L2(vectors)
-            self._indexes[session_id].add(vectors)
-            self._index_data[session_id] = [(v[0], v[2]) for v in vectors_data]
+            # Load existing vectors from DB
+            vectors_data = self.db.get_all_vectors(session_id)
+            if vectors_data:
+                vectors = np.vstack([v[1] for v in vectors_data]).astype("float32")
+                faiss.normalize_L2(vectors)
+                self._indexes[session_id].add(vectors)
+                self._index_data[session_id] = [(v[0], v[2]) for v in vectors_data]
 
         return self._indexes[session_id], self._index_data[session_id]
 
-    def add_message(self, role: str, content: str, session_id: str = "default", metadata: Optional[Dict] = None) -> int:
+    def add_message(
+        self,
+        role: str,
+        content: str,
+        session_id: str = "default",
+        metadata: Optional[Dict] = None,
+    ) -> int:
         """
         Add a message to conversation history.
 
@@ -430,7 +424,11 @@ class ConversationMemory:
         """
         with self._lock:
             msg = Message(
-                role=role, content=content, timestamp=datetime.now(), session_id=session_id, metadata=metadata or {}
+                role=role,
+                content=content,
+                timestamp=datetime.now(),
+                session_id=session_id,
+                metadata=metadata or {},
             )
 
             # Embed the content
@@ -505,15 +503,18 @@ class ConversationMemory:
 
             results = []
             for sim, idx in zip(similarities[0], indices[0]):
-                if idx >= 0 and idx >= len(data) and sim >= self.config.RELEVANCE_THRESHOLD:
-                    continue
-                msg_id, content = data[idx]
-                results.append({"id": msg_id, "content": content, "score": float(sim)})
+                if idx >= 0 and idx < len(data) and sim >= self.config.RELEVANCE_THRESHOLD:
+                    msg_id, content = data[idx]
+                    results.append({"id": msg_id, "content": content, "score": float(sim)})
 
             return results
 
     def get_relevant_context(
-        self, query: str, session_id: str = "default", include_recent: bool = True, include_search: bool = True
+        self,
+        query: str,
+        session_id: str = "default",
+        include_recent: bool = True,
+        include_search: bool = True,
     ) -> str:
         """
         Build context string from relevant history.
@@ -557,7 +558,10 @@ class ConversationMemory:
         return "\n".join(context_parts) if context_parts else ""
 
     def build_contextual_prompt(
-        self, user_query: str, session_id: str = "default", system_prompt: Optional[str] = None
+        self,
+        user_query: str,
+        session_id: str = "default",
+        system_prompt: Optional[str] = None,
     ) -> str:
         """
         Build a prompt with conversation context.
@@ -584,9 +588,74 @@ class ConversationMemory:
 
         return "\n".join(parts)
 
+    async def summarize_old_messages(self, session_id: str, llm_backend) -> Optional[ConversationSummary]:
+        """
+        Use LLM to summarize older messages (async).
 
-def _summarize_old_messages_part1_continued():
-    """Continue _summarize_old_messages_part1 logic."""
+        Call this periodically to compress old history.
+
+        Args:
+            session_id: Session identifier
+            llm_backend: LLM backend with send_message_async method
+
+        Returns:
+            ConversationSummary if summarization occurred, None otherwise
+        """
+        count = self.db.get_unsummarized_count(session_id)
+
+        if count < self.config.SUMMARIZE_THRESHOLD:
+            logger.debug(f"[ConvMemory] Only {count} unsummarized messages, skipping")
+            return None
+
+        # Get messages to summarize (keep recent ones)
+        all_messages = self.db.get_recent_messages(session_id, limit=count)
+        to_summarize = all_messages[: -self.config.RECENT_WINDOW]
+
+        if not to_summarize:
+            return None
+
+        # Build summarization prompt
+        conversation_text = "\n".join([f"{m.role.upper()}: {m.content}" for m in to_summarize])
+
+        summarize_prompt = f"""Summarize this conversation concisely, capturing:
+1. Main topics discussed
+2. Key decisions or conclusions
+3. Important information shared
+
+Conversation:
+{conversation_text}
+
+Provide a brief summary (2-3 paragraphs max):"""
+
+        # Get summary from LLM
+        summary_text = ""
+        async for chunk in llm_backend.send_message_async(summarize_prompt):
+            summary_text += chunk
+
+        # Extract topics (simple keyword extraction)
+        topics = self._extract_topics(to_summarize)
+
+        summary = ConversationSummary(
+            summary_text=summary_text.strip(),
+            start_time=to_summarize[0].timestamp,
+            end_time=to_summarize[-1].timestamp,
+            message_count=len(to_summarize),
+            topics=topics,
+        )
+
+        # Store summary
+        summary_embedding = self.model.encode([summary_text], convert_to_numpy=True, normalize_embeddings=True)[
+            0
+        ].astype("float32")
+
+        self.db.add_summary(session_id, summary, summary_embedding)
+
+        # Mark messages as summarized
+        self.db.mark_as_summarized(session_id, to_summarize[-1].timestamp)
+
+        logger.info(f"[ConvMemory] Summarized {len(to_summarize)} messages for session {session_id}")
+
+        return summary
 
     def _extract_topics(self, messages: List[Message]) -> List[str]:
         """Extract topic keywords from messages (simple implementation)."""
@@ -734,80 +803,6 @@ def _summarize_old_messages_part1_continued():
 
             # Note: DB data persists - add explicit deletion if needed
             logger.info(f"[ConvMemory] Cleared in-memory data for session {session_id}")
-
-
-def _summarize_old_messages_part1():
-    """Summarize old messages part 1."""
-
-    self.db.add_summary(session_id, summary, summary_embedding)
-
-    # Mark messages as summarized
-    self.db.mark_as_summarized(session_id, to_summarize[-1].timestamp)
-
-    logger.info(f"[ConvMemory] Summarized {len(to_summarize)} messages for session {session_id}")
-
-    return summary
-
-    async def summarize_old_messages(self, session_id: str, llm_backend) -> Optional[ConversationSummary]:
-        """
-        Use LLM to summarize older messages (async).
-
-        Call this periodically to compress old history.
-
-        Args:
-            session_id: Session identifier
-            llm_backend: LLM backend with send_message_async method
-
-        Returns:
-            ConversationSummary if summarization occurred, None otherwise
-        """
-        count = self.db.get_unsummarized_count(session_id)
-
-        if count < self.config.SUMMARIZE_THRESHOLD:
-            logger.debug(f"[ConvMemory] Only {count} unsummarized messages, skipping")
-            return None
-
-        # Get messages to summarize (keep recent ones)
-        all_messages = self.db.get_recent_messages(session_id, limit=count)
-        to_summarize = all_messages[: -self.config.RECENT_WINDOW]
-
-        if not to_summarize:
-            return None
-
-        # Build summarization prompt
-        conversation_text = "\n".join([f"{m.role.upper()}: {m.content}" for m in to_summarize])
-
-        summarize_prompt = f"""Summarize this conversation concisely, capturing:
-1. Main topics discussed
-2. Key decisions or conclusions
-3. Important information shared
-
-Conversation:
-{conversation_text}
-
-Provide a brief summary (2-3 paragraphs max):"""
-
-        # Get summary from LLM
-        summary_text = ""
-        async for chunk in llm_backend.send_message_async(summarize_prompt):
-            summary_text += chunk
-
-        # Extract topics (simple keyword extraction)
-        topics = self._extract_topics(to_summarize)
-
-        ConversationSummary(
-            summary_text=summary_text.strip(),
-            start_time=to_summarize[0].timestamp,
-            end_time=to_summarize[-1].timestamp,
-            message_count=len(to_summarize),
-            topics=topics,
-        )
-
-        # Store summary
-        self.model.encode([summary_text], convert_to_numpy=True, normalize_embeddings=True)[0].astype("float32")
-        _summarize_old_messages_part1()
-
-    return _summarize_old_messages_part1_continued()
 
 
 # =============================================================================

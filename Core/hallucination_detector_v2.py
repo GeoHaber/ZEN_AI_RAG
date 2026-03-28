@@ -1,292 +1,502 @@
 """
-Core/hallucination_detector_v2.py — Multi-Signal Hallucination Detector.
+Core/hallucination_detector_v2.py — Multi-Signal Hallucination Detection
 
-Detection signals:
-  1. Ungrounded claims (keyword coverage < 30%)
-  2. NLI contradiction (cross-encoder deberta-v3)
-  3. Numerical inconsistency (numbers in answer vs sources)
-  4. Causal hallucination (causal claims without evidence)
-  5. Reasoning gaps (conditional premises not in sources)
+Detects 5 types of hallucinations in LLM answers:
+  1. Ungrounded claims   — claim not findable in source evidence
+  2. NLI contradictions  — claim directly contradicts evidence (CrossEncoder)
+  3. Numerical errors    — numbers in answer don't match evidence
+  4. Causal fabrication  — false cause-effect not in evidence
+  5. Reasoning errors    — invalid conditional logic
 
-Ported from ZEN_RAG.
+Designed to work alongside the existing Core/answer_verification_sota.py
+(FEVER framework) — this module adds NLI and deeper signal detection.
+
+Usage:
+    detector = AdvancedHallucinationDetector()
+    result = detector.detect_hallucinations(answer, evidence_texts)
+    if result.probability > 0.20:
+        st.warning(f"⚠️ {result.probability:.0%} hallucination risk")
 """
-
-from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Data classes
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 @dataclass
 class ClaimCheck:
-    """Result of checking a single claim."""
+    """Result of checking one claim."""
 
-    claim: str
-    hallucination_type: str  # "ungrounded", "contradiction", "numerical", "causal", "reasoning"
-    confidence: float = 0.0
-    evidence: str = ""
+    claim_text: str
+    hallucination_type: Optional[str]  # None = grounded, else type
+    confidence: float  # How confident we are in the detection (0–1)
+    evidence_snippet: Optional[str] = None  # Best matching evidence
 
 
 @dataclass
 class HallucinationReport:
-    """Full hallucination analysis of an answer."""
+    """Aggregate report for an answer."""
 
-    flagged_claims: List[ClaimCheck] = field(default_factory=list)
-    total_claims: int = 0
-    probability: float = 0.0
-    summary: str = ""
-    by_type: Dict[str, List[str]] = field(default_factory=dict)
+    claims: List[ClaimCheck]
+    probability: float  # Overall hallucination probability (0–1)
+    by_type: Dict[str, List[str]]  # {type: [claim_texts]}
+    summary: str
 
     @property
-    def is_clean(self) -> bool:
-        return self.probability < 0.20
+    def has_hallucinations(self) -> bool:
+        return self.probability > 0.10
+
+    @property
+    def hallucination_rate(self) -> float:
+        return self.probability
+
+    @property
+    def total_claims(self) -> int:
+        return len(self.claims)
+
+    @property
+    def hallucinated_claims(self) -> int:
+        return sum(1 for c in self.claims if c.hallucination_type is not None)
+
+    def to_legacy_dict(self) -> Dict:
+        """Convert to format compatible with ui/answer_verification.py.
+
+        The UI distinguishes between *refuted* claims (directly contradicted)
+        and *unsupported* claims (not findable in sources).  We split based
+        on the hallucination_type so show_hallucination_warning() renders
+        both sections correctly.
+        """
+        refuted = []
+        unsupported = []
+        for c in self.claims:
+            if c.hallucination_type is None:
+                continue
+            entry = {"claim": c.claim_text, "reasoning": c.hallucination_type}
+            if c.hallucination_type in (
+                "nli_contradiction",
+                "numerical_error",
+            ):
+                refuted.append(entry)
+            else:
+                unsupported.append(entry)
+        return {
+            "has_hallucinations": self.has_hallucinations,
+            "hallucination_rate": self.probability,
+            "refuted_claims": refuted,
+            "unsupported_claims": unsupported,
+            "total_claims": self.total_claims,
+            "summary": self.summary,
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Detector
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 class AdvancedHallucinationDetector:
-    """Multi-signal hallucination detector for RAG answers.
+    """
+    Multi-signal hallucination detection.
 
-    Usage:
-        detector = AdvancedHallucinationDetector()
-        report = detector.detect(answer, source_chunks)
-        if not report.is_clean:
-            # Flag or refine the answer
+    Uses NLI CrossEncoder when available (significantly more accurate for
+    contradiction detection), with robust heuristic fallbacks.
     """
 
-    # NLI model for contradiction detection
-    _NLI_MODEL_NAME = "cross-encoder/nli-deberta-v3-small"
+    def __init__(self, nli_model_name: str = "cross-encoder/nli-deberta-v3-small"):
+        self.nli_model = None
+        self.nli_available = False
 
-    def __init__(self, nli_threshold: float = 0.70):
-        self.nli_threshold = nli_threshold
-        self._nli_model = None
+        try:
+            from sentence_transformers import CrossEncoder
 
-    @property
-    def nli_model(self):
-        if self._nli_model is None:
-            try:
-                from sentence_transformers import CrossEncoder
-                self._nli_model = CrossEncoder(self._NLI_MODEL_NAME)
-                logger.info(f"[HallucinationDetector] Loaded NLI model: {self._NLI_MODEL_NAME}")
-            except Exception as e:
-                logger.warning(f"[HallucinationDetector] NLI model not available: {e}")
-        return self._nli_model
+            self.nli_model = CrossEncoder(nli_model_name)
+            self.nli_available = True
+            logger.info(f"[HallucinationDetector] NLI model loaded: {nli_model_name}")
+        except Exception as e:
+            logger.info(f"[HallucinationDetector] NLI model not available ({e}); using heuristic-only detection")
 
-    def detect(
+    # =====================================================================
+    # PUBLIC API
+    # =====================================================================
+
+    def detect_hallucinations(
         self,
         answer: str,
-        source_chunks: List[Dict[str, Any]],
-        query: Optional[str] = None,
+        evidence_texts: List[str],
+        claims: Optional[List[str]] = None,
     ) -> HallucinationReport:
-        """Run all hallucination signals on an answer."""
-        if not answer or not source_chunks:
-            return HallucinationReport(summary="No answer or sources to check")
+        """
+        Detect hallucinations in an LLM answer.
 
-        claims = self._extract_claims(answer)
+        Args:
+            answer: The generated answer text.
+            evidence_texts: List of source/evidence passages.
+            claims: Pre-extracted claims. If None, auto-extracted from answer.
+
+        Returns:
+            HallucinationReport with per-claim analysis and overall probability.
+        """
+        if not evidence_texts:
+            return HallucinationReport(
+                claims=[],
+                probability=0.5,
+                by_type={},
+                summary="No evidence provided — cannot verify",
+            )
+
+        # Combine evidence for searching
+        evidence_combined = "\n\n".join(evidence_texts)
+
+        # Extract claims
+        if claims is None:
+            claims = self._extract_claims(answer)
+
         if not claims:
-            return HallucinationReport(summary="No verifiable claims found")
+            return HallucinationReport(
+                claims=[],
+                probability=0.0,
+                by_type={},
+                summary="No verifiable claims found",
+            )
 
-        evidence_text = " ".join(c.get("text", "") for c in source_chunks)
-        flagged: List[ClaimCheck] = []
+        # Check each claim
+        checked: List[ClaimCheck] = []
         by_type: Dict[str, List[str]] = {
             "ungrounded": [],
-            "contradiction": [],
+            "nli_contradiction": [],
             "numerical": [],
             "causal": [],
             "reasoning": [],
         }
 
-        for claim in claims:
-            # Signal 1: Ungrounded
-            if self._is_ungrounded(claim, evidence_text):
-                check = ClaimCheck(claim=claim, hallucination_type="ungrounded", confidence=0.7)
-                flagged.append(check)
-                by_type["ungrounded"].append(claim)
+        for claim_text in claims:
+            if isinstance(claim_text, dict):
+                claim_text = claim_text.get("text", str(claim_text))
+            claim_text = str(claim_text).strip()
+            if not claim_text or len(claim_text) < 10:
                 continue
 
-            # Signal 2: NLI contradiction
-            nli_result = self._check_nli_contradiction(claim, source_chunks)
-            if nli_result:
-                flagged.append(nli_result)
-                by_type["contradiction"].append(claim)
-                continue
+            result = self._check_claim(claim_text, evidence_combined, evidence_texts)
+            checked.append(result)
 
-            # Signal 3: Numerical inconsistency
-            if self._check_numerical(claim, evidence_text):
-                check = ClaimCheck(claim=claim, hallucination_type="numerical", confidence=0.8)
-                flagged.append(check)
-                by_type["numerical"].append(claim)
-                continue
+            if result.hallucination_type:
+                by_type.setdefault(result.hallucination_type, []).append(claim_text)
 
-            # Signal 4: Causal hallucination
-            if self._check_causal(claim, evidence_text):
-                check = ClaimCheck(claim=claim, hallucination_type="causal", confidence=0.6)
-                flagged.append(check)
-                by_type["causal"].append(claim)
-                continue
+        # Calculate probability
+        if not checked:
+            prob = 0.0
+        else:
+            # Weighted: high-confidence detections count more
+            weighted_sum = sum(c.confidence for c in checked if c.hallucination_type is not None)
+            prob = min(1.0, weighted_sum / len(checked))
 
-            # Signal 5: Reasoning gap
-            if self._check_reasoning(claim, evidence_text):
-                check = ClaimCheck(claim=claim, hallucination_type="reasoning", confidence=0.5)
-                flagged.append(check)
-                by_type["reasoning"].append(claim)
-
-        total = len(claims)
-        probability = len(flagged) / total if total > 0 else 0.0
-        summary = self._build_summary(by_type, probability, total)
+        summary = self._build_summary(by_type, prob, len(checked))
 
         return HallucinationReport(
-            flagged_claims=flagged,
-            total_claims=total,
-            probability=probability,
-            summary=summary,
+            claims=checked,
+            probability=prob,
             by_type=by_type,
+            summary=summary,
         )
 
-    # ─── Claim Extraction ──────────────────────────────────────────────────
+    # Compatibility alias used by existing code
+    def detect(self, answer: str, sources: List) -> Dict:
+        """Legacy API compatible with Core/answer_verification_sota.py."""
+        evidence = []
+        for src in sources:
+            if isinstance(src, str):
+                evidence.append(src)
+            elif isinstance(src, dict):
+                evidence.append(src.get("text", str(src)))
+            else:
+                evidence.append(str(src))
 
-    @staticmethod
-    def _extract_claims(text: str) -> List[str]:
-        """Split answer into individual claims/sentences."""
+        report = self.detect_hallucinations(answer, evidence)
+        return report.to_legacy_dict()
+
+    # =====================================================================
+    # CLAIM EXTRACTION
+    # =====================================================================
+
+    def _extract_claims(self, text: str) -> List[str]:
+        """Extract individual factual claims from answer text."""
+        # Split on sentence boundaries
         sentences = re.split(r"(?<=[.!?])\s+", text)
         claims = []
-        for s in sentences:
-            s = s.strip()
-            if len(s) > 15 and not s.startswith(("Note:", "Disclaimer:", "Source:")):
-                claims.append(s)
+
+        for sent in sentences:
+            sent = sent.strip()
+            if not sent or len(sent) < 15:
+                continue
+
+            # Skip conversational filler
+            if re.match(
+                r"^(I\s+(think|believe|am not sure)|Let me|Here|Note that|"
+                r"In summary|Overall|To summarize|As mentioned|Please note)",
+                sent,
+                re.I,
+            ):
+                continue
+
+            # Skip questions
+            if sent.endswith("?"):
+                continue
+
+            claims.append(sent)
+
         return claims
 
-    # ─── Signal 1: Ungrounded Claims ───────────────────────────────────────
+    # =====================================================================
+    # PER-CLAIM CHECKING
+    # =====================================================================
 
-    @staticmethod
-    def _is_ungrounded(claim: str, evidence: str) -> bool:
-        """Check if < 30% of content words appear in evidence."""
-        stopwords = frozenset({
-            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-            "have", "has", "had", "do", "does", "did", "will", "would", "could",
-            "should", "may", "might", "must", "shall", "can", "in", "on", "at",
-            "to", "for", "of", "with", "by", "from", "and", "or", "but", "if",
-            "then", "than", "that", "this", "it", "its", "not", "no", "so",
-            "very", "also", "just", "more", "most", "such", "other", "which",
-            "who", "what", "when", "where", "how", "all", "any", "both", "each",
-        })
+    def _check_claim(self, claim: str, evidence_combined: str, evidence_list: List[str]) -> ClaimCheck:
+        """Check one claim against all evidence."""
 
-        content_words = [w for w in re.findall(r"\b\w+\b", claim.lower())
-                         if w not in stopwords and len(w) > 2]
-        if len(content_words) < 3:
-            return False
+        # 1. Numerical error (highest confidence)
+        num_err = self._check_numerical(claim, evidence_combined)
+        if num_err:
+            return ClaimCheck(claim, "numerical", 0.85, num_err)
 
-        evidence_lower = evidence.lower()
-        found = sum(1 for w in content_words if w in evidence_lower)
-        coverage = found / len(content_words)
-        return coverage < 0.30
+        # 2. NLI contradiction
+        if self.nli_available:
+            nli_result = self._check_nli(claim, evidence_list)
+            if nli_result:
+                return ClaimCheck(claim, "nli_contradiction", 0.80, nli_result)
 
-    # ─── Signal 2: NLI Contradiction ───────────────────────────────────────
+        # 3. Causal fabrication
+        causal_err = self._check_causal(claim, evidence_combined)
+        if causal_err:
+            return ClaimCheck(claim, "causal", 0.70, causal_err)
 
-    def _check_nli_contradiction(
-        self,
-        claim: str,
-        source_chunks: List[Dict],
-    ) -> Optional[ClaimCheck]:
-        """Use NLI cross-encoder to detect contradictions."""
+        # 4. Reasoning error
+        reasoning_err = self._check_reasoning(claim, evidence_combined)
+        if reasoning_err:
+            return ClaimCheck(claim, "reasoning", 0.65, reasoning_err)
+
+        # 5. Ungrounded claim (lowest confidence — many false positives)
+        if self._is_ungrounded(claim, evidence_combined):
+            return ClaimCheck(claim, "ungrounded", 0.45)
+
+        # Grounded
+        return ClaimCheck(claim, None, 0.0)
+
+    # ── Check: Numerical errors ──────────────────────────────────────────
+
+    def _check_numerical(self, claim: str, evidence: str) -> Optional[str]:
+        """Detect numbers in claim that don't appear in evidence."""
+        claim_nums = re.findall(r"\b\d+(?:[.,]\d+)*\b", claim)
+        if not claim_nums:
+            return None
+
+        evidence_nums = set(re.findall(r"\b\d+(?:[.,]\d+)*\b", evidence))
+
+        for num_str in claim_nums:
+            # Normalize
+            normalized = num_str.replace(",", "")
+            if normalized in {"0", "1", "2", "3", "4", "5", "10", "100"}:
+                continue  # Skip trivial numbers
+
+            try:
+                num_val = float(normalized)
+            except ValueError:
+                continue
+
+            # Allow ±2% tolerance for large numbers, ±1 for small
+            matched = False
+            for ev_str in evidence_nums:
+                try:
+                    ev_val = float(ev_str.replace(",", ""))
+                    if num_val == 0 and ev_val == 0:
+                        matched = True
+                        break
+                    tolerance = max(1.0, abs(ev_val) * 0.02)
+                    if abs(num_val - ev_val) <= tolerance:
+                        matched = True
+                        break
+                except ValueError:
+                    continue
+
+            if not matched:
+                return f"Number {num_str} not found in evidence"
+
+        return None
+
+    # ── Check: NLI contradiction ─────────────────────────────────────────
+
+    def _check_nli(self, claim: str, evidence_list: List[str]) -> Optional[str]:
+        """Use NLI CrossEncoder to detect if any evidence contradicts the claim."""
         if not self.nli_model:
             return None
 
         try:
-            for chunk in source_chunks[:5]:
-                text = chunk.get("text", "")
-                if not text:
+            # Check against each evidence passage (truncated for speed)
+            for evidence in evidence_list:
+                ev_trunc = evidence[:800]
+                if len(ev_trunc) < 20:
                     continue
 
-                # NLI scores: [contradiction, entailment, neutral]
-                scores = self.nli_model.predict([(text, claim)])
-                if hasattr(scores, "__len__") and len(scores) > 0:
-                    score = scores[0]
-                    # Handle both single-value and multi-class outputs
-                    if hasattr(score, "__len__") and len(score) >= 3:
-                        contradiction_score = float(score[0])
-                        if contradiction_score > self.nli_threshold:
-                            return ClaimCheck(
-                                claim=claim,
-                                hallucination_type="contradiction",
-                                confidence=contradiction_score,
-                                evidence=text[:200],
-                            )
+                scores = self.nli_model.predict([(ev_trunc, claim)])
+                # Output format: [contradiction, neutral, entailment]
+                if hasattr(scores[0], "__len__") and len(scores[0]) >= 3:
+                    contradiction_score = float(scores[0][0])
+                    if contradiction_score > 0.70:
+                        snippet = ev_trunc[:150].strip()
+                        return f"Contradicted by: {snippet}..."
+                elif isinstance(scores[0], (int, float)):
+                    # Some models output a single score
+                    if float(scores[0]) < -0.5:
+                        return "NLI contradiction detected"
         except Exception as e:
             logger.debug(f"[HallucinationDetector] NLI check error: {e}")
 
         return None
 
-    # ─── Signal 3: Numerical Inconsistency ─────────────────────────────────
+    # ── Check: Causal fabrication ────────────────────────────────────────
 
-    @staticmethod
-    def _check_numerical(claim: str, evidence: str) -> bool:
-        """Check if numbers in claim appear in evidence."""
-        claim_nums = set(re.findall(r"\b\d+\.?\d*%?\b", claim))
-        if not claim_nums:
-            return False
-
-        evidence_nums = set(re.findall(r"\b\d+\.?\d*%?\b", evidence))
-        unmatched = claim_nums - evidence_nums
-
-        # If >50% of numbers in the claim don't appear in evidence
-        if len(unmatched) > len(claim_nums) * 0.5:
-            return True
-        return False
-
-    # ─── Signal 4: Causal Hallucination ────────────────────────────────────
-
-    @staticmethod
-    def _check_causal(claim: str, evidence: str) -> bool:
-        """Check if causal claims have evidence support."""
-        causal_patterns = [
-            r"\b(because|caused?\s+by|leads?\s+to|results?\s+in|due\s+to)\b",
-            r"\b(therefore|consequently|as\s+a\s+result|hence)\b",
+    def _check_causal(self, claim: str, evidence: str) -> Optional[str]:
+        """Detect false cause-effect claims not supported by evidence."""
+        causal_markers = [
+            r"\bcaused?\s+(?:by|the)\b",
+            r"\bresult(?:s|ed)?\s+in\b",
+            r"\blead(?:s|ing)?\s+to\b",
+            r"\bis\s+responsible\s+for\b",
+            r"\bdue\s+to\b",
+            r"\bbecause\s+of\b",
+            r"\btriggered?\b",
         ]
 
-        claim_has_causal = any(re.search(p, claim, re.IGNORECASE) for p in causal_patterns)
+        claim_has_causal = any(re.search(p, claim, re.I) for p in causal_markers)
         if not claim_has_causal:
-            return False
+            return None
 
-        evidence_has_causal = any(re.search(p, evidence, re.IGNORECASE) for p in causal_patterns)
-        return not evidence_has_causal
+        # Evidence should also express causation for the same entities
+        evidence_has_causal = any(re.search(p, evidence, re.I) for p in causal_markers)
+        if not evidence_has_causal:
+            return "Claim asserts causation but evidence only shows correlation"
 
-    # ─── Signal 5: Reasoning Gap ───────────────────────────────────────────
+        return None
 
-    @staticmethod
-    def _check_reasoning(claim: str, evidence: str) -> bool:
-        """Check if conditional/reasoning premises exist in evidence."""
-        reasoning_patterns = [
-            r"\bif\s+.+then\b",
-            r"\bassuming\s+that\b",
-            r"\bgiven\s+that\b",
-            r"\bprovided\s+that\b",
-        ]
+    # ── Check: Reasoning errors ──────────────────────────────────────────
 
-        has_reasoning = any(re.search(p, claim, re.IGNORECASE) for p in reasoning_patterns)
-        if not has_reasoning:
-            return False
+    def _check_reasoning(self, claim: str, evidence: str) -> Optional[str]:
+        """Detect invalid if-then or conditional reasoning."""
+        match = re.search(r"\bif\s+(.+?),?\s+then\s+(.+)", claim, re.I)
+        if not match:
+            return None
 
-        # Extract the premise (text after if/assuming/given)
-        premise_match = re.search(r"\b(if|assuming|given|provided)\s+(?:that\s+)?(.+?)(?:,|then|\b$)", claim, re.IGNORECASE)
-        if premise_match:
-            premise = premise_match.group(2).strip()
-            premise_words = [w for w in re.findall(r"\w+", premise.lower()) if len(w) > 3]
-            if premise_words:
-                evidence_lower = evidence.lower()
-                found = sum(1 for w in premise_words if w in evidence_lower)
-                coverage = found / len(premise_words) if premise_words else 1.0
-                if coverage < 0.3:
-                    return True
+        premise = match.group(1).strip().lower()
 
-        return False
+        # Premise must be present in evidence
+        if premise not in evidence.lower() and len(premise) > 10:
+            return f"Conditional premise '{premise[:50]}' not found in evidence"
 
-    # ─── Summary ───────────────────────────────────────────────────────────
+        return None
 
-    @staticmethod
-    def _build_summary(by_type: Dict[str, List[str]], probability: float, total_claims: int) -> str:
+    # ── Check: Ungrounded claim ──────────────────────────────────────────
+
+    def _is_ungrounded(self, claim: str, evidence: str) -> bool:
+        """
+        Check if claim has no lexical grounding in evidence.
+        Conservative: requires multiple content words to be missing.
+        """
+        stopwords = {
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "must",
+            "shall",
+            "can",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "and",
+            "or",
+            "but",
+            "if",
+            "then",
+            "than",
+            "that",
+            "this",
+            "it",
+            "its",
+            "not",
+            "no",
+            "so",
+            "very",
+            "also",
+            "just",
+            "more",
+            "most",
+            "such",
+            "other",
+            "which",
+            "who",
+            "what",
+            "when",
+            "where",
+            "how",
+            "all",
+            "any",
+            "both",
+            "each",
+        }
+
+        content_words = [w for w in re.findall(r"\b\w+\b", claim.lower()) if w not in stopwords and len(w) > 2]
+
+        if len(content_words) < 3:
+            return False  # Too few words to judge
+
+        evidence_lower = evidence.lower()
+        found = sum(1 for w in content_words if w in evidence_lower)
+        coverage = found / len(content_words)
+
+        # If <30% of content words appear in evidence → ungrounded
+        return coverage < 0.30
+
+    # =====================================================================
+    # SUMMARY
+    # =====================================================================
+
+    def _build_summary(self, by_type: Dict[str, List[str]], probability: float, total_claims: int) -> str:
         """Human-readable summary string."""
         parts = []
         for htype, claims in by_type.items():

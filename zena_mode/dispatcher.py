@@ -42,11 +42,10 @@ class FastDispatcher:
         """
         # --- Level 0: Instant Check ---
         for pattern, response in self.fast_responses.items():
-            if not pattern.search(prompt.strip()):
-                continue
-            if callable(response):
-                return {"type": "direct", "content": response()}
-            return {"type": "direct", "content": response}
+            if pattern.search(prompt.strip()):
+                if callable(response):
+                    return {"type": "direct", "content": response()}
+                return {"type": "direct", "content": response}
 
         # --- Level 1: Intent Classification (Mock/Heuristic for now, can use small model later) ---
         # Heuristics for RAG: "who is", "what is", "search", "find", "?" (if it looks like a fact query)
@@ -55,7 +54,19 @@ class FastDispatcher:
         lower_p = prompt.lower()
 
         # 1. Code Detection
-        if any(w in lower_p for w in ["code", "script", "function", "class", "def ", "import ", "python", "html"]):
+        if any(
+            w in lower_p
+            for w in [
+                "code",
+                "script",
+                "function",
+                "class",
+                "def ",
+                "import ",
+                "python",
+                "html",
+            ]
+        ):
             return {"type": "expert", "expert": "code", "prompt": prompt}
 
         # 2. RAG Detection (Simple Heuristic for speed)

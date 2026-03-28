@@ -1,22 +1,16 @@
 """
-Core Application Models — Typed DTOs for ZEN_AI_RAG.
-
-Defines the request/response data-transfer objects used throughout the
-application. Every interaction (test, UI, API) uses these models.
-
-Adapted from RAG_RAT/Core/models.py.
+Core Application Models
+Defines the request/response DTOs used throughout the application.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
 
 
 class ResponseStatus(str, Enum):
-    """Response status codes."""
+    """Response status codes"""
 
     SUCCESS = "success"
     ERROR = "error"
@@ -24,12 +18,9 @@ class ResponseStatus(str, Enum):
     TIMEOUT = "timeout"
 
 
-# ─── Query ───────────────────────────────────────────────
-
-
 @dataclass
 class QueryRequest:
-    """Request for a single query with optional RAG context."""
+    """Request for a query operation"""
 
     query: str
     include_sources: bool = True
@@ -39,15 +30,16 @@ class QueryRequest:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
+        """Validate request"""
         if not self.query or not self.query.strip():
             raise ValueError("Query cannot be empty")
-        if not 0.0 <= self.temperature <= 2.0:
-            raise ValueError("Temperature must be between 0 and 2")
+        if self.temperature < 0 or self.temperature > 1:
+            raise ValueError("Temperature must be between 0 and 1")
 
 
 @dataclass
 class QueryResponse:
-    """Response from a query operation."""
+    """Response from a query operation"""
 
     content: str
     sources: List[Dict[str, Any]] = field(default_factory=list)
@@ -59,22 +51,9 @@ class QueryResponse:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-# ─── Chat ────────────────────────────────────────────────
-
-
-@dataclass
-class ChatMessage:
-    """Single chat message."""
-
-    role: str  # "user", "assistant", "system"
-    content: str
-    timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
 @dataclass
 class ChatRequest:
-    """Request for a chat operation with conversation memory."""
+    """Request for a chat operation"""
 
     message: str
     session_id: str
@@ -85,6 +64,7 @@ class ChatRequest:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
+        """Validate request"""
         if not self.message or not self.message.strip():
             raise ValueError("Message cannot be empty")
         if not self.session_id:
@@ -92,8 +72,18 @@ class ChatRequest:
 
 
 @dataclass
+class ChatMessage:
+    """Single chat message"""
+
+    role: str  # "user", "assistant", "system"
+    content: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class ChatResponse:
-    """Response from a chat operation."""
+    """Response from a chat operation"""
 
     message: ChatMessage
     history: List[ChatMessage] = field(default_factory=list)
@@ -105,12 +95,9 @@ class ChatResponse:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-# ─── Search ──────────────────────────────────────────────
-
-
 @dataclass
 class SearchRequest:
-    """Request for a RAG knowledge-base search."""
+    """Request for a search operation"""
 
     query: str
     limit: int = 10
@@ -118,17 +105,18 @@ class SearchRequest:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
+        """Validate request"""
         if not self.query or not self.query.strip():
             raise ValueError("Query cannot be empty")
         if self.limit <= 0:
             raise ValueError("Limit must be positive")
-        if not 0.0 <= self.threshold <= 1.0:
+        if self.threshold < 0 or self.threshold > 1:
             raise ValueError("Threshold must be between 0 and 1")
 
 
 @dataclass
 class SearchResult:
-    """Single search result."""
+    """Single search result"""
 
     content: str
     score: float
@@ -138,7 +126,7 @@ class SearchResult:
 
 @dataclass
 class SearchResponse:
-    """Response from a search operation."""
+    """Response from a search operation"""
 
     results: List[SearchResult] = field(default_factory=list)
     total_count: int = 0
@@ -149,12 +137,9 @@ class SearchResponse:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-# ─── Streaming ───────────────────────────────────────────
-
-
 @dataclass
 class StreamRequest:
-    """Request for a streaming operation."""
+    """Request for a streaming operation"""
 
     query: str
     max_tokens: int = 2048
@@ -165,7 +150,7 @@ class StreamRequest:
 
 @dataclass
 class StreamChunk:
-    """Single chunk in a streaming response."""
+    """Single chunk in a stream"""
 
     content: str
     chunk_id: int
@@ -174,16 +159,14 @@ class StreamChunk:
     timestamp: datetime = field(default_factory=datetime.now)
 
 
-# ─── Status ──────────────────────────────────────────────
-
-
 @dataclass
 class StatusResponse:
-    """Application status response."""
+    """Status of the application"""
 
-    status: ResponseStatus = ResponseStatus.SUCCESS
-    components: Dict[str, Any] = field(default_factory=dict)
+    is_ready: bool
+    rag_engine_ready: bool
+    llm_service_ready: bool
+    cache_service_ready: bool
+    error_message: Optional[str] = None
     uptime_seconds: float = 0.0
-    version: str = ""
-    timestamp: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)

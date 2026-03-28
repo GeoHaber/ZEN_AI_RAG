@@ -1,277 +1,402 @@
 """
-Core/reranker_advanced.py — 5-Factor Advanced Reranker for RAG Pipeline.
+Core/reranker_advanced.py — 5-Factor Advanced Re-ranking Engine
 
-Scoring factors:
-  1. Semantic relevance (40%) — CrossEncoder semantic similarity
-  2. Position boost (10%) — original retrieval position
-  3. Keyword density (15%) — query keyword concentration
-  4. Answer-type alignment (25%) — does chunk match expected answer type
-  5. Source credibility (10%) — TLD and domain reputation
+Replaces simple keyword-overlap ranking with a multi-signal reranker:
+  Factor 1: Semantic relevance (CrossEncoder or cosine)    — 40%
+  Factor 2: Position / structure importance                 — 10%
+  Factor 3: Information density (unique words, length)      — 15%
+  Factor 4: Answer-type matching (what/how/compare/where)   — 25%
+  Factor 5: Source credibility (official > academic > web)   — 10%
 
-Ported from ZEN_RAG.
+Drop-in replacement for the existing reranker in rag_pipeline.py.
+
+Usage:
+    reranker = AdvancedReranker(model=sentence_transformer)
+    ranked, scores = reranker.rerank(query, chunks, top_k=5)
 """
 
-from __future__ import annotations
-
+import os
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
+def _reranker_model_path():
+    """Local path from env; when set, load from disk only (no HuggingFace hub)."""
+    p = os.environ.get("RAG_RERANKER_MODEL_PATH", "").strip()
+    if not p:
+        return None
+    path = Path(p).expanduser().resolve()
+    return str(path) if path.exists() else None
+
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+
 class AdvancedReranker:
-    """5-factor reranker for RAG search results.
+    """5-factor re-ranking combining semantic, structural, and quality signals."""
 
-    Uses CrossEncoder for semantic scoring + heuristic signals
-    for position, density, answer-type, and source credibility.
-
-    Usage:
-        reranker = AdvancedReranker()
-        reranked = reranker.rerank(query, chunks, top_k=5)
-    """
-
-    # Factor weights
-    W_SEMANTIC = 0.40
-    W_POSITION = 0.10
-    W_DENSITY = 0.15
-    W_ANSWER_TYPE = 0.25
-    W_SOURCE = 0.10
-
-    # Source credibility scores
+    # ── Source credibility table ──────────────────────────────────────────
     SOURCE_CREDIBILITY = {
-        "wikipedia.org": 0.85,
-        "arxiv.org": 0.90,
-        "nature.com": 0.95,
-        "science.org": 0.95,
-        "pubmed": 0.92,
-        "nih.gov": 0.93,
-        "springer.com": 0.88,
-        "ieee.org": 0.90,
-        "acm.org": 0.88,
-        "reuters.com": 0.82,
-        "bbc.com": 0.80,
-        "nytimes.com": 0.80,
+        "official": 0.95,
+        "gov": 0.93,
+        "edu": 0.90,
+        "academic": 0.90,
+        "research": 0.88,
+        "pubmed": 0.88,
+        "nih": 0.88,
+        "news": 0.75,
+        "bbc": 0.78,
+        "reuters": 0.80,
+        "wiki": 0.70,
+        "wikipedia": 0.70,
+        "github": 0.75,
+        "stackoverflow": 0.72,
+        "pdf": 0.65,
+        "medium": 0.55,
+        "blog": 0.50,
+        "reddit": 0.45,
+        "forum": 0.40,
+        "web": 0.50,
     }
 
-    # Answer type patterns
-    ANSWER_TYPE_PATTERNS = {
-        "definition": re.compile(r"\b(what\s+is|define|meaning\s+of|definition)\b", re.I),
-        "list": re.compile(r"\b(list|enumerate|what\s+are|name\s+the|types\s+of)\b", re.I),
-        "number": re.compile(r"\b(how\s+many|how\s+much|number\s+of|count|percentage)\b", re.I),
-        "person": re.compile(r"\b(who\s+(is|was|are|were)|author|creator|founder)\b", re.I),
-        "date": re.compile(r"\b(when|what\s+(year|date|time)|since\s+when)\b", re.I),
-        "location": re.compile(r"\b(where|location|country|city|region)\b", re.I),
-        "comparison": re.compile(r"\b(compare|versus|vs\.?|differ|difference|better)\b", re.I),
-        "process": re.compile(r"\b(how\s+to|steps|process|procedure|method)\b", re.I),
-        "reason": re.compile(r"\b(why|reason|cause|because|purpose)\b", re.I),
+    # ── Query-type detection patterns ────────────────────────────────────
+    QUERY_TYPE_PATTERNS = {
+        "definition": re.compile(r"\b(what|define|meaning|explain|describe|who)\b", re.I),
+        "procedure": re.compile(r"\b(how|steps?|process|procedure|guide|tutorial|instructions?)\b", re.I),
+        "comparison": re.compile(
+            r"\b(compare|difference|vs|versus|better|worse|advantage|disadvantage)\b",
+            re.I,
+        ),
+        "location": re.compile(r"\b(where|location|place|country|city|address|situated)\b", re.I),
+        "temporal": re.compile(r"\b(when|date|year|time|history|timeline|era)\b", re.I),
+        "quantitative": re.compile(r"\b(how\s+many|how\s+much|number|count|percentage|ratio|amount)\b", re.I),
+        "causal": re.compile(r"\b(why|cause|reason|because|effect|result|consequence)\b", re.I),
     }
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
-        self._model = None
-        self._model_name = model_name
+    # ── Answer-type indicators per query-type ────────────────────────────
+    ANSWER_INDICATORS = {
+        "definition": [
+            (r"\bis\s+(a|an|the|defined\s+as)\b", 0.95),
+            (r"\brefers?\s+to\b", 0.90),
+            (r"\bmeans?\b", 0.85),
+            (r"\b(definition|concept|term)\b", 0.80),
+        ],
+        "procedure": [
+            (r"(?:^|\n)\s*\d+[\.\)]\s", 0.95),  # Numbered lists
+            (r"\b(step|first|second|then|next|finally)\b", 0.90),
+            (r"\b(process|procedure|method|technique)\b", 0.80),
+            (r"\b(install|configure|setup|run|execute)\b", 0.75),
+        ],
+        "comparison": [
+            (r"\b(unlike|whereas|however|on\s+the\s+other\s+hand)\b", 0.95),
+            (r"\b(vs|versus|compared?\s+to)\b", 0.90),
+            (r"\b(advantage|disadvantage|pro|con)\b", 0.85),
+            (r"\b(similar|different|differ)\b", 0.80),
+        ],
+        "location": [
+            (r"\b(located|situated|found\s+in)\b", 0.95),
+            (r"\b(north|south|east|west)\s+of\b", 0.90),
+            (r"\b(region|province|state|district)\b", 0.80),
+            (r"\b(lat|long|coordinates?)\b", 0.85),
+        ],
+        "temporal": [
+            (r"\b(in\s+)?\d{4}\b", 0.90),
+            (r"\b(century|decade|era|period)\b", 0.85),
+            (r"\b(before|after|during|between)\b", 0.75),
+            (r"\b(founded|established|created|born|died)\b", 0.90),
+        ],
+        "quantitative": [
+            (r"\d+(?:\.\d+)?(?:\s*%|\s*percent)", 0.95),
+            (r"\b\d+(?:,\d{3})*\b", 0.85),
+            (r"\b(total|average|median|approximately)\b", 0.80),
+            (r"\b(statistics?|data|figure|number)\b", 0.75),
+        ],
+        "causal": [
+            (r"\b(because|due\s+to|caused?\s+by)\b", 0.95),
+            (r"\b(result(?:s|ed)?\s+in|lead(?:s|ing)?\s+to)\b", 0.90),
+            (r"\b(reason|cause|effect|consequence)\b", 0.85),
+            (r"\b(therefore|thus|hence|so)\b", 0.80),
+        ],
+    }
 
-    @property
-    def model(self):
-        if self._model is None:
+    def __init__(self, model=None, cross_encoder=None):
+        """
+        Args:
+            model: SentenceTransformer for embedding-based scoring.
+            cross_encoder: Optional CrossEncoder for precise semantic scoring.
+                           If None, falls back to cosine similarity.
+        """
+        self.model = model
+        self.cross_encoder = cross_encoder
+
+        # Try to load CrossEncoder if not provided (prefer local path for offline use)
+        if self.cross_encoder is None:
             try:
                 from sentence_transformers import CrossEncoder
-                self._model = CrossEncoder(self._model_name)
-                logger.info(f"[Reranker] Loaded CrossEncoder: {self._model_name}")
+
+                default_name = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+                load_name = _reranker_model_path() or default_name
+                if load_name != default_name:
+                    logger.info(f"[Reranker] CrossEncoder from local path (no hub): {load_name}")
+                self.cross_encoder = CrossEncoder(load_name)
+                logger.info("[Reranker] CrossEncoder loaded")
             except Exception as e:
-                logger.warning(f"[Reranker] CrossEncoder not available: {e}")
-        return self._model
+                logger.info(f"[Reranker] CrossEncoder not available ({e}), using cosine fallback")
+                self.cross_encoder = None
+
+    # =====================================================================
+    # PUBLIC API
+    # =====================================================================
 
     def rerank(
         self,
         query: str,
-        chunks: List[Dict[str, Any]],
-        top_k: int = 10,
-    ) -> List[Dict[str, Any]]:
-        """Rerank chunks using 5-factor scoring."""
-        if not chunks:
-            return []
+        chunks: List[Dict],
+        top_k: int = 5,
+        weights: Optional[Dict[str, float]] = None,
+    ) -> Tuple[List[Dict], List[float]]:
+        """
+        Rerank chunks using 5-factor scoring.
 
-        if len(chunks) == 1:
-            chunks[0]["rerank_score"] = 1.0
-            return chunks
+        Args:
+            query: User query.
+            chunks: List of chunk dicts (must have 'text', optionally 'url', 'source', 'title').
+            top_k: Number of results to return.
+            weights: Override default factor weights. Keys:
+                     semantic, position, density, answer_type, source
 
-        try:
-            import numpy as np
-        except ImportError:
-            logger.warning("[Reranker] numpy not available — returning original order")
-            return chunks[:top_k]
+        Returns:
+            (ranked_chunks, ranked_scores)
+        """
+        if not chunks or np is None:
+            return chunks[:top_k], [0.0] * min(len(chunks), top_k)
+
+        w = {
+            "semantic": 0.40,
+            "position": 0.10,
+            "density": 0.15,
+            "answer_type": 0.25,
+            "source": 0.10,
+        }
+        if weights:
+            w.update(weights)
 
         n = len(chunks)
-        texts = [c.get("text", "") for c in chunks]
+        scores = np.zeros((n, 5))
 
-        # Factor 1: Semantic scores
-        semantic_scores = self._score_semantic(query, texts)
+        # Factor 1: Semantic relevance
+        scores[:, 0] = self._score_semantic(query, chunks) * w["semantic"]
 
-        # Factor 2: Position scores
-        position_scores = np.array([1.0 / (i + 1) for i in range(n)])
-        if position_scores.max() > 0:
-            position_scores /= position_scores.max()
+        # Factor 2: Position importance
+        scores[:, 1] = self._score_position(chunks) * w["position"]
 
-        # Factor 3: Keyword density
-        density_scores = self._score_density(query, texts)
+        # Factor 3: Information density
+        scores[:, 2] = self._score_density(chunks) * w["density"]
 
-        # Factor 4: Answer-type alignment
-        answer_type = self._detect_answer_type(query)
-        type_scores = self._score_answer_type(answer_type, texts)
+        # Factor 4: Answer-type match
+        scores[:, 3] = self._score_answer_type(query, chunks) * w["answer_type"]
 
         # Factor 5: Source credibility
-        source_scores = self._score_source(chunks)
+        scores[:, 4] = self._score_source(chunks) * w["source"]
 
-        # Combine
-        final_scores = (
-            self.W_SEMANTIC * semantic_scores
-            + self.W_POSITION * position_scores
-            + self.W_DENSITY * density_scores
-            + self.W_ANSWER_TYPE * type_scores
-            + self.W_SOURCE * source_scores
-        )
+        final = np.sum(scores, axis=1)
+        ranked_idx = np.argsort(final)[::-1][:top_k]
 
-        # Sort by final score descending
-        ranked_indices = np.argsort(final_scores)[::-1][:top_k]
+        ranked_chunks = [chunks[i] for i in ranked_idx]
+        ranked_scores = [float(final[i]) for i in ranked_idx]
 
-        result = []
-        for idx in ranked_indices:
-            chunk = dict(chunks[idx])
-            chunk["rerank_score"] = float(final_scores[idx])
-            chunk["_rerank_detail"] = {
-                "semantic": float(semantic_scores[idx]),
-                "position": float(position_scores[idx]),
-                "density": float(density_scores[idx]),
-                "answer_type": float(type_scores[idx]),
-                "source": float(source_scores[idx]),
+        # Inject scores into chunk metadata for debugging
+        for chunk, score, idx in zip(ranked_chunks, ranked_scores, ranked_idx):
+            chunk["_rerank_score"] = score
+            chunk["_rerank_factors"] = {
+                "semantic": float(scores[idx, 0]),
+                "position": float(scores[idx, 1]),
+                "density": float(scores[idx, 2]),
+                "answer_type": float(scores[idx, 3]),
+                "source": float(scores[idx, 4]),
             }
-            result.append(chunk)
 
-        logger.debug(f"[Reranker] Reranked {n} → {len(result)} chunks, "
-                      f"top score: {result[0]['rerank_score']:.3f}")
-        return result
+        return ranked_chunks, ranked_scores
 
-    # ─── Factor 1: Semantic ────────────────────────────────────────────────
+    # =====================================================================
+    # FACTOR 1: SEMANTIC RELEVANCE (40%)
+    # =====================================================================
 
-    def _score_semantic(self, query: str, texts: List[str]) -> "np.ndarray":
-        import numpy as np
+    def _score_semantic(self, query: str, chunks: List[Dict]) -> np.ndarray:
+        """Score each chunk by semantic relevance to the query."""
+        texts = [c.get("text", "") for c in chunks]
 
-        if self.model:
+        # Prefer CrossEncoder (more accurate pairwise scoring)
+        if self.cross_encoder is not None:
             try:
                 pairs = [(query, t) for t in texts]
-                scores = self.model.predict(pairs)
-                scores = np.array(scores, dtype=float)
-                # Normalize to [0, 1]
-                if scores.max() > scores.min():
-                    scores = (scores - scores.min()) / (scores.max() - scores.min())
+                raw_scores = self.cross_encoder.predict(pairs)
+                # Sigmoid to [0, 1]
+                scores = 1.0 / (1.0 + np.exp(-np.array(raw_scores)))
                 return scores
             except Exception as e:
-                logger.warning(f"[Reranker] CrossEncoder scoring failed: {e}")
+                logger.debug(f"[Reranker] CrossEncoder failed, falling back: {e}")
 
-        # Fallback: keyword overlap
-        query_words = set(re.findall(r"\w+", query.lower()))
+        # Fallback: cosine similarity with SentenceTransformer
+        if self.model is not None:
+            try:
+                q_emb = self.model.encode([query], normalize_embeddings=True)[0]
+                c_embs = self.model.encode(texts, normalize_embeddings=True)
+                sims = np.array([np.dot(q_emb, c) for c in c_embs])
+                return (sims + 1.0) / 2.0  # Map [-1, 1] → [0, 1]
+            except Exception as e:
+                logger.debug(f"[Reranker] Embedding scoring failed: {e}")
+
+        # Last resort: keyword overlap
+        return self._keyword_overlap(query, texts)
+
+    def _keyword_overlap(self, query: str, texts: List[str]) -> np.ndarray:
+        """Simple keyword overlap as ultimate fallback."""
+        q_words = set(query.lower().split())
         scores = []
-        for t in texts:
-            t_words = set(re.findall(r"\w+", t.lower()))
-            if query_words:
-                scores.append(len(query_words & t_words) / len(query_words))
+        for text in texts:
+            t_words = set(text.lower().split())
+            if not q_words:
+                scores.append(0.0)
             else:
-                scores.append(0.5)
+                scores.append(len(q_words & t_words) / len(q_words))
         return np.array(scores)
 
-    # ─── Factor 3: Keyword Density ─────────────────────────────────────────
+    # =====================================================================
+    # FACTOR 2: POSITION IMPORTANCE (10%)
+    # =====================================================================
 
-    @staticmethod
-    def _score_density(query: str, texts: List[str]) -> "np.ndarray":
-        import numpy as np
+    def _score_position(self, chunks: List[Dict]) -> np.ndarray:
+        """
+        Position-based scoring: beginning and end of documents tend to
+        contain introductions and summaries (more information-rich).
+        """
+        n = len(chunks)
+        if n == 0:
+            return np.array([])
 
-        from Core.constants import STOP_WORDS
-        query_keywords = [w for w in re.findall(r"\w+", query.lower()) if w not in STOP_WORDS and len(w) > 2]
+        scores = np.full(n, 0.65)
 
-        if not query_keywords:
-            return np.full(len(texts), 0.5)
+        # Score by chunk_index if available, else by list position
+        for i, chunk in enumerate(chunks):
+            idx = chunk.get("chunk_index", i)
+            if idx == 0:
+                scores[i] = 0.95
+            elif idx == 1:
+                scores[i] = 0.85
+            elif idx <= 3:
+                scores[i] = 0.75
 
+        # Last chunks also tend to be summaries
+        if n > 2:
+            scores[-1] = max(scores[-1], 0.85)
+            if n > 3:
+                scores[-2] = max(scores[-2], 0.75)
+
+        return scores
+
+    # =====================================================================
+    # FACTOR 3: INFORMATION DENSITY (15%)
+    # =====================================================================
+
+    def _score_density(self, chunks: List[Dict]) -> np.ndarray:
+        """
+        Higher information density = better chunk quality.
+        Measures: unique-word ratio, sentence richness, length penalty.
+        """
         scores = []
-        for t in texts:
-            t_lower = t.lower()
-            hits = sum(t_lower.count(kw) for kw in query_keywords)
-            word_count = max(len(t.split()), 1)
-            density = hits / word_count
-            scores.append(min(density * 10, 1.0))  # Scale and cap
+        for chunk in chunks:
+            text = chunk.get("text", "")
+            words = text.lower().split()
+            if len(words) < 3:
+                scores.append(0.1)
+                continue
 
-        arr = np.array(scores)
-        if arr.max() > 0:
-            arr /= arr.max()
-        return arr
+            # Unique word ratio (vocabulary richness)
+            unique_ratio = len(set(words)) / len(words)
 
-    # ─── Factor 4: Answer Type ─────────────────────────────────────────────
+            # Sentence count (richer = better)
+            sentences = [s.strip() for s in re.split(r"[.!?]+", text) if s.strip()]
+            sent_score = min(len(sentences) / 5.0, 1.0)
 
-    def _detect_answer_type(self, query: str) -> str:
-        """Detect expected answer type from query."""
-        for atype, pattern in self.ANSWER_TYPE_PATTERNS.items():
+            # Length penalty: too short or too long
+            char_len = len(text)
+            if char_len < 80:
+                length_factor = 0.4
+            elif char_len < 200:
+                length_factor = 0.7
+            elif char_len > 3000:
+                length_factor = 0.75
+            else:
+                length_factor = 1.0
+
+            # Presence of structured content (lists, numbers, proper nouns)
+            structure_bonus = 0.0
+            if re.search(r"(?:^|\n)\s*[\-\*\d]+[\.\)]\s", text):
+                structure_bonus = 0.1  # Has lists
+            if re.search(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b", text):
+                structure_bonus += 0.05  # Has proper nouns
+
+            density = (
+                unique_ratio * 0.40 + sent_score * 0.25 + length_factor * 0.25 + structure_bonus
+            ) * 0.10 + 0.50  # Shift to 0.5-1.0 range
+
+            scores.append(min(density, 1.0))
+
+        return np.array(scores) if scores else np.array([])
+
+    # =====================================================================
+    # FACTOR 4: ANSWER-TYPE MATCHING (25%)
+    # =====================================================================
+
+    def _score_answer_type(self, query: str, chunks: List[Dict]) -> np.ndarray:
+        """
+        Match chunk content type to what the query needs.
+        E.g., "What is X?" needs definition chunks; "How to Y?" needs step-by-step.
+        """
+        # Detect query type
+        query_type = "general"
+        for qtype, pattern in self.QUERY_TYPE_PATTERNS.items():
             if pattern.search(query):
-                return atype
-        return "general"
+                query_type = qtype
+                break
 
-    def _score_answer_type(self, answer_type: str, texts: List[str]) -> "np.ndarray":
-        """Score chunks by how well they match the expected answer type."""
-        import numpy as np
+        indicators = self.ANSWER_INDICATORS.get(query_type, [])
+        compiled = [(re.compile(p, re.I | re.MULTILINE), s) for p, s in indicators]
 
         scores = []
-        for t in texts:
-            score = 0.5  # Default neutral
-            t_lower = t.lower()
+        for chunk in chunks:
+            text = chunk.get("text", "")
+            best = 0.50  # Default for general queries
 
-            if answer_type == "definition":
-                if re.search(r"\bis\s+(a|an|the|defined\s+as)\b", t_lower):
-                    score = 0.9
-            elif answer_type == "list":
-                bullets = len(re.findall(r"(?:^|\n)\s*[-•*\d.]+\s", t))
-                if bullets >= 2:
-                    score = 0.9
-                elif bullets >= 1:
-                    score = 0.7
-            elif answer_type == "number":
-                if re.search(r"\b\d+\.?\d*\s*(%|percent|million|billion|thousand)?\b", t):
-                    score = 0.85
-            elif answer_type == "person":
-                # Simple person name heuristic
-                if re.search(r"\b[A-Z][a-z]+\s+[A-Z][a-z]+\b", t):
-                    score = 0.8
-            elif answer_type == "date":
-                if re.search(r"\b\d{4}\b|\b(january|february|march|april|may|june|july|august|september|october|november|december)\b", t_lower):
-                    score = 0.85
-            elif answer_type == "location":
-                if re.search(r"\b(city|country|state|region|located|situated)\b", t_lower):
-                    score = 0.8
-            elif answer_type == "comparison":
-                if re.search(r"\b(while|whereas|compared|unlike|however|but)\b", t_lower):
-                    score = 0.85
-            elif answer_type == "process":
-                if re.search(r"\b(step|first|then|next|finally|process)\b", t_lower):
-                    score = 0.85
-            elif answer_type == "reason":
-                if re.search(r"\b(because|due\s+to|caused|reason|result)\b", t_lower):
-                    score = 0.85
+            for pat, indicator_score in compiled:
+                if pat.search(text):
+                    best = max(best, indicator_score)
 
-            scores.append(score)
+            scores.append(best)
 
-        return np.array(scores)
+        return np.array(scores) if scores else np.array([])
 
-    # ─── Factor 5: Source Credibility ──────────────────────────────────────
+    # =====================================================================
+    # FACTOR 5: SOURCE CREDIBILITY (10%)
+    # =====================================================================
 
-    def _score_source(self, chunks: List[Dict]) -> "np.ndarray":
-        """Score chunks by source domain credibility."""
-        import numpy as np
-
+    def _score_source(self, chunks: List[Dict]) -> np.ndarray:
+        """Score based on source credibility/authority."""
         scores = []
         for chunk in chunks:
             url = (chunk.get("url") or chunk.get("source") or "").lower()
             title = (chunk.get("title") or "").lower()
             combined = url + " " + title
 
-            best = 0.50
+            best = 0.50  # Default
             for key, cred in self.SOURCE_CREDIBILITY.items():
                 if key in combined:
                     best = max(best, cred)
