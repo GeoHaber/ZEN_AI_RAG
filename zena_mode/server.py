@@ -150,8 +150,8 @@ class ZenAIOrchestrator(BaseHTTPRequestHandler):
 
                 target_path = config.MODEL_DIR / model_name
                 if not target_path.exists():
-                    # Fallback to central store
-                    target_path = Path("C:/AI/Models") / model_name
+                    # Fallback to central store (cross-platform)
+                    target_path = Path.home() / "AI" / "Models" / model_name
                     if not target_path.exists():
                         self._send_json(404, {"error": f"Model {model_name} not found"})
                         return

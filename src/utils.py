@@ -246,8 +246,9 @@ class HardwareProfiler:
                 profile["ram_gb"] = round(psutil.virtual_memory().total / (1024**3), 1)
 
             if sys.platform == "win32":
-                cmd = 'powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json"'
-                out = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
+                cmd = ["powershell", "-NoProfile", "-Command",
+                       "Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json"]
+                out = subprocess.check_output(cmd, shell=False, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
                 if out:
                     import json
 

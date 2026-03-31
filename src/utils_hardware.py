@@ -119,14 +119,14 @@ def detect_gpu() -> Optional[Dict[str, Any]]:
         return None
 
     try:
-        cmd = (
-            "powershell -NoProfile -Command "
-            '"Get-CimInstance Win32_VideoController | '
+        cmd = [
+            "powershell", "-NoProfile", "-Command",
+            'Get-CimInstance Win32_VideoController | '
             'Where-Object {$_.Name -notmatch "Remote|RDP"} | '
-            'Select-Object Name, AdapterRAM | ConvertTo-Json"'
-        )
+            'Select-Object Name, AdapterRAM | ConvertTo-Json',
+        ]
 
-        output = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=5).strip()
+        output = subprocess.check_output(cmd, shell=False, text=True, stderr=subprocess.DEVNULL, timeout=5).strip()
 
         if not output:
             return None

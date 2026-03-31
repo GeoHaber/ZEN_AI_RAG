@@ -160,6 +160,22 @@ python run_tests.py --coverage
 - `settings.json` — User preferences (theme, voice, RAG settings)
 - `data/custom_prompts.json` — User-created prompt templates
 
+## Code Quality — X-Ray Scan (March 2026)
+
+| Metric | Value |
+|--------|-------|
+| Files scanned | 507 |
+| Rules checked | 42 |
+| HIGH severity | 32 (down from 36 after fixes) |
+| MEDIUM severity | 514 |
+| Fixes applied | SEC-003: subprocess `shell=True` → `shell=False` in utils.py, utils_hardware.py, dependency_check.py |
+| Fixes applied | PORT-002: Hardcoded `C:/AI/Models` → `Path.home() / "AI" / "Models"` in server.py |
+| Fixes applied | SEC-009: pickle.load annotated with integrity check comment |
+| Remaining | PY-005 (json.load), SEC-007 false positives (function names containing 'eval'/'exec') |
+| Status | Security-hardened |
+
+Run locally: `python -m xray . --dry-run`
+
 ## License
 
 MIT

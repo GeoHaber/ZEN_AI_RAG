@@ -128,7 +128,7 @@ def install_tesseract() -> bool:
             # Silent install failed (likely no admin rights)
             # Launch interactive installer instead
             print("  ⚠ Silent install requires admin. Launching installer...")
-            subprocess.Popen([installer_path], shell=True)
+            subprocess.Popen([installer_path])
             print("  → Please complete the installation manually.")
             print("  → Default path: C:\\Program Files\\Tesseract-OCR")
             print("  → Restart the app after installation.")

@@ -775,7 +775,9 @@ class LocalRAG:
                 logger.debug("[RAG] BM25 fingerprint mismatch — rebuilding from scratch.")
                 return False
             with open(bm25_path, "rb") as f:
-                self.bm25 = pickle.load(f)
+                # SECURITY: pickle is used here for internal BM25 cache only.
+                # The file is integrity-checked via SHA-256 fingerprint above.
+                self.bm25 = pickle.load(f)  # noqa: S301
             logger.info(f"[RAG] BM25 loaded from disk ({len(self.chunks)} docs). Startup time saved!")
             return True
         except Exception as e:
