@@ -12,6 +12,7 @@ Full-stack AI assistant with **Retrieval-Augmented Generation**, local LLM infer
 - **Pre-flight validation** — auto-checks binary, models, and dependencies on startup
 - **Multi-model support** — auto-discovers GGUF models, switch models live
 - **Zena AI personality** — customizable AI assistant with enhanced capabilities
+- **[RAG Test Bench](rag-test-bench/)** — lightweight Flask app for A/B testing RAG pipelines side-by-side
 
 ## Quick Start
 
