@@ -39,12 +39,12 @@ def check_package(import_name: str, display_name: str, optional: bool = False) -
         __import__(import_name)
         status = f"{GREEN}✓{RESET}"
         category = "REQUIRED" if not optional else "OPTIONAL"
-        # [X-Ray auto-fix] print(f"  {status} {display_name:45} [{category}]")
+        print(f"  {status} {display_name:45} [{category}]")
         return True
     except ImportError:
         status = f"{RED}✗{RESET}"
         category = "WARNING" if optional else "ERROR"
-        # [X-Ray auto-fix] print(f"  {status} {display_name:45} [{category}]")
+        print(f"  {status} {display_name:45} [{category}]")
         return False
 
 
@@ -54,7 +54,7 @@ def check_file(filepath: str, display_name: str, optional: bool = False) -> bool
     exists = path.exists()
     status = f"{GREEN}✓{RESET}" if exists else f"{RED}✗{RESET}"
     category = "WARNING" if optional and not exists else "REQUIRED" if not exists else "OK"
-    # [X-Ray auto-fix] print(f"  {status} {display_name:45} [{category}]")
+    print(f"  {status} {display_name:45} [{category}]")
     return exists
 
 
@@ -62,7 +62,7 @@ def _do_do_main_setup_setup():
     """Helper: setup phase for _do_main_setup."""
 
     print("\n" + "=" * 85)
-    # [X-Ray auto-fix] print(f"{BOLD}{CYAN}ZEN_AI_RAG Installation Verification{RESET}")
+    print(f"{BOLD}{CYAN}ZEN_AI_RAG Installation Verification{RESET}")
     print("=" * 85 + "\n")
 
     results = {
@@ -72,7 +72,7 @@ def _do_do_main_setup_setup():
     }
 
     # Core dependencies (required)
-    # [X-Ray auto-fix] print(f"{BOLD}Core Dependencies (REQUIRED):{RESET}")
+    print(f"{BOLD}Core Dependencies (REQUIRED):{RESET}")
     core_packages = [
         ("nicegui", "NiceGUI - Web UI Framework"),
         ("uvicorn", "Uvicorn - ASGI Server"),
@@ -88,7 +88,7 @@ def _do_do_main_setup_setup():
     print()
 
     # LLM & RAG (required)
-    # [X-Ray auto-fix] print(f"{BOLD}LLM & RAG Integration (REQUIRED):{RESET}")
+    print(f"{BOLD}LLM & RAG Integration (REQUIRED):{RESET}")
     rag_packages = [
         ("qdrant_client", "Qdrant Client - Vector Database"),
         ("sentence_transformers", "Sentence Transformers - Embeddings"),
@@ -108,7 +108,7 @@ def _do_main_setup():
     """Helper: setup phase for main."""
     display_name, import_name, results = _do_do_main_setup_setup()
     # Document Processing (required)
-    # [X-Ray auto-fix] print(f"{BOLD}Document Processing (REQUIRED):{RESET}")
+    print(f"{BOLD}Document Processing (REQUIRED):{RESET}")
     doc_packages = [
         ("PyPDF2", "PyPDF2 - PDF Processing"),
         ("fitz", "PyMuPDF - PDF/Image Processing"),
@@ -122,7 +122,7 @@ def _do_main_setup():
     print()
 
     # Audio (required for voice)
-    # [X-Ray auto-fix] print(f"{BOLD}Audio Processing (REQUIRED for Voice):{RESET}")
+    print(f"{BOLD}Audio Processing (REQUIRED for Voice):{RESET}")
     audio_packages = [
         ("faster_whisper", "Faster Whisper - STT"),
         ("piper", "Piper TTS - Text-to-Speech"),
@@ -143,7 +143,7 @@ def _do_main_init():
 
     display_name, import_name, results = _do_main_setup()
     # ML & Utilities (required)
-    # [X-Ray auto-fix] print(f"{BOLD}ML & Utilities (REQUIRED):{RESET}")
+    print(f"{BOLD}ML & Utilities (REQUIRED):{RESET}")
     util_packages = [
         ("numpy", "NumPy - Numerical Computing"),
         ("scipy", "SciPy - Scientific Computing"),
@@ -158,7 +158,7 @@ def _do_main_init():
     print()
 
     # Testing (optional)
-    # [X-Ray auto-fix] print(f"{BOLD}Testing Tools (OPTIONAL):{RESET}")
+    print(f"{BOLD}Testing Tools (OPTIONAL):{RESET}")
     test_packages = [
         ("pytest", "Pytest - Testing Framework"),
         ("pytest_asyncio", "Pytest AsyncIO - Async Testing"),
@@ -171,7 +171,7 @@ def _do_main_init():
     print()
 
     # Vision (optional)
-    # [X-Ray auto-fix] print(f"{BOLD}Vision Tools (OPTIONAL):{RESET}")
+    print(f"{BOLD}Vision Tools (OPTIONAL):{RESET}")
     vision_packages = [
         ("cv2", "OpenCV - Computer Vision"),
         ("PIL", "Pillow - Image Processing"),
@@ -190,7 +190,7 @@ def main():
     """Run verification checks."""
     display_name, results = _do_main_init()
     # Directory structure
-    # [X-Ray auto-fix] print(f"{BOLD}Directory Structure:{RESET}")
+    print(f"{BOLD}Directory Structure:{RESET}")
     dirs = [
         ("zena_mode", "Core application module"),
         ("ui", "UI components"),
@@ -207,7 +207,7 @@ def main():
 
     # Summary
     print("=" * 85)
-    # [X-Ray auto-fix] print(f"{BOLD}Summary:{RESET}")
+    print(f"{BOLD}Summary:{RESET}")
     print("=" * 85)
 
     required_ok = results["required"]["failed"] == 0
@@ -224,13 +224,13 @@ def main():
     )
 
     if required_ok:
-        # [X-Ray auto-fix] print(f"\n{GREEN}{BOLD}✓ Installation Verified - Ready to Use!{RESET}")
-        # [X-Ray auto-fix] print(f"\nNext: Run 'python zena.py' to start the application")
+        print(f"\n{GREEN}{BOLD}✓ Installation Verified - Ready to Use!{RESET}")
+        print(f"\nNext: Run 'python zena.py' to start the application")
         print("=" * 85 + "\n")
         return 0
     else:
-        # [X-Ray auto-fix] print(f"\n{RED}{BOLD}✗ Installation Failed - Missing required packages{RESET}")
-        # [X-Ray auto-fix] print(f"\nFix with: pip install -r requirements.txt")
+        print(f"\n{RED}{BOLD}✗ Installation Failed - Missing required packages{RESET}")
+        print(f"\nFix with: pip install -r requirements.txt")
         print("=" * 85 + "\n")
         return 1
 

@@ -99,7 +99,7 @@ def build():
         shutil.copy(".env", target_dir)
         print("   + Copied .env")
 
-    # [X-Ray auto-fix] print(f"🚀 Release ready at: {target_dir.absolute()}")
+    print(f"🚀 Release ready at: {target_dir.absolute()}")
 
 
 if __name__ == "__main__":

@@ -1265,10 +1265,10 @@ if __name__ == "__main__":
 
         # Discover experts
         await arb.discover_swarm()
-        # [X-Ray auto-fix] print(f"✅ Discovered {len(arb.ports)} experts: {arb.ports}")
+        print(f"✅ Discovered {len(arb.ports)} experts: {arb.ports}")
         # Test query
         question = "What is 2 + 2?"
-        # [X-Ray auto-fix] print(f"\n🔍 Question: {question}\n")
+        print(f"\n🔍 Question: {question}\n")
         async for chunk in arb.get_consensus(question, verbose=True):
             print(chunk, end="", flush=True)
 
@@ -1277,9 +1277,9 @@ if __name__ == "__main__":
         # Show stats
         if arb.performance_tracker:
             stats = arb.performance_tracker.get_stats()
-            # [X-Ray auto-fix] print(f"\n📊 Performance Stats:")
-            # [X-Ray auto-fix] print(f"  Total Queries: {stats['total_queries']}")
-            # [X-Ray auto-fix] print(f"  Avg Consensus: {stats['avg_consensus']:.1%}")
-            # [X-Ray auto-fix] print(f"  Avg Confidence: {stats['avg_confidence']:.1%}")
+            print(f"\n📊 Performance Stats:")
+            print(f"  Total Queries: {stats['total_queries']}")
+            print(f"  Avg Consensus: {stats['avg_consensus']:.1%}")
+            print(f"  Avg Confidence: {stats['avg_confidence']:.1%}")
 
     asyncio.run(test_arbitrator())

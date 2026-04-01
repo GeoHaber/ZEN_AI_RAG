@@ -174,7 +174,7 @@ class BenchmarkHarness:
         Returns:
             ComparisonReport with speedup metrics
         """
-        # [X-Ray auto-fix] print(f"\n📊 Benchmarking {module_name}/{test_name}...")
+        print(f"\n📊 Benchmarking {module_name}/{test_name}...")
         print("-" * 80)
 
         # Benchmark Python
@@ -186,7 +186,7 @@ class BenchmarkHarness:
             kwargs=kwargs or {},
             iterations=iterations,
         )
-        # [X-Ray auto-fix] print(f"✓ {py_result.duration_ms:.2f}ms")
+        print(f"✓ {py_result.duration_ms:.2f}ms")
         py_result.implementation = "python"
 
         # Benchmark Rust (placeholder - will use actual Rust binding)
@@ -198,7 +198,7 @@ class BenchmarkHarness:
             kwargs=kwargs or {},
             iterations=iterations,
         )
-        # [X-Ray auto-fix] print(f"✓ {rust_result.duration_ms:.2f}ms")
+        print(f"✓ {rust_result.duration_ms:.2f}ms")
         rust_result.implementation = "rust"
 
         # Calculate comparison
@@ -217,7 +217,7 @@ class BenchmarkHarness:
         # Print summary
         print("\n  📈 Results:")
         print(f"     Speedup: {speedup:.2f}x {'✨' if speedup > 1.5 else '⚠️ ' if speedup < 1 else '👍'}")
-        # [X-Ray auto-fix] print(f"     Memory Delta: {memory_delta:+.1f}%")
+        print(f"     Memory Delta: {memory_delta:+.1f}%")
         print(f"     Python: {py_result.duration_ms:.2f}ms ({py_result.memory_avg_mb:.2f}MB)")
         print(f"     Rust:   {rust_result.duration_ms:.2f}ms ({rust_result.memory_avg_mb:.2f}MB)")
 
@@ -237,7 +237,7 @@ class BenchmarkHarness:
         with open(output_path, "w") as f:
             json.dump(results_list, f, indent=2)
 
-        # [X-Ray auto-fix] print(f"\n💾 Results saved to {output_path}")
+        print(f"\n💾 Results saved to {output_path}")
         return output_path
 
     def generate_report(self, filename: str = "benchmark_report.json"):

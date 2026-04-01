@@ -30,13 +30,13 @@ async def test_rag():
         rag = AsyncLocalRAG()
         print("✅ Pipeline Initialized")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Initialization Failed: {e}")
+        print(f"❌ Initialization Failed: {e}")
         return
 
     # 2. Check Embedding Model
     print("\n[2] Checking Embeddings...")
     if rag.model:
-        # [X-Ray auto-fix] print(f"✅ Transformer Loaded: {rag.model}")
+        print(f"✅ Transformer Loaded: {rag.model}")
         pass
     else:
         print("❌ Transformer NOT Loaded (Lazy Load pending?)")
@@ -50,20 +50,20 @@ async def test_rag():
         await rag.add_chunks_async([chunk])
         print("✅ Ingestion Triggered")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Ingestion Failed: {e}")
+        print(f"❌ Ingestion Failed: {e}")
         pass
     # 4. Query
     print("\n[4] Querying...")
     query = "What is the secret code?"
     try:
         results = await rag.search_async(query, k=3)
-        # [X-Ray auto-fix] print(f"✅ Search returned {len(results)} results")
+        print(f"✅ Search returned {len(results)} results")
         found = False
         for r in results:
             # Result is a dictionary, not object
             text = r.get("text", "")
             score = r.get("score", 0.0)
-            # [X-Ray auto-fix] print(f"   - Match ({score:.3f}): {text[:50]}...")
+            print(f"   - Match ({score:.3f}): {text[:50]}...")
             if "Blue-Omega-99" in text:
                 found = True
 
@@ -73,7 +73,7 @@ async def test_rag():
             print("\n⚠️ FAILURE: Secret code NOT found in results.")
 
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Search Failed: {e}")
+        print(f"❌ Search Failed: {e}")
         pass
     print("=" * 60)
 

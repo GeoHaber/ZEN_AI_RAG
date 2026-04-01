@@ -6,9 +6,9 @@ import os
 
 def run_test(name, script_path):
     """Run test."""
-    # [X-Ray auto-fix] print(f"\n{'=' * 60}")
-    # [X-Ray auto-fix] print(f"🧪 RUNNING: {name}")
-    # [X-Ray auto-fix] print(f"{'=' * 60}")
+    print(f"\n{'=' * 60}")
+    print(f"🧪 RUNNING: {name}")
+    print(f"{'=' * 60}")
     start = time.time()
     try:
         # Prepare environment
@@ -28,10 +28,10 @@ def run_test(name, script_path):
             print(result.stderr)
 
         if result.returncode == 0:
-            # [X-Ray auto-fix] print(f"✅ PASS ({duration:.2f}s)")
+            print(f"✅ PASS ({duration:.2f}s)")
             return True, duration
         else:
-            # [X-Ray auto-fix] print(f"❌ FAIL (Exit Code: {result.returncode})")
+            print(f"❌ FAIL (Exit Code: {result.returncode})")
             return False, duration
 
     except Exception as e:
@@ -41,9 +41,9 @@ def run_test(name, script_path):
 
 def check_efficiency():
     """Check efficiency."""
-    # [X-Ray auto-fix] print(f"\n{'=' * 60}")
-    # [X-Ray auto-fix] print(f"📊 EFFICIENCY AUDIT")
-    # [X-Ray auto-fix] print(f"{'=' * 60}")
+    print(f"\n{'=' * 60}")
+    print(f"📊 EFFICIENCY AUDIT")
+    print(f"{'=' * 60}")
     # Simple check using tasklist
     try:
         result = subprocess.run(
@@ -52,14 +52,14 @@ def check_efficiency():
         print(result.stdout)
 
         count = result.stdout.count("python.exe")
-        # [X-Ray auto-fix] print(f"Python Processes Detected: {count}")
+        print(f"Python Processes Detected: {count}")
         if count > 10:
             print("⚠️ WARNING: High number of Python processes detected (Risk of Zombies).")
         else:
             print("✅ Process count is within normal limits.")
 
     except Exception:
-        # [X-Ray auto-fix] print(f"Could not run tasklist: {e}")
+        print(f"Could not run tasklist: {e}")
         pass
 
 
@@ -80,18 +80,18 @@ def main():
             passed, duration = run_test(name, path)
             results.append((name, passed, duration))
         else:
-            # [X-Ray auto-fix] print(f"⚠️ SKIPPING {name}: File not found ({path})")
+            print(f"⚠️ SKIPPING {name}: File not found ({path})")
             results.append((name, False, 0))
 
     check_efficiency()
 
-    # [X-Ray auto-fix] print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 60}")
     print(f"📝 FINAL REPORT")
-    # [X-Ray auto-fix] print(f"{'=' * 60}")
+    print(f"{'=' * 60}")
     all_pass = True
     for name, passed, duration in results:
         status = "✅ PASS" if passed else "❌ FAIL"
-        # [X-Ray auto-fix] print(f"{status} | {name:<30} | {duration:.2f}s")
+        print(f"{status} | {name:<30} | {duration:.2f}s")
         if not passed:
             all_pass = False
 

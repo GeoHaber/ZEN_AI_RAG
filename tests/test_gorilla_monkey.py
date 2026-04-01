@@ -296,7 +296,7 @@ class TestNoUI_LocaleGorilla:
                 if not val or not isinstance(val, str) or not val.strip():
                     empty.setdefault(code, []).append(attr)
         if empty:
-            # [X-Ray auto-fix] print(f"\n⚠️  Empty locale keys: {json.dumps(empty, indent=2)}")
+            print(f"\n⚠️  Empty locale keys: {json.dumps(empty, indent=2)}")
             pass
         # Soft assert — report but don't fail for metadata keys
         real_empty = {k: v for k, v in empty.items() if any(not a.startswith("LANGUAGE_") for a in v)}
@@ -371,7 +371,7 @@ class TestNoUI_LocaleGorilla:
                 if en_placeholders and en_placeholders != loc_placeholders:
                     mismatches.setdefault(code, []).append(f"{attr}: EN={en_placeholders} vs {code}={loc_placeholders}")
         if mismatches:
-            # [X-Ray auto-fix] print(f"\n⚠️  Placeholder mismatches: {json.dumps(mismatches, indent=2)}")
+            print(f"\n⚠️  Placeholder mismatches: {json.dumps(mismatches, indent=2)}")
             pass
 
 
@@ -443,7 +443,7 @@ class TestNoUI_UIStateGorilla:
         assert len(errors) == 0, f"Concurrent append errors: {errors[:5]}"
         history = st.get("chat_history")
         assert isinstance(history, list)
-        # [X-Ray auto-fix] print(f"\n📊 Concurrent append: {len(history)} messages survived (800 attempted)")
+        print(f"\n📊 Concurrent append: {len(history)} messages survived (800 attempted)")
 
     def test_safe_update_invalid_client(self):
         """safe_update when client is disconnected."""
@@ -1164,7 +1164,7 @@ class TestWithUI_WidgetBuilders:
                     pass  # Expected for wrong arg count
                 except Exception:
                     # Unexpected crash
-                    # [X-Ray auto-fix] print(f"⚠️  {name}({args!r}) → {type(e).__name__}: {e}")
+                    print(f"⚠️  {name}({args!r}) → {type(e).__name__}: {e}")
                     pass
 
 
@@ -1287,11 +1287,11 @@ class TestDrunkGorilla:
             t.join()
 
         print(f"\n🦍 DRUNK GORILLA REPORT:")
-        # [X-Ray auto-fix] print(f"   Total actions: {tracker['actions']}")
-        # [X-Ray auto-fix] print(f"   Errors: {len(tracker['errors'])}")
+        print(f"   Total actions: {tracker['actions']}")
+        print(f"   Errors: {len(tracker['errors'])}")
         if tracker["errors"]:
             for tid, i, op, err in tracker["errors"][:10]:
-                # [X-Ray auto-fix] print(f"   ❌ T{tid}[{i}] {op}: {err}")
+                print(f"   ❌ T{tid}[{i}] {op}: {err}")
                 pass
         # Allow some race-condition errors but no hard crashes
         crash_errors = [e for e in tracker["errors"] if "Traceback" in e[3] or "segfault" in e[3].lower()]
@@ -1329,8 +1329,8 @@ class TestDrunkGorilla:
             t.join()
 
         print(f"\n🐒 MONKEY ARMY REPORT:")
-        # [X-Ray auto-fix] print(f"   Monkeys: 20, Ops each: 100")
-        # [X-Ray auto-fix] print(f"   Errors: {len(errors)}")
+        print(f"   Monkeys: 20, Ops each: 100")
+        print(f"   Errors: {len(errors)}")
         assert len(errors) == 0, f"Monkey errors: {errors[:5]}"
 
 

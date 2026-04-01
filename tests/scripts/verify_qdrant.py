@@ -48,16 +48,16 @@ def test_qdrant_flow():
     results = rag.search("What is the capital of France?")
     assert len(results) > 0
     assert "Paris" in results[0]["text"]
-    # [X-Ray auto-fix] print(f"✅ Semantic Search Passed. Score: {results[0]['score']:.4f}")
+    print(f"✅ Semantic Search Passed. Score: {results[0]['score']:.4f}")
     print("🔄 Testing Hybrid Search (ZenAI Spezial)...")
     # Intentional mix of keyword match and semantic
     results = rag.hybrid_search("ZenAI Assistant specializing in performance", alpha=0.5)
     assert len(results) > 0
     assert "ZenAI" in results[0]["text"]
-    # [X-Ray auto-fix] print(f"✅ Hybrid Search Passed. Fusion Score: {results[0]['fusion_score']:.4f}")
+    print(f"✅ Hybrid Search Passed. Fusion Score: {results[0]['fusion_score']:.4f}")
     print("📊 Stats check...")
     stats = rag.get_stats()
-    # [X-Ray auto-fix] print(f"Stats: {stats}")
+    print(f"Stats: {stats}")
     assert stats["total_chunks"] >= 3
 
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         test_qdrant_flow()
         print("\n🏆 QDRANT MIGRATION VERIFIED! 🤵")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Verification FAILED: {e}")
+        print(f"❌ Verification FAILED: {e}")
         import traceback
 
         traceback.print_exc()

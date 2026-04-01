@@ -279,30 +279,30 @@ def _route_part1_part3(self):
         print("INTELLIGENT ROUTER PERFORMANCE REPORT")
         print("=" * 70)
 
-        # [X-Ray auto-fix] print(f"\n📊 Overall Statistics:")
-        # [X-Ray auto-fix] print(f"  Total Queries:    {stats['total_queries']}")
-        # [X-Ray auto-fix] print(f"  Avg Latency:      {stats.get('avg_latency_ms', 0):.1f}ms")
-        # [X-Ray auto-fix] print(f"  Avg Cost:         ${stats.get('avg_cost_usd', 0):.6f}")
-        # [X-Ray auto-fix] print(f"  Total Cost:       ${stats.get('total_cost_usd', 0):.4f}")
-        # [X-Ray auto-fix] print(f"  Error Rate:       {stats.get('error_rate', '0%')}")
-        # [X-Ray auto-fix] print(f"  Cost Savings:     {stats.get('cost_savings_vs_all_powerful', '0%')}")
-        # [X-Ray auto-fix] print(f"\n🎯 Tier Distribution:")
+        print(f"\n📊 Overall Statistics:")
+        print(f"  Total Queries:    {stats['total_queries']}")
+        print(f"  Avg Latency:      {stats.get('avg_latency_ms', 0):.1f}ms")
+        print(f"  Avg Cost:         ${stats.get('avg_cost_usd', 0):.6f}")
+        print(f"  Total Cost:       ${stats.get('total_cost_usd', 0):.4f}")
+        print(f"  Error Rate:       {stats.get('error_rate', '0%')}")
+        print(f"  Cost Savings:     {stats.get('cost_savings_vs_all_powerful', '0%')}")
+        print(f"\n🎯 Tier Distribution:")
         for tier, percentage in stats.get("tier_distribution", {}).items():
-            # [X-Ray auto-fix] print(f"  {tier:20s}: {percentage}")
+            print(f"  {tier:20s}: {percentage}")
             pass
         if "cache_stats" in stats:
             cache_stats = stats["cache_stats"]
-            # [X-Ray auto-fix] print(f"\n⚡ Cache Performance:")
-            # [X-Ray auto-fix] print(f"  Hit Rate:         {cache_stats.get('hit_rate', '0%')}")
-            # [X-Ray auto-fix] print(f"  Total Entries:    {cache_stats.get('total_entries', 0)}")
-            # [X-Ray auto-fix] print(f"  Exact Matches:    {cache_stats.get('exact_matches', 0)}")
-            # [X-Ray auto-fix] print(f"  Semantic Matches: {cache_stats.get('semantic_matches', 0)}")
+            print(f"\n⚡ Cache Performance:")
+            print(f"  Hit Rate:         {cache_stats.get('hit_rate', '0%')}")
+            print(f"  Total Entries:    {cache_stats.get('total_entries', 0)}")
+            print(f"  Exact Matches:    {cache_stats.get('exact_matches', 0)}")
+            print(f"  Semantic Matches: {cache_stats.get('semantic_matches', 0)}")
         if "mini_rag_stats" in stats:
             rag_stats = stats["mini_rag_stats"]
-            # [X-Ray auto-fix] print(f"\n📚 Mini RAG Performance:")
-            # [X-Ray auto-fix] print(f"  Hit Rate:         {rag_stats.get('hit_rate', '0%')}")
-            # [X-Ray auto-fix] print(f"  Total Entries:    {rag_stats.get('total_entries', 0)}")
-            # [X-Ray auto-fix] print(f"  High Conf Hits:   {rag_stats.get('high_confidence_hits', 0)}")
+            print(f"\n📚 Mini RAG Performance:")
+            print(f"  Hit Rate:         {rag_stats.get('hit_rate', '0%')}")
+            print(f"  Total Entries:    {rag_stats.get('total_entries', 0)}")
+            print(f"  High Conf Hits:   {rag_stats.get('high_confidence_hits', 0)}")
         print("\n" + "=" * 70)
 
 
@@ -486,9 +486,9 @@ if __name__ == "__main__":
         ]
 
         for query in test_queries:
-            # [X-Ray auto-fix] print(f"\n{'=' * 70}")
-            # [X-Ray auto-fix] print(f"Query: {query}")
-            # [X-Ray auto-fix] print(f"{'=' * 70}")
+            print(f"\n{'=' * 70}")
+            print(f"Query: {query}")
+            print(f"{'=' * 70}")
             async for chunk in router.route(query):
                 print(chunk, end="", flush=True)
 

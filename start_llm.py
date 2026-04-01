@@ -15,7 +15,7 @@ def check_and_install_requirements(requirements_path):
         print("❌ FATAL: pip not found. Please install pip.")
         sys.exit(1)
 
-    # [X-Ray auto-fix] print(f"🔍 Checking and installing dependencies from {requirements_path}...")
+    print(f"🔍 Checking and installing dependencies from {requirements_path}...")
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", requirements_path], check=True, shell=False)
         print("✅ Dependencies are up to date.")

@@ -24,8 +24,8 @@ def test_parallel_stress():
     if not MODEL_PATH.exists():
         pytest.skip(f"Test Model not found at {MODEL_PATH}")
 
-    # [X-Ray auto-fix] print(f"\n[Stress] Running Parallel Decoding Test...")
-    # [X-Ray auto-fix] print(f"Model: {MODEL_PATH.name}")
+    print(f"\n[Stress] Running Parallel Decoding Test...")
+    print(f"Model: {MODEL_PATH.name}")
     # 4 Parallel Sequences, 128 tokens prediction
     # This stresses KV cache and compute.
     cmd = [
@@ -64,6 +64,6 @@ def test_parallel_stress():
         # Verify output contains decoding stats or completion
         # Ideally check for "decoded" or specific log lines.
         # But return code 0 usually means success for this tool.
-        # [X-Ray auto-fix] print(f"[Stress] Success! Output sample:\n{result.stdout[:200]}...")
+        print(f"[Stress] Success! Output sample:\n{result.stdout[:200]}...")
     except subprocess.TimeoutExpired:
         pytest.fail("Test timed out! Parallel decoding took too long.")

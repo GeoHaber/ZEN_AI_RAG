@@ -48,12 +48,12 @@ class SafeImporter:
         display_name = display_name or module_name
         try:
             self.imports[module_name] = __import__(module_name)
-            # [X-Ray auto-fix] print(f"  ✓ {display_name:40} success")
+            print(f"  ✓ {display_name:40} success")
             return True
         except Exception as e:
             error_msg = f"{display_name}: {str(e)[:100]}"
             self.errors.append(error_msg)
-            # [X-Ray auto-fix] print(f"  ✗ {display_name:40} FAILED: {str(e)[:50]}")
+            print(f"  ✗ {display_name:40} FAILED: {str(e)[:50]}")
             return False
 
     def report(self):
@@ -61,12 +61,12 @@ class SafeImporter:
         print("\n" + "─" * 80)
         print("IMPORT VERIFICATION")
         print("─" * 80)
-        # [X-Ray auto-fix] print(f"Successful: {len(self.imports)} modules")
-        # [X-Ray auto-fix] print(f"Failed: {len(self.errors)} modules")
+        print(f"Successful: {len(self.imports)} modules")
+        print(f"Failed: {len(self.errors)} modules")
         if self.errors:
             print("\nErrors:")
             for err in self.errors:
-                # [X-Ray auto-fix] print(f"  • {err}")
+                print(f"  • {err}")
                 pass
         return len(self.errors) == 0
 
@@ -97,11 +97,11 @@ try:
 
     RUST_AVAILABLE = True
     importer.imports["rag_rat_rust"] = rag_rat_rust
-    # [X-Ray auto-fix] print(f"  ✓ {'Rust Extension Module (rag_rat_rust.pyd)':40} success")
+    print(f"  ✓ {'Rust Extension Module (rag_rat_rust.pyd)':40} success")
 except ImportError as e:
     RUST_AVAILABLE = False
     importer.warnings.append(f"Rust module not available: {e}")
-    # [X-Ray auto-fix] print(f"  ⚠ {'Rust Extension Module (rag_rat_rust.pyd)':40} not available")
+    print(f"  ⚠ {'Rust Extension Module (rag_rat_rust.pyd)':40} not available")
 if not importer.report():
     print("\n❌ Critical imports failed. Exiting.")
     sys.exit(1)
@@ -124,36 +124,36 @@ def safe_fetch_website(url: str, timeout: int = 30) -> Tuple[bool, str, Optional
     Returns: (success, content, error_message, status_code)
     """
     try:
-        # [X-Ray auto-fix] print(f"\n  📥 Fetching {url}...")
+        print(f"\n  📥 Fetching {url}...")
         import requests
 
         response = requests.get(url, timeout=timeout)
         response.raise_for_status()
 
-        # [X-Ray auto-fix] print(f"     Status: {response.status_code}")
-        # [X-Ray auto-fix] print(f"     Size: {len(response.content) / 1024:.1f} KB")
+        print(f"     Status: {response.status_code}")
+        print(f"     Size: {len(response.content) / 1024:.1f} KB")
         return True, response.content, None, response.status_code
 
     except requests.exceptions.Timeout:
         error = f"Timeout after {timeout}s"
-        # [X-Ray auto-fix] print(f"     ❌ {error}")
+        print(f"     ❌ {error}")
         return False, "", error, None
 
     except requests.exceptions.ConnectionError as e:
         error = f"Connection error: {str(e)[:50]}"
-        # [X-Ray auto-fix] print(f"     ❌ {error}")
+        print(f"     ❌ {error}")
         return False, "", error, None
 
     except requests.exceptions.HTTPError as e:
         status = e.response.status_code if e.response else None
         error = f"HTTP {status}: {str(e)[:50]}"
-        # [X-Ray auto-fix] print(f"     ❌ {error}")
+        print(f"     ❌ {error}")
         return False, "", error, status
 
     except Exception as e:
         error = f"Unexpected error: {str(e)[:50]}"
-        # [X-Ray auto-fix] print(f"     ❌ {error}")
-        # [X-Ray auto-fix] print(f"     {traceback.format_exc()[:200]}")
+        print(f"     ❌ {error}")
+        print(f"     {traceback.format_exc()[:200]}")
         return False, "", error, None
 
 
@@ -231,14 +231,14 @@ websites = {
 website_data = {}
 
 for name, url in websites.items():
-    # [X-Ray auto-fix] print(f"\n{name.upper()}")
+    print(f"\n{name.upper()}")
     print("─" * 80)
 
     # Fetch
     success, content, error, status = safe_fetch_website(url)
 
     if not success:
-        # [X-Ray auto-fix] print(f"  ❌ Failed to fetch {url}")
+        print(f"  ❌ Failed to fetch {url}")
         website_data[name] = {
             "url": url,
             "success": False,
@@ -251,14 +251,14 @@ for name, url in websites.items():
     result = safe_process_content(content, url)
     website_data[name] = result
 
-    # [X-Ray auto-fix] print(f"  ✓ HTML decoded: {result['text_extracted']:,} characters")
-    # [X-Ray auto-fix] print(f"  ✓ Images found: {result['images_found']}")
-    # [X-Ray auto-fix] print(f"  ✓ Decode method: {result.get('decode_method', 'unknown')}")
+    print(f"  ✓ HTML decoded: {result['text_extracted']:,} characters")
+    print(f"  ✓ Images found: {result['images_found']}")
+    print(f"  ✓ Decode method: {result.get('decode_method', 'unknown')}")
     if result.get("errors"):
-        # [X-Ray auto-fix] print(f"  ⚠ Errors: {result['errors']}")
+        print(f"  ⚠ Errors: {result['errors']}")
         pass
     if result.get("warnings"):
-        # [X-Ray auto-fix] print(f"  ⚠ Warnings: {result['warnings']}")
+        print(f"  ⚠ Warnings: {result['warnings']}")
         pass
         # ═══════════════════════════════════════════════════════════════════════════
         # PHASE 3: CRASH DETECTION & REPORTING
@@ -275,9 +275,9 @@ for name, data in website_data.items():
         crashes.append({"site": name, "reason": data.get("error", "Unknown error")})
 
 if crashes:
-    # [X-Ray auto-fix] print(f"\n❌ {len(crashes)} CRASHES DETECTED:")
+    print(f"\n❌ {len(crashes)} CRASHES DETECTED:")
     for crash in crashes:
-        # [X-Ray auto-fix] print(f"  • {crash['site']}: {crash['reason']}")
+        print(f"  • {crash['site']}: {crash['reason']}")
         pass
 else:
     print("\n✅ NO CRASHES - All websites processed safely!")
@@ -301,8 +301,8 @@ for name, data in website_data.items():
             "size": data["text_extracted"],
             "images": data["images_found"],
         }
-        # [X-Ray auto-fix] print(f"✓ {name}: Added {data['text_extracted']:,} chars to RAG")
-# [X-Ray auto-fix] print(f"\n✅ RAG Knowledge Base Ready: {len(rag_knowledge)} sources")
+        print(f"✓ {name}: Added {data['text_extracted']:,} chars to RAG")
+print(f"\n✅ RAG Knowledge Base Ready: {len(rag_knowledge)} sources")
 # ═══════════════════════════════════════════════════════════════════════════
 # PHASE 5: SAMPLE QUESTIONS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -319,7 +319,7 @@ sample_questions = [
 
 print("\nSample questions to answer from RAG:")
 for i, q in enumerate(sample_questions, 1):
-    # [X-Ray auto-fix] print(f"  {i}. {q}")
+    print(f"  {i}. {q}")
     pass
 print("\n(Full LLM integration would complete the RAG pipeline)")
 
@@ -337,7 +337,7 @@ total_memory_start = process.memory_info().rss / 1024 / 1024
 total_time_start = time.time()
 
 print(f"\nMemory usage: {total_memory_start:.2f} MB")
-# [X-Ray auto-fix] print(f"CPU percent: {process.cpu_percent(interval=1):.1f}%")
+print(f"CPU percent: {process.cpu_percent(interval=1):.1f}%")
 # ═══════════════════════════════════════════════════════════════════════════
 # PHASE 7: SUMMARY REPORT
 # ═══════════════════════════════════════════════════════════════════════════
@@ -362,17 +362,17 @@ summary = {
 }
 
 print("\n📊 TEST RESULTS:")
-# [X-Ray auto-fix] print(f"  ✓ Tests passed: {summary['tests_passed']}/{summary['tests_run']}")
-# [X-Ray auto-fix] print(f"  ✓ Crashes: {summary['crashes']}")
-# [X-Ray auto-fix] print(f"  ✓ Total content: {summary['total_content_size']:,} chars")
-# [X-Ray auto-fix] print(f"  ✓ Total images: {summary['total_images']}")
-# [X-Ray auto-fix] print(f"  ✓ Time: {summary['total_time_seconds']:.2f}s")
-# [X-Ray auto-fix] print(f"  ✓ Memory: {summary['memory_mb']:.2f} MB")
-# [X-Ray auto-fix] print(f"  ✓ Rust available: {'YES' if summary['rust_available'] else 'NO'}")
+print(f"  ✓ Tests passed: {summary['tests_passed']}/{summary['tests_run']}")
+print(f"  ✓ Crashes: {summary['crashes']}")
+print(f"  ✓ Total content: {summary['total_content_size']:,} chars")
+print(f"  ✓ Total images: {summary['total_images']}")
+print(f"  ✓ Time: {summary['total_time_seconds']:.2f}s")
+print(f"  ✓ Memory: {summary['memory_mb']:.2f} MB")
+print(f"  ✓ Rust available: {'YES' if summary['rust_available'] else 'NO'}")
 if summary["crashes"] == 0:
     print("\n✅ ALL TESTS PASSED - NO CRASHES!")
 else:
-    # [X-Ray auto-fix] print(f"\n⚠️  {summary['crashes']} CRASH(ES) DETECTED")
+    print(f"\n⚠️  {summary['crashes']} CRASH(ES) DETECTED")
     pass
     # ═══════════════════════════════════════════════════════════════════════════
     # SAVE RESULTS
@@ -391,7 +391,7 @@ with open(results_file, "w") as f:
         indent=2,
     )
 
-# [X-Ray auto-fix] print(f"\n💾 Results saved to: {results_file}")
+print(f"\n💾 Results saved to: {results_file}")
 print("\n" + "=" * 80)
 print("✅ HARNESS COMPLETE")
 print("=" * 80)

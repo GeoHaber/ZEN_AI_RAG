@@ -203,10 +203,10 @@ def _full_diagnostic_part3_part4(self):
         )
 
     # Test 2: Audio Level
-    # [X-Ray auto-fix] print(f"  [2/3] Testing audio level (2 seconds, speak now!)...")
+    print(f"  [2/3] Testing audio level (2 seconds, speak now!)...")
     level = self.audio_level_check(device_id, duration=2)
     results["tests"]["audio_level"] = level
-    # [X-Ray auto-fix] print(f"    ✓ Level: {level['level']:.4f} ({level['quality']})")
+    print(f"    ✓ Level: {level['level']:.4f} ({level['quality']})")
     if level["quality"] == "SILENT":
         results["recommendations"].append(
             "Microphone is capturing silence. Check Windows Volume Mixer - increase microphone volume."
@@ -215,19 +215,18 @@ def _full_diagnostic_part3_part4(self):
         results["recommendations"].append("Audio level is very low. Increase microphone volume in system settings.")
 
     # Test 3: Loopback
-    # [X-Ray auto-fix] print(f"  [3/3] Testing loopback (play beep and record)...")
+    print(f"  [3/3] Testing loopback (play beep and record)...")
     loopback = self.loopback_test(device_id, timeout=3)
     results["tests"]["loopback"] = loopback
 
     if loopback["success"]:
         if loopback["beep_detected"]:
-            # [X-Ray auto-fix] print(f"    ✓ Beep detected at {loopback['frequency']:.0f}Hz")
-            pass
+            print(f"    ✓ Beep detected at {loopback['frequency']:.0f}Hz")
         else:
-            # [X-Ray auto-fix] print(f"    ⚠️ No beep detected (audio level: {loopback['audio_level']:.4f})")
+            print(f"    ⚠️ No beep detected (audio level: {loopback['audio_level']:.4f})")
             results["recommendations"].append("Loopback test failed - microphone may be muted or disconnected.")
     else:
-        # [X-Ray auto-fix] print(f"    ✗ Loopback failed: {loopback['error'][:50]}")
+        print(f"    ✗ Loopback failed: {loopback['error'][:50]}")
         results["recommendations"].append(f"Loopback test error: {loopback['error'][:100]}")
     _full_diagnostic_part3(self)
 
@@ -275,10 +274,10 @@ def _full_diagnostic_part3(self):
         }
 
         # Test 1: Availability (locked?)
-        # [X-Ray auto-fix] print(f"\n  [1/3] Testing device availability...")
+        print(f"\n  [1/3] Testing device availability...")
         avail = self.test_device_availability(device_id)
         results["tests"]["availability"] = avail
-        # [X-Ray auto-fix] print(f"    {'✓' if avail['available'] else '✗'} {avail['reason']}")
+        print(f"    {'✓' if avail['available'] else '✗'} {avail['reason']}")
 
     _full_diagnostic_part3_part4(self)
 
@@ -293,16 +292,16 @@ def _auto_heal_part1_part2(self):
     print("\n[1] Discovering audio devices...")
     devices = sd.query_devices()
     input_devices = [i for i, d in enumerate(devices) if d["max_input_channels"] > 0]
-    # [X-Ray auto-fix] print(f"  ✓ Found {len(input_devices)} input device(s)")
+    print(f"  ✓ Found {len(input_devices)} input device(s)")
     actions.append(f"Discovered {len(input_devices)} input devices")
 
     # Step 2: Check default device first
     default_dev = sd.default.device[0]
-    # [X-Ray auto-fix] print(f"\n[2] Testing default device (#{default_dev})...")
+    print(f"\n[2] Testing default device (#{default_dev})...")
     diag = self.full_diagnostic(default_dev)
 
     if diag["overall_status"] == "OK":
-        # [X-Ray auto-fix] print(f"  ✓ Default device is OK!")
+        print(f"  ✓ Default device is OK!")
         return {
             "healed": True,
             "working_device": default_dev,
@@ -313,20 +312,20 @@ def _auto_heal_part1_part2(self):
     actions.append(f"Default device status: {diag['overall_status']}")
 
     # Step 3: Try other Logi webcam devices
-    # [X-Ray auto-fix] print(f"\n[3] Trying alternate Logi devices...")
+    print(f"\n[3] Trying alternate Logi devices...")
     logi_devices = [i for i in input_devices if "logi" in devices[i]["name"].lower()]
 
     for dev_id in logi_devices:
         if dev_id == default_dev:
             continue
 
-        # [X-Ray auto-fix] print(f"  Trying device #{dev_id}: {devices[dev_id]['name']}")
+        print(f"  Trying device #{dev_id}: {devices[dev_id]['name']}")
         avail = self.test_device_availability(dev_id)
 
         if avail["available"]:
             level = self.audio_level_check(dev_id, duration=1)
             if level["quality"] in ("EXCELLENT", "GOOD"):
-                # [X-Ray auto-fix] print(f"  ✓ Found working device!")
+                print(f"  ✓ Found working device!")
                 actions.append(f"Switched to device #{dev_id}")
                 return {"healed": True, "working_device": dev_id, "actions_taken": actions, "status": "RECOVERED"}
 
@@ -338,7 +337,7 @@ def _auto_heal_part1(self):
     """Auto heal part 1."""
 
     # Step 4: Try all remaining devices
-    # [X-Ray auto-fix] print(f"\n[4] Trying all other input devices...")
+    print(f"\n[4] Trying all other input devices...")
     for dev_id in input_devices:
         if dev_id in logi_devices or dev_id == default_dev:
             continue
@@ -347,15 +346,14 @@ def _auto_heal_part1(self):
         if avail["available"]:
             level = self.audio_level_check(dev_id, duration=1)
             if level["quality"] in ("EXCELLENT", "GOOD"):
-                # [X-Ray auto-fix] print(f"  ✓ Found working device: {avail['device_name']}")
+                print(f"  ✓ Found working device: {avail['device_name']}")
                 actions.append(f"Fallback to device #{dev_id}")
                 return {"healed": True, "working_device": dev_id, "actions_taken": actions, "status": "FALLBACK"}
 
     # Step 5: Print recommendations
-    # [X-Ray auto-fix] print(f"\n[5] Healing failed. Recommendations:")
+    print(f"\n[5] Healing failed. Recommendations:")
     for rec in diag["recommendations"]:
-        # [X-Ray auto-fix] print(f"  • {rec}")
-        pass
+        print(f"  • {rec}")
     return {"healed": False, "working_device": None, "actions_taken": actions, "status": "FAILED - See recommendations"}
 
     def auto_heal(self) -> Dict[str, Any]:
@@ -386,20 +384,18 @@ if __name__ == "__main__":
     default_dev = sd.default.device[0]
     result = healer.full_diagnostic(default_dev)
 
-    # [X-Ray auto-fix] print(f"\nStatus: {result['overall_status']}")
+    print(f"\nStatus: {result['overall_status']}")
     if result["recommendations"]:
         print("\nRecommendations:")
         for rec in result["recommendations"]:
-            # [X-Ray auto-fix] print(f"  • {rec}")
-            pass
+            print(f"  • {rec}")
     # Run auto-heal
     print("\n2️⃣ AUTO-HEAL TEST")
     heal_result = healer.auto_heal()
 
-    # [X-Ray auto-fix] print(f"\n{'✓' if heal_result['healed'] else '✗'} Healed: {heal_result['healed']}")
-    # [X-Ray auto-fix] print(f"Working device: {heal_result['working_device']}")
-    # [X-Ray auto-fix] print(f"Status: {heal_result['status']}")
-    # [X-Ray auto-fix] print(f"Actions taken:")
+    print(f"\n{'✓' if heal_result['healed'] else '✗'} Healed: {heal_result['healed']}")
+    print(f"Working device: {heal_result['working_device']}")
+    print(f"Status: {heal_result['status']}")
+    print(f"Actions taken:")
     for action in heal_result["actions_taken"]:
-        # [X-Ray auto-fix] print(f"  • {action}")        pass
-        pass
+        print(f"  • {action}")

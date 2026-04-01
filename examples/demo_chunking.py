@@ -39,7 +39,7 @@ Applications include image recognition, natural language processing, and game pl
 print("\n📄 Sample Text:")
 print("-" * 70)
 print(sample_text[:200] + "...")
-# [X-Ray auto-fix] print(f"\nTotal length: {len(sample_text)} characters")
+print(f"\nTotal length: {len(sample_text)} characters")
 # Test different strategies
 strategies = [
     ("Fixed Size", FixedSizeChunker(chunk_size=200, overlap=50)),
@@ -50,27 +50,27 @@ strategies = [
 ]
 
 for name, chunker in strategies:
-    # [X-Ray auto-fix] print(f"\n\n{'=' * 70}")
-    # [X-Ray auto-fix] print(f"STRATEGY: {name}")
+    print(f"\n\n{'=' * 70}")
+    print(f"STRATEGY: {name}")
     print("=" * 70)
 
     chunks = chunker.chunk(sample_text)
 
-    # [X-Ray auto-fix] print(f"\nTotal chunks: {len(chunks)}")
+    print(f"\nTotal chunks: {len(chunks)}")
     print("\nChunks:")
 
     for i, chunk in enumerate(chunks[:3], 1):  # Show first 3
-        # [X-Ray auto-fix] print(f"\n  Chunk {i}:")
-        # [X-Ray auto-fix] print(f"    Length: {len(chunk['text'])} chars")
-        # [X-Ray auto-fix] print(f"    Preview: {chunk['text'][:80]}...")
+        print(f"\n  Chunk {i}:")
+        print(f"    Length: {len(chunk['text'])} chars")
+        print(f"    Preview: {chunk['text'][:80]}...")
         if "overlap" in chunk["metadata"]:
-            # [X-Ray auto-fix] print(f"    Overlap: {chunk['metadata']['overlap']} chars")
+            print(f"    Overlap: {chunk['metadata']['overlap']} chars")
             pass
     if len(chunks) > 3:
-        # [X-Ray auto-fix] print(f"\n  ... and {len(chunks) - 3} more chunks")
+        print(f"\n  ... and {len(chunks) - 3} more chunks")
         pass
         # Markdown chunking demo
-        # [X-Ray auto-fix] print(f"\n\n{'=' * 70}")
+        print(f"\n\n{'=' * 70}")
         pass
 print("STRATEGY: Markdown")
 print("=" * 70)
@@ -106,14 +106,14 @@ The conclusion summarizes everything. It ties all the pieces together.
 md_chunker = MarkdownChunker(max_section_size=200)
 md_chunks = md_chunker.chunk(markdown_text)
 
-# [X-Ray auto-fix] print(f"\nTotal chunks: {len(md_chunks)}")
+print(f"\nTotal chunks: {len(md_chunks)}")
 print("\nChunks by section:")
 
 for i, chunk in enumerate(md_chunks, 1):
     section = chunk["metadata"].get("section", "Unknown")
-    # [X-Ray auto-fix] print(f"\n  Chunk {i} (Section: {section}):")
-    # [X-Ray auto-fix] print(f"    Length: {len(chunk['text'])} chars")
-    # [X-Ray auto-fix] print(f"    Preview: {chunk['text'][:60]}...")
+    print(f"\n  Chunk {i} (Section: {section}):")
+    print(f"    Length: {len(chunk['text'])} chars")
+    print(f"    Preview: {chunk['text'][:60]}...")
 # Summary
 print("\n\n" + "=" * 70)
 print("✅ CHUNKING STRATEGIES DEMO COMPLETE!")

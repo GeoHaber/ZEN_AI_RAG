@@ -89,11 +89,11 @@ class CLITester:
             # We want to check if it generated *new* text, but for crash test, any output is good sign of life.
             if success and len(res.stdout) < 10:
                 success = False  # Output too short
-                # [X-Ray auto-fix] print(f"[Err] Output too short for {model_path.name}")
+                print(f"[Err] Output too short for {model_path.name}")
             if not success:
                 # Print MORE dump
-                # [X-Ray auto-fix] print(f"[Err] {model_path.name} Failed. Exit:{res.returncode}")
-                # [X-Ray auto-fix] print(f"--- STDERR ---\n{res.stderr[:500]}\n--- STDOUT ---\n{res.stdout[:500]}")
+                print(f"[Err] {model_path.name} Failed. Exit:{res.returncode}")
+                print(f"--- STDERR ---\n{res.stderr[:500]}\n--- STDOUT ---\n{res.stdout[:500]}")
                 pass
             return {
                 "index": index,
@@ -111,7 +111,7 @@ class CLITester:
 
     def run_cycle(self, N):
         """Run cycle."""
-        # [X-Ray auto-fix] print(f"\n[CLI-Test] Starting Cycle N={N} (Parallel Instances) ---")
+        print(f"\n[CLI-Test] Starting Cycle N={N} (Parallel Instances) ---")
         futures = []
         cycle_results = []
 
@@ -142,9 +142,9 @@ class CLITester:
         if success_count > 0:
             avg_time = statistics.mean([r["duration"] for r in cycle_results if r["success"]])
 
-        # [X-Ray auto-fix] print(f"[CLI-Test] Cycle N={N} Complete in {total_cycle_time:.2f}s")
-        # [X-Ray auto-fix] print(f"           Success: {success_count}/{N}")
-        # [X-Ray auto-fix] print(f"           Avg Duration Per Instance: {avg_time:.2f}s")
+        print(f"[CLI-Test] Cycle N={N} Complete in {total_cycle_time:.2f}s")
+        print(f"           Success: {success_count}/{N}")
+        print(f"           Avg Duration Per Instance: {avg_time:.2f}s")
         # Log to list
         row = {
             "instances": N,
@@ -175,7 +175,7 @@ class CLITester:
             success = self.run_cycle(n)
 
             if not success:
-                # [X-Ray auto-fix] print(f"[CLI-Test] Crash/Failure detected at N={n}. Stopping.")
+                print(f"[CLI-Test] Crash/Failure detected at N={n}. Stopping.")
                 break
 
             if self.safe_mode and n >= 2:
@@ -191,6 +191,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "FULL":
         is_safe = False
 
-    # [X-Ray auto-fix] print(f"--- ZenAI Standalone CLI Crash Test (SafeMode={is_safe}) ---")
+    print(f"--- ZenAI Standalone CLI Crash Test (SafeMode={is_safe}) ---")
     tester = CLITester(max_N=12, safe_mode=is_safe)
     tester.run()

@@ -224,7 +224,7 @@ def main():
 
     if USE_CYTHON:
         extensions = collect_extensions()
-        # [X-Ray auto-fix] print(f"\nCompiling {len(extensions)} modules with Cython...\n")
+        print(f"\nCompiling {len(extensions)} modules with Cython...\n")
         setup(
             name="zenai_core",
             version="1.0.0",

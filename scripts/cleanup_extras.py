@@ -71,18 +71,18 @@ def cleanup_project():
         name = item.name
 
         if name in KEEPERS:
-            # [X-Ray auto-fix] print(f"  Existing: {name} (Keep)")
+            print(f"  Existing: {name} (Keep)")
             continue
 
-        # [X-Ray auto-fix] print(f"  ➡️ Moving: {name} -> _Extra_files/")
+        print(f"  ➡️ Moving: {name} -> _Extra_files/")
         dest = EXTRA_DIR / name
         try:
             shutil.move(str(item), str(dest))
             moved_count += 1
         except Exception:
-            # [X-Ray auto-fix] print(f"  ❌ Failed to move {name}: {e}")
+            print(f"  ❌ Failed to move {name}: {e}")
             pass
-    # [X-Ray auto-fix] print(f"\n✅ Cleanup Complete. Moved {moved_count} items to _Extra_files/.")
+    print(f"\n✅ Cleanup Complete. Moved {moved_count} items to _Extra_files/.")
 
 
 if __name__ == "__main__":

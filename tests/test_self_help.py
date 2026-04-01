@@ -71,7 +71,7 @@ class TestSelfHelpRAG(unittest.TestCase):
 
         # Check content relevance
         top_text = results[0]["text"].lower()
-        # [X-Ray auto-fix] print(f"DEBUG: Top Result: {top_text}")
+        print(f"DEBUG: Top Result: {top_text}")
         # We expect 'model manager' or 'catalog' or 'download' logic
         self.assertTrue(
             any(x in top_text for x in ["model", "catalog", "manager", "download"]),

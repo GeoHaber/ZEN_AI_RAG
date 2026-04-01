@@ -62,7 +62,7 @@ def log(action: str, api_call: str = "", response: str = ""):
     else:
         entry = f"[{ts}] {action}"
 
-    # [X-Ray auto-fix] print(entry)
+    print(entry)
     state.logs.append(entry)
     state.action_count += 1
 

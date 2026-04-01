@@ -100,7 +100,7 @@ def _test_hallucination_verification_mixed_part1(self):
 
     result = self.arbitrator.verify_hallucination(response, context_chunks)
 
-    # [X-Ray auto-fix] print(f"DEBUG RESULT: {result}", file=sys.stderr, flush=True)
+    print(f"DEBUG RESULT: {result}", file=sys.stderr, flush=True)
     # Should be 0.5 because "Apples are red" is supported, "Bananas are purple" is not
     self.assertAlmostEqual(result["score"], 0.5)
     self.assertEqual(len(result["unsupported"]), 1)

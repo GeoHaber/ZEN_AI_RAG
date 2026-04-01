@@ -66,7 +66,7 @@ class TestArbitratorScaling(unittest.TestCase):
         requests.post = requests_post_original
 
         # We expect 2 brains total: 8001 (main) + 8005 (expert)
-        # [X-Ray auto-fix] print(f"Found ports: {arbitrator.ports}")
+        print(f"Found ports: {arbitrator.ports}")
         self.assertGreaterEqual(len(arbitrator.ports), 2, "Arbitrator failed to discover 2 brains")
         self.assertIn(8001, arbitrator.ports)
         self.assertIn(8005, arbitrator.ports)

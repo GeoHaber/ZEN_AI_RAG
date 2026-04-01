@@ -20,7 +20,7 @@ def test_rag_retrieval_content():
     2. Searches for 'news' (or generic query).
     3. Prints the EXACT text chunks the LLM would see.
     """
-    # [X-Ray auto-fix] print("\nXXX DIAGNOSTIC START XXX")
+    print("\nXXX DIAGNOSTIC START XXX")
     try:
         from zena_mode import LocalRAG
     except ImportError:
@@ -36,26 +36,26 @@ def test_rag_retrieval_content():
     if rag.index is None or rag.index.ntotal == 0:
         pytest.skip("RAG index is empty - no data to test")
 
-    # [X-Ray auto-fix] print(f"SUCCESS: Loaded RAG Index. Total vectors: {rag.index.ntotal}")
+    print(f"SUCCESS: Loaded RAG Index. Total vectors: {rag.index.ntotal}")
     # Simulate User Query
     query = "what are the news on thet site"
-    # [X-Ray auto-fix] print(f"\nQUERY: '{query}'")
+    print(f"\nQUERY: '{query}'")
     results = rag.search(query, k=5)
 
     if not results:
         print("RESULT: No chunks found.")
     else:
-        # [X-Ray auto-fix] print(f"RESULT: Found {len(results)} chunks.\n")
+        print(f"RESULT: Found {len(results)} chunks.\n")
         for i, chunk in enumerate(results, 1):
             title = chunk.get("title", "No Title")
             text = chunk.get("text", "[EMPTY TEXT]")
             url = chunk.get("url", "No URL")
 
-            # [X-Ray auto-fix] print(f"--- Chunk {i} ---")
-            # [X-Ray auto-fix] print(f"Title: {title}")
-            # [X-Ray auto-fix] print(f"URL:   {url}")
-            # [X-Ray auto-fix] print(f"Text Length: {len(text)} chars")
-            # [X-Ray auto-fix] print(f"PREVIEW: {text[:500].replace(chr(10), ' ')}...")
+            print(f"--- Chunk {i} ---")
+            print(f"Title: {title}")
+            print(f"URL:   {url}")
+            print(f"Text Length: {len(text)} chars")
+            print(f"PREVIEW: {text[:500].replace(chr(10), ' ')}...")
             print("----------------")
             sys.stdout.flush()
 

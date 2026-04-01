@@ -62,16 +62,16 @@ documents = [
 print("\n📥 Adding documents...")
 for doc in documents:
     deduplicator.add_document(doc["id"], doc["text"], doc["metadata"])
-    # [X-Ray auto-fix] print(f"  Added: {doc['id']} - {doc['text'][:50]}...")
+    print(f"  Added: {doc['id']} - {doc['text'][:50]}...")
 # Find duplicates
 print("\n🔍 Finding duplicates...")
 duplicates = deduplicator.find_duplicates()
 
-# [X-Ray auto-fix] print(f"\nFound {len(duplicates)} duplicate groups:")
+print(f"\nFound {len(duplicates)} duplicate groups:")
 for hash_val, docs in duplicates.items():
-    # [X-Ray auto-fix] print(f"\n  Group (hash: {hash_val[:16]}...):")
+    print(f"\n  Group (hash: {hash_val[:16]}...):")
     for doc in docs:
-        # [X-Ray auto-fix] print(f"    - {doc['id']}: {doc['text'][:40]}...")
+        print(f"    - {doc['id']}: {doc['text'][:40]}...")
         pass
         # Test different strategies
         pass
@@ -89,19 +89,19 @@ for strategy in strategies:
     # Deduplicate
     unique, removed = dedup.deduplicate(strategy=strategy)
 
-    # [X-Ray auto-fix] print(f"\nStrategy: {strategy}")
-    # [X-Ray auto-fix] print(f"  Unique documents: {len(unique)}")
-    # [X-Ray auto-fix] print(f"  Removed duplicates: {len(removed)}")
-    # [X-Ray auto-fix] print(f"  Kept documents: {[doc['id'] for doc in unique]}")
+    print(f"\nStrategy: {strategy}")
+    print(f"  Unique documents: {len(unique)}")
+    print(f"  Removed duplicates: {len(removed)}")
+    print(f"  Kept documents: {[doc['id'] for doc in unique]}")
 # Statistics
 print("\n\n📊 Deduplication Statistics:")
 stats = deduplicator.get_statistics()
 for key, value in stats.items():
     if isinstance(value, float):
-        # [X-Ray auto-fix] print(f"  {key}: {value:.2%}" if "rate" in key else f"  {key}: {value:.2f}")
+        print(f"  {key}: {value:.2%}" if "rate" in key else f"  {key}: {value:.2f}")
         pass
     else:
-        # [X-Ray auto-fix] print(f"  {key}: {value}")
+        print(f"  {key}: {value}")
         pass
         # ============================================================================
         # PART 2: Similarity-Based Deduplication (Near Duplicates)
@@ -152,32 +152,32 @@ near_duplicate_docs = [
 print("\n📥 Adding documents with embeddings...")
 for doc in near_duplicate_docs:
     sim_dedup.add_document(doc["id"], doc["text"], doc["embedding"], doc["metadata"])
-    # [X-Ray auto-fix] print(f"  Added: {doc['id']} - {doc['text'][:45]}...")
+    print(f"  Added: {doc['id']} - {doc['text'][:45]}...")
 # Find similar pairs
 print("\n🔍 Finding similar pairs...")
 similar_pairs = sim_dedup.find_similar_pairs()
 
-# [X-Ray auto-fix] print(f"\nFound {len(similar_pairs)} similar pairs:")
+print(f"\nFound {len(similar_pairs)} similar pairs:")
 for i, j, similarity in similar_pairs:
     doc_i = near_duplicate_docs[i]
     doc_j = near_duplicate_docs[j]
-    # [X-Ray auto-fix] print(f"\n  Similarity: {similarity:.3f}")
-    # [X-Ray auto-fix] print(f"    {doc_i['id']}: {doc_i['text'][:40]}...")
-    # [X-Ray auto-fix] print(f"    {doc_j['id']}: {doc_j['text'][:40]}...")
+    print(f"\n  Similarity: {similarity:.3f}")
+    print(f"    {doc_i['id']}: {doc_i['text'][:40]}...")
+    print(f"    {doc_j['id']}: {doc_j['text'][:40]}...")
 # Deduplicate
 print("\n\n🎯 Deduplicating by clustering similar documents...")
 unique, removed = sim_dedup.deduplicate_clusters()
 
 print("\nResults:")
-# [X-Ray auto-fix] print(f"  Unique documents: {len(unique)}")
-# [X-Ray auto-fix] print(f"  Removed near-duplicates: {len(removed)}")
+print(f"  Unique documents: {len(unique)}")
+print(f"  Removed near-duplicates: {len(removed)}")
 print("\n  Kept documents:")
 for doc in unique:
-    # [X-Ray auto-fix] print(f"    - {doc['id']}: {doc['text'][:50]}...")
+    print(f"    - {doc['id']}: {doc['text'][:50]}...")
     pass
 print("\n  Removed documents:")
 for doc in removed:
-    # [X-Ray auto-fix] print(f"    - {doc['id']}: {doc['text'][:50]}...")
+    print(f"    - {doc['id']}: {doc['text'][:50]}...")
     pass
     # ============================================================================
     # SUMMARY
@@ -190,15 +190,15 @@ print("=" * 70)
 
 print("\n📈 Summary:")
 print("  Content-based deduplication:")
-# [X-Ray auto-fix] print(f"    - Processed: {len(documents)} documents")
-# [X-Ray auto-fix] print(f"    - Found: {len(duplicates)} duplicate groups")
-# [X-Ray auto-fix] print(f"    - Unique: {len(unique)} documents (after dedup)")
-# [X-Ray auto-fix] print(f"    - Removed: {len(documents) - len(unique)} exact duplicates")
+print(f"    - Processed: {len(documents)} documents")
+print(f"    - Found: {len(duplicates)} duplicate groups")
+print(f"    - Unique: {len(unique)} documents (after dedup)")
+print(f"    - Removed: {len(documents) - len(unique)} exact duplicates")
 print("\n  Similarity-based deduplication:")
-# [X-Ray auto-fix] print(f"    - Processed: {len(near_duplicate_docs)} documents")
-# [X-Ray auto-fix] print(f"    - Found: {len(similar_pairs)} similar pairs")
-# [X-Ray auto-fix] print(f"    - Unique: {len(unique)} documents (after dedup)")
-# [X-Ray auto-fix] print(f"    - Removed: {len(removed)} near-duplicates")
+print(f"    - Processed: {len(near_duplicate_docs)} documents")
+print(f"    - Found: {len(similar_pairs)} similar pairs")
+print(f"    - Unique: {len(unique)} documents (after dedup)")
+print(f"    - Removed: {len(removed)} near-duplicates")
 print("\n🎯 Key Features Demonstrated:")
 print("  ✓ SHA256 content hashing for exact duplicates")
 print("  ✓ Multiple deduplication strategies (keep_first, keep_last, keep_best)")

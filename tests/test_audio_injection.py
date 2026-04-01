@@ -27,13 +27,13 @@ wav_buffer = io.BytesIO()
 wavfile.write(wav_buffer, sample_rate, (audio_data * 32767).astype("int16"))
 wav_bytes = wav_buffer.getvalue()
 
-# [X-Ray auto-fix] print(f"  ✓ Generated {duration}s of {frequency}Hz sine wave")
-# [X-Ray auto-fix] print(f"  ✓ Audio size: {len(wav_bytes)} bytes")
+print(f"  ✓ Generated {duration}s of {frequency}Hz sine wave")
+print(f"  ✓ Audio size: {len(wav_bytes)} bytes")
 # TEST 1: Direct WAV creation
 print("\n[2/5] Testing WAV file creation...")
 test_wav_path = Path("test_audio_injection.wav")
 wavfile.write(test_wav_path, sample_rate, (audio_data * 32767).astype("int16"))
-# [X-Ray auto-fix] print(f"  ✓ Created {test_wav_path}")
+print(f"  ✓ Created {test_wav_path}")
 # TEST 2: Inject into VoiceManager transcription
 print("\n[3/5] Testing transcription with injected audio...")
 try:
@@ -43,15 +43,15 @@ try:
 
     # Transcribe the synthetic audio
     result = vm.transcribe(wav_bytes, language="en")
-    # [X-Ray auto-fix] print(f"  ✓ Transcription result: {result}")
+    print(f"  ✓ Transcription result: {result}")
     if result.get("success"):
         text = result.get("text", "")
-        # [X-Ray auto-fix] print(f"  ✓ Transcribed text: '{text}'")
+        print(f"  ✓ Transcribed text: '{text}'")
     else:
-        # [X-Ray auto-fix] print(f"  ⚠️ Transcription failed: {result.get('error', 'unknown error')}")
+        print(f"  ⚠️ Transcription failed: {result.get('error', 'unknown error')}")
         pass
 except Exception:
-    # [X-Ray auto-fix] print(f"  ✗ Transcription test failed: {e}")
+    print(f"  ✗ Transcription test failed: {e}")
     import traceback
 
     traceback.print_exc()
@@ -64,21 +64,21 @@ try:
     # Create a mock recording result with our synthetic audio
     mock_result = RecordingResult(success=True, audio_data=wav_bytes, duration=duration, sample_rate=sample_rate)
 
-    # [X-Ray auto-fix] print(f"  ✓ Mock recording created")
-    # [X-Ray auto-fix] print(f"  ✓ Success: {mock_result.success}")
-    # [X-Ray auto-fix] print(f"  ✓ Duration: {mock_result.duration}s")
-    # [X-Ray auto-fix] print(f"  ✓ Sample rate: {mock_result.sample_rate}Hz")
-    # [X-Ray auto-fix] print(f"  ✓ Audio data: {len(mock_result.audio_data)} bytes")
+    print(f"  ✓ Mock recording created")
+    print(f"  ✓ Success: {mock_result.success}")
+    print(f"  ✓ Duration: {mock_result.duration}s")
+    print(f"  ✓ Sample rate: {mock_result.sample_rate}Hz")
+    print(f"  ✓ Audio data: {len(mock_result.audio_data)} bytes")
     # Now try to transcribe this mock result
     if mock_result.success:
         vm = VoiceManager()
         transcription = vm.transcribe(mock_result.audio_data)
-        # [X-Ray auto-fix] print(f"\n  ✓ Mock audio transcribed")
+        print(f"\n  ✓ Mock audio transcribed")
         if transcription.get("success"):
-            # [X-Ray auto-fix] print(f"  ✓ Text: '{transcription.get('text', '')}'")
+            print(f"  ✓ Text: '{transcription.get('text', '')}'")
             pass
 except Exception:
-    # [X-Ray auto-fix] print(f"  ✗ Mock recording test failed: {e}")
+    print(f"  ✗ Mock recording test failed: {e}")
     import traceback
 
     traceback.print_exc()
@@ -101,7 +101,7 @@ try:
         def record_audio(self, duration=3.0, device_id=None, sample_rate=16000, channels=1, auto_fallback=True):
             """Override to use injected audio if enabled"""
             if self.inject_enabled and self.inject_audio:
-                # [X-Ray auto-fix] print(f"    [!] Using injected audio instead of microphone")
+                print(f"    [!] Using injected audio instead of microphone")
                 return RecordingResult(
                     success=True, audio_data=self.inject_audio, duration=duration, sample_rate=sample_rate
                 )
@@ -118,19 +118,19 @@ try:
     result = ivm.record_audio(duration=3)
 
     if result.success:
-        # [X-Ray auto-fix] print(f"  ✓ Injection recording successful")
-        # [X-Ray auto-fix] print(f"  ✓ Audio size: {len(result.audio_data)} bytes")
+        print(f"  ✓ Injection recording successful")
+        print(f"  ✓ Audio size: {len(result.audio_data)} bytes")
         # Transcribe the injected audio
         transcription = ivm.transcribe(result.audio_data)
-        # [X-Ray auto-fix] print(f"  ✓ Injected audio transcribed")
+        print(f"  ✓ Injected audio transcribed")
         if transcription.get("success"):
-            # [X-Ray auto-fix] print(f"  ✓ Text: '{transcription.get('text', '')}'")
+            print(f"  ✓ Text: '{transcription.get('text', '')}'")
             pass
     else:
-        # [X-Ray auto-fix] print(f"  ✗ Injection failed: {result.error}")
+        print(f"  ✗ Injection failed: {result.error}")
         pass
 except Exception:
-    # [X-Ray auto-fix] print(f"  ✗ Injection test failed: {e}")
+    print(f"  ✗ Injection test failed: {e}")
     import traceback
 
     traceback.print_exc()
@@ -174,7 +174,7 @@ To use audio injection in the UI:
 
 print("\n💡 BENEFITS:")
 print("  ✓ Test audio pipeline without microphone")
-# [X-Ray auto-fix] print("  ✓ Debug UI audio handling")
+print("  ✓ Debug UI audio handling")
 print("  ✓ Verify transcription works")
 print("  ✓ Reproducible test audio every time")
 print("  ✓ No need for actual microphone for testing")

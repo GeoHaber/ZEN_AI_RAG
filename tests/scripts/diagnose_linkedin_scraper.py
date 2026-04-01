@@ -9,7 +9,7 @@ logger = logging.getLogger("LinkedInDiagnose")
 
 def diagnose_url(url):
     """Diagnose url."""
-    # [X-Ray auto-fix] print(f"\n🔍 Diagnosing URL: {url}")
+    print(f"\n🔍 Diagnosing URL: {url}")
     print("-" * 50)
 
     headers = {
@@ -23,18 +23,18 @@ def diagnose_url(url):
 
     try:
         response = requests.get(url, headers=headers, timeout=15)
-        # [X-Ray auto-fix] print(f"📡 HTTP Status: {response.status_code}")
-        # [X-Ray auto-fix] print(f"📏 Response Length: {len(response.text)} bytes")
+        print(f"📡 HTTP Status: {response.status_code}")
+        print(f"📏 Response Length: {len(response.text)} bytes")
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
             title = soup.title.string if soup.title else "No title"
-            # [X-Ray auto-fix] print(f"📑 Page Title: {title}")
+            print(f"📑 Page Title: {title}")
             # Check for common bot detection patterns
             if "authwall" in response.url or "security-check" in response.text.lower():
                 print("⚠️  DETECTED: Redirected to Authwall/Security check.")
 
             text = soup.get_text()
-            # [X-Ray auto-fix] print(f"📝 Extracted Text Preview (first 200 chars):\n{text.strip()[:200]}...")
+            print(f"📝 Extracted Text Preview (first 200 chars):\n{text.strip()[:200]}...")
             if len(text.strip()) < 100:
                 print("❌ ERROR: Very little text extracted. JavaScript rendering might be required.")
         else:
@@ -45,7 +45,7 @@ def diagnose_url(url):
                 print("💡 Suggestion: LinkedIn specific request rejection code.")
 
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ EXCEPTION: {e}")
+        print(f"❌ EXCEPTION: {e}")
         pass
 
 

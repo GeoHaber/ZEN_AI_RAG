@@ -137,13 +137,13 @@ class LocalLLMManager:
         print("=" * 60)
 
         base_name = duplicate_group[0].base_model
-        # [X-Ray auto-fix] print(f"\nBase Model: {base_name}")
-        # [X-Ray auto-fix] print(f"Found {len(duplicate_group)} variants:\n")
+        print(f"\nBase Model: {base_name}")
+        print(f"Found {len(duplicate_group)} variants:\n")
         for i, model in enumerate(duplicate_group, 1):
             quant_info = f" [{model.quantization}]" if model.quantization else ""
-            # [X-Ray auto-fix] print(f"  {i}. {model.filename}{quant_info}")
-            # [X-Ray auto-fix] print(f"     Size: {model.size}")
-            # [X-Ray auto-fix] print(f"     Quantization: {model.quantization or 'Original'}")
+            print(f"  {i}. {model.filename}{quant_info}")
+            print(f"     Size: {model.size}")
+            print(f"     Quantization: {model.quantization or 'Original'}")
             print()
 
         # Prompt user
@@ -155,10 +155,10 @@ class LocalLLMManager:
                 if 0 <= choice_idx < len(duplicate_group):
                     selected = duplicate_group[choice_idx]
                     self._selected_duplicates[base_name] = selected
-                    # [X-Ray auto-fix] print(f"✓ Selected: {selected.filename}\n")
+                    print(f"✓ Selected: {selected.filename}\n")
                     return selected
                 else:
-                    # [X-Ray auto-fix] print(f"Invalid choice. Enter 1-{len(duplicate_group)}")
+                    print(f"Invalid choice. Enter 1-{len(duplicate_group)}")
                     pass
             except ValueError:
                 print("Invalid input. Enter a number.")
@@ -210,17 +210,17 @@ class LocalLLMManager:
             if llama["needs_update"]:
                 print(f"  ⚠ Update available: {llama['latest_version']}")
             if llama["running"]:
-                # [X-Ray auto-fix] print(f"  ✓ Running (PID: {llama['pid']})")
+                print(f"  ✓ Running (PID: {llama['pid']})")
                 pass
             else:
                 print("  ✗ Not running")
         else:
             print("  ✗ Not installed")
-            # [X-Ray auto-fix] print(f"  Download from: {self.llama_manager.get_download_url()}")
+            print(f"  Download from: {self.llama_manager.get_download_url()}")
         # Models status
-        # [X-Ray auto-fix] print(f"\n[Models]")
-        # [X-Ray auto-fix] print(f"  Total discovered: {status.models_discovered}")
-        # [X-Ray auto-fix] print(f"  Groups: {len(self.registry._model_groups)}")
+        print(f"\n[Models]")
+        print(f"  Total discovered: {status.models_discovered}")
+        print(f"  Groups: {len(self.registry._model_groups)}")
         # Category breakdown
         by_category = {}
         for model in status.models:
@@ -228,32 +228,32 @@ class LocalLLMManager:
             by_category[cat] = by_category.get(cat, 0) + 1
 
         for cat, count in sorted(by_category.items()):
-            # [X-Ray auto-fix] print(f"    - {cat.capitalize()}: {count}")
+            print(f"    - {cat.capitalize()}: {count}")
             pass
         # Duplicates
         if status.duplicate_groups:
-            # [X-Ray auto-fix] print(f"\n[Duplicates]")
+            print(f"\n[Duplicates]")
             for base_name, variants in status.duplicate_groups.items():
-                # [X-Ray auto-fix] print(f"  • {base_name}: {len(variants)} variants")
+                print(f"  • {base_name}: {len(variants)} variants")
                 for v in variants:
                     marker = "✓" if v in self._selected_duplicates.values() else " "
-                    # [X-Ray auto-fix] print(f"    {marker} {v.filename}")
+                    print(f"    {marker} {v.filename}")
         # Recommendations
-        # [X-Ray auto-fix] print(f"\n[Model Recommendations]")
+        print(f"\n[Model Recommendations]")
         fast = self.get_recommendations("fast")
-        # [X-Ray auto-fix] print(f"  Fast: {len(fast)} models")
+        print(f"  Fast: {len(fast)} models")
         if fast:
-            # [X-Ray auto-fix] print(f"    • {fast[0].name}")
+            print(f"    • {fast[0].name}")
             pass
         coding = self.get_recommendations("coding")
-        # [X-Ray auto-fix] print(f"  Coding: {len(coding)} models")
+        print(f"  Coding: {len(coding)} models")
         if coding:
-            # [X-Ray auto-fix] print(f"    • {coding[0].name}")
+            print(f"    • {coding[0].name}")
             pass
         reasoning = self.get_recommendations("reasoning")
-        # [X-Ray auto-fix] print(f"  Reasoning: {len(reasoning)} models")
+        print(f"  Reasoning: {len(reasoning)} models")
         if reasoning:
-            # [X-Ray auto-fix] print(f"    • {reasoning[0].name}")
+            print(f"    • {reasoning[0].name}")
             pass
         print("\n" + "=" * 70 + "\n")
 
@@ -265,14 +265,14 @@ if __name__ == "__main__":
     manager = LocalLLMManager()
     status = manager.initialize()
 
-    # [X-Ray auto-fix] print(f"\nllama.cpp ready: {status.llama_cpp_ready}")
-    # [X-Ray auto-fix] print(f"Models found: {status.models_discovered}")
+    print(f"\nllama.cpp ready: {status.llama_cpp_ready}")
+    print(f"Models found: {status.models_discovered}")
     if status.duplicate_groups:
-        # [X-Ray auto-fix] print(f"Duplicates: {list(status.duplicate_groups.keys())}")
+        print(f"Duplicates: {list(status.duplicate_groups.keys())}")
         pass
     print("\nRecommendations for 'coding':")
     coding = manager.get_recommendations("coding")
     for m in coding[:3]:
-        # [X-Ray auto-fix] print(f"  • {m.name}")
+        print(f"  • {m.name}")
         pass
     manager.print_summary()

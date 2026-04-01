@@ -39,7 +39,7 @@ class TestModelManagement:
             # Verify models returned
             assert isinstance(models, list)
             assert len(models) == 2
-            # [X-Ray auto-fix] print(f"✓ get_models() returned: {models}")
+            print(f"✓ get_models() returned: {models}")
 
     @pytest.mark.asyncio
     async def test_get_models_fallback_on_error(self):
@@ -54,7 +54,7 @@ class TestModelManagement:
             # Should return fallback list
             assert isinstance(models, list)
             assert len(models) > 0
-            # [X-Ray auto-fix] print(f"✓ Fallback models: {models}")
+            print(f"✓ Fallback models: {models}")
 
 
 if __name__ == "__main__":

@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
     resolver = ConflictResolver()
     conflicts = resolver.detect_conflicts(assertions)
-    # [X-Ray auto-fix] print(f"Found {len(conflicts)} conflicts:")
+    print(f"Found {len(conflicts)} conflicts:")
     for conflict in conflicts:
         resolved = resolver.resolve_conflict(conflict)
         print(resolver.build_assertion_summary([resolved]))

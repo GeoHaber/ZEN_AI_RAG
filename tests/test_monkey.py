@@ -368,7 +368,7 @@ class TestMonkeyChaos:
         report = tracker.get_report()
         print(f"\n📊 Monkey Report (LLM Offline):")
         print(f"   Actions: {report['total_actions']}")
-        # [X-Ray auto-fix] print(f"   Expected Errors: {expected_errors}")
+        print(f"   Expected Errors: {expected_errors}")
         print(f"   Unexpected Crashes: {report['crashes']}")
 
         # Connection errors are expected, crashes are not
@@ -491,9 +491,9 @@ class TestMonkeyChaos:
             t.join()
 
         print(f"\n📊 Concurrent Monkey Report:")
-        # [X-Ray auto-fix] print(f"   Threads: 5")
-        # [X-Ray auto-fix] print(f"   Actions per thread: 50")
-        # [X-Ray auto-fix] print(f"   Errors: {len(errors)}")
+        print(f"   Threads: 5")
+        print(f"   Actions per thread: 50")
+        print(f"   Errors: {len(errors)}")
         # Some errors expected due to race conditions, but no crashes
         if errors:
             print(f"   First error: {errors[0]}")

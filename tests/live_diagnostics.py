@@ -21,13 +21,13 @@ async def check_service(name, url, timeout=2.0):
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, timeout=timeout)
             if resp.status_code == 200:
-                # [X-Ray auto-fix] print(f"✅ {name:15} | Online ({url})")
+                print(f"✅ {name:15} | Online ({url})")
                 return True
             else:
                 print(f"⚠️ {name:15} | Warning: Status {resp.status_code} ({url})")
                 return False
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ {name:15} | Offline ({url}) - {type(e).__name__}")
+        print(f"❌ {name:15} | Offline ({url}) - {type(e).__name__}")
         return False
 
 
@@ -54,7 +54,7 @@ async def run_monkey_test(backend, iterations=5):
     success_count = 0
     for i in range(1, iterations + 1):
         prompt = random.choice(MONKEY_PROMPTS)
-        # [X-Ray auto-fix] print(f'[{i}/{iterations}] 🐒 Monkey injecting: "{prompt}"')
+        print(f'[{i}/{iterations}] 🐒 Monkey injecting: "{prompt}"')
         full_text = ""
         start = time.time()
         try:
@@ -65,15 +65,15 @@ async def run_monkey_test(backend, iterations=5):
 
             duration = time.time() - start
             if full_text.strip():
-                # [X-Ray auto-fix] print(f" ✅ Received {len(full_text)} chars ({duration:.1f}s)")
+                print(f" ✅ Received {len(full_text)} chars ({duration:.1f}s)")
                 success_count += 1
             else:
-                # [X-Ray auto-fix] print(f" ❌ RECEIVED EMPTY RESPONSE!")
+                print(f" ❌ RECEIVED EMPTY RESPONSE!")
                 pass
         except Exception:
-            # [X-Ray auto-fix] print(f" ❌ ERROR DURING MONKEY TEST: {e}")
+            print(f" ❌ ERROR DURING MONKEY TEST: {e}")
             pass
-    # [X-Ray auto-fix] print(f"\n🐒 Monkey Test Complete: {success_count}/{iterations} successful injections.")
+    print(f"\n🐒 Monkey Test Complete: {success_count}/{iterations} successful injections.")
     return success_count == iterations
 
 
@@ -88,7 +88,7 @@ async def run_ui_chaos_test(backend, iterations=10):
         for i in range(1, iterations + 1):
             target_id = random.choice(MONKEY_TARGETS)
             description = UI_METADATA.get(target_id, "Unknown action")
-            # [X-Ray auto-fix] print(f"[{i}/{iterations}] 🌀 Poking: {target_id} ({description})")
+            print(f"[{i}/{iterations}] 🌀 Poking: {target_id} ({description})")
             # Ask the LLM to predict outcome for verification
             prompt = f"UI Action: Click '{description}'. Based on this action, what is the expected UI change? Answer in 1 short sentence."
             print("  🤖 AI Prediction: ", end="", flush=True)
@@ -103,7 +103,7 @@ async def run_ui_chaos_test(backend, iterations=10):
                     print(" ✅ Triggered")
                     success_count += 1
                 else:
-                    # [X-Ray auto-fix] print(f" ⚠️ Failed (Status {resp.status_code})")
+                    print(f" ⚠️ Failed (Status {resp.status_code})")
                     pass
             except Exception as e:
                 print(f" ❌ ERROR: {e}")
@@ -111,7 +111,7 @@ async def run_ui_chaos_test(backend, iterations=10):
             # Wait a bit between pokes to allow UI to react
             await asyncio.sleep(random.uniform(0.5, 1.5))
 
-    # [X-Ray auto-fix] print(f"\n🌀 UI Chaos Test Complete: {success_count}/{iterations} successful pokes.")
+    print(f"\n🌀 UI Chaos Test Complete: {success_count}/{iterations} successful pokes.")
     return success_count > 0
 
 
@@ -177,8 +177,8 @@ async def run_diagnostics(monkey_mode=False):
     try:
         async with backend:
             for test in test_prompts:
-                # [X-Ray auto-fix] print(f"\n🚀 Testing: {test['name']}")
-                # [X-Ray auto-fix] print(f'Prompt : "{test["prompt"]}"')
+                print(f"\n🚀 Testing: {test['name']}")
+                print(f'Prompt : "{test["prompt"]}"')
                 print("Response: ", end="", flush=True)
 
                 full_text = ""
@@ -189,12 +189,12 @@ async def run_diagnostics(monkey_mode=False):
                     print(chunk, end="", flush=True)
 
                 duration = time.time() - start
-                # [X-Ray auto-fix] print(f"\n(Received {len(full_text)} chars in {duration:.2f}s)")
+                print(f"\n(Received {len(full_text)} chars in {duration:.2f}s)")
                 if len(full_text) > 2:
-                    # [X-Ray auto-fix] print(f"✅ {test['name']}: PASS")
+                    print(f"✅ {test['name']}: PASS")
                     pass
                 else:
-                    # [X-Ray auto-fix] print(f"❌ {test['name']}: FAIL (Empty or too short)")
+                    print(f"❌ {test['name']}: FAIL (Empty or too short)")
                     all_passed = False
 
     except Exception as e:

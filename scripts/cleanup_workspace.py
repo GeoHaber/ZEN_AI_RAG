@@ -150,7 +150,7 @@ def ensure_dirs():
     for d in dirs:
         path = ROOT / d
         path.mkdir(exist_ok=True)
-        # [X-Ray auto-fix] print(f"{Colors.GREEN}[DIR]{Colors.END} {d}/")
+        print(f"{Colors.GREEN}[DIR]{Colors.END} {d}/")
 
 
 def move_file(src, dest_dir):
@@ -161,10 +161,10 @@ def move_file(src, dest_dir):
 
         if src_path.exists() and not dest_path.exists():
             shutil.move(str(src_path), str(dest_path))
-            # [X-Ray auto-fix] print(f"{Colors.GREEN}[MOVE]{Colors.END} {src} -> {dest_dir}/")
+            print(f"{Colors.GREEN}[MOVE]{Colors.END} {src} -> {dest_dir}/")
             return True
     except Exception:
-        # [X-Ray auto-fix] print(f"{Colors.RED}[ERROR]{Colors.END} {src}: {e}")
+        print(f"{Colors.RED}[ERROR]{Colors.END} {src}: {e}")
         pass
     return False
 
@@ -179,9 +179,9 @@ def move_pattern(pattern, dest_dir):
             dest_path = ROOT / dest_dir / filename
             if not dest_path.exists():
                 shutil.move(filepath, str(dest_path))
-                # [X-Ray auto-fix] print(f"{Colors.GREEN}[MOVE]{Colors.END} {filename} -> {dest_dir}/")
+                print(f"{Colors.GREEN}[MOVE]{Colors.END} {filename} -> {dest_dir}/")
         except Exception:
-            # [X-Ray auto-fix] print(f"{Colors.RED}[ERROR]{Colors.END} {filename}: {e}")
+            print(f"{Colors.RED}[ERROR]{Colors.END} {filename}: {e}")
             pass
 
 
@@ -190,9 +190,9 @@ def cleanup_pycache():
     for pycache in ROOT.rglob("__pycache__"):
         try:
             shutil.rmtree(pycache)
-            # [X-Ray auto-fix] print(f"{Colors.GREEN}[DELETE]{Colors.END} {pycache.relative_to(ROOT)}/")
+            print(f"{Colors.GREEN}[DELETE]{Colors.END} {pycache.relative_to(ROOT)}/")
         except Exception:
-            # [X-Ray auto-fix] print(f"{Colors.YELLOW}[SKIP]{Colors.END} {pycache}: {e}")
+            print(f"{Colors.YELLOW}[SKIP]{Colors.END} {pycache}: {e}")
             pass
 
 
@@ -200,40 +200,40 @@ def main():
     """Main."""
     os.chdir(str(ROOT))
 
-    # [X-Ray auto-fix] print(f"\n{Colors.CYAN}{Colors.BOLD}=== ZEN_AI_RAG WORKSPACE CLEANUP ==={Colors.END}\n")
+    print(f"\n{Colors.CYAN}{Colors.BOLD}=== ZEN_AI_RAG WORKSPACE CLEANUP ==={Colors.END}\n")
     # Create directories
-    # [X-Ray auto-fix] print(f"{Colors.YELLOW}Creating directories...{Colors.END}")
+    print(f"{Colors.YELLOW}Creating directories...{Colors.END}")
     ensure_dirs()
 
     # Move documentation
-    # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}Moving documentation files...{Colors.END}")
+    print(f"\n{Colors.YELLOW}Moving documentation files...{Colors.END}")
     move_pattern("*.md", "docs")
     move_pattern("*.txt", "docs")
     move_pattern("*.log", "docs")
 
     # Move test files
-    # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}Moving test files...{Colors.END}")
+    print(f"\n{Colors.YELLOW}Moving test files...{Colors.END}")
     move_pattern("test_*.py", "tests")
     move_pattern("verify_*.py", "tests")
     move_file("run_tests.py", "tests")
     move_file("pytest.ini", "tests")
 
     # Move script files
-    # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}Moving script files...{Colors.END}")
+    print(f"\n{Colors.YELLOW}Moving script files...{Colors.END}")
     for pattern in SCRIPTS_FILES:
         move_pattern(pattern, "scripts")
 
     # Move old/diagnostic files
-    # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}Moving old/non-essential files...{Colors.END}")
+    print(f"\n{Colors.YELLOW}Moving old/non-essential files...{Colors.END}")
     for pattern in OLD_FILES:
         move_pattern(pattern, "OLD")
 
     # Clean up pycache
-    # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}Cleaning __pycache__...{Colors.END}")
+    print(f"\n{Colors.YELLOW}Cleaning __pycache__...{Colors.END}")
     cleanup_pycache()
 
     # Report
-    # [X-Ray auto-fix] print(f"\n{Colors.CYAN}{Colors.BOLD}=== CLEANUP COMPLETE ==={Colors.END}\n")
+    print(f"\n{Colors.CYAN}{Colors.BOLD}=== CLEANUP COMPLETE ==={Colors.END}\n")
     # Count files
     root_files = len(list(ROOT.glob("*.py"))) + len(list(ROOT.glob("*.bat"))) + len(list(ROOT.glob("*.sh")))
     docs_files = len(list((ROOT / "docs").glob("*")))
@@ -241,11 +241,11 @@ def main():
     scripts_files = len(list((ROOT / "scripts").glob("*")))
     old_files = len(list((ROOT / "OLD").glob("*")))
 
-    # [X-Ray auto-fix] print(f"{Colors.GREEN}Root directory:{Colors.END} ~{root_files} essential files")
-    # [X-Ray auto-fix] print(f"{Colors.GREEN}docs/:{Colors.END} {docs_files} files")
-    # [X-Ray auto-fix] print(f"{Colors.GREEN}tests/:{Colors.END} {tests_files} files")
-    # [X-Ray auto-fix] print(f"{Colors.GREEN}scripts/:{Colors.END} {scripts_files} files")
-    # [X-Ray auto-fix] print(f"{Colors.GREEN}OLD/:{Colors.END} {old_files} files")
+    print(f"{Colors.GREEN}Root directory:{Colors.END} ~{root_files} essential files")
+    print(f"{Colors.GREEN}docs/:{Colors.END} {docs_files} files")
+    print(f"{Colors.GREEN}tests/:{Colors.END} {tests_files} files")
+    print(f"{Colors.GREEN}scripts/:{Colors.END} {scripts_files} files")
+    print(f"{Colors.GREEN}OLD/:{Colors.END} {old_files} files")
     print()
 
 

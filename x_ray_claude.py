@@ -1795,19 +1795,19 @@ function filterSmells() {{
 
 def print_smell_report(smells: List[SmellIssue], summary: Dict[str, Any]):
     """Pretty-print the code smell report."""
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}")
+    print(f"\n  {'=' * 58}")
     print(f"    CODE SMELL REPORT")
-    # [X-Ray auto-fix] print(f"  {'=' * 58}")
+    print(f"  {'=' * 58}")
     print(
         f"    Total issues: {summary['total']}  "
         f"({Severity.icon(Severity.CRITICAL)} {summary['critical']}  "
         f"{Severity.icon(Severity.WARNING)} {summary['warning']}  "
         f"{Severity.icon(Severity.INFO)} {summary['info']})"
     )
-    # [X-Ray auto-fix] print(f"  {SEP * 58}")
+    print(f"  {SEP * 58}")
     if not smells:
-        # [X-Ray auto-fix] print(f"    No code smells detected! Clean code.")
-        # [X-Ray auto-fix] print(f"  {'=' * 58}\n")
+        print(f"    No code smells detected! Clean code.")
+        print(f"  {'=' * 58}\n")
         return
 
     # Group by file
@@ -1820,44 +1820,44 @@ def print_smell_report(smells: List[SmellIssue], summary: Dict[str, Any]):
         n_wr = sum(1 for s in file_smells if s.severity == Severity.WARNING)
         n_in = sum(1 for s in file_smells if s.severity == Severity.INFO)
         counts = f"{Severity.icon(Severity.CRITICAL)}{n_cr} {Severity.icon(Severity.WARNING)}{n_wr} {Severity.icon(Severity.INFO)}{n_in}"
-        # [X-Ray auto-fix] print(f"\n    {fpath}  [{counts}]")
+        print(f"\n    {fpath}  [{counts}]")
         for s in file_smells:
             icon = Severity.icon(s.severity)
-            # [X-Ray auto-fix] print(f"      {icon} L{s.line:>4d}  {s.category:<25s} {s.name}")
-            # [X-Ray auto-fix] print(f"              {s.message}")
-            # [X-Ray auto-fix] print(f"              -> {s.suggestion}")
+            print(f"      {icon} L{s.line:>4d}  {s.category:<25s} {s.name}")
+            print(f"              {s.message}")
+            print(f"              -> {s.suggestion}")
             if s.llm_analysis:
                 for line in textwrap.wrap(s.llm_analysis, 65):
-                    # [X-Ray auto-fix] print(f"              [AI] {line}")
+                    print(f"              [AI] {line}")
                     pass
     # Worst files
     if summary["worst_files"]:
-        # [X-Ray auto-fix] print(f"\n    WORST FILES (by issue count)")
+        print(f"\n    WORST FILES (by issue count)")
         for fpath, count in sorted(summary["worst_files"].items(), key=lambda x: -x[1])[:5]:
-            # [X-Ray auto-fix] print(f"      {count:>3d} issues  {fpath}")
+            print(f"      {count:>3d} issues  {fpath}")
             pass
     # Category breakdown
     if summary["by_category"]:
-        # [X-Ray auto-fix] print(f"\n    CATEGORY BREAKDOWN")
+        print(f"\n    CATEGORY BREAKDOWN")
         for cat, count in sorted(summary["by_category"].items(), key=lambda x: -x[1]):
-            # [X-Ray auto-fix] print(f"      {count:>3d}  {cat}")
+            print(f"      {count:>3d}  {cat}")
             pass
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}\n")
+    print(f"\n  {'=' * 58}\n")
 
 
 def print_duplicate_report(groups: List[DuplicateGroup], summary: Dict[str, Any]):
     """Pretty-print the duplicate finder report."""
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}")
+    print(f"\n  {'=' * 58}")
     print(f"    SIMILAR FUNCTIONS REPORT")
-    # [X-Ray auto-fix] print(f"  {'=' * 58}")
-    # [X-Ray auto-fix] print(f"    Groups found:     {summary['total_groups']}")
-    # [X-Ray auto-fix] print(f"    Exact duplicates: {summary['exact_duplicates']}")
-    # [X-Ray auto-fix] print(f"    Near duplicates:  {summary['near_duplicates']}")
-    # [X-Ray auto-fix] print(f"    Functions involved: {summary['total_functions_involved']}")
-    # [X-Ray auto-fix] print(f"  {SEP * 58}")
+    print(f"  {'=' * 58}")
+    print(f"    Groups found:     {summary['total_groups']}")
+    print(f"    Exact duplicates: {summary['exact_duplicates']}")
+    print(f"    Near duplicates:  {summary['near_duplicates']}")
+    print(f"    Functions involved: {summary['total_functions_involved']}")
+    print(f"  {SEP * 58}")
     if not groups:
-        # [X-Ray auto-fix] print(f"    No duplicates detected!")
-        # [X-Ray auto-fix] print(f"  {'=' * 58}\n")
+        print(f"    No duplicates detected!")
+        print(f"  {'=' * 58}\n")
         return
 
     for group in groups[:20]:
@@ -1869,48 +1869,48 @@ def print_duplicate_report(groups: List[DuplicateGroup], summary: Dict[str, Any]
             f"(avg: {group.avg_similarity:.0%})"
         )
         for func in group.functions:
-            # [X-Ray auto-fix] print(f"      {func['name']:<30s} {func['file']}:{func['line']}")
+            print(f"      {func['name']:<30s} {func['file']}:{func['line']}")
             if func.get("signature"):
-                # [X-Ray auto-fix] print(f"        {func['signature']}")
+                print(f"        {func['signature']}")
                 pass
         if group.merge_suggestion:
-            # [X-Ray auto-fix] print(f"      [MERGE] {group.merge_suggestion}")
+            print(f"      [MERGE] {group.merge_suggestion}")
             pass
     if len(groups) > 20:
-        # [X-Ray auto-fix] print(f"\n    ... and {len(groups) - 20} more groups")
+        print(f"\n    ... and {len(groups) - 20} more groups")
         pass
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}\n")
+    print(f"\n  {'=' * 58}\n")
 
 
 def print_library_report(suggestions: List[LibrarySuggestion], summary: Dict[str, Any]):
     """Pretty-print the library extraction suggestions."""
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}")
-    # [X-Ray auto-fix] print(f"    LIBRARY EXTRACTION ADVISOR")
-    # [X-Ray auto-fix] print(f"  {'=' * 58}")
-    # [X-Ray auto-fix] print(f"    Suggestions:       {summary['total_suggestions']}")
-    # [X-Ray auto-fix] print(f"    Functions to merge: {summary['total_functions']}")
-    # [X-Ray auto-fix] print(f"    Proposed modules:  {', '.join(summary['modules_proposed'][:5])}")
-    # [X-Ray auto-fix] print(f"  {SEP * 58}")
+    print(f"\n  {'=' * 58}")
+    print(f"    LIBRARY EXTRACTION ADVISOR")
+    print(f"  {'=' * 58}")
+    print(f"    Suggestions:       {summary['total_suggestions']}")
+    print(f"    Functions to merge: {summary['total_functions']}")
+    print(f"    Proposed modules:  {', '.join(summary['modules_proposed'][:5])}")
+    print(f"  {SEP * 58}")
     if not suggestions:
-        # [X-Ray auto-fix] print(f"    No library extraction opportunities found.")
-        # [X-Ray auto-fix] print(f"  {'=' * 58}\n")
+        print(f"    No library extraction opportunities found.")
+        print(f"  {'=' * 58}\n")
         return
 
     for i, sug in enumerate(suggestions[:15], 1):
-        # [X-Ray auto-fix] print(f"\n    {i}. Module: {sug.module_name}")
-        # [X-Ray auto-fix] print(f"       {sug.description}")
-        # [X-Ray auto-fix] print(f"       API: {sug.unified_api}")
+        print(f"\n    {i}. Module: {sug.module_name}")
+        print(f"       {sug.description}")
+        print(f"       API: {sug.unified_api}")
         for func in sug.functions[:5]:
-            # [X-Ray auto-fix] print(f"         - {func['name']}  ({func['file']}:{func['line']})")
+            print(f"         - {func['name']}  ({func['file']}:{func['line']})")
             pass
         if len(sug.functions) > 5:
-            # [X-Ray auto-fix] print(f"         ... +{len(sug.functions) - 5} more")
+            print(f"         ... +{len(sug.functions) - 5} more")
             pass
-        # [X-Ray auto-fix] print(f"       Rationale: {sug.rationale}")
+        print(f"       Rationale: {sug.rationale}")
     if len(suggestions) > 15:
-        # [X-Ray auto-fix] print(f"\n    ... and {len(suggestions) - 15} more suggestions")
+        print(f"\n    ... and {len(suggestions) - 15} more suggestions")
         pass
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}\n")
+    print(f"\n  {'=' * 58}\n")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2074,7 +2074,7 @@ def main():
     start_time = time.time()
 
     # ── Step 1: Scan codebase ──
-    # [X-Ray auto-fix] print(f"  Scanning {root.name}/...")
+    print(f"  Scanning {root.name}/...")
     functions, classes, errors = scan_codebase(root, args.exclude, args.include)
     scan_time = time.time() - start_time
 
@@ -2084,7 +2084,7 @@ def main():
         f"({scan_time:.2f}s)"
     )
     if errors:
-        # [X-Ray auto-fix] print(f"  Skipped {len(errors)} files with errors")
+        print(f"  Skipped {len(errors)} files with errors")
         pass
     if not functions:
         print("  No functions found — nothing to analyze.")
@@ -2094,7 +2094,7 @@ def main():
     smells: List[SmellIssue] = []
     smell_summary: Dict[str, Any] = {}
     if args.smell:
-        # [X-Ray auto-fix] print(f"\n  Running code smell detection...")
+        print(f"\n  Running code smell detection...")
         detector = CodeSmellDetector()
         smells = detector.detect(functions, classes)
         smell_summary = detector.summary()
@@ -2115,7 +2115,7 @@ def main():
     duplicates: List[DuplicateGroup] = []
     dup_summary: Dict[str, Any] = {}
     if args.duplicates:
-        # [X-Ray auto-fix] print(f"\n  Running duplicate detection...")
+        print(f"\n  Running duplicate detection...")
         finder = DuplicateFinder()
         duplicates = finder.find(functions, cross_file_only=True)
         dup_summary = finder.summary()
@@ -2126,13 +2126,13 @@ def main():
         if not args.quiet:
             print_duplicate_report(duplicates, dup_summary)
         else:
-            # [X-Ray auto-fix] print(f"    {dup_summary['total_groups']} groups, {dup_summary['total_functions_involved']} functions")
+            print(f"    {dup_summary['total_groups']} groups, {dup_summary['total_functions_involved']} functions")
             pass
     # ── Step 4: Library Extraction Advisor ──
     library_suggestions: List[LibrarySuggestion] = []
     lib_summary: Dict[str, Any] = {}
     if args.suggest_library:
-        # [X-Ray auto-fix] print(f"\n  Running library extraction analysis...")
+        print(f"\n  Running library extraction analysis...")
         advisor = LibraryAdvisor()
         library_suggestions = advisor.analyze(duplicates, functions)
         lib_summary = advisor.summary()
@@ -2143,16 +2143,16 @@ def main():
         if not args.quiet:
             print_library_report(library_suggestions, lib_summary)
         else:
-            # [X-Ray auto-fix] print(f"    {lib_summary['total_suggestions']} suggestions")
+            print(f"    {lib_summary['total_suggestions']} suggestions")
             pass
     # ── Step 5: Smart Graph ──
     if args.graph:
-        # [X-Ray auto-fix] print(f"\n  Generating smart code graph...")
+        print(f"\n  Generating smart code graph...")
         graph = SmartGraph()
         graph.build(functions, smells, duplicates, root)
         graph_path = root / "xray_claude_graph.html"
         graph.write_html(graph_path)
-        # [X-Ray auto-fix] print(f"    Written to {graph_path}")
+        print(f"    Written to {graph_path}")
     # ── Step 6: JSON Report ──
     total_time = time.time() - start_time
     if args.report:
@@ -2172,12 +2172,12 @@ def main():
         print(f"\n  JSON report saved to {report_path}")
 
     # ── Final Summary ──
-    # [X-Ray auto-fix] print(f"\n  {'=' * 58}")
-    # [X-Ray auto-fix] print(f"    SCAN COMPLETE ({total_time:.2f}s)")
-    # [X-Ray auto-fix] print(f"  {SEP * 58}")
-    # [X-Ray auto-fix] print(f"    Files:      {len(set(f.file_path for f in functions)):>6}")
-    # [X-Ray auto-fix] print(f"    Functions:  {len(functions):>6}")
-    # [X-Ray auto-fix] print(f"    Classes:    {len(classes):>6}")
+    print(f"\n  {'=' * 58}")
+    print(f"    SCAN COMPLETE ({total_time:.2f}s)")
+    print(f"  {SEP * 58}")
+    print(f"    Files:      {len(set(f.file_path for f in functions)):>6}")
+    print(f"    Functions:  {len(functions):>6}")
+    print(f"    Classes:    {len(classes):>6}")
     if smells:
         print(
             f"    Smells:     {len(smells):>6}  "
@@ -2186,13 +2186,13 @@ def main():
             f"{Severity.icon(Severity.INFO)}{smell_summary.get('info', 0)})"
         )
     if duplicates:
-        # [X-Ray auto-fix] print(f"    Duplicates: {len(duplicates):>6} groups")
+        print(f"    Duplicates: {len(duplicates):>6} groups")
         pass
     if library_suggestions:
-        # [X-Ray auto-fix] print(f"    Library:    {len(library_suggestions):>6} suggestions")
+        print(f"    Library:    {len(library_suggestions):>6} suggestions")
         pass
-    # [X-Ray auto-fix] print(f"    LLM:        {'enabled' if args.use_llm else 'disabled'}")
-    # [X-Ray auto-fix] print(f"  {'=' * 58}\n")
+    print(f"    LLM:        {'enabled' if args.use_llm else 'disabled'}")
+    print(f"  {'=' * 58}\n")
 
 
 if __name__ == "__main__":

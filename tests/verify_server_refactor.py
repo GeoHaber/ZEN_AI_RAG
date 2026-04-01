@@ -11,13 +11,13 @@ def test_routes():
     print("--- ZenAI Server Smoke Test ---")
     for route in routes:
         try:
-            # [X-Ray auto-fix] print(f"Testing {route}...", end=" ", flush=True)
+            print(f"Testing {route}...", end=" ", flush=True)
             resp = requests.get(f"{base_url}{route}", timeout=2)
             if resp.status_code == 200:
-                # [X-Ray auto-fix] print(f"OK ({len(resp.text)} bytes)")
+                print(f"OK ({len(resp.text)} bytes)")
                 pass
             else:
-                # [X-Ray auto-fix] print(f"FAILED ({resp.status_code}): {resp.text}")
+                print(f"FAILED ({resp.status_code}): {resp.text}")
                 pass
         except Exception as e:
             print(f"ERROR: {e}")

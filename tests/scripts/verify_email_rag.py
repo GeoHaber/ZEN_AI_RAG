@@ -36,7 +36,7 @@ async def test_email_rag_flow():
 
     try:
         # 2. Create Dummy MBOX
-        # [X-Ray auto-fix] print(f"📦 Creating MBOX at {mbox_path}...")
+        print(f"📦 Creating MBOX at {mbox_path}...")
         mbox = mailbox.mbox(str(mbox_path))
 
         # Email 1: Old date
@@ -62,7 +62,7 @@ async def test_email_rag_flow():
         print("📥 Ingesting emails...")
         ingestor = EmailIngestor()
         docs = ingestor.ingest(str(mbox_path))
-        # [X-Ray auto-fix] print(f"   found {len(docs)} emails.")
+        print(f"   found {len(docs)} emails.")
         # 4. Index into RAG
         print("🧠 Indexing to RAG...")
         # Use a fresh, temporary RAG instance
@@ -74,8 +74,8 @@ async def test_email_rag_flow():
         results = rag.search("When did Project Alpha start?")
         if results:
             top = results[0]
-            # [X-Ray auto-fix] print(f"   Answer Source: {top['text'][:50]}...")
-            # [X-Ray auto-fix] print(f"   Metadata Date: {top.get('metadata', {}).get('date')}")
+            print(f"   Answer Source: {top['text'][:50]}...")
+            print(f"   Metadata Date: {top.get('metadata', {}).get('date')}")
             if "1990" in top["text"] or "1990" in top.get("metadata", {}).get("date", ""):
                 print("   ✅ SUCCESS: Retrieved 1990 date.")
             else:
@@ -87,8 +87,8 @@ async def test_email_rag_flow():
         results = rag.search("Who warned about Y2K server melting?")
         if results:
             top = results[0]
-            # [X-Ray auto-fix] print(f"   Answer Source: {top['text'][:50]}...")
-            # [X-Ray auto-fix] print(f"   Metadata Sender: {top.get('metadata', {}).get('sender')}")
+            print(f"   Answer Source: {top['text'][:50]}...")
+            print(f"   Metadata Sender: {top.get('metadata', {}).get('sender')}")
             if "admin@zenacorp.com" in str(top):
                 print("   ✅ SUCCESS: Retrieved correct sender.")
             else:

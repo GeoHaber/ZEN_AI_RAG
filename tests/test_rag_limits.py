@@ -50,7 +50,7 @@ class TestRAGLimits:
         context_part = prompt.split("Question:")[0]
         context_len = len(context_part)
 
-        # [X-Ray auto-fix] print(f"\n[DEBUG] Context Length sent to LLM: {context_len} chars")
+        print(f"\n[DEBUG] Context Length sent to LLM: {context_len} chars")
         # Assertions
         assert context_len < 13000, f"Context overflow! Length {context_len} > 13000"
         assert context_len > 1000, "Context too short!"

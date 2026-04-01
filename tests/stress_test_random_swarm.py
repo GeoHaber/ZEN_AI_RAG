@@ -75,15 +75,15 @@ async def wait_for_swarm(ports):
                     pass
                 await asyncio.sleep(2)
             if not ready:
-                # [X-Ray auto-fix] print(f"[Warning] Port {port} timed out during startup.")
+                print(f"[Warning] Port {port} timed out during startup.")
                 pass
 
 
 async def run_tier_test(n):
     """Run tier test."""
-    # [X-Ray auto-fix] print(f"\n{'=' * 80}")
-    # [X-Ray auto-fix] print(f"🚀 STARTING STRESS TEST TIER: N={n}")
-    # [X-Ray auto-fix] print(f"{'=' * 80}")
+    print(f"\n{'=' * 80}")
+    print(f"🚀 STARTING STRESS TEST TIER: N={n}")
+    print(f"{'=' * 80}")
     models = get_available_models()
     if not models:
         print("Error: No models found in C:\\AI\\Models")
@@ -98,11 +98,11 @@ async def run_tier_test(n):
 
     processes = []
     log_files = []
-    # [X-Ray auto-fix] print(f"[Setup] Launching {n} random models...")
+    print(f"[Setup] Launching {n} random models...")
     for i in range(n):
         port = PORTS[i]
         m = selected_models[i]
-        # [X-Ray auto-fix] print(f"  > Agent {i + 1} [Identity]: {m.name}")
+        print(f"  > Agent {i + 1} [Identity]: {m.name}")
         p, log_f = start_expert(m, port, i + 1)
         processes.append(p)
         log_files.append(log_f)
@@ -123,7 +123,7 @@ async def run_tier_test(n):
         full_answer += chunk
 
     total_time = time.time() - start_time
-    # [X-Ray auto-fix] print(f"\n[Metrics] Global Tier Completion: {total_time:.2f}s")
+    print(f"\n[Metrics] Global Tier Completion: {total_time:.2f}s")
     # Clean up
     for p in processes:
         p.terminate()
@@ -140,9 +140,9 @@ async def main():
     for n in tiers:
         try:
             await run_tier_test(n)
-            # [X-Ray auto-fix] print(f"\n[Tier {n}] Completed successfully.")
+            print(f"\n[Tier {n}] Completed successfully.")
         except Exception:
-            # [X-Ray auto-fix] print(f"\n[Tier {n}] FAILED: {e}")
+            print(f"\n[Tier {n}] FAILED: {e}")
             pass
         print("\nCooldown (10s)...")
         await asyncio.sleep(10)

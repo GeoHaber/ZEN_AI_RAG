@@ -37,7 +37,7 @@ def test_tps_calculation_simulation():
 
     avgs = monitor.get_averages()
     assert avgs["llm_tps"] > 0
-    # [X-Ray auto-fix] print(f"Calculated TPS: {avgs['llm_tps']:.2f}")
+    print(f"Calculated TPS: {avgs['llm_tps']:.2f}")
 
 
 if __name__ == "__main__":

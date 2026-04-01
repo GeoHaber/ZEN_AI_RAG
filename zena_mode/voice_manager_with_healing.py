@@ -263,14 +263,13 @@ if __name__ == "__main__":
 
     # Find best device
     best = voice.get_best_device()
-    # [X-Ray auto-fix] print(f"\nUsing device: {best}")
+    print(f"\nUsing device: {best}")
     # Record with healing
     print("\nRecording 3 seconds...")
     audio = voice.record_audio_with_healing(duration=3.0, auto_fallback=True, verbose=True)
 
     if audio:
-        # [X-Ray auto-fix] print(f"✓ Recorded {len(audio)} bytes")
-        pass
+        print(f"✓ Recorded {len(audio)} bytes")
     else:
         print("✗ Recording failed")
 
@@ -403,13 +402,12 @@ if __name__ == "__main__":
 
     # Find best device
     best = voice.get_best_device()
-    # [X-Ray auto-fix] print(f"\nUsing device: {best}")
+    print(f"\nUsing device: {best}")
     # Record with healing
     print("\nRecording 3 seconds with healing...")
     audio = voice.record_audio_with_healing(duration=3.0, auto_fallback=True, verbose=True)
 
     if audio:
-        # [X-Ray auto-fix] print(f"✓ Recorded {len(audio)} bytes")
-        pass
+        print(f"✓ Recorded {len(audio)} bytes")
     else:
         print("✗ Recording failed")

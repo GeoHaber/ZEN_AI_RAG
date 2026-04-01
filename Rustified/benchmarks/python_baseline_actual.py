@@ -87,7 +87,7 @@ class RAGRATAdaptedBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  inference_guard: {e}")
+            print(f"⚠️  inference_guard: {e}")
             self.results["inference_guard"] = None
             return None
 
@@ -142,7 +142,7 @@ class RAGRATAdaptedBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  rag_integration: {e}")
+            print(f"⚠️  rag_integration: {e}")
             self.results["rag_integration"] = None
             return None
 
@@ -183,7 +183,7 @@ class RAGRATAdaptedBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  llm_service: {e}")
+            print(f"⚠️  llm_service: {e}")
             self.results["llm_service"] = None
             return None
 
@@ -225,7 +225,7 @@ class RAGRATAdaptedBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  config_enhanced: {e}")
+            print(f"⚠️  config_enhanced: {e}")
             self.results["config_enhanced"] = None
             return None
 
@@ -283,7 +283,7 @@ class RAGRATAdaptedBenchmarks:
 
         for module, tests in self.results.items():
             if tests is None:
-                # [X-Ray auto-fix] print(f"{module:<30} | {'SKIPPED':<25} | {'N/A':<12} | {'N/A':<10}")
+                print(f"{module:<30} | {'SKIPPED':<25} | {'N/A':<12} | {'N/A':<10}")
                 continue
 
             if isinstance(tests, dict):

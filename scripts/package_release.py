@@ -55,11 +55,11 @@ def create_dist_zip():
                 continue
 
             if src_path.is_file():
-                # [X-Ray auto-fix] print(f"  Adding file: {item}")
+                print(f"  Adding file: {item}")
                 zipf.write(src_path, arcname=item)
 
             elif src_path.is_dir():
-                # [X-Ray auto-fix] print(f"  Adding dir:  {item}")
+                print(f"  Adding dir:  {item}")
                 for root, dirs, files in os.walk(src_path):
                     # Filter out garbage
                     if "__pycache__" in root:
@@ -79,8 +79,8 @@ def create_dist_zip():
                         rel_path = full_path.relative_to(ROOT_DIR)
                         zipf.write(full_path, arcname=str(rel_path))
 
-    # [X-Ray auto-fix] print(f"\n✅ Release created at: {ZIP_NAME}")
-    # [X-Ray auto-fix] print(f"📦 Size: {ZIP_NAME.stat().st_size / 1024 / 1024:.2f} MB")
+    print(f"\n✅ Release created at: {ZIP_NAME}")
+    print(f"📦 Size: {ZIP_NAME.stat().st_size / 1024 / 1024:.2f} MB")
     return ZIP_NAME
 
 

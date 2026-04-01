@@ -25,7 +25,7 @@ def test_zen_brain_imports():
         print("  ✓ LocalLLMManager imported successfully")
         return True
     except ImportError:
-        # [X-Ray auto-fix] print(f"  ✗ Import failed: {e}")
+        print(f"  ✗ Import failed: {e}")
         return False
 
 
@@ -40,7 +40,7 @@ def test_zen_brain_initialization():
         print("  ✓ ZenBrain instance created")
         return True
     except Exception:
-        # [X-Ray auto-fix] print(f"  ✗ Initialization failed: {e}")
+        print(f"  ✗ Initialization failed: {e}")
         return False
 
 
@@ -54,16 +54,16 @@ def test_zen_brain_wake_up():
         brain = ZenBrain(Path(config.MODEL_DIR))
         status = brain.wake_up()
 
-        # [X-Ray auto-fix] print(f"  ✓ Wake up successful")
-        # [X-Ray auto-fix] print(f"  ✓ llama.cpp ready: {status.llama_cpp_ready}")
-        # [X-Ray auto-fix] print(f"  ✓ Models discovered: {status.models_discovered}")
+        print(f"  ✓ Wake up successful")
+        print(f"  ✓ llama.cpp ready: {status.llama_cpp_ready}")
+        print(f"  ✓ Models discovered: {status.models_discovered}")
         if status.models:
-            # [X-Ray auto-fix] print(f"  ✓ Available models: {len(status.models)}")
-            # [X-Ray auto-fix] print(f"    - {status.models[0].name}")
+            print(f"  ✓ Available models: {len(status.models)}")
+            print(f"    - {status.models[0].name}")
             pass
         return True
     except Exception:
-        # [X-Ray auto-fix] print(f"  ✗ Wake up failed: {e}")
+        print(f"  ✗ Wake up failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -82,14 +82,14 @@ def test_zen_brain_recommendation():
 
         recommended = brain.recommend_model()
         if recommended:
-            # [X-Ray auto-fix] print(f"  ✓ Recommended model: {recommended}")
+            print(f"  ✓ Recommended model: {recommended}")
             pass
         else:
-            # [X-Ray auto-fix] print(f"  ⚠ No models available to recommend")
+            print(f"  ⚠ No models available to recommend")
             pass
         return True
     except Exception:
-        # [X-Ray auto-fix] print(f"  ✗ Recommendation failed: {e}")
+        print(f"  ✗ Recommendation failed: {e}")
         return False
 
 
@@ -101,20 +101,20 @@ def test_no_dead_code():
         exp_voice_path = Path(__file__).parent / "experimental_voice_lab"
 
         if voice_engine_path.exists():
-            # [X-Ray auto-fix] print(f"  ✗ voice_engine.py still exists: {voice_engine_path}")
+            print(f"  ✗ voice_engine.py still exists: {voice_engine_path}")
             return False
         else:
-            # [X-Ray auto-fix] print(f"  ✓ voice_engine.py deleted")
+            print(f"  ✓ voice_engine.py deleted")
             pass
         if exp_voice_path.exists():
-            # [X-Ray auto-fix] print(f"  ✗ experimental_voice_lab still exists: {exp_voice_path}")
+            print(f"  ✗ experimental_voice_lab still exists: {exp_voice_path}")
             return False
         else:
-            # [X-Ray auto-fix] print(f"  ✓ experimental_voice_lab deleted")
+            print(f"  ✓ experimental_voice_lab deleted")
             pass
         return True
     except Exception:
-        # [X-Ray auto-fix] print(f"  ✗ Dead code check failed: {e}")
+        print(f"  ✗ Dead code check failed: {e}")
         return False
 
 
@@ -138,7 +138,7 @@ def main():
             result = test_func()
             results.append((name, result))
         except Exception:
-            # [X-Ray auto-fix] print(f"✗ Test {name} crashed: {e}")
+            print(f"✗ Test {name} crashed: {e}")
             results.append((name, False))
         print()
 
@@ -151,9 +151,9 @@ def main():
 
     for name, result in results:
         status = "✓ PASS" if result else "✗ FAIL"
-        # [X-Ray auto-fix] print(f"{status}: {name}")
-    # [X-Ray auto-fix] print(f"\n{'✓ ALL TESTS PASSED' if passed == total else f'✗ {total - passed} TESTS FAILED'}")
-    # [X-Ray auto-fix] print(f"Score: {passed}/{total}\n")
+        print(f"{status}: {name}")
+    print(f"\n{'✓ ALL TESTS PASSED' if passed == total else f'✗ {total - passed} TESTS FAILED'}")
+    print(f"Score: {passed}/{total}\n")
     return passed == total
 
 

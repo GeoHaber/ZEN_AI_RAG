@@ -285,14 +285,14 @@ class EvaluationHarness:
         print("\n" + "=" * 60)
         print("ZEN_RAG EVALUATION REPORT")
         print("=" * 60)
-        # [X-Ray auto-fix] print(f"Samples evaluated : {summary.get('n_samples', 0)}")
-        # [X-Ray auto-fix] print(f"Total time        : {summary.get('total_time_s', 0):.1f}s")
-        # [X-Ray auto-fix] print(f"Avg latency       : {summary.get('avg_latency_s', 0):.3f}s")
+        print(f"Samples evaluated : {summary.get('n_samples', 0)}")
+        print(f"Total time        : {summary.get('total_time_s', 0):.1f}s")
+        print(f"Avg latency       : {summary.get('avg_latency_s', 0):.3f}s")
         print("-" * 60)
         for key, val in summary.items():
             if key.startswith("mean_") and "latency" not in key:
                 metric_name = key.replace("mean_", "").upper()
-                # [X-Ray auto-fix] print(f"{metric_name:<20}: {val:.4f}")
+                print(f"{metric_name:<20}: {val:.4f}")
         print("=" * 60)
 
     def save_report(self, results: Dict, filename: str = None) -> Path:

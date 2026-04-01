@@ -38,7 +38,7 @@ class Translator:
             language: Language code (en, fr, es, ro, hu)
         """
         if language not in self.SUPPORTED_LANGUAGES:
-            # [X-Ray auto-fix] print(f"⚠️ Language '{language}' not supported. Using English.")
+            print(f"⚠️ Language '{language}' not supported. Using English.")
             language = "en"
 
         self.language = language
@@ -65,7 +65,7 @@ class Translator:
 
         if not locale_file.exists():
             if not fallback:
-                # [X-Ray auto-fix] print(f"❌ Locale file not found: {locale_file}")
+                print(f"❌ Locale file not found: {locale_file}")
                 pass
             return False
 
@@ -80,7 +80,7 @@ class Translator:
 
             return True
         except Exception:
-            # [X-Ray auto-fix] print(f"❌ Error loading locale: {e}")
+            print(f"❌ Error loading locale: {e}")
             return False
 
     def t(self, key: str, **kwargs) -> str:
@@ -110,7 +110,7 @@ class Translator:
             try:
                 text = text.format(**kwargs)
             except KeyError:
-                # [X-Ray auto-fix] print(f"⚠️ Missing interpolation key: {e}")
+                print(f"⚠️ Missing interpolation key: {e}")
                 pass
         return text
 
@@ -145,7 +145,7 @@ def set_language(language: str) -> bool:
     global translator
 
     if language not in Translator.SUPPORTED_LANGUAGES:
-        # [X-Ray auto-fix] print(f"❌ Language not supported: {language}")
+        print(f"❌ Language not supported: {language}")
         return False
 
     translator = Translator(language)

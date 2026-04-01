@@ -45,13 +45,13 @@ def index_and_verify():
         print("No documents to index.")
         return False
 
-    # [X-Ray auto-fix] print(f"Loaded {len(documents)} scenario documents.")
+    print(f"Loaded {len(documents)} scenario documents.")
     storage = PROJECT_ROOT / "rag_storage"
-    # [X-Ray auto-fix] print(f"Vector DB path: {storage}")
+    print(f"Vector DB path: {storage}")
     try:
         from zena_mode.rag_pipeline import LocalRAG
     except ImportError:
-        # [X-Ray auto-fix] print(f"LocalRAG unavailable: {e}")
+        print(f"LocalRAG unavailable: {e}")
         print("Install RAG dependencies: pip install sentence-transformers qdrant-client")
         return False
 
@@ -61,7 +61,7 @@ def index_and_verify():
 
     # Verify
     n_chunks = len(rag.chunks)
-    # [X-Ray auto-fix] print(f"\nIndexing result: {n_chunks} chunks in vector DB.")
+    print(f"\nIndexing result: {n_chunks} chunks in vector DB.")
     if n_chunks == 0:
         print("WARNING: No chunks were added. Check chunker/filter or document content.")
         return False
@@ -78,9 +78,9 @@ def index_and_verify():
         if key == "text":
             preview = (val[:200] + "…") if len(val) > 200 else val
             preview = preview.replace("\n", " ")
-            # [X-Ray auto-fix] print(f"  {key}: {preview!r}")
+            print(f"  {key}: {preview!r}")
         else:
-            # [X-Ray auto-fix] print(f"  {key}: {val!r}")
+            print(f"  {key}: {val!r}")
             pass
     print("=" * 60)
 

@@ -311,24 +311,21 @@ def _do_do_full_diagnostic_setup_setup(verbose):
     input_devices = [(i, d) for i, d in enumerate(all_devices) if d["max_input_channels"] > 0]
 
     if verbose:
-        # [X-Ray auto-fix] print(f"\n[INFO] Found {len(input_devices)} input device(s)")
-        pass
+        print(f"\n[INFO] Found {len(input_devices)} input device(s)")
     # Score each device
     device_scores: List[DeviceScore] = []
 
     for dev_id, dev_info in input_devices:
         if verbose:
-            # [X-Ray auto-fix] print(f"\n  Testing device #{dev_id}: {dev_info['name']}")
-            pass
+            print(f"\n  Testing device #{dev_id}: {dev_info['name']}")
         score = self.score_device(dev_id)
         device_scores.append(score)
 
         if verbose:
-            # [X-Ray auto-fix] print(f"    Availability: {score.availability_score}/100 - {score.availability_reason}")
-            # [X-Ray auto-fix] print(f"    Quality: {score.quality_score}/100 - {score.quality_reason}")
-            # [X-Ray auto-fix] print(f"    Priority: {score.priority_score}/100 - {score.priority_reason}")
-            # [X-Ray auto-fix] print(f"    TOTAL: {score.total_score}/100")
-            pass
+            print(f"    Availability: {score.availability_score}/100 - {score.availability_reason}")
+            print(f"    Quality: {score.quality_score}/100 - {score.quality_reason}")
+            print(f"    Priority: {score.priority_score}/100 - {score.priority_reason}")
+            print(f"    TOTAL: {score.total_score}/100")
     return device_scores
 
     return device_scores
@@ -377,11 +374,9 @@ def _do_full_diagnostic_setup_part1():
     else:
         recommendations.append("[OK] Microphone system is healthy and ready to use!")
 
-    # [X-Ray auto-fix] print(f"\n[ADVICE] RECOMMENDATIONS:")
+    print(f"\n[ADVICE] RECOMMENDATIONS:")
     for rec in recommendations:
-        # [X-Ray auto-fix] print(f"  {rec}")
-        pass
-        pass
+        print(f"  {rec}")
     return {
         "diagnostic": diag,
         "recommendations": recommendations,
@@ -407,23 +402,19 @@ def _do_full_diagnostic_setup(verbose):
         best_device = device_scores[0] if device_scores else None
 
         if verbose and best_device:
-            # [X-Ray auto-fix] print(f"\n[BEST] Device #{best_device.device_id} - {best_device.device_name}")
-            # [X-Ray auto-fix] print(f"  Score: {best_device.total_score}/100")
-            pass
+            print(f"\n[BEST] Device #{best_device.device_id} - {best_device.device_name}")
+            print(f"  Score: {best_device.total_score}/100")
         # Check for processes using mic
         if verbose:
             processes = self.process_detector.find_processes_using_microphone()
             if processes:
-                # [X-Ray auto-fix] print(f"\n[WARNING] Audio-using processes detected:")
+                print(f"\n[WARNING] Audio-using processes detected:")
                 for proc in processes[:10]:  # Show first 10
-                    # [X-Ray auto-fix] print(f"    * {proc['name']} (PID: {proc['pid']})")
-                    pass
+                    print(f"    * {proc['name']} (PID: {proc['pid']})")
                 if len(processes) > 10:
-                    # [X-Ray auto-fix] print(f"    ... and {len(processes) - 10} more")
-                    pass
+                    print(f"    ... and {len(processes) - 10} more")
             else:
-                # [X-Ray auto-fix] print(f"\n[OK] No other audio-using processes detected")
-                pass
+                print(f"\n[OK] No other audio-using processes detected")
         return {
             "devices": [s.to_dict() for s in device_scores],
             "best_device": best_device.to_dict() if best_device else None,
@@ -450,6 +441,6 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("[SUMMARY] DIAGNOSTIC SUMMARY")
     print("=" * 70)
-    # [X-Ray auto-fix] print(f"Best device: #{result['diagnostic']['best_device_id']}")
-    # [X-Ray auto-fix] print(f"Status: {result['status']}")
-    # [X-Ray auto-fix] print(f"Devices tested: {result['diagnostic']['total_devices']}")
+    print(f"Best device: #{result['diagnostic']['best_device_id']}")
+    print(f"Status: {result['status']}")
+    print(f"Devices tested: {result['diagnostic']['total_devices']}")

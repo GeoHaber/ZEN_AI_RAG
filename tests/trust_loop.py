@@ -18,7 +18,7 @@ async def run_trust_proof():
 
     # Check live experts
     live_count = len(arb.endpoints)
-    # [X-Ray auto-fix] print(f"📡 System Check: {live_count} Live Experts Discovered.")
+    print(f"📡 System Check: {live_count} Live Experts Discovered.")
     if live_count == 0:
         print("❌ Error: No experts online. Please start the swarm before running this proof.")
         return
@@ -32,7 +32,7 @@ async def run_trust_proof():
     target_max = 5
 
     for n in range(1, target_max + 1):
-        # [X-Ray auto-fix] print(f"\n\n🚀 [TIER {n}] Testing with {n} Active Expert(s)...")
+        print(f"\n\n🚀 [TIER {n}] Testing with {n} Active Expert(s)...")
         print("-" * 50)
 
         # Configure a temporary sub-swarm for this tier
@@ -48,7 +48,7 @@ async def run_trust_proof():
             # If we don't have enough live ones, we'll mock the 'Multi-Agent' experience
             # by repeating the first one N times so the user can see the PARALLEL trace.
             if len(tier_arb.endpoints) < n:
-                # [X-Ray auto-fix] print(f"💡 Note: Swarm has only {len(arb.endpoints)} unique experts. Multiplexing for demonstration...")
+                print(f"💡 Note: Swarm has only {len(arb.endpoints)} unique experts. Multiplexing for demonstration...")
                 while len(tier_arb.endpoints) < n:
                     tier_arb.endpoints.append(arb.endpoints[0])
                     tier_arb.ports.append(arb.ports[0])
@@ -58,7 +58,7 @@ async def run_trust_proof():
             # We don't need to print chunks here as get_cot_response prints to terminal
             pass
 
-        # [X-Ray auto-fix] print(f"\n✅ Tier {n} Proof Complete.")
+        print(f"\n✅ Tier {n} Proof Complete.")
         await asyncio.sleep(1)  # Small pause for readability
 
     print("\n" + "=" * 80)

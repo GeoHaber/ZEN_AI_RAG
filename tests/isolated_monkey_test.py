@@ -18,7 +18,7 @@ BASE_URL = "http://127.0.0.1:8080"
 
 def run_monkey_test():
     """Run monkey test."""
-    # [X-Ray auto-fix] print(f"🚀 Starting Isolated Monkey Test on {BASE_URL}")
+    print(f"🚀 Starting Isolated Monkey Test on {BASE_URL}")
     passed = 0
     failed = 0
 
@@ -27,11 +27,11 @@ def run_monkey_test():
         requests.get(BASE_URL, timeout=5)
         print("✅ UI Server is reachable.")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ UI Server is NOT reachable: {e}")
+        print(f"❌ UI Server is NOT reachable: {e}")
         return
 
     for element_id in MONKEY_TARGETS:
-        # [X-Ray auto-fix] print(f"🔎 Poking {element_id}...", end=" ", flush=True)
+        print(f"🔎 Poking {element_id}...", end=" ", flush=True)
         try:
             # Simulate a click via the test endpoint
             resp = requests.post(f"{BASE_URL}/test/click/{element_id}", timeout=5)
@@ -39,7 +39,7 @@ def run_monkey_test():
                 print("OK")
                 passed += 1
             else:
-                # [X-Ray auto-fix] print(f"FAIL (Status {resp.status_code})")
+                print(f"FAIL (Status {resp.status_code})")
                 failed += 1
         except Exception as e:
             print(f"ERROR: {e}")
@@ -49,7 +49,7 @@ def run_monkey_test():
         time.sleep(0.5)
 
     print("\n" + "=" * 40)
-    # [X-Ray auto-fix] print(f"🐒 Monkey Test Finished: {passed} PASSED, {failed} FAILED")
+    print(f"🐒 Monkey Test Finished: {passed} PASSED, {failed} FAILED")
     print("=" * 40)
 
     if failed > 0:

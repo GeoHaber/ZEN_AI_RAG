@@ -129,12 +129,12 @@ class CodeAnalyzer:
             return file_metrics
 
         except Exception:
-            # [X-Ray auto-fix] print(f"Error analyzing {file_path}: {e}")
+            print(f"Error analyzing {file_path}: {e}")
             return None
 
     def analyze_directory(self):
         """Recursively analyze all Python files"""
-        # [X-Ray auto-fix] print(f"Starting X_Ray analysis of {self.root}...")
+        print(f"Starting X_Ray analysis of {self.root}...")
         print("-" * 80)
 
         for py_file in sorted(self.root.rglob("*.py")):

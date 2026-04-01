@@ -343,6 +343,6 @@ if __name__ == "__main__":
 
     async def _test():
         rag = await get_rag()
-        # [X-Ray auto-fix] print(f"RAG Stats: {rag.get_stats()}")
+        print(f"RAG Stats: {rag.get_stats()}")
 
     asyncio.run(_test())

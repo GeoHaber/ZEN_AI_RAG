@@ -8,7 +8,7 @@ def run_chaos():
     """Run chaos."""
     port = os.environ.get("NICEGUI_SCREEN_TEST_PORT", "8080")
     url = f"http://localhost:{port}"
-    # [X-Ray auto-fix] print(f"🐒 Unleashing Chaos Monkey on {url}...")
+    print(f"🐒 Unleashing Chaos Monkey on {url}...")
     with sync_playwright() as p:
         # Launch browser
         browser = p.chromium.launch()
@@ -17,7 +17,7 @@ def run_chaos():
         try:
             page.goto(url, timeout=10000)
         except Exception:
-            # [X-Ray auto-fix] print(f"❌ App not reachable: {e}")
+            print(f"❌ App not reachable: {e}")
             return
 
         # Prepare for chaos
@@ -57,7 +57,7 @@ def run_chaos():
 
                 # Check crash
                 if page.locator("text='Connection lost'").is_visible():
-                    # [X-Ray auto-fix] print(f"🚨 CRASH DETECTED at step {i}")
+                    print(f"🚨 CRASH DETECTED at step {i}")
                     errors.append("Connection Lost")
                     break
 
