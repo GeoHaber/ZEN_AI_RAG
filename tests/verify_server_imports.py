@@ -9,12 +9,12 @@ sys.path.insert(0, str(BASE_DIR))
 def test_import(module_name):
     """Test import."""
     try:
-        # [X-Ray auto-fix] print(f"Testing import: {module_name}...", end="", flush=True)
+        print(f"Testing import: {module_name}...", end="", flush=True)
         __import__(module_name)
         print(" OK")
         return True
     except Exception:
-        # [X-Ray auto-fix] print(f" FAILED: {e}")
+        print(f" FAILED: {e}")
         import traceback
 
         traceback.print_exc()

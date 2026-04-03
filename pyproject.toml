@@ -1,3 +1,15 @@
+[project]
+name = "zen-ai-rag"
+version = "1.0.0"
+description = "ZenAI RAG pipeline with local LLM support"
+requires-python = ">=3.10"
+dependencies = [
+    "zen-core-libs",
+]
+
+[tool.uv.sources]
+zen-core-libs = { workspace = true }
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

@@ -960,27 +960,27 @@ def run_all_tests():
             test()
             passed += 1
         except AssertionError:
-            # [X-Ray auto-fix] print(f"[FAIL] {test.__name__}: {e}")
+            print(f"[FAIL] {test.__name__}: {e}")
             failed += 1
         except Exception:
-            # [X-Ray auto-fix] print(f"[SKIP] {test.__name__}: {e}")
+            print(f"[SKIP] {test.__name__}: {e}")
             skipped += 1
 
     print()
     print("=" * 70)
     print("RESULTS")
     print("=" * 70)
-    # [X-Ray auto-fix] print(f"Total:   {len(tests)}")
-    # [X-Ray auto-fix] print(f"Passed:  {passed} [OK]")
-    # [X-Ray auto-fix] print(f"Failed:  {failed} [X]")
-    # [X-Ray auto-fix] print(f"Skipped: {skipped} [SKIP]")
+    print(f"Total:   {len(tests)}")
+    print(f"Passed:  {passed} [OK]")
+    print(f"Failed:  {failed} [X]")
+    print(f"Skipped: {skipped} [SKIP]")
     print()
 
     if failed == 0:
         print("[OK] All tests passed!")
         return True
     else:
-        # [X-Ray auto-fix] print(f"[ERROR] {failed} test(s) failed")
+        print(f"[ERROR] {failed} test(s) failed")
         return False
 
 

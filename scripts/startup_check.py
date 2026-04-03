@@ -76,29 +76,29 @@ class StartupLogger:
 
     def success(self, msg: str):
         """Log success."""
-        # [X-Ray auto-fix] print(f"{Color.GREEN}✓{Color.END} {msg}")
+        print(f"{Color.GREEN}✓{Color.END} {msg}")
         self.checks.append({"status": "ok", "message": msg})
 
     def error(self, msg: str):
         """Log error."""
-        # [X-Ray auto-fix] print(f"{Color.RED}✗{Color.END} {msg}")
+        print(f"{Color.RED}✗{Color.END} {msg}")
         self.checks.append({"status": "error", "message": msg})
         self.errors.append(msg)
 
     def warning(self, msg: str):
         """Log warning."""
-        # [X-Ray auto-fix] print(f"{Color.YELLOW}⚠{Color.END} {msg}")
+        print(f"{Color.YELLOW}⚠{Color.END} {msg}")
         self.checks.append({"status": "warning", "message": msg})
         self.warnings.append(msg)
 
     def info(self, msg: str):
         """Log info."""
-        # [X-Ray auto-fix] print(f"{Color.CYAN}ℹ{Color.END} {msg}")
+        print(f"{Color.CYAN}ℹ{Color.END} {msg}")
         self.checks.append({"status": "info", "message": msg})
 
     def header(self, msg: str):
         """Log section header."""
-        # [X-Ray auto-fix] print(f"\n{Color.BOLD}{Color.CYAN}{msg}{Color.END}")
+        print(f"\n{Color.BOLD}{Color.CYAN}{msg}{Color.END}")
 
     def get_report(self) -> Dict:
         """Get summary report."""
@@ -290,9 +290,9 @@ def check_api_keys() -> bool:
 
 def run_startup_checks() -> Tuple[bool, Dict]:
     """Run all startup checks."""
-    # [X-Ray auto-fix] print(f"\n{Color.BOLD}{Color.CYAN}{'=' * 70}{Color.END}")
-    # [X-Ray auto-fix] print(f"{Color.BOLD}{Color.CYAN}🐀 RAG_RAT - Pre-flight System Check{Color.END}")
-    # [X-Ray auto-fix] print(f"{Color.BOLD}{Color.CYAN}{'=' * 70}{Color.END}\n")
+    print(f"\n{Color.BOLD}{Color.CYAN}{'=' * 70}{Color.END}")
+    print(f"{Color.BOLD}{Color.CYAN}🐀 RAG_RAT - Pre-flight System Check{Color.END}")
+    print(f"{Color.BOLD}{Color.CYAN}{'=' * 70}{Color.END}\n")
     checks_passed = True
 
     # Core checks
@@ -330,22 +330,22 @@ def run_startup_checks() -> Tuple[bool, Dict]:
 
 def handle_missing_dependencies() -> None:
     """Handle case of missing dependencies."""
-    # [X-Ray auto-fix] print(f"\n{Color.RED}{Color.BOLD}⚠️  SETUP REQUIRED{Color.END}")
-    # [X-Ray auto-fix] print(f"{Color.RED}{'=' * 70}{Color.END}\n")
-    # [X-Ray auto-fix] print(f"Some required packages are missing. Please run:\n")
-    # [X-Ray auto-fix] print(f"  {Color.CYAN}python install.py{Color.END}\n")
-    # [X-Ray auto-fix] print(f"This will:\n")
-    # [X-Ray auto-fix] print(f"  • Auto-install all dependencies")
-    # [X-Ray auto-fix] print(f"  • Create required directories")
-    # [X-Ray auto-fix] print(f"  • Check for local LLM servers")
-    # [X-Ray auto-fix] print(f"  • Test all imports\n")
-    # [X-Ray auto-fix] print(f"{Color.RED}{'=' * 70}\n")
+    print(f"\n{Color.RED}{Color.BOLD}⚠️  SETUP REQUIRED{Color.END}")
+    print(f"{Color.RED}{'=' * 70}{Color.END}\n")
+    print(f"Some required packages are missing. Please run:\n")
+    print(f"  {Color.CYAN}python install.py{Color.END}\n")
+    print(f"This will:\n")
+    print(f"  • Auto-install all dependencies")
+    print(f"  • Create required directories")
+    print(f"  • Check for local LLM servers")
+    print(f"  • Test all imports\n")
+    print(f"{Color.RED}{'=' * 70}\n")
 
 
 def handle_success() -> None:
     """Handle successful startup check."""
-    # [X-Ray auto-fix] print(f"\n{Color.GREEN}{Color.BOLD}✅ ALL CHECKS PASSED - READY TO START!{Color.END}")
-    # [X-Ray auto-fix] print(f"{Color.GREEN}{'=' * 70}{Color.END}\n")
+    print(f"\n{Color.GREEN}{Color.BOLD}✅ ALL CHECKS PASSED - READY TO START!{Color.END}")
+    print(f"{Color.GREEN}{'=' * 70}{Color.END}\n")
 
 
 # =============================================================================
@@ -357,7 +357,7 @@ def main():
     """Main entry point."""
     checks_passed, report = run_startup_checks()
 
-    # [X-Ray auto-fix] print(f"\n{Color.BOLD}{Color.CYAN}{'=' * 70}{Color.END}\n")
+    print(f"\n{Color.BOLD}{Color.CYAN}{'=' * 70}{Color.END}\n")
     if not checks_passed:
         handle_missing_dependencies()
         return False

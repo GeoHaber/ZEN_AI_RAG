@@ -86,17 +86,17 @@ class TestRealAPIQueries:
             result = await arbitrator._query_external_agent("claude-3-5-sonnet-20241022", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"\n[Claude] {result['content'][:200]}... ({result['time']:.2f}s)")
+            print(f"\n[Claude] {result['content'][:200]}... ({result['time']:.2f}s)")
         if GOOGLE_KEY:
             result = await arbitrator._query_external_agent("gemini-pro", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Gemini] {result['content'][:200]}... ({result['time']:.2f}s)")
+            print(f"[Gemini] {result['content'][:200]}... ({result['time']:.2f}s)")
         if GROK_KEY:
             result = await arbitrator._query_external_agent("grok-beta", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Grok] {result['content'][:200]}... ({result['time']:.2f}s)")
+            print(f"[Grok] {result['content'][:200]}... ({result['time']:.2f}s)")
         # Verify we got at least one response
         assert len(results) > 0, "No API responses received"
 
@@ -104,7 +104,7 @@ class TestRealAPIQueries:
         responses = [r["content"] for r in results if not r["content"].startswith("[")]
         if len(responses) > 1:
             consensus = arbitrator._calculate_consensus_simple(responses)
-            # [X-Ray auto-fix] print(f"\nConsensus: {consensus:.1%}")
+            print(f"\nConsensus: {consensus:.1%}")
             # Factual query should have high consensus (all say "Paris")
             assert consensus > 0.3, f"Expected high consensus for factual query, got {consensus:.1%}"
 
@@ -113,7 +113,7 @@ class TestRealAPIQueries:
             if not result["content"].startswith("["):  # Skip error messages
                 assert "Paris" in result["content"], f"Expected 'Paris' in response: {result['content']}"
 
-        # [X-Ray auto-fix] print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
+        print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
 
     @pytest.mark.asyncio
     async def test_math_query_consensus(self, arbitrator, cost_tracker):
@@ -133,17 +133,17 @@ class TestRealAPIQueries:
             result = await arbitrator._query_external_agent("claude-3-5-sonnet-20241022", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"\n[Claude] {result['content'][:200]}... ({result['time']:.2f}s)")
+            print(f"\n[Claude] {result['content'][:200]}... ({result['time']:.2f}s)")
         if GOOGLE_KEY:
             result = await arbitrator._query_external_agent("gemini-pro", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Gemini] {result['content'][:200]}... ({result['time']:.2f}s)")
+            print(f"[Gemini] {result['content'][:200]}... ({result['time']:.2f}s)")
         if GROK_KEY:
             result = await arbitrator._query_external_agent("grok-beta", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Grok] {result['content'][:200]}... ({result['time']:.2f}s)")
+            print(f"[Grok] {result['content'][:200]}... ({result['time']:.2f}s)")
         assert len(results) > 0
 
         # Check all responses mention "150"
@@ -151,7 +151,7 @@ class TestRealAPIQueries:
             if not result["content"].startswith("["):
                 assert "150" in result["content"], f"Expected '150' in response: {result['content']}"
 
-        # [X-Ray auto-fix] print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
+        print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
 
     @pytest.mark.asyncio
     async def test_nuanced_query_disagreement(self, arbitrator, cost_tracker):
@@ -171,29 +171,29 @@ class TestRealAPIQueries:
             result = await arbitrator._query_external_agent("claude-3-5-sonnet-20241022", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"\n[Claude] {result['content'][:300]}... ({result['time']:.2f}s)")
+            print(f"\n[Claude] {result['content'][:300]}... ({result['time']:.2f}s)")
         if GOOGLE_KEY:
             result = await arbitrator._query_external_agent("gemini-pro", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Gemini] {result['content'][:300]}... ({result['time']:.2f}s)")
+            print(f"[Gemini] {result['content'][:300]}... ({result['time']:.2f}s)")
         if GROK_KEY:
             result = await arbitrator._query_external_agent("grok-beta", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Grok] {result['content'][:300]}... ({result['time']:.2f}s)")
+            print(f"[Grok] {result['content'][:300]}... ({result['time']:.2f}s)")
         assert len(results) > 0
 
         # Calculate consensus
         responses = [r["content"] for r in results if not r["content"].startswith("[")]
         if len(responses) > 1:
             consensus = arbitrator._calculate_consensus_simple(responses)
-            # [X-Ray auto-fix] print(f"\nConsensus: {consensus:.1%}")
+            print(f"\nConsensus: {consensus:.1%}")
             # Nuanced query can have varying consensus (not testing specific value)
             # Just verify consensus calculation works
             assert 0.0 <= consensus <= 1.0
 
-        # [X-Ray auto-fix] print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
+        print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
 
     @pytest.mark.asyncio
     async def test_code_generation_query(self, arbitrator, cost_tracker):
@@ -215,17 +215,17 @@ class TestRealAPIQueries:
             result = await arbitrator._query_external_agent("claude-3-5-sonnet-20241022", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"\n[Claude] {result['content'][:300]}... ({result['time']:.2f}s)")
+            print(f"\n[Claude] {result['content'][:300]}... ({result['time']:.2f}s)")
         if GOOGLE_KEY:
             result = await arbitrator._query_external_agent("gemini-pro", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Gemini] {result['content'][:300]}... ({result['time']:.2f}s)")
+            print(f"[Gemini] {result['content'][:300]}... ({result['time']:.2f}s)")
         if GROK_KEY:
             result = await arbitrator._query_external_agent("grok-beta", messages)
             results.append(result)
             cost_tracker.record_query(result["model"], result["content"])
-            # [X-Ray auto-fix] print(f"[Grok] {result['content'][:300]}... ({result['time']:.2f}s)")
+            print(f"[Grok] {result['content'][:300]}... ({result['time']:.2f}s)")
         assert len(results) > 0
 
         # All responses should contain Python code
@@ -239,8 +239,8 @@ class TestRealAPIQueries:
         responses = [r["content"] for r in results if not r["content"].startswith("[")]
         if len(responses) > 1:
             consensus = arbitrator._calculate_consensus_simple(responses)
-            # [X-Ray auto-fix] print(f"\nConsensus: {consensus:.1%}")
-        # [X-Ray auto-fix] print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
+            print(f"\nConsensus: {consensus:.1%}")
+        print(f"\nTest Cost: ${cost_tracker.get_total_cost():.4f}")
 
 
 class TestCostTracking:
@@ -273,7 +273,7 @@ class TestCostTracking:
             cost_tracker.record_query(result["model"], result["content"])
 
         total_cost = cost_tracker.get_total_cost()
-        # [X-Ray auto-fix] print(f"\nTotal Cost: ${total_cost:.4f}")
+        print(f"\nTotal Cost: ${total_cost:.4f}")
         # Single query should be very cheap (< $0.01)
         assert total_cost < 0.01, f"Single query too expensive: ${total_cost:.4f}"
 
@@ -281,7 +281,7 @@ class TestCostTracking:
         breakdown = cost_tracker.get_cost_breakdown()
         print("\nCost Breakdown:")
         for provider, cost in breakdown.items():
-            # [X-Ray auto-fix] print(f"  {provider}: ${cost:.4f}")
+            print(f"  {provider}: ${cost:.4f}")
             pass
 
 
@@ -305,8 +305,8 @@ class TestConfidenceExtraction:
 
         if ANTHROPIC_KEY:
             result = await arbitrator._query_external_agent("claude-3-5-sonnet-20241022", messages)
-            # [X-Ray auto-fix] print(f"\n[Claude] Response: {result['content'][:200]}")
-            # [X-Ray auto-fix] print(f"[Claude] Confidence: {result['confidence']:.1%}")
+            print(f"\n[Claude] Response: {result['content'][:200]}")
+            print(f"[Claude] Confidence: {result['confidence']:.1%}")
             # Should have high confidence for simple math
             assert result["confidence"] >= 0.7, f"Expected high confidence, got {result['confidence']:.1%}"
 
@@ -322,7 +322,7 @@ def save_phase2_results(results: dict):
             indent=2,
         )
 
-    # [X-Ray auto-fix] print(f"\n📊 Phase 2 results saved to: {output_file}")
+    print(f"\n📊 Phase 2 results saved to: {output_file}")
 
 
 if __name__ == "__main__":

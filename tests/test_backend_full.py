@@ -22,21 +22,21 @@ from config_system import config, EMOJI
 
 async def test_llm_chat():
     """Test llm chat."""
-    # [X-Ray auto-fix] print(f"🔎 {EMOJI['robot']} Testing LLM Chat Connectivity...")
+    print(f"🔎 {EMOJI['robot']} Testing LLM Chat Connectivity...")
     backend = AsyncZenAIBackend()
 
     try:
         async with backend:
-            # [X-Ray auto-fix] print(f"  - Sending 'Say HELLO' to {backend.api_url}")
+            print(f"  - Sending 'Say HELLO' to {backend.api_url}")
             full_response = ""
             async for chunk in backend.send_message_async("Say only the word HELLO"):
                 full_response += chunk
 
             if "HELLO" in full_response:
-                # [X-Ray auto-fix] print(f"  ✅ Received: {repr(full_response)}")
+                print(f"  ✅ Received: {repr(full_response)}")
                 return True
 
-            # [X-Ray auto-fix] print(f"  ❌ Failed to get expected response. Received: {repr(full_response)}")
+            print(f"  ❌ Failed to get expected response. Received: {repr(full_response)}")
             return False
     except Exception as e:
         print(f"  ❌ LLM Test Error: {e}")
@@ -45,7 +45,7 @@ async def test_llm_chat():
 
 def test_rag_standalone():
     """Test rag standalone."""
-    # [X-Ray auto-fix] print(f"🔎 {EMOJI['database']} Testing RAG Indexing & Retrieval...")
+    print(f"🔎 {EMOJI['database']} Testing RAG Indexing & Retrieval...")
     test_cache = Path("tests/rag_test_cache")
     if test_cache.exists():
         try:
@@ -74,7 +74,7 @@ def test_rag_standalone():
         results = rag.search("What is the secret password?", k=1)
 
         if len(results) > 0 and "PURPLE-ORANGUTAN" in results[0]["text"]:
-            # [X-Ray auto-fix] print(f"  ✅ RAG Success: Found secret content")
+            print(f"  ✅ RAG Success: Found secret content")
             # Close/Cleanup RAG before directory deletion
             del rag
             import gc
@@ -83,7 +83,7 @@ def test_rag_standalone():
             time.sleep(1)
             return True
         else:
-            # [X-Ray auto-fix] print(f"  ❌ RAG Failure: Could not find indexed content")
+            print(f"  ❌ RAG Failure: Could not find indexed content")
             return False
     except Exception as e:
         print(f"  ❌ RAG Test Error: {e}")
@@ -101,19 +101,19 @@ def test_rag_standalone():
 
 def test_hub_api():
     """Test hub api."""
-    # [X-Ray auto-fix] print(f"🔎 {EMOJI['web']} Testing Hub API Status...")
+    print(f"🔎 {EMOJI['web']} Testing Hub API Status...")
     hub_url = f"http://{config.host}:{config.mgmt_port}"
     try:
         # Check mgmt port - server.py might be running as part of start_llm.py
         resp = requests.get(f"{hub_url}/models/available", timeout=5)
         if resp.status_code == 200:
-            # [X-Ray auto-fix] print(f"  ✅ Hub API Online")
+            print(f"  ✅ Hub API Online")
             return True
         else:
-            # [X-Ray auto-fix] print(f"  ❌ Hub API returned status {resp.status_code}")
+            print(f"  ❌ Hub API returned status {resp.status_code}")
             return False
     except Exception:
-        # [X-Ray auto-fix] print(f"  ⚠️ Hub API unreachable: {e}")
+        print(f"  ⚠️ Hub API unreachable: {e}")
         return False
 
 
@@ -131,7 +131,7 @@ async def main():
     all_ok = True
     for test, passed in results.items():
         status = "✅ PASSED" if passed else "❌ FAILED"
-        # [X-Ray auto-fix] print(f"{test:<20} : {status}")
+        print(f"{test:<20} : {status}")
         if not passed:
             all_ok = False
 

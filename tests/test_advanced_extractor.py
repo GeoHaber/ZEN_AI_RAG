@@ -44,7 +44,7 @@ def test_bytes_routing():
         # This is a bit complex for a quick script, let's just check filename handling
         pass
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Routing failed: {e}")
+        print(f"❌ Routing failed: {e}")
         return
 
     print("✅ Bytes routing logic verified")

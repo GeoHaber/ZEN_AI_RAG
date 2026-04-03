@@ -19,11 +19,11 @@ def measure(name: str, func):
     try:
         result = func()
         elapsed = (time.perf_counter() - start) * 1000
-        # [X-Ray auto-fix] print(f"✅ {name}: {elapsed:.1f}ms")
+        print(f"✅ {name}: {elapsed:.1f}ms")
         return result, elapsed
     except Exception:
         elapsed = (time.perf_counter() - start) * 1000
-        # [X-Ray auto-fix] print(f"❌ {name}: FAILED after {elapsed:.1f}ms - {e}")
+        print(f"❌ {name}: FAILED after {elapsed:.1f}ms - {e}")
         return None, elapsed
 
 
@@ -112,7 +112,7 @@ def main():
             status = "🟡 OK"
         else:
             status = "🟢 FAST"
-        # [X-Ray auto-fix] print(f"  {status} {name}: {ms:.0f}ms")
+        print(f"  {status} {name}: {ms:.0f}ms")
     print("\n" + "=" * 60)
     print("  OPTIMIZATION RECOMMENDATIONS")
     print("=" * 60)

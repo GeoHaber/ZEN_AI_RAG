@@ -17,7 +17,7 @@ START_SCRIPT = ROOT_DIR / "start_llm.py"
 @pytest.fixture(scope="module")
 def llm_server():
     """Starts start_llm.py in a subprocess and kills it after tests."""
-    # [X-Ray auto-fix] print(f"\n[Test] Launching {START_SCRIPT}...")
+    print(f"\n[Test] Launching {START_SCRIPT}...")
     # Run in Hub Mode or just normal mode? Normal mode starts engine.
     # We use --hub-only to test API first, or full run?
     # User wants to test "start stop", so full run is better, but risky on CI/local unless we assume 8001/8002 are free.

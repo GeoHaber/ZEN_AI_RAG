@@ -27,13 +27,13 @@ test_queries = ["what is AI", "How to train a model?", "Compare Python vs JavaSc
 
 for query in test_queries:
     result = processor.process_query(query, expand=False)
-    # [X-Ray auto-fix] print(f"\nOriginal: {query}")
-    # [X-Ray auto-fix] print(f"Processed: {result['processed']}")
-    # [X-Ray auto-fix] print(f"Intent: {result['intent']}")
+    print(f"\nOriginal: {query}")
+    print(f"Processed: {result['processed']}")
+    print(f"Intent: {result['intent']}")
     # Generate multi-queries
     multi = processor.generate_multi_queries(query, num_queries=2)
     if len(multi) > 1:
-        # [X-Ray auto-fix] print(f"Related queries: {multi[1:]}")
+        print(f"Related queries: {multi[1:]}")
         pass
         # 2. Semantic Cache Demo
         pass
@@ -58,23 +58,23 @@ queries_and_embeddings = [
 
 for query, emb, result in queries_and_embeddings:
     cache.store(query, emb, result)
-    # [X-Ray auto-fix] print(f"✓ Cached: {query}")
+    print(f"✓ Cached: {query}")
 # Test cache lookup
 print("\nCache lookups:")
 for query, emb, expected in queries_and_embeddings:
     result = cache.lookup(query, emb)
     if result:
-        # [X-Ray auto-fix] print(f"  HIT: {query} → {result['response']}")
+        print(f"  HIT: {query} → {result['response']}")
         pass
     else:
-        # [X-Ray auto-fix] print(f"  MISS: {query}")
+        print(f"  MISS: {query}")
         pass
         # Show stats
         pass
 stats = cache.get_stats()
 print("\nCache Stats:")
-# [X-Ray auto-fix] print(f"  Hit rate: {stats['hit_rate']:.1%}")
-# [X-Ray auto-fix] print(f"  Cache size: {stats['cache_size']}")
+print(f"  Hit rate: {stats['hit_rate']:.1%}")
+print(f"  Cache size: {stats['cache_size']}")
 # 3. Answer Evaluator Demo
 print("\n\n📊 3. ANSWER EVALUATOR")
 print("-" * 60)
@@ -101,24 +101,24 @@ test_cases = [
 ]
 
 for i, case in enumerate(test_cases, 1):
-    # [X-Ray auto-fix] print(f"\nTest Case {i}:")
-    # [X-Ray auto-fix] print(f"Q: {case['question']}")
-    # [X-Ray auto-fix] print(f"A: {case['answer'][:60]}...")
+    print(f"\nTest Case {i}:")
+    print(f"Q: {case['question']}")
+    print(f"A: {case['answer'][:60]}...")
     scores = evaluator.evaluate_answer(case["question"], case["answer"], case["sources"])
 
     print("\nScores:")
-    # [X-Ray auto-fix] print(f"  Overall: {scores['overall']:.2f}")
-    # [X-Ray auto-fix] print(f"  Faithfulness: {scores['faithfulness']:.2f}")
-    # [X-Ray auto-fix] print(f"  Relevance: {scores['relevance']:.2f}")
-    # [X-Ray auto-fix] print(f"  Completeness: {scores['completeness']:.2f}")
-    # [X-Ray auto-fix] print(f"  Conciseness: {scores['conciseness']:.2f}")
+    print(f"  Overall: {scores['overall']:.2f}")
+    print(f"  Faithfulness: {scores['faithfulness']:.2f}")
+    print(f"  Relevance: {scores['relevance']:.2f}")
+    print(f"  Completeness: {scores['completeness']:.2f}")
+    print(f"  Conciseness: {scores['conciseness']:.2f}")
 # Show evaluation stats
 print("\n\nEvaluation Statistics:")
 eval_stats = evaluator.get_statistics()
-# [X-Ray auto-fix] print(f"  Total evaluations: {eval_stats['total_evaluations']}")
+print(f"  Total evaluations: {eval_stats['total_evaluations']}")
 if "average_scores" in eval_stats:
     avg = eval_stats["average_scores"]
-    # [X-Ray auto-fix] print(f"  Average overall score: {avg['overall']:.2f}")
+    print(f"  Average overall score: {avg['overall']:.2f}")
 print("\n" + "=" * 60)
 print("✅ QUICK WINS DEMO COMPLETE!")
 print("=" * 60)

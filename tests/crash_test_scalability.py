@@ -32,7 +32,7 @@ class ScalabilityTester:
         self.active_ports = []
 
     def log(self, msg):
-        # [X-Ray auto-fix] print(f"[CrashTest] {msg}")
+        print(f"[CrashTest] {msg}")
         pass
 
     def clean_all(self):

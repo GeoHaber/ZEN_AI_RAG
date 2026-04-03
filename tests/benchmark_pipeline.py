@@ -110,7 +110,7 @@ def benchmark_rag():
         dur = time.time() - t0
         total_time += dur
         valid_iters += 1
-        # [X-Ray auto-fix] print(f".", end="", flush=True)
+        print(f".", end="", flush=True)
     avg_latency = total_time / valid_iters
     logger.info(f"\n✅ Average Full Pipeline Latency: {avg_latency:.4f}s")
 

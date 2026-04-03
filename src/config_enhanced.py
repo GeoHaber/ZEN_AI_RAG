@@ -341,7 +341,7 @@ def save_config(config_dict: Dict) -> bool:
             json.dump(config_dict, f, indent=2)
         return True
     except Exception:
-        # [X-Ray auto-fix] print(f"Error saving config: {e}")
+        print(f"Error saving config: {e}")
         return False
 
 
@@ -353,7 +353,7 @@ def load_config() -> Dict:
             with open(config_file, "r") as f:
                 return json.load(f)
     except Exception:
-        # [X-Ray auto-fix] print(f"Error loading config: {e}")
+        print(f"Error loading config: {e}")
         pass
     return {}
 

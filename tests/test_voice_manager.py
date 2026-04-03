@@ -7,12 +7,12 @@ vm = get_voice_manager()
 status = vm.get_status()
 
 print("✓ VoiceManager initialized")
-# [X-Ray auto-fix] print(f"  STT available: {status['voice_available']}")
-# [X-Ray auto-fix] print(f"  Audio capture: {status['audio_capture_available']}")
-# [X-Ray auto-fix] print(f"  Devices found: {len(status['devices'])}")
+print(f"  STT available: {status['voice_available']}")
+print(f"  Audio capture: {status['audio_capture_available']}")
+print(f"  Devices found: {len(status['devices'])}")
 input_devices = [d for d in status["devices"] if d["is_input"]]
-# [X-Ray auto-fix] print(f"\nInput devices:")
+print(f"\nInput devices:")
 for dev in input_devices[:5]:
-    # [X-Ray auto-fix] print(f"  • {dev['name']} (ID {dev['id']}, {dev['channels']} channels)")
+    print(f"  • {dev['name']} (ID {dev['id']}, {dev['channels']} channels)")
     pass
 print("\n✓ All tests passed!")

@@ -73,12 +73,12 @@ def run_benchmark():
         logger.info(f"Top Result Score: {results[0].get('score', 0):.4f}")
 
     # Report
-    # [X-Ray auto-fix] print(f"\n=== BENCHMARK RESULTS (Baseline) ===")
-    # [X-Ray auto-fix] print(f"Documents: {NUM_DOCS}")
-    # [X-Ray auto-fix] print(f"Total Time: {ingest_duration:.4f} s")
-    # [X-Ray auto-fix] print(f"Throughput: {docs_per_sec:.2f} docs/s")
-    # [X-Ray auto-fix] print(f"Search Latency: {search_latency:.2f} ms")
-    # [X-Ray auto-fix] print(f"Storage: {total_size:.2f} MB")
+    print(f"\n=== BENCHMARK RESULTS (Baseline) ===")
+    print(f"Documents: {NUM_DOCS}")
+    print(f"Total Time: {ingest_duration:.4f} s")
+    print(f"Throughput: {docs_per_sec:.2f} docs/s")
+    print(f"Search Latency: {search_latency:.2f} ms")
+    print(f"Storage: {total_size:.2f} MB")
     print("====================================")
 
     # Cleanup

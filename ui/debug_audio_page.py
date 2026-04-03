@@ -169,5 +169,5 @@ async def debug_audio_page():
 
 # Run if called directly (for testing)
 if __name__ == "__main__":
-    # [X-Ray auto-fix] print("Starting debug audio page at http://localhost:8080/debug/audio")
+    print("Starting debug audio page at http://localhost:8080/debug/audio")
     ui.run(host="127.0.0.1", port=8080, reload=False)

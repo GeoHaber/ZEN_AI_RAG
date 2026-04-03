@@ -15,7 +15,7 @@ def test_vision_engine_init():
     print("Testing VisionEngine initialization...")
     engine = get_vision_engine()
     assert engine is not None
-    # [X-Ray auto-fix] print(f"✅ VisionEngine initialized (Enabled: {engine.enabled})")
+    print(f"✅ VisionEngine initialized (Enabled: {engine.enabled})")
 
 
 def test_object_detection_dummy():
@@ -29,9 +29,9 @@ def test_object_detection_dummy():
     # Create a dummy image
     img = np.zeros((640, 640, 3), dtype=np.uint8)
     detections = engine.detect_objects(img)
-    # [X-Ray auto-fix] print(f"✅ Detection run completed. Found {len(detections)} objects.")
+    print(f"✅ Detection run completed. Found {len(detections)} objects.")
     summary = engine.get_vision_summary(detections)
-    # [X-Ray auto-fix] print(f"Summary: {summary or 'None'}")
+    print(f"Summary: {summary or 'None'}")
 
 
 if __name__ == "__main__":

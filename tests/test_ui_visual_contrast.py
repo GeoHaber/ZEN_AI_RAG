@@ -290,9 +290,9 @@ def _do_run_contrast_tests_setup():
         status_icon = "[OK]" if result["status"] == "PASS" else "[FAIL]"
         ratio_str = f"{result['ratio']:.2f}:1" if result["ratio"] else "N/A"
 
-        # [X-Ray auto-fix] print(f"{status_icon} {result['name']:<30} {ratio_str:>10} {result['type']:>10}")
+        print(f"{status_icon} {result['name']:<30} {ratio_str:>10} {result['type']:>10}")
         if result["issue"]:
-            # [X-Ray auto-fix] print(f"      -> {result['issue']}")
+            print(f"      -> {result['issue']}")
             pass
     print()
 
@@ -309,9 +309,9 @@ def _do_run_contrast_tests_setup():
         status_icon = "[OK]" if result["status"] == "PASS" else "[FAIL]"
         ratio_str = f"{result['ratio']:.2f}:1" if result["ratio"] else "N/A"
 
-        # [X-Ray auto-fix] print(f"{status_icon} {result['name']:<30} {ratio_str:>10} {result['type']:>10}")
+        print(f"{status_icon} {result['name']:<30} {ratio_str:>10} {result['type']:>10}")
         if result["issue"]:
-            # [X-Ray auto-fix] print(f"      -> {result['issue']}")
+            print(f"      -> {result['issue']}")
             pass
     print()
     print("=" * 80)
@@ -331,7 +331,7 @@ def run_contrast_tests():
     print(
         f"Light Mode: {len(light_fail)} failures out of {len([r for r in results['light'] if r['status'] != 'SKIP'])}"
     )
-    # [X-Ray auto-fix] print(f"Dark Mode:  {len(dark_fail)} failures out of {len([r for r in results['dark'] if r['status'] != 'SKIP'])}")
+    print(f"Dark Mode:  {len(dark_fail)} failures out of {len([r for r in results['dark'] if r['status'] != 'SKIP'])}")
     print()
 
     if light_fail or dark_fail:
@@ -341,16 +341,16 @@ def run_contrast_tests():
         if light_fail:
             print("\nLight Mode Issues:")
             for r in light_fail:
-                # [X-Ray auto-fix] print(f"  - {r['name']}: {r['issue']}")
-                # [X-Ray auto-fix] print(f"    BG: {r['bg']} | FG: {r['fg']}")
-                # [X-Ray auto-fix] print(f"    Recommended FG for 4.5:1 contrast: Use darker/lighter color")
+                print(f"  - {r['name']}: {r['issue']}")
+                print(f"    BG: {r['bg']} | FG: {r['fg']}")
+                print(f"    Recommended FG for 4.5:1 contrast: Use darker/lighter color")
                 pass
         if dark_fail:
             print("\nDark Mode Issues:")
             for r in dark_fail:
-                # [X-Ray auto-fix] print(f"  - {r['name']}: {r['issue']}")
-                # [X-Ray auto-fix] print(f"    BG: {r['bg']} | FG: {r['fg']}")
-                # [X-Ray auto-fix] print(f"    Recommended FG for 4.5:1 contrast: Use lighter color")
+                print(f"  - {r['name']}: {r['issue']}")
+                print(f"    BG: {r['bg']} | FG: {r['fg']}")
+                print(f"    Recommended FG for 4.5:1 contrast: Use lighter color")
                 pass
         print()
         generate_fixes(light_fail, dark_fail)
@@ -371,16 +371,16 @@ def generate_fixes(light_fail: List[Dict], dark_fail: List[Dict]):
         print("/* Light Mode Fixes */")
         for item in light_fail:
             if "Icon" in item["name"] or "icon" in item["type"]:
-                # [X-Ray auto-fix] print(f"/* {item['name']} - increase icon color darkness */")
-                # [X-Ray auto-fix] print(f".icon-class {{ color: #374151; /* gray-700 for better contrast */ }}")
+                print(f"/* {item['name']} - increase icon color darkness */")
+                print(f".icon-class {{ color: #374151; /* gray-700 for better contrast */ }}")
                 pass
             elif "Toggle" in item["name"]:
-                # [X-Ray auto-fix] print(f"/* {item['name']} - increase toggle visibility */")
-                # [X-Ray auto-fix] print(f".q-toggle__track {{ opacity: 1 !important; background: #D1D5DB !important; }}")
+                print(f"/* {item['name']} - increase toggle visibility */")
+                print(f".q-toggle__track {{ opacity: 1 !important; background: #D1D5DB !important; }}")
                 pass
             elif "Border" in item["name"]:
-                # [X-Ray auto-fix] print(f"/* {item['name']} - darken border */")
-                # [X-Ray auto-fix] print(f".border {{ border-color: #9CA3AF !important; }}")
+                print(f"/* {item['name']} - darken border */")
+                print(f".border {{ border-color: #9CA3AF !important; }}")
                 pass
         print()
 
@@ -388,16 +388,16 @@ def generate_fixes(light_fail: List[Dict], dark_fail: List[Dict]):
         print("/* Dark Mode Fixes */")
         for item in dark_fail:
             if "Icon" in item["name"] or "icon" in item["type"]:
-                # [X-Ray auto-fix] print(f"/* {item['name']} - increase icon color lightness */")
-                # [X-Ray auto-fix] print(f".dark .icon-class {{ color: #E2E8F0; /* slate-200 for better contrast */ }}")
+                print(f"/* {item['name']} - increase icon color lightness */")
+                print(f".dark .icon-class {{ color: #E2E8F0; /* slate-200 for better contrast */ }}")
                 pass
             elif "Toggle" in item["name"]:
-                # [X-Ray auto-fix] print(f"/* {item['name']} - increase toggle visibility */")
-                # [X-Ray auto-fix] print(f".dark .q-toggle__track {{ opacity: 1 !important; background: #475569 !important; }}")
+                print(f"/* {item['name']} - increase toggle visibility */")
+                print(f".dark .q-toggle__track {{ opacity: 1 !important; background: #475569 !important; }}")
                 pass
             elif "Border" in item["name"]:
-                # [X-Ray auto-fix] print(f"/* {item['name']} - lighten border */")
-                # [X-Ray auto-fix] print(f".dark .border {{ border-color: #475569 !important; }}")
+                print(f"/* {item['name']} - lighten border */")
+                print(f".dark .border {{ border-color: #475569 !important; }}")
                 pass
         print()
 

@@ -234,15 +234,15 @@ def test_timeout_calculation():
 
 
 if __name__ == "__main__":
-    # [X-Ray auto-fix] print(f"Rust inference status: {get_inference_status()}")
+    print(f"Rust inference status: {get_inference_status()}")
     test_timeout_calculation()
 
     # Test token counting
     test_text = "Hello world! This is a test of the token counting system."
     tokens = count_tokens_safe(test_text, "tinyllama")
     print("\nToken counting test:")
-    # [X-Ray auto-fix] print(f"  Text: {test_text!r}")
-    # [X-Ray auto-fix] print(f"  Tokens: {tokens}")
+    print(f"  Text: {test_text!r}")
+    print(f"  Tokens: {tokens}")
     # Test request building
     request = build_inference_request(
         provider="Local (llama-cpp)",
@@ -252,5 +252,5 @@ if __name__ == "__main__":
     )
     print("\nInference request:")
     for key, value in request.items():
-        # [X-Ray auto-fix] print(f"  {key}: {value}")        pass
+        print(f"  {key}: {value}")        pass
         pass

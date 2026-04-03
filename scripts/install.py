@@ -123,14 +123,14 @@ def install_packages(packages: List[str], pip_cmd: str) -> bool:
         print(Colors.yellow("  ⚠ No packages to install"))
         return True
 
-    # [X-Ray auto-fix] print(f"\n📦 Installing {len(packages)} packages...")
+    print(f"\n📦 Installing {len(packages)} packages...")
     print("   (This may take a few minutes on first install)\n")
 
     failed = []
 
     for i, package in enumerate(packages, 1):
         pkg_name = package.split(">=")[0].split("==")[0].split("<")[0].split(">")[0].strip()
-        # [X-Ray auto-fix] print(f"   [{i}/{len(packages)}] Installing {Colors.cyan(pkg_name)}...", end=" ", flush=True)
+        print(f"   [{i}/{len(packages)}] Installing {Colors.cyan(pkg_name)}...", end=" ", flush=True)
         try:
             subprocess.run(
                 [pip_cmd, "install", "-q", package], check=True, capture_output=True, timeout=300, shell=False
@@ -144,11 +144,11 @@ def install_packages(packages: List[str], pip_cmd: str) -> bool:
             failed.append(package)
 
     if failed:
-        # [X-Ray auto-fix] print(f"\n{Colors.yellow('⚠ Some packages failed to install:')}")
+        print(f"\n{Colors.yellow('⚠ Some packages failed to install:')}")
         for pkg in failed:
-            # [X-Ray auto-fix] print(f"   - {pkg}")
+            print(f"   - {pkg}")
             pass
-        # [X-Ray auto-fix] print(f"\nTry manually: {pip_cmd} install {' '.join(failed)}")
+        print(f"\nTry manually: {pip_cmd} install {' '.join(failed)}")
         return False
 
     print(Colors.green("\n  ✓ All packages installed successfully!"))
@@ -157,7 +157,7 @@ def install_packages(packages: List[str], pip_cmd: str) -> bool:
 
 def create_directories() -> None:
     """Create required directories."""
-    # [X-Ray auto-fix] print(f"\n📁 Creating required directories...")
+    print(f"\n📁 Creating required directories...")
     dirs = [
         "cache",
         "logs",
@@ -171,13 +171,13 @@ def create_directories() -> None:
     for dir_name in dirs:
         dir_path = Path(__file__).parent / dir_name
         dir_path.mkdir(exist_ok=True)
-        # [X-Ray auto-fix] print(f"   ✓ {dir_name}/")
+        print(f"   ✓ {dir_name}/")
     print(Colors.green("  ✓ All directories ready!"))
 
 
 def check_local_llm_servers() -> Tuple[bool, bool]:
     """Check if local LLM servers are available."""
-    # [X-Ray auto-fix] print(f"\n🔍 Checking for local LLM servers...")
+    print(f"\n🔍 Checking for local LLM servers...")
     import socket
 
     def is_port_open(port: int) -> bool:
@@ -195,28 +195,28 @@ def check_local_llm_servers() -> Tuple[bool, bool]:
     llama_cpp = is_port_open(8001)
 
     if ollama:
-        # [X-Ray auto-fix] print(f"   ✓ Ollama found on port 11434")
+        print(f"   ✓ Ollama found on port 11434")
         pass
     else:
-        # [X-Ray auto-fix] print(f"   ✗ Ollama not found (port 11434 closed)")
+        print(f"   ✗ Ollama not found (port 11434 closed)")
         pass
     if llama_cpp:
-        # [X-Ray auto-fix] print(f"   ✓ llama-cpp found on port 8001")
+        print(f"   ✓ llama-cpp found on port 8001")
         pass
     else:
-        # [X-Ray auto-fix] print(f"   ✗ llama-cpp not found (port 8001 closed)")
+        print(f"   ✗ llama-cpp not found (port 8001 closed)")
         pass
     if not (ollama or llama_cpp):
-        # [X-Ray auto-fix] print(f"\n   {Colors.yellow("ℹ No local LLM servers found - that's OK!")}")
-        # [X-Ray auto-fix] print(f"   You can use External LLMs (OpenAI, Claude, etc.) instead")
-        # [X-Ray auto-fix] print(f"   Or install Ollama: https://ollama.ai")
+        print(f"\n   {Colors.yellow("ℹ No local LLM servers found - that's OK!")}")
+        print(f"   You can use External LLMs (OpenAI, Claude, etc.) instead")
+        print(f"   Or install Ollama: https://ollama.ai")
         pass
     return ollama, llama_cpp
 
 
 def test_imports() -> bool:
     """Test critical imports."""
-    # [X-Ray auto-fix] print(f"\n✅ Testing imports...")
+    print(f"\n✅ Testing imports...")
     critical_imports = [
         ("streamlit", "Streamlit (UI framework)"),
         ("httpx", "httpx (HTTP client)"),
@@ -233,29 +233,29 @@ def test_imports() -> bool:
 
     all_ok = True
 
-    # [X-Ray auto-fix] print(f"\n   {Colors.bold('Critical packages:')}")
+    print(f"\n   {Colors.bold('Critical packages:')}")
     for module, display_name in critical_imports:
         try:
             __import__(module)
-            # [X-Ray auto-fix] print(f"   ✓ {display_name}")
+            print(f"   ✓ {display_name}")
         except ImportError:
             print(Colors.red(f"   ✗ {display_name}"))
             all_ok = False
 
-    # [X-Ray auto-fix] print(f"\n   {Colors.bold('Optional packages:')}")
+    print(f"\n   {Colors.bold('Optional packages:')}")
     for module, display_name in optional_imports:
         try:
             __import__(module)
-            # [X-Ray auto-fix] print(f"   ✓ {display_name}")
+            print(f"   ✓ {display_name}")
         except ImportError:
-            # [X-Ray auto-fix] print(f"   ⊘ {display_name} (not needed for basic operation)")
+            print(f"   ⊘ {display_name} (not needed for basic operation)")
             pass
     return all_ok
 
 
 def create_startup_script() -> None:
     """Create convenient startup scripts."""
-    # [X-Ray auto-fix] print(f"\n📝 Creating startup scripts...\n")
+    print(f"\n📝 Creating startup scripts...\n")
     project_root = Path(__file__).parent
 
     # Windows batch file
@@ -272,7 +272,7 @@ pause
 """
         batch_file = project_root / "run_rag_rat.bat"
         batch_file.write_text(batch_content)
-        # [X-Ray auto-fix] print(f"   ✓ Created {Colors.cyan('run_rag_rat.bat')}")
+        print(f"   ✓ Created {Colors.cyan('run_rag_rat.bat')}")
     # Linux/Mac shell script
     else:
         shell_content = """#!/bin/bash
@@ -287,7 +287,7 @@ python -m streamlit run app_enhanced.py
         shell_file = project_root / "run_rag_rat.sh"
         shell_file.write_text(shell_content)
         shell_file.chmod(0o755)
-        # [X-Ray auto-fix] print(f"   ✓ Created {Colors.cyan('run_rag_rat.sh')}")
+        print(f"   ✓ Created {Colors.cyan('run_rag_rat.sh')}")
 
 
 def print_next_steps():
@@ -296,31 +296,31 @@ def print_next_steps():
     print(Colors.green("✅ Setup Complete!"))
     print("=" * 70)
 
-    # [X-Ray auto-fix] print(f"\n{Colors.bold('🚀 To start RAG_RAT:')}")
+    print(f"\n{Colors.bold('🚀 To start RAG_RAT:')}")
     if sys.platform == "win32":
-        # [X-Ray auto-fix] print(f"\n   Option 1: Double-click {Colors.cyan('run_rag_rat.bat')}")
-        # [X-Ray auto-fix] print(f"   Option 2: Run in terminal:")
-        # [X-Ray auto-fix] print(f"             streamlit run app_enhanced.py")
+        print(f"\n   Option 1: Double-click {Colors.cyan('run_rag_rat.bat')}")
+        print(f"   Option 2: Run in terminal:")
+        print(f"             streamlit run app_enhanced.py")
         pass
     else:
-        # [X-Ray auto-fix] print(f"\n   Option 1: Run the startup script:")
-        # [X-Ray auto-fix] print(f"            ./run_rag_rat.sh")
-        # [X-Ray auto-fix] print(f"   Option 2: Run directly:")
-        # [X-Ray auto-fix] print(f"            streamlit run app_enhanced.py")
+        print(f"\n   Option 1: Run the startup script:")
+        print(f"            ./run_rag_rat.sh")
+        print(f"   Option 2: Run directly:")
+        print(f"            streamlit run app_enhanced.py")
         pass
-    # [X-Ray auto-fix] print(f"\n{Colors.bold('📚 Documentation:')}")
-    # [X-Ray auto-fix] print(f"   - QUICK_REFERENCE.txt - 2-minute quick start")
-    # [X-Ray auto-fix] print(f"   - STARTUP_FLOW_GUIDE.md - Detailed setup guide")
-    # [X-Ray auto-fix] print(f"   - INDEX.md - Complete documentation index")
-    # [X-Ray auto-fix] print(f"\n{Colors.bold('⚙️  Next:')}")
-    # [X-Ray auto-fix] print(f"   1. Start the app")
-    # [X-Ray auto-fix] print(f"   2. Choose: External LLM (easiest) or Local LLM")
-    # [X-Ray auto-fix] print(f"   3. Paste API key or select local model")
-    # [X-Ray auto-fix] print(f"   4. Start chatting! 🎉")
+    print(f"\n{Colors.bold('📚 Documentation:')}")
+    print(f"   - QUICK_REFERENCE.txt - 2-minute quick start")
+    print(f"   - STARTUP_FLOW_GUIDE.md - Detailed setup guide")
+    print(f"   - INDEX.md - Complete documentation index")
+    print(f"\n{Colors.bold('⚙️  Next:')}")
+    print(f"   1. Start the app")
+    print(f"   2. Choose: External LLM (easiest) or Local LLM")
+    print(f"   3. Paste API key or select local model")
+    print(f"   4. Start chatting! 🎉")
     print(f"\n{Colors.yellow('ℹ  Need help?')}")
-    # [X-Ray auto-fix] print(f"   See: docs/TROUBLESHOOTING.md")
-    # [X-Ray auto-fix] print(f"   GitHub: https://github.com/...")
-    # [X-Ray auto-fix] print(f"\n" + "=" * 70 + "\n")
+    print(f"   See: docs/TROUBLESHOOTING.md")
+    print(f"   GitHub: https://github.com/...")
+    print(f"\n" + "=" * 70 + "\n")
 
 
 def main():
@@ -365,7 +365,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        # [X-Ray auto-fix] print(f"\n\n{Colors.yellow('⚠ Installation cancelled by user')}\n")
+        print(f"\n\n{Colors.yellow('⚠ Installation cancelled by user')}\n")
         sys.exit(0)
     except Exception as e:
         print(f"\n{Colors.red(f'✗ Installation error: {e}')}\n")

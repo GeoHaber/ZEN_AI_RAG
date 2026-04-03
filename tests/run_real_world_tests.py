@@ -26,16 +26,16 @@ def _test_all_sites_part1():
     unexpected = sum(1 for r in results if r.get("test_status") == "UNEXPECTED")
     errors = sum(1 for r in results if r.get("test_status") == "ERROR")
 
-    # [X-Ray auto-fix] print(f"\nTotal Sites Tested: {total}")
-    # [X-Ray auto-fix] print(f"Passed (Matched Expectation): {passed}")
-    # [X-Ray auto-fix] print(f"Unexpected Results: {unexpected}")
-    # [X-Ray auto-fix] print(f"Errors: {errors}")
+    print(f"\nTotal Sites Tested: {total}")
+    print(f"Passed (Matched Expectation): {passed}")
+    print(f"Unexpected Results: {unexpected}")
+    print(f"Errors: {errors}")
     crawlable = sum(1 for r in results if r.get("can_crawl"))
     blocked = sum(1 for r in results if not r.get("can_crawl") and r.get("test_status") != "ERROR")
 
-    # [X-Ray auto-fix] print(f"\nCrawlability:")
-    # [X-Ray auto-fix] print(f"  Allowed: {crawlable}/{total}")
-    # [X-Ray auto-fix] print(f"  Blocked: {blocked}/{total}")
+    print(f"\nCrawlability:")
+    print(f"  Allowed: {crawlable}/{total}")
+    print(f"  Blocked: {blocked}/{total}")
     # Protection types detected
     protections = {}
     for r in results:
@@ -44,9 +44,9 @@ def _test_all_sites_part1():
             protections[prot] = protections.get(prot, 0) + 1
 
     if protections:
-        # [X-Ray auto-fix] print(f"\nBot Protections Detected:")
+        print(f"\nBot Protections Detected:")
         for prot, count in protections.items():
-            # [X-Ray auto-fix] print(f"  {prot}: {count} site(s)")
+            print(f"  {prot}: {count} site(s)")
             pass
     # Save results
     output_file = "test_results_real_world.json"
@@ -91,9 +91,9 @@ async def test_all_sites():
     print("=" * 80 + "\n")
 
     for name, url, expected_crawlable in test_cases:
-        # [X-Ray auto-fix] print(f"\nTesting: {name}")
-        # [X-Ray auto-fix] print(f"URL: {url}")
-        # [X-Ray auto-fix] print(f"Expected: {'ALLOW' if expected_crawlable else 'BLOCK'}")
+        print(f"\nTesting: {name}")
+        print(f"URL: {url}")
+        print(f"Expected: {'ALLOW' if expected_crawlable else 'BLOCK'}")
         print("-" * 40)
 
         try:
@@ -116,7 +116,7 @@ async def test_all_sites():
             if report.bot_protection:
                 print(f"Protection Detected: {report.bot_protection}")
             if report.requires_js:
-                # [X-Ray auto-fix] print(f"Requires JavaScript: Yes")
+                print(f"Requires JavaScript: Yes")
                 pass
             # Verify expectation
             if report.can_crawl == expected_crawlable:
@@ -149,7 +149,7 @@ async def test_all_sites():
 
     _test_all_sites_part1()
 
-    # [X-Ray auto-fix] print(f"\nFull results saved to: {output_file}")
+    print(f"\nFull results saved to: {output_file}")
     return results
 
 

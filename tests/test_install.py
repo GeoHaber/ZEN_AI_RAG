@@ -39,7 +39,7 @@ class TestDistribution(unittest.TestCase):
 
     def test_installation_layout(self):
         """Unpack logic and verify file structure."""
-        # [X-Ray auto-fix] print(f"\n📦 Unpacking {self.dist_path.name}...")
+        print(f"\n📦 Unpacking {self.dist_path.name}...")
         try:
             with zipfile.ZipFile(self.dist_path, "r") as zip_ref:
                 zip_ref.extractall(self.sandbox)
@@ -108,8 +108,8 @@ except Exception as e:
             [sys.executable, "check_install.py"], cwd=self.sandbox, capture_output=True, text=True, shell=False
         )
 
-        # [X-Ray auto-fix] print(f"Output: {result.stdout}")
-        # [X-Ray auto-fix] print(f"Stderr: {result.stderr}")
+        print(f"Output: {result.stdout}")
+        print(f"Stderr: {result.stderr}")
         # Check output
         if "nicegui" in result.stderr.lower() and "install" in result.stderr.lower():
             # This is actually GOOD - it means zena.py tried to import nicegui,

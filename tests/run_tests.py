@@ -37,49 +37,49 @@ class Colors:
 
 def print_header(text):
     """Print section header."""
-    # [X-Ray auto-fix] print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.END}")
-    # [X-Ray auto-fix] print(f"{Colors.BOLD}{Colors.BLUE}{text:^70}{Colors.END}")
-    # [X-Ray auto-fix] print(f"{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.END}\n")
+    print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.BLUE}{text:^70}{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.END}\n")
 
 
 def safe_unicode_print(text, color=""):
     """Print with fallback for Windows console encoding issues."""
     try:
-        # [X-Ray auto-fix] print(text)
+        print(text)
         pass
     except UnicodeEncodeError:
         # Fallback to ASCII-safe symbols
         text = text.replace("✓", "[PASS]").replace("✗", "[FAIL]").replace("⚠", "[WARN]")
-        # [X-Ray auto-fix] print(text)
+        print(text)
 
 
 def print_success(text):
     """Print success message."""
     try:
-        # [X-Ray auto-fix] print(f"{Colors.GREEN}✓ {text}{Colors.END}")
+        print(f"{Colors.GREEN}✓ {text}{Colors.END}")
         pass
     except UnicodeEncodeError:
-        # [X-Ray auto-fix] print(f"{Colors.GREEN}[PASS] {text}{Colors.END}")
+        print(f"{Colors.GREEN}[PASS] {text}{Colors.END}")
         pass
 
 
 def print_error(text):
     """Print error message."""
     try:
-        # [X-Ray auto-fix] print(f"{Colors.RED}✗ {text}{Colors.END}")
+        print(f"{Colors.RED}✗ {text}{Colors.END}")
         pass
     except UnicodeEncodeError:
-        # [X-Ray auto-fix] print(f"{Colors.RED}[FAIL] {text}{Colors.END}")
+        print(f"{Colors.RED}[FAIL] {text}{Colors.END}")
         pass
 
 
 def print_warning(text):
     """Print warning message."""
     try:
-        # [X-Ray auto-fix] print(f"{Colors.YELLOW}⚠ {text}{Colors.END}")
+        print(f"{Colors.YELLOW}⚠ {text}{Colors.END}")
         pass
     except UnicodeEncodeError:
-        # [X-Ray auto-fix] print(f"{Colors.YELLOW}[WARN] {text}{Colors.END}")
+        print(f"{Colors.YELLOW}[WARN] {text}{Colors.END}")
         pass
 
 
@@ -94,8 +94,8 @@ def run_command(cmd, description):
     Returns:
         (success: bool, duration: float)
     """
-    # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Running: {description}{Colors.END}")
-    # [X-Ray auto-fix] print(f"Command: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
+    print(f"\n{Colors.BOLD}Running: {description}{Colors.END}")
+    print(f"Command: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
     print("-" * 70)
 
     start_time = time.time()
@@ -244,7 +244,7 @@ def generate_coverage_report():
                     data = {}
                 total_coverage = data["totals"]["percent_covered"]
 
-            # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Total Coverage: {total_coverage:.1f}%{Colors.END}")
+            print(f"\n{Colors.BOLD}Total Coverage: {total_coverage:.1f}%{Colors.END}")
             if total_coverage >= 80:
                 print_success(f"Excellent coverage! (>80%)")
             elif total_coverage >= 60:
@@ -289,7 +289,7 @@ def watch_mode():
 
             self.last_run = now
 
-            # [X-Ray auto-fix] print(f"\n{Colors.YELLOW}File changed: {event.src_path}{Colors.END}")
+            print(f"\n{Colors.YELLOW}File changed: {event.src_path}{Colors.END}")
             print("Re-running tests...\n")
 
             run_unit_tests(fast=True)
@@ -363,7 +363,7 @@ def print_test_history():
         icon = "✓" if success else "✗"
         color = Colors.GREEN if success else Colors.RED
 
-        # [X-Ray auto-fix] print(f"{color}{icon}{Colors.END} {timestamp} - {duration:.1f}s")
+        print(f"{color}{icon}{Colors.END} {timestamp} - {duration:.1f}s")
 
 
 def _do_main_setup():
@@ -382,8 +382,8 @@ def _do_main_setup():
 
     # Print banner
     print("\n" + "=" * 70)
-    # [X-Ray auto-fix] print(f"{Colors.BOLD}TEST RUNNER - 'Trust but Verify' (Ronald Reagan){Colors.END}".center(80))
-    # [X-Ray auto-fix] print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"{Colors.BOLD}TEST RUNNER - 'Trust but Verify' (Ronald Reagan){Colors.END}".center(80))
+    print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
 
     # Show history if requested
@@ -435,13 +435,13 @@ def main():
 
     if all_success:
         print_success(f"ALL TESTS PASSED ✓")
-        # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
-        # [X-Ray auto-fix] print(f"{Colors.GREEN}Code is verified and safe to commit.{Colors.END}\n")
+        print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
+        print(f"{Colors.GREEN}Code is verified and safe to commit.{Colors.END}\n")
         exit_code = 0
     else:
         print_error(f"SOME TESTS FAILED ✗")
-        # [X-Ray auto-fix] print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
-        # [X-Ray auto-fix] print(f"{Colors.RED}Fix failures before committing code!{Colors.END}\n")
+        print(f"\n{Colors.BOLD}Duration: {total_duration:.2f}s{Colors.END}")
+        print(f"{Colors.RED}Fix failures before committing code!{Colors.END}\n")
         exit_code = 1
 
     # Save results to history

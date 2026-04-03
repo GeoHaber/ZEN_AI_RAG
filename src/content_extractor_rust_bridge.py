@@ -262,7 +262,7 @@ def benchmark_parse_image_dimension():
             for val in test_values:
                 rag_rat_rust.parse_image_dimension(val)
         rust_time = time.perf_counter() - start
-        # [X-Ray auto-fix] print(f"✓ Rust (1000 iterations):   {rust_time * 1000:.2f}ms")
+        print(f"✓ Rust (1000 iterations):   {rust_time * 1000:.2f}ms")
     else:
         rust_time = None
         print("✗ Rust not available")
@@ -273,20 +273,20 @@ def benchmark_parse_image_dimension():
         for val in test_values:
             parse_image_dimension(val)
     py_time = time.perf_counter() - start
-    # [X-Ray auto-fix] print(f"✓ Python (1000 iterations): {py_time * 1000:.2f}ms")
+    print(f"✓ Python (1000 iterations): {py_time * 1000:.2f}ms")
     if rust_time:
         speedup = py_time / rust_time
-        # [X-Ray auto-fix] print(f"\n✓ Speedup: {speedup:.1f}x faster with Rust")
+        print(f"\n✓ Speedup: {speedup:.1f}x faster with Rust")
     print()
 
 
 if __name__ == "__main__":
     # Test the bridge
-    # [X-Ray auto-fix] print(f"Rust status: {get_rust_status()}")
+    print(f"Rust status: {get_rust_status()}")
     # Test dimension parsing
     print("\nTesting parse_image_dimension():")
     for val in ["100", "100px", "invalid", "3dX\x19^\x03", ""]:
         result = parse_image_dimension(val)
-        # [X-Ray auto-fix] print(f"  {val!r:20} → {result}")
+        print(f"  {val!r:20} → {result}")
     # Run benchmark
     benchmark_parse_image_dimension()

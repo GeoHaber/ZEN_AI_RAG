@@ -161,7 +161,7 @@ def setup_tesseract() -> bool:
             import pytesseract
 
             pytesseract.pytesseract.tesseract_cmd = tesseract_path
-            # [X-Ray auto-fix] print(f"✓ Tesseract configured: {tesseract_path}")
+            print(f"✓ Tesseract configured: {tesseract_path}")
             return True
         except ImportError as exc:
             _ = exc  # suppressed intentionally
@@ -225,7 +225,7 @@ def install_package(package: str, upgrade: bool = False) -> bool:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, shell=False)
         return result.returncode == 0
     except Exception:
-        # [X-Ray auto-fix] print(f"Failed to install {package}: {e}")
+        print(f"Failed to install {package}: {e}")
         return False
 
 
@@ -255,26 +255,26 @@ def check_and_install_dependencies(show_status: bool = True) -> bool:
 
     # Auto-install missing packages
     if missing:
-        # [X-Ray auto-fix] print(f"\n🔧 Installing {len(missing)} missing packages...")
+        print(f"\n🔧 Installing {len(missing)} missing packages...")
         for pkg_name, min_version, desc in missing:
             print(f"  → Installing {pkg_name}>={min_version} ({desc})...")
             if install_package(f"{pkg_name}>={min_version}"):
-                # [X-Ray auto-fix] print(f"    ✓ {pkg_name} installed")
+                print(f"    ✓ {pkg_name} installed")
                 pass
             else:
-                # [X-Ray auto-fix] print(f"    ✗ Failed to install {pkg_name}")
+                print(f"    ✗ Failed to install {pkg_name}")
                 pass
                 # Upgrade outdated packages
                 pass
     if outdated:
-        # [X-Ray auto-fix] print(f"\n📦 Upgrading {len(outdated)} outdated packages...")
+        print(f"\n📦 Upgrading {len(outdated)} outdated packages...")
         for pkg_name, curr_ver, min_ver, desc in outdated:
-            # [X-Ray auto-fix] print(f"  → Upgrading {pkg_name} ({curr_ver} → {min_ver}+)...")
+            print(f"  → Upgrading {pkg_name} ({curr_ver} → {min_ver}+)...")
             if install_package(f"{pkg_name}>={min_ver}", upgrade=True):
-                # [X-Ray auto-fix] print(f"    ✓ {pkg_name} upgraded")
+                print(f"    ✓ {pkg_name} upgraded")
                 pass
             else:
-                # [X-Ray auto-fix] print(f"    ✗ Failed to upgrade {pkg_name}")
+                print(f"    ✗ Failed to upgrade {pkg_name}")
                 pass
     if show_status and (missing or outdated):
         print("\n✅ Dependency check complete. Please restart the app if packages were installed.\n")

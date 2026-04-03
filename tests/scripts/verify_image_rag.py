@@ -35,7 +35,7 @@ async def verify_image_extraction():
     clean_text = scraper.clean_html(soup)
 
     print("\n--- Extracted Content ---")
-    # [X-Ray auto-fix] print(clean_text)
+    print(clean_text)
     print("-------------------------")
 
     # Validation

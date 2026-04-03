@@ -33,16 +33,16 @@ for module_name, items in tests:
         mod = __import__(module_name, fromlist=items.split(", "))
         for item in items.split(", "):
             getattr(mod, item.strip())
-        # [X-Ray auto-fix] print(f"✓ {module_name}: {items}")
+        print(f"✓ {module_name}: {items}")
     except Exception as e:
-        # [X-Ray auto-fix] print(f"✗ {module_name}: {e}")
+        print(f"✗ {module_name}: {e}")
         failed.append((module_name, str(e)))
 
 print("\n" + "=" * 60)
 if failed:
-    # [X-Ray auto-fix] print(f"FAILED: {len(failed)} imports")
+    print(f"FAILED: {len(failed)} imports")
     for mod, err in failed:
-        # [X-Ray auto-fix] print(f"  - {mod}: {err[:80]}")
+        print(f"  - {mod}: {err[:80]}")
         pass
 else:
     print("All imports OK!")

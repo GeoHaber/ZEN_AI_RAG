@@ -12,7 +12,7 @@ async def run_chaos_monkey():
     port = "8080"  # Default NiceGUI port
     url = f"http://localhost:{port}"
 
-    # [X-Ray auto-fix] print(f"🐒 Initializing UI Chaos Monkey...")
+    print(f"🐒 Initializing UI Chaos Monkey...")
     async with async_playwright() as p:
         # Launch browser (headless=False to see the chaos)
         try:
@@ -28,11 +28,11 @@ async def run_chaos_monkey():
 
         # 1. Connect to App
         try:
-            # [X-Ray auto-fix] print(f"🔌 Connecting to {url}...")
+            print(f"🔌 Connecting to {url}...")
             await page.goto(url, timeout=5000)
             await page.wait_for_selector("body", timeout=5000)
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️ App not running at {url}. Please start 'python start_llm.py' first.")
+            print(f"⚠️ App not running at {url}. Please start 'python start_llm.py' first.")
             await browser.close()
             sys.exit(1)
 
@@ -59,12 +59,12 @@ async def run_chaos_monkey():
                 # 🐒 15% chance for special "High-Value" actions
                 dice = random.random()
                 if dice < 0.05:
-                    # [X-Ray auto-fix] print(f"[{i + 1}] 🌗 Monkey is toggling Theme...")
+                    print(f"[{i + 1}] 🌗 Monkey is toggling Theme...")
                     theme_toggle = page.locator(".q-toggle").first
                     if await theme_toggle.is_visible():
                         await theme_toggle.click()
                 elif dice < 0.10:
-                    # [X-Ray auto-fix] print(f"[{i + 1}] ☰ Monkey is exploring the Drawer...")
+                    print(f"[{i + 1}] ☰ Monkey is exploring the Drawer...")
                     menu_btn = page.locator("button:has-text('menu')").first
                     if await menu_btn.is_visible():
                         await menu_btn.click()
@@ -74,7 +74,7 @@ async def run_chaos_monkey():
                         if items:
                             await random.choice(items).click()
                 elif dice < 0.15:
-                    # [X-Ray auto-fix] print(f"[{i + 1}] 🎙️ Monkey is checking the Voice Lab...")
+                    print(f"[{i + 1}] 🎙️ Monkey is checking the Voice Lab...")
                     voice_lab_btn = page.locator("button:has-text('Voice Lab')")
                     if await voice_lab_btn.is_visible():
                         await voice_lab_btn.click()
@@ -123,7 +123,7 @@ async def run_chaos_monkey():
 
                 # Specific check for RAG Dialog
                 if await page.locator(".q-dialog").is_visible():
-                    # [X-Ray auto-fix] print(f"[{i + 1}] 🧠 Monkey is in the RAG Dialog!")
+                    print(f"[{i + 1}] 🧠 Monkey is in the RAG Dialog!")
                     close_btn = page.locator(".q-dialog button:has-text('close')").first
                     if random.random() < 0.2 and await close_btn.is_visible():
                         await close_btn.click()
@@ -143,16 +143,16 @@ async def run_chaos_monkey():
                 pass
 
             # Progress items
-            # [X-Ray auto-fix] print(f"\r[{i + 1}/{interactions}] Actions completed...", end="")
+            print(f"\r[{i + 1}/{interactions}] Actions completed...", end="")
         print("\n")
         if errors:
-            # [X-Ray auto-fix] print(f"❌ TEST FAILED: Application Crashed!")
+            print(f"❌ TEST FAILED: Application Crashed!")
             for err in errors:
-                # [X-Ray auto-fix] print(err)
+                print(err)
                 pass
             sys.exit(1)
 
-        # [X-Ray auto-fix] print(f"✅ TEST PASSED: Application Survived {interactions} interactions!")
+        print(f"✅ TEST PASSED: Application Survived {interactions} interactions!")
         await browser.close()
 
 

@@ -106,11 +106,11 @@ def _do_test_engine_lifecycle_init():
     if not pid_a:
         # Check stdout
         out, err = proc_a.communicate(timeout=1)
-        # [X-Ray auto-fix] print(f"STDOUT: {out}")
-        # [X-Ray auto-fix] print(f"STDERR: {err}")
+        print(f"STDOUT: {out}")
+        print(f"STDERR: {err}")
         pytest.fail("Instance A failed to start llama-server.exe")
 
-    # [X-Ray auto-fix] print(f"[Test] Instance A Running (PID: {pid_a})")
+    print(f"[Test] Instance A Running (PID: {pid_a})")
     assert port_active, "API 8001 not responding"
 
     return cmd, pid_a, proc_a
@@ -142,14 +142,14 @@ def test_engine_lifecycle(clean_env):
 
     # --- Step 3: Verify Swap ---
     current_pids = get_llama_pids()
-    # [X-Ray auto-fix] print(f"[Test] Current PIDs: {current_pids}")
+    print(f"[Test] Current PIDs: {current_pids}")
     assert pid_a not in current_pids, "Instance A (PID {pid_a}) should have been killed!"
     assert len(current_pids) > 0, "Instance B should be running"
 
     pid_b = current_pids[0]
     assert pid_b != pid_a, "PID should have changed"
 
-    # [X-Ray auto-fix] print(f"[Test] Instance B Running (PID: {pid_b}) - Swap Successful")
+    print(f"[Test] Instance B Running (PID: {pid_b}) - Swap Successful")
     # Cleanup
     proc_a.terminate()
     proc_b.terminate()

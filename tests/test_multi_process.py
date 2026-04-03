@@ -24,7 +24,7 @@ def wait_for_port(port, timeout=60):
             resp = requests.get(url, timeout=1)
             # We want to wait UNTIL it is 200 (Ready), not just UP (503)
             if resp.status_code == 200:
-                # [X-Ray auto-fix] print(f"[Multi] Port {port} is READY (200 OK)")
+                print(f"[Multi] Port {port} is READY (200 OK)")
                 return True
             elif resp.status_code == 503:
                 # Still loading
@@ -68,11 +68,11 @@ def test_multi_process_concurrency():
     ports = [8005, 8006, 8007, 8008]
     procs = []
 
-    # [X-Ray auto-fix] print(f"\n[Multi] Launching {len(ports)} Parallel Instances...")
+    print(f"\n[Multi] Launching {len(ports)} Parallel Instances...")
     try:
         # 1. Launch All
         for port in ports:
-            # [X-Ray auto-fix] print(f"[Multi] Launching Port {port}...")
+            print(f"[Multi] Launching Port {port}...")
             proc = launch_instance(port, os.environ)
             procs.append((port, proc))
 
@@ -91,14 +91,14 @@ def test_multi_process_concurrency():
             # We will perform a request and assume that proves the process output worked.
             # To truly capture stdout, we'd need a non-blocking read loop.
             # Let's trust the PID check + HTTP 200 for now, but log the PID.
-            # [X-Ray auto-fix] print(f"[Multi] Port {port} READY (PID: {proc.pid})")
+            print(f"[Multi] Port {port} READY (PID: {proc.pid})")
         print("[Multi] verify_direct_traffic (Hit all endpoints)...")
 
         # 3. Traffic Test
         for port, _ in procs:
             resp = requests.get(f"http://127.0.0.1:{port}/props", timeout=5)
             assert resp.status_code == 200
-            # [X-Ray auto-fix] print(f"[Multi] Port {port} response: {len(resp.content)} bytes")
+            print(f"[Multi] Port {port} response: {len(resp.content)} bytes")
         print("[Multi] SUCCESS: 4-Way Concurrency Achieved.")
 
     finally:

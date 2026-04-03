@@ -70,7 +70,7 @@ def print_banner():
 
 def check_connection():
     """Verify ZenAI is running."""
-    # [X-Ray auto-fix] print(f"⏳ Waiting for ZenAI at {BASE_URL}...")
+    print(f"⏳ Waiting for ZenAI at {BASE_URL}...")
     for i in range(20):  # Try for 40 seconds
         try:
             r = requests.get(BASE_URL, timeout=5)
@@ -81,7 +81,7 @@ def check_connection():
             pass
         time.sleep(2)
         if i % 2 == 0:
-            # [X-Ray auto-fix] print(f"   ... attempting connection ({i * 2}s)")
+            print(f"   ... attempting connection ({i * 2}s)")
             pass
     print("❌ Cannot connect to ZenAI (Timeout)")
     return False
@@ -102,10 +102,10 @@ def trigger_click(element_id):
             },
             timeout=2,
         )
-        # [X-Ray auto-fix] print(f"   🖱️  Clicked: {element_id}")
+        print(f"   🖱️  Clicked: {element_id}")
     except Exception:
         # Fallback - just log the action
-        # [X-Ray auto-fix] print(f"   🖱️  Click (simulated): {element_id}")
+        print(f"   🖱️  Click (simulated): {element_id}")
         pass
     time.sleep(0.3)
 
@@ -132,16 +132,16 @@ def send_message(text):
             },
             timeout=2,
         )
-        # [X-Ray auto-fix] print(f"   💬 Sent: {text[:50]}{'...' if len(text) > 50 else ''}")
+        print(f"   💬 Sent: {text[:50]}{'...' if len(text) > 50 else ''}")
     except Exception:
-        # [X-Ray auto-fix] print(f"   💬 Message (simulated): {text[:30]}...")
+        print(f"   💬 Message (simulated): {text[:30]}...")
         pass
     time.sleep(0.5)
 
 
 def run_chaos_sequence(duration_seconds=30):
     """Run chaos monkey for specified duration."""
-    # [X-Ray auto-fix] print(f"\n🐒 Starting {duration_seconds}s chaos sequence...")
+    print(f"\n🐒 Starting {duration_seconds}s chaos sequence...")
     print("   Watch your browser!\n")
 
     start = time.time()
@@ -214,10 +214,10 @@ def main():
 
     if choice == "1":
         count = run_chaos_sequence(30)
-        # [X-Ray auto-fix] print(f"\n✅ Completed {count} chaotic actions!")
+        print(f"\n✅ Completed {count} chaotic actions!")
     elif choice == "2":
         count = run_manual_chaos()
-        # [X-Ray auto-fix] print(f"\n✅ Completed {count} chaotic actions!")
+        print(f"\n✅ Completed {count} chaotic actions!")
     elif choice == "3":
         print("\n🐒 Quick burst mode - 10 rapid actions!")
         for i in range(10):
@@ -229,7 +229,7 @@ def main():
     else:
         print("Invalid choice. Running auto mode...")
         count = run_chaos_sequence(15)
-        # [X-Ray auto-fix] print(f"\n✅ Completed {count} chaotic actions!")
+        print(f"\n✅ Completed {count} chaotic actions!")
     print("\n📊 Check your browser to see the results!")
     print("   Any crashes or errors would be visible in the ZenAI console.")
 

@@ -138,8 +138,8 @@ def main():
         path = DATA_DIR / f"{s['id']}.txt"
         text = (s["title"] + "\n\n" + s["content"].strip()).strip()
         path.write_text(text, encoding="utf-8")
-        # [X-Ray auto-fix] print(f"  Written: {path.name} ({len(text)} chars)")
-    # [X-Ray auto-fix] print(f"Done. {len(SCENARIOS)} files in {DATA_DIR}")
+        print(f"  Written: {path.name} ({len(text)} chars)")
+    print(f"Done. {len(SCENARIOS)} files in {DATA_DIR}")
 
 
 if __name__ == "__main__":

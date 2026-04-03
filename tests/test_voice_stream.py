@@ -16,12 +16,12 @@ async def test_voice_streaming():
     Simulates a browser client streaming audio to the backend.
     """
     uri = f"ws://127.0.0.1:{config.voice_port}"
-    # [X-Ray auto-fix] print(f"Connecting to {uri}...")
+    print(f"Connecting to {uri}...")
     try:
         async with websockets.connect(uri) as websocket:
             # 1. Wait for Ready
             msg = await websocket.recv()
-            # [X-Ray auto-fix] print(f"< {msg}")
+            print(f"< {msg}")
             # 2. Generate Synthetic Audio (Sine Wave "Beep")
             # We use a simple 440Hz tone. Whisper won't transcribe it as English text usually,
             # but it validates the pipeline processes audio without crashing.
@@ -51,14 +51,14 @@ async def test_voice_streaming():
             while True:
                 response = await websocket.recv()
                 data = json.loads(response)
-                # [X-Ray auto-fix] print(f"< {data}")
+                print(f"< {data}")
                 if data.get("is_final") or data.get("status") == "cleared":
                     break
 
             print("✅ Test Passed: Stream completed.")
 
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Test Failed: {e}")
+        print(f"❌ Test Failed: {e}")
         sys.exit(1)
 
 

@@ -25,14 +25,14 @@ try:
         response = client.get("http://localhost:8006/status", follow_redirects=False)
         if response.status_code == 200:
             print("  ✓ Voice API responding")
-            # [X-Ray auto-fix] print(f"  Response: {response.text[:100]}")
+            print(f"  Response: {response.text[:100]}")
         else:
-            # [X-Ray auto-fix] print(f"  ⚠️ Voice API returned status {response.status_code}")
+            print(f"  ⚠️ Voice API returned status {response.status_code}")
             pass
     except httpx.ConnectError:
         print("  ⚠️ Voice API not accessible (may not be started yet)")
     except Exception:
-        # [X-Ray auto-fix] print(f"  ⚠️ Voice API check failed: {e}")
+        print(f"  ⚠️ Voice API check failed: {e}")
         pass
 finally:
     try:
@@ -46,21 +46,21 @@ try:
     from zena_mode.voice_manager import VoiceManager
 
     vm = VoiceManager()
-    # [X-Ray auto-fix] print(f"  ✓ VoiceManager initialized")
+    print(f"  ✓ VoiceManager initialized")
     # List all input devices
     devices = vm.enumerate_devices()
     input_devices = [d for d in devices if d.is_input]
-    # [X-Ray auto-fix] print(f"  ✓ Found {len(input_devices)} input device(s)")
+    print(f"  ✓ Found {len(input_devices)} input device(s)")
     # Test auto-fallback by recording
     print("  🎙️ Testing auto-fallback recording (2 seconds)...")
     result = vm.record_audio(duration=2, auto_fallback=True)
 
     if result.success:
         print("  ✓ Recording successful with auto-fallback")
-        # [X-Ray auto-fix] print(f"  ✓ Audio size: {len(result.audio_data)} bytes")
-        # [X-Ray auto-fix] print(f"  ✓ Duration: {result.duration}s at {result.sample_rate}Hz")
+        print(f"  ✓ Audio size: {len(result.audio_data)} bytes")
+        print(f"  ✓ Duration: {result.duration}s at {result.sample_rate}Hz")
     else:
-        # [X-Ray auto-fix] print(f"  ✗ Recording failed: {result.error}")
+        print(f"  ✗ Recording failed: {result.error}")
         pass
     # Test fallback with invalid device
     print("\n  Testing fallback with invalid primary device (ID: 9999)...")
@@ -69,10 +69,10 @@ try:
     if result.success:
         print("  ✓ Fallback succeeded - switched to working device automatically!")
     else:
-        # [X-Ray auto-fix] print(f"  ⚠️ Fallback exhausted all devices: {result.error}")
+        print(f"  ⚠️ Fallback exhausted all devices: {result.error}")
         pass
 except Exception:
-    # [X-Ray auto-fix] print(f"  ✗ VoiceManager test failed: {e}")
+    print(f"  ✗ VoiceManager test failed: {e}")
     import traceback
 
     traceback.print_exc()
@@ -104,10 +104,10 @@ try:
         else:
             print("  ✗ Missing add_advanced_microphone_panel()")
     else:
-        # [X-Ray auto-fix] print(f"  ✗ microphone_checker.py not found at {checker_path}")
+        print(f"  ✗ microphone_checker.py not found at {checker_path}")
         pass
 except Exception:
-    # [X-Ray auto-fix] print(f"  ✗ Browser permission checker test failed: {e}")
+    print(f"  ✗ Browser permission checker test failed: {e}")
     pass
 print("\n" + "=" * 70)
 print("✅ MICROPHONE SYSTEM TEST COMPLETE")

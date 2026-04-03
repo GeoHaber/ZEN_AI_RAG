@@ -23,29 +23,29 @@ for i, dev in enumerate(devices):
     if is_output:
         marker += " 🔊 OUTPUT"
     name = dev["name"][:35]
-    # [X-Ray auto-fix] print(f"  [{i:2d}] {name:<35} {marker}")
+    print(f"  [{i:2d}] {name:<35} {marker}")
 # Test default input device
 print("\n🎯 Testing Default Input Device...")
 try:
     input_device = sd.default.device[0]
-    # [X-Ray auto-fix] print(f"  Default: Device #{input_device}")
+    print(f"  Default: Device #{input_device}")
     dev_info = sd.query_devices(input_device)
-    # [X-Ray auto-fix] print(f"  Name: {dev_info['name']}")
-    # [X-Ray auto-fix] print(f"  Channels: {dev_info['max_input_channels']}")
-    # [X-Ray auto-fix] print(f"  Sample Rate: {dev_info['default_samplerate']} Hz")
+    print(f"  Name: {dev_info['name']}")
+    print(f"  Channels: {dev_info['max_input_channels']}")
+    print(f"  Sample Rate: {dev_info['default_samplerate']} Hz")
     # Try to record 2 seconds
     print("\n🎙️ Recording 2 seconds test (speak now!)...")
     duration = 2
     fs = int(dev_info["default_samplerate"])
-    # [X-Ray auto-fix] print(f"  Recording at {fs} Hz...")
+    print(f"  Recording at {fs} Hz...")
     try:
         audio_data = sd.rec(int(duration * fs), samplerate=fs, channels=1, device=input_device)
         sd.wait()
 
         # Check if any audio was captured
         audio_level = np.max(np.abs(audio_data))
-        # [X-Ray auto-fix] print(f"  ✓ Recording successful!")
-        # [X-Ray auto-fix] print(f"  Audio level: {audio_level:.4f}")
+        print(f"  ✓ Recording successful!")
+        print(f"  Audio level: {audio_level:.4f}")
         if audio_level < 0.001:
             print("  ⚠️ WARNING: Very low audio level - microphone may be muted or disconnected")
         elif audio_level < 0.01:
@@ -54,7 +54,7 @@ try:
             print("  ✓ Audio capture working!")
 
     except Exception:
-        # [X-Ray auto-fix] print(f"  ✗ Recording failed: {e}")
+        print(f"  ✗ Recording failed: {e}")
         sys.exit(1)
 
 except Exception as e:
@@ -68,14 +68,14 @@ try:
 
     vm = VoiceManager()
 
-    # [X-Ray auto-fix] print(f"  ✓ VoiceManager loaded")
+    print(f"  ✓ VoiceManager loaded")
     devices = vm.enumerate_devices()
-    # [X-Ray auto-fix] print(f"  Available devices: {len(devices)}")
+    print(f"  Available devices: {len(devices)}")
     # List input devices
     print("\n  Input Devices:")
     for dev in devices:
         if dev.is_input:
-            # [X-Ray auto-fix] print(f"    - {dev.name} (ID: {dev.id}, channels: {dev.channels})")
+            print(f"    - {dev.name} (ID: {dev.id}, channels: {dev.channels})")
             pass
     # Try to record audio
     print("\n  Testing recording (2 seconds, speak now!)...")
@@ -88,10 +88,10 @@ try:
         samples = np.array(samples, dtype=np.float32) / 32768.0
         level = np.max(np.abs(samples))
 
-        # [X-Ray auto-fix] print(f"  ✓ Recorded successfully")
-        # [X-Ray auto-fix] print(f"  Duration: {result.duration:.2f}s")
-        # [X-Ray auto-fix] print(f"  Sample rate: {result.sample_rate} Hz")
-        # [X-Ray auto-fix] print(f"  Audio level: {level:.4f}")
+        print(f"  ✓ Recorded successfully")
+        print(f"  Duration: {result.duration:.2f}s")
+        print(f"  Sample rate: {result.sample_rate} Hz")
+        print(f"  Audio level: {level:.4f}")
         if level > 0.05:
             print("  ✓ Audio level good!")
         elif level > 0.01:
@@ -99,7 +99,7 @@ try:
         else:
             print("  ✗ Audio level very low - microphone may be muted")
     else:
-        # [X-Ray auto-fix] print(f"  ✗ Recording failed: {result.error}")
+        print(f"  ✗ Recording failed: {result.error}")
         pass
 except Exception as e:
     print(f"  ✗ VoiceManager error: {e}")

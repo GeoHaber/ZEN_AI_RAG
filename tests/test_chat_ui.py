@@ -36,13 +36,13 @@ async def test_llm_backend():
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # [X-Ray auto-fix] print(f"  → Sending test message to {api_url}")
+            print(f"  → Sending test message to {api_url}")
             response = await client.post(api_url, json=payload)
 
             if response.status_code == 200:
                 data = response.json()
                 content = data["choices"][0]["message"]["content"]
-                # [X-Ray auto-fix] print(f"  ✅ LLM Response: {content[:100]}")
+                print(f"  ✅ LLM Response: {content[:100]}")
                 return True
             else:
                 print(f"  ❌ HTTP Error: {response.status_code}")
@@ -77,7 +77,7 @@ async def test_streaming_response():
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # [X-Ray auto-fix] print(f"  → Testing streaming...")
+            print(f"  → Testing streaming...")
             chunk_count = 0
             full_response = ""
 
@@ -105,8 +105,8 @@ async def test_streaming_response():
                     except Exception:
                         pass
 
-            # [X-Ray auto-fix] print(f"  ✅ Received {chunk_count} chunks")
-            # [X-Ray auto-fix] print(f"  ✅ Response: {full_response[:100]}")
+            print(f"  ✅ Received {chunk_count} chunks")
+            print(f"  ✅ Response: {full_response[:100]}")
             return chunk_count > 0
 
     except Exception as e:
@@ -131,10 +131,10 @@ async def test_ui_endpoint():
                 has_nicegui = "nicegui" in html.lower() or "quasar" in html.lower()
                 has_zena = "zena" in html.lower() or "chat" in html.lower()
 
-                # [X-Ray auto-fix] print(f"  ✅ Web server responding (HTTP 200)")
-                # [X-Ray auto-fix] print(f"  ✅ NiceGUI/Quasar detected: {has_nicegui}")
-                # [X-Ray auto-fix] print(f"  ✅ ZenAI content detected: {has_zena}")
-                # [X-Ray auto-fix] print(f"  📊 HTML size: {len(html)} bytes")
+                print(f"  ✅ Web server responding (HTTP 200)")
+                print(f"  ✅ NiceGUI/Quasar detected: {has_nicegui}")
+                print(f"  ✅ ZenAI content detected: {has_zena}")
+                print(f"  📊 HTML size: {len(html)} bytes")
                 return True
             else:
                 print(f"  ❌ HTTP Error: {response.status_code}")
@@ -167,11 +167,11 @@ async def test_chat_ui_e2e_playwright():
             context = await browser.new_context()
             page = await context.new_page()
 
-            # [X-Ray auto-fix] print(f"  → Navigating to {url}")
+            print(f"  → Navigating to {url}")
             try:
                 await page.goto(url, timeout=5000)
             except Exception:
-                # [X-Ray auto-fix] print(f"  ❌ Failed to load {url}. Is the app running?")
+                print(f"  ❌ Failed to load {url}. Is the app running?")
                 await browser.close()
                 return False
 
@@ -179,7 +179,7 @@ async def test_chat_ui_e2e_playwright():
             try:
                 await page.wait_for_selector("body", timeout=5000)
                 title = await page.title()
-                # [X-Ray auto-fix] print(f"  ✅ Page Title: {title}")
+                print(f"  ✅ Page Title: {title}")
                 # Check for key elements (Sidebar, Header)
                 # Note: Adjust selectors based on actual implementation
                 sidebar = await page.locator("aside").count()  # Or specific class
@@ -187,7 +187,7 @@ async def test_chat_ui_e2e_playwright():
                 print(f"  ✅ Found {sidebar} sidebars and {header} headers")
 
             except Exception:
-                # [X-Ray auto-fix] print(f"  ❌ Layout check failed: {e}")
+                print(f"  ❌ Layout check failed: {e}")
                 await browser.close()
                 return False
 
@@ -198,7 +198,7 @@ async def test_chat_ui_e2e_playwright():
                 await page.wait_for_selector(input_selector, timeout=3000)
 
                 test_message = f"E2E_Test_{__import__('random').randint(1000, 9999)}"
-                # [X-Ray auto-fix] print(f"  → Typing message: '{test_message}'")
+                print(f"  → Typing message: '{test_message}'")
                 await page.fill(input_selector, test_message)
                 await asyncio.sleep(0.5)
 
@@ -218,17 +218,17 @@ async def test_chat_ui_e2e_playwright():
                 # Look for the text in the chat area
                 content = await page.content()
                 if test_message in content:
-                    # [X-Ray auto-fix] print(f"  ✅ Message '{test_message}' found in chat history!")
+                    print(f"  ✅ Message '{test_message}' found in chat history!")
                     await browser.close()
                     return True
                 else:
-                    # [X-Ray auto-fix] print(f"  ❌ Message '{test_message}' NOT found in page content.")
+                    print(f"  ❌ Message '{test_message}' NOT found in page content.")
                     # print(f"DEBUG: Page Text: {await page.inner_text('body')}")
                     await browser.close()
                     return False
 
             except Exception:
-                # [X-Ray auto-fix] print(f"  ❌ Interaction failed: {e}")
+                print(f"  ❌ Interaction failed: {e}")
                 await browser.close()
                 return False
 
@@ -265,8 +265,8 @@ async def main():
 
     for name, result in results:
         status = "✅ PASS" if result else "❌ FAIL"
-        # [X-Ray auto-fix] print(f"  {status}: {name}")
-    # [X-Ray auto-fix] print(f"\n  Total: {passed}/{total} tests passed")
+        print(f"  {status}: {name}")
+    print(f"\n  Total: {passed}/{total} tests passed")
     if passed == total:
         print("\n  🎉 ALL TESTS PASSED!")
     else:

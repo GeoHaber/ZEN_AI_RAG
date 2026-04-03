@@ -18,9 +18,9 @@ def test_tutorial_trigger():
     # 1. Check if server is up
     try:
         resp = requests.get(f"{BASE_URL}/", timeout=5)
-        # [X-Ray auto-fix] print(f"✅ Server is UP (Status: {resp.status_code})")
+        print(f"✅ Server is UP (Status: {resp.status_code})")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Server is DOWN: {e}")
+        print(f"❌ Server is DOWN: {e}")
         return False
 
     # 2. Get initial state
@@ -28,14 +28,14 @@ def test_tutorial_trigger():
     state_resp = requests.get(f"{BASE_URL}/test/state", timeout=30)
     if state_resp.status_code == 200:
         state = state_resp.json()
-        # [X-Ray auto-fix] print(f"Initial Notifications: {state.get('notifications', [])}")
+        print(f"Initial Notifications: {state.get('notifications', [])}")
     # 3. Trigger the Tour Button via Test API
     print("Triggering 'Start Quick Tour' button...")
     click_resp = requests.post(f"{BASE_URL}/test/click/ui-btn-start-tour", timeout=30)
     if click_resp.status_code == 200:
         print("✅ Click command sent successfully.")
     else:
-        # [X-Ray auto-fix] print(f"❌ Failed to send click command: {click_resp.text}")
+        print(f"❌ Failed to send click command: {click_resp.text}")
         return False
 
     # 4. Wait for JS execution and dialog appearance
@@ -49,7 +49,7 @@ def test_tutorial_trigger():
     if state_resp.status_code == 200:
         state = state_resp.json()
         active_dialogs = state.get("active_dialogs", 0)
-        # [X-Ray auto-fix] print(f"Active Dialogs: {active_dialogs}")
+        print(f"Active Dialogs: {active_dialogs}")
         # In UITutorial, we open a dialog.
         if active_dialogs > 0:
             print("✅ Tutorial Dialog DETECTED!")

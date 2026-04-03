@@ -25,7 +25,7 @@ async def test_rag_ui_website_ingestion():
 
         try:
             # 1. Load Page
-            # [X-Ray auto-fix] print(f"  → Navigating to {UI_URL}")
+            print(f"  → Navigating to {UI_URL}")
             await page.goto(UI_URL)
             await page.wait_for_load_state("networkidle")
 
@@ -59,7 +59,7 @@ async def test_rag_ui_website_ingestion():
             # 3. Select Website Tab (Default)
             # Input URL
             target_url = "https://example.com"
-            # [X-Ray auto-fix] print(f"  → Entering URL: {target_url}")
+            print(f"  → Entering URL: {target_url}")
             # NiceGUI inputs often match by their label text
             url_input = page.locator("label:has-text('Website URL') input")
             await url_input.fill(target_url)
@@ -92,7 +92,7 @@ async def test_rag_ui_website_ingestion():
             return True
 
         except Exception as e:
-            # [X-Ray auto-fix] print(f"  ❌ Website Test Failed: {e}")
+            print(f"  ❌ Website Test Failed: {e}")
             await page.screenshot(path="rag_website_fail.png")
             raise e
         finally:
@@ -129,7 +129,7 @@ async def test_rag_ui_directory_ingestion():
             await page.click("div[role='tab']:has-text('Local Files')")
 
             # 3. Enter Path
-            # [X-Ray auto-fix] print(f"  → Entering Path: {abs_path}")
+            print(f"  → Entering Path: {abs_path}")
             dir_input = page.locator("label:has-text('Directory Path') input")
             await dir_input.fill(abs_path)
 
@@ -155,7 +155,7 @@ async def test_rag_ui_directory_ingestion():
             return True
 
         except Exception as e:
-            # [X-Ray auto-fix] print(f"  ❌ Directory Test Failed: {e}")
+            print(f"  ❌ Directory Test Failed: {e}")
             await page.screenshot(path="rag_dir_fail.png")
             raise e
         finally:

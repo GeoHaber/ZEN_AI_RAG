@@ -24,14 +24,14 @@ async def test_feature_menu_items():
                     connected = True
                     break
                 except Exception:
-                    # [X-Ray auto-fix] print(f"Waiting for server... ({i + 1}/10)")
+                    print(f"Waiting for server... ({i + 1}/10)")
                     await asyncio.sleep(2)
 
             if not connected:
                 pytest.fail(f"Could not connect to {url} after 20 seconds. Is the app running?")
 
             # DEBUG: Print Title
-            # [X-Ray auto-fix] print(f"DEBUG: Page Title: {await page.title()}")
+            print(f"DEBUG: Page Title: {await page.title()}")
             # 2. Open Sidebar (if closed, but default is open in drawer)
             print("Trying to open drawer...")
             try:
@@ -51,12 +51,12 @@ async def test_feature_menu_items():
                 await labs_el.wait_for(state="visible", timeout=5000)
                 await labs_el.click()
             except Exception as e:
-                # [X-Ray auto-fix] print(f"Failed to find Labs: {e}")
+                print(f"Failed to find Labs: {e}")
                 content = await page.content()
-                # [X-Ray auto-fix] print(f"DEBUG: Page Content Snippet: {content[:1000]}")
+                print(f"DEBUG: Page Content Snippet: {content[:1000]}")
                 # Dump full body text
                 body_text = await page.inner_text("body")
-                # [X-Ray auto-fix] print(f"DEBUG: Body Text: {body_text[:500]}")
+                print(f"DEBUG: Body Text: {body_text[:500]}")
                 raise e
 
             await asyncio.sleep(1)  # Wait for animation

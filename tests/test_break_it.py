@@ -96,9 +96,9 @@ class TestRealConfigBreaking:
 
         # If we found race conditions, report them
         if errors:
-            # [X-Ray auto-fix] print(f"\n⚠️ Found {len(errors)} race condition issues!")
+            print(f"\n⚠️ Found {len(errors)} race condition issues!")
             for e in errors[:5]:
-                # [X-Ray auto-fix] print(f"  - {e}")
+                print(f"  - {e}")
                 pass
             # This is a REAL bug if it happens
             pytest.fail(f"Race condition detected: {errors[0]}")
@@ -452,7 +452,7 @@ class TestDataPersistence:
             rag.close()
         except Exception:
             # Expected to fail, but shouldn't be an unhandled crash
-            # [X-Ray auto-fix] print(f"Expected failure on corrupted storage: {e}")
+            print(f"Expected failure on corrupted storage: {e}")
             pass
 
     def test_read_only_directory(self, tmp_path):

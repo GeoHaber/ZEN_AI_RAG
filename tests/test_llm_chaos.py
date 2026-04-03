@@ -83,7 +83,7 @@ class TestLLMChaos:
             pytest.skip("Could not find llama-server process to kill")
 
         # 3. KILL IT
-        # [X-Ray auto-fix] print(f"\n💀 KILLING PID {target_pid} FOR SCIENCE...")
+        print(f"\n💀 KILLING PID {target_pid} FOR SCIENCE...")
         psutil.Process(target_pid).kill()
 
         # 4. Wait for Auto-Recovery (Max 15s)

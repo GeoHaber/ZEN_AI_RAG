@@ -55,12 +55,12 @@ def test_hybrid_search_precision(temp_rag):
 
     # Test Standard Semantic Search
     vector_results = temp_rag.search(query, k=1)
-    # [X-Ray auto-fix] print(f"\nVector Top Result: {vector_results[0]['title'] if vector_results else 'None'}")
+    print(f"\nVector Top Result: {vector_results[0]['title'] if vector_results else 'None'}")
     # Test Hybrid Search (This is what we are implementing/improving)
     hybrid_results = temp_rag.hybrid_search(query, k=3, alpha=0.5)
     print("\nHybrid Search Results (query):")
     for r in hybrid_results:
-        # [X-Ray auto-fix] print(f"- {r['url']}: {r['title']} (Score: {r['fusion_score']:.4f})")
+        print(f"- {r['url']}: {r['title']} (Score: {r['fusion_score']:.4f})")
         pass
     assert len(hybrid_results) > 0
     assert hybrid_results[0]["url"] == "doc2"
@@ -70,7 +70,7 @@ def test_hybrid_search_precision(temp_rag):
     results = temp_rag.hybrid_search(tricky_query, k=3, alpha=0.3)
     print("\nHybrid Search Results (tricky):")
     for r in results:
-        # [X-Ray auto-fix] print(f"- {r['url']}: {r['title']} (Score: {r['fusion_score']:.4f})")
+        print(f"- {r['url']}: {r['title']} (Score: {r['fusion_score']:.4f})")
         pass
     assert results[0]["url"] == "doc2"
 

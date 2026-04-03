@@ -12,23 +12,23 @@ def run_test():
     # 1. Check UI Reachability
     try:
         r = requests.get(ui_url, timeout=5)
-        # [X-Ray auto-fix] print(f"✅ UI is up (Status {r.status_code})")
+        print(f"✅ UI is up (Status {r.status_code})")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ UI is unreachable: {e}")
+        print(f"❌ UI is unreachable: {e}")
         sys.exit(1)
 
     # 2. Inject Message
     payload = {"text": "Hello ZenAI! Who are you?"}
-    # [X-Ray auto-fix] print(f"🔎 Sending message: '{payload['text']}'")
+    print(f"🔎 Sending message: '{payload['text']}'")
     try:
         r = requests.post(f"{ui_url}/test/send", json=payload, timeout=5)
         if r.status_code == 200:
             print("✅ Send command accepted by UI.")
         else:
-            # [X-Ray auto-fix] print(f"❌ Send command failed: {r.status_code} - {r.text}")
+            print(f"❌ Send command failed: {r.status_code} - {r.text}")
             sys.exit(1)
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ Error sending message: {e}")
+        print(f"❌ Error sending message: {e}")
         sys.exit(1)
 
     # 3. Poll for Response

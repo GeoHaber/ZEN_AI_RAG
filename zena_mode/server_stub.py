@@ -109,7 +109,7 @@ def start_hub(host: str | None = None, port: int | None = None) -> Tuple[Threadi
             pass
         raise RuntimeError(f"Hub failed to bind to {bind_host}:{bind_port} within {timeout}s")
 
-    # [X-Ray auto-fix] print(f"HUB_BOUND {bind_host}:{bind_port}")
+    print(f"HUB_BOUND {bind_host}:{bind_port}")
     return server, thread
 
 

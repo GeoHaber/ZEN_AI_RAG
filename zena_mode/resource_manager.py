@@ -164,6 +164,5 @@ resource_manager = ResourceManager()
 
 if __name__ == "__main__":
     # Test run
-    # [X-Ray auto-fix] print(f"Strategy: {resource_manager.strategy}")
-    pass
-    # [X-Ray auto-fix] print(f"Can load 4GB model? {resource_manager.can_load_model(4.0)}")    pass
+    print(f"Strategy: {resource_manager.strategy}")
+    print(f"Can load 4GB model? {resource_manager.can_load_model(4.0)}")

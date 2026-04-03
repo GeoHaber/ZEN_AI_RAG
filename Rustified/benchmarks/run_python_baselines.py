@@ -100,7 +100,7 @@ class RAGRATBaselineBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"❌ Error benchmarking inference_guard: {e}")
+            print(f"❌ Error benchmarking inference_guard: {e}")
             traceback.print_exc()
             return None
 
@@ -170,7 +170,7 @@ class RAGRATBaselineBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"❌ Error benchmarking rag_service: {e}")
+            print(f"❌ Error benchmarking rag_service: {e}")
             traceback.print_exc()
             return None
 
@@ -225,7 +225,7 @@ class RAGRATBaselineBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  Warning benchmarking llm_adapters: {e}")
+            print(f"⚠️  Warning benchmarking llm_adapters: {e}")
             # Not critical, continue
             return None
 
@@ -291,7 +291,7 @@ class RAGRATBaselineBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  Warning benchmarking rag_integration: {e}")
+            print(f"⚠️  Warning benchmarking rag_integration: {e}")
             return None
 
     def benchmark_config_parsing(self):
@@ -333,7 +333,7 @@ class RAGRATBaselineBenchmarks:
             return stats
 
         except Exception:
-            # [X-Ray auto-fix] print(f"⚠️  Warning benchmarking config_enhanced: {e}")
+            print(f"⚠️  Warning benchmarking config_enhanced: {e}")
             return None
 
     def run_all_benchmarks(self):

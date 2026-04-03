@@ -12,25 +12,25 @@ def test_swarm_endpoint():
 
     try:
         time.time()
-        # [X-Ray auto-fix] print(f"Sending POST to {url}...")
+        print(f"Sending POST to {url}...")
         response = requests.post(url, json=payload, timeout=120)
 
-        # [X-Ray auto-fix] print(f"Status Code: {response.status_code}")
+        print(f"Status Code: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
             print("✅ Success! Response received.")
-            # [X-Ray auto-fix] print(f"Response Preview: {str(data)[:200]}...")
+            print(f"Response Preview: {str(data)[:200]}...")
             if "experts" in data and "response" in data:
                 print("✅ Structure Valid: 'experts' and 'response' present.")
             else:
                 print("⚠️ Warning: Unexpected response structure.")
         elif response.status_code == 500:
             data = response.json()
-            # [X-Ray auto-fix] print(f"❌ Failed: Server Error 500. Message: {data.get('error')}")
+            print(f"❌ Failed: Server Error 500. Message: {data.get('error')}")
             if "TaskType" in str(data.get("error", "")):
                 print("❌ 'TaskType' error still persistent!")
         else:
-            # [X-Ray auto-fix] print(f"❌ Failed: Unexpected status code {response.status_code}")
+            print(f"❌ Failed: Unexpected status code {response.status_code}")
             print(response.text)
 
     except Exception as e:

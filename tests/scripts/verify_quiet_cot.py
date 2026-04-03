@@ -12,20 +12,20 @@ async def test_quiet_cot_logic():
     arb = SwarmArbitrator()
     arb.endpoints = ["http://127.0.0.1:8001/v1/chat/completions"]
 
-    # [X-Ray auto-fix] print(f"\n[Test 1] Single-LLM Self-Reflection (Quiet Mode)...")
+    print(f"\n[Test 1] Single-LLM Self-Reflection (Quiet Mode)...")
     prompt = "Why is the sky blue?"
 
     chunks = []
     async for chunk in arb.get_cot_response(prompt, "You are ZenAI.", verbose=False):
         chunks.append(chunk)
 
-    # [X-Ray auto-fix] print(f"Captured {len(chunks)} stream chunks.")
+    print(f"Captured {len(chunks)} stream chunks.")
     # The first chunk should be the 'Thinking...' indicator
     # The middle chunks should be the synthesis
     # The final chunk should be the metrics
 
     full_response = "".join(chunks)
-    # [X-Ray auto-fix] print(f"Final Response Length: {len(full_response)}")
+    print(f"Final Response Length: {len(full_response)}")
     # Verification: Should NOT contain "Expert Analysis" or "Reflection Analysis" strings used for verbose mode
     if "--- **Expert" in full_response or "--- **Reflection" in full_response:
         print("❌ FAILED: Intermediate thoughts found in Quiet Mode output!")

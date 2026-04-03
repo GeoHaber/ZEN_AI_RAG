@@ -65,7 +65,31 @@ DEDUPER = SmartDeduplicator()
 RERANKER = Reranker(use_cross_encoder=False)   # heuristic by default (fast)
 ROUTER = QueryRouter()
 HALLUCINATION_DETECTOR = HallucinationDetector()
-SEARCH_CACHE = ZeroWasteCache(max_entries=256, ttl_seconds=1800)
+# ── Tunable constants ────────────────────────────────────────────────────
+DEFAULT_TOP_K = 5                  # default number of results to retrieve
+MAX_ACTIVE_PIPELINES = 4           # max pipelines selectable at once
+SCORE_THRESHOLD = 0.15             # minimum relevance score for RAG chunks
+PIPELINE_CONTEXT_CHAR_LIMIT = 4800 # max chars of RAG context per pipeline
+HISTORY_BUDGET_CHARS = 8000        # char budget for chat history trimming
+SEARCH_RESULT_PREVIEW_LEN = 500    # chars shown in search result text preview
+LLM_TEMPERATURE = 0.3              # temperature for LLM chat completions
+LLM_MAX_TOKENS = 2048              # max tokens for LLM responses
+LLM_STREAM_TIMEOUT = 120           # seconds to wait for LLM streaming response
+PIPELINE_COMPARE_TIMEOUT = 180     # seconds total timeout for pipeline comparison
+SEARCH_CACHE_MAX_ENTRIES = 256     # max entries in the zero-waste cache
+SEARCH_CACHE_TTL = 1800            # cache TTL in seconds (30 minutes)
+MAX_HALLUCINATION_FINDINGS = 5     # max hallucination findings to return
+DEFAULT_LLAMA_PORT = 8090          # default port for local llama-server
+DEFAULT_CTX_SIZE = 4096            # default context size for llama-server
+LLM_HEALTH_TIMEOUT = 3             # seconds for LLM health check
+MAX_CRAWL_DEPTH = 10               # maximum allowed crawl depth
+MAX_CRAWL_PAGES = 5000             # maximum allowed pages per crawl
+DEFAULT_CRAWL_DEPTH = 2            # default crawl depth
+DEFAULT_CRAWL_PAGES = 50           # default max pages per crawl
+HF_SEARCH_LIMIT_MAX = 50          # max results for HuggingFace model search
+MAX_SEARCH_K = 20                  # max k value for search endpoint
+
+SEARCH_CACHE = ZeroWasteCache(max_entries=SEARCH_CACHE_MAX_ENTRIES, ttl_seconds=SEARCH_CACHE_TTL)
 METRICS = get_tracker()
 
 # ── Pipeline Presets (Benchmark Comparison Framework) ─────────────────────
@@ -108,7 +132,7 @@ def _load_active_pipelines() -> list[str]:
         try:
             with open(_ACTIVE_PIPELINES_FILE, "r", encoding="utf-8") as f:
                 ids = json.load(f)
-            return [pid for pid in ids if pid in PIPELINE_PRESETS][:4]
+            return [pid for pid in ids if pid in PIPELINE_PRESETS][:MAX_ACTIVE_PIPELINES]
         except (json.JSONDecodeError, ValueError, OSError):
             logger.warning("Corrupt active_pipelines.json — using defaults")
     return ["full_stack"]
@@ -119,7 +143,7 @@ def _save_active_pipelines(ids: list[str]):
         json.dump(ids, f)
 
 
-def _pipeline_retrieve(pid: str, query: str, k: int = 5):
+def _pipeline_retrieve(pid: str, query: str, k: int = DEFAULT_TOP_K):
     """Apply pipeline-specific retrieval strategy to the shared INDEX."""
     cfg = PIPELINE_PRESETS[pid]
     t0 = time.monotonic()
@@ -166,7 +190,7 @@ def _pipeline_retrieve(pid: str, query: str, k: int = 5):
     return results, timing
 
 
-def _pipeline_build_context(pid: str, query: str, k: int = 5, threshold: float = 0.15):
+def _pipeline_build_context(pid: str, query: str, k: int = DEFAULT_TOP_K, threshold: float = SCORE_THRESHOLD):
     """Build RAG context for one pipeline."""
     results, timing = _pipeline_retrieve(pid, query, k)
     strong = [r for r in results if r.score >= threshold]
@@ -176,7 +200,7 @@ def _pipeline_build_context(pid: str, query: str, k: int = 5, threshold: float =
     total_chars = 0
     for r in strong:
         chunk_str = f"[{r.chunk.page_title}] ({r.chunk.source_url})\n{r.chunk.text}"
-        if total_chars + len(chunk_str) > 4800:
+        if total_chars + len(chunk_str) > PIPELINE_CONTEXT_CHAR_LIMIT:
             break
         parts.append(chunk_str)
         total_chars += len(chunk_str)
@@ -186,7 +210,7 @@ def _pipeline_build_context(pid: str, query: str, k: int = 5, threshold: float =
     return "\n\n---\n\n".join(parts), sources, timing
 
 
-def _trim_history(messages: list, budget_chars: int = 8000) -> list:
+def _trim_history(messages: list, budget_chars: int = HISTORY_BUDGET_CHARS) -> list:
     """Trim chat history to fit token budget, keeping most recent messages."""
     trimmed = []
     total = 0
@@ -282,8 +306,8 @@ def add_site():
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     try:
-        depth = max(1, min(int(data.get("depth", 2)), 10))
-        max_pages = max(1, min(int(data.get("max_pages", 50)), 5000))
+        depth = max(1, min(int(data.get("depth", DEFAULT_CRAWL_DEPTH)), MAX_CRAWL_DEPTH))
+        max_pages = max(1, min(int(data.get("max_pages", DEFAULT_CRAWL_PAGES)), MAX_CRAWL_PAGES))
     except (ValueError, TypeError):
         return jsonify({"error": "depth and max_pages must be integers"}), 400
 
@@ -340,8 +364,8 @@ def set_active_pipelines():
     ids = [pid for pid in data.get("pipelines", []) if pid in PIPELINE_PRESETS]
     if not ids:
         return jsonify({"error": "At least one pipeline required"}), 400
-    _save_active_pipelines(ids[:4])
-    return jsonify({"active": ids[:4]})
+    _save_active_pipelines(ids[:MAX_ACTIVE_PIPELINES])
+    return jsonify({"active": ids[:MAX_ACTIVE_PIPELINES]})
 
 
 # --- Crawl & Index ---
@@ -383,8 +407,8 @@ def start_crawl():
 
                 results, stats = crawl_site(
                     site["url"],
-                    max_depth=site.get("depth", 2),
-                    max_pages=site.get("max_pages", 50),
+                    max_depth=site.get("depth", DEFAULT_CRAWL_DEPTH),
+                    max_pages=site.get("max_pages", DEFAULT_CRAWL_PAGES),
                     on_page=_on_page,
                     cancel_event=_crawl_cancel,
                 )
@@ -475,7 +499,7 @@ def search():
     if not query:
         return jsonify({"error": "query is required"}), 400
     try:
-        k = max(1, min(int(data.get("k", 5)), 20))
+        k = max(1, min(int(data.get("k", DEFAULT_TOP_K)), MAX_SEARCH_K))
     except (ValueError, TypeError):
         return jsonify({"error": "k must be an integer"}), 400
 
@@ -518,7 +542,7 @@ def search():
         "intent_confidence": round(routing.confidence, 2),
         "results": [
             {
-                "text": r.chunk.text[:500],
+                "text": r.chunk.text[:SEARCH_RESULT_PREVIEW_LEN],
                 "source_url": r.chunk.source_url,
                 "page_title": r.chunk.page_title,
                 "score": round(r.score, 4),
@@ -647,7 +671,7 @@ def models_search():
     if not query:
         return jsonify({"error": "q parameter required"}), 400
     try:
-        limit = min(int(request.args.get("limit", 20)), 50)
+        limit = min(int(request.args.get("limit", MAX_SEARCH_K)), HF_SEARCH_LIMIT_MAX)
     except (ValueError, TypeError):
         return jsonify({"error": "limit must be an integer"}), 400
     results = MODEL_HUB.search_hf(query, limit=limit)
@@ -687,9 +711,9 @@ def llm_start():
     data = request.get_json(force=True)
     model_path = data.get("model_path", "")
     try:
-        port = int(data.get("port", 8090))
+        port = int(data.get("port", DEFAULT_LLAMA_PORT))
         gpu_layers = int(data.get("gpu_layers", -1))
-        ctx_size = int(data.get("ctx_size", 4096))
+        ctx_size = int(data.get("ctx_size", DEFAULT_CTX_SIZE))
     except (ValueError, TypeError):
         return jsonify({"error": "port, gpu_layers, ctx_size must be integers"}), 400
 
@@ -778,7 +802,7 @@ def llm_health():
     llm = _get_llm_settings()
     api_url = llm["base_url"].rstrip("/") + "/models"
     try:
-        r = http_requests.get(api_url, timeout=3,
+        r = http_requests.get(api_url, timeout=LLM_HEALTH_TIMEOUT,
                               headers={"Authorization": f"Bearer {llm['api_key']}"})
         r.raise_for_status()
         return jsonify({"ok": True, "base_url": llm["base_url"], "model": llm["model"]})
@@ -826,8 +850,8 @@ def chat():
         return jsonify({"error": "messages required"}), 400
 
     try:
-        rag_k = int(data.get("rag_k", 5))
-        rag_score_threshold = float(data.get("rag_score_threshold", 0.15))  # filter weak matches
+        rag_k = int(data.get("rag_k", DEFAULT_TOP_K))
+        rag_score_threshold = float(data.get("rag_score_threshold", SCORE_THRESHOLD))  # filter weak matches
     except (ValueError, TypeError):
         return jsonify({"error": "rag_k must be int, rag_score_threshold must be float"}), 400
     llm = _get_llm_settings()
@@ -974,11 +998,11 @@ def chat():
                     "model": llm["model"],
                     "messages": [system_msg] + trimmed_messages,
                     "stream": True,
-                    "temperature": 0.3,
-                    "max_tokens": 2048,
+                    "temperature": LLM_TEMPERATURE,
+                    "max_tokens": LLM_MAX_TOKENS,
                 },
                 stream=True,
-                timeout=120,
+                timeout=LLM_STREAM_TIMEOUT,
             )
             resp.raise_for_status()
 
@@ -1011,7 +1035,7 @@ def chat():
                     "findings": [
                         {"type": f.type.value, "severity": round(f.severity, 2),
                          "text": f.text[:100], "explanation": f.explanation[:200]}
-                        for f in h_report.findings[:5]
+                        for f in h_report.findings[:MAX_HALLUCINATION_FINDINGS]
                     ],
                 }
                 yield f"data: {json.dumps({'hallucination': hallucination_info})}\n\n"
@@ -1053,7 +1077,7 @@ def chat_compare():
     active_ids = _load_active_pipelines()
     llm = _get_llm_settings()
     try:
-        rag_k = int(data.get("rag_k", 5))
+        rag_k = int(data.get("rag_k", DEFAULT_TOP_K))
     except (ValueError, TypeError):
         return jsonify({"error": "rag_k must be an integer"}), 400
 
@@ -1101,9 +1125,9 @@ def chat_compare():
                 json={
                     "model": llm["model"],
                     "messages": [pd["system_msg"]] + trimmed,
-                    "stream": True, "temperature": 0.3, "max_tokens": 2048,
+                    "stream": True, "temperature": LLM_TEMPERATURE, "max_tokens": LLM_MAX_TOKENS,
                 },
-                stream=True, timeout=120,
+                stream=True, timeout=LLM_STREAM_TIMEOUT,
             )
             resp.raise_for_status()
             for line in resp.iter_lines(decode_unicode=True):
@@ -1144,7 +1168,7 @@ def chat_compare():
     def generate():
         done = 0
         total = len(active_ids)
-        deadline = time.monotonic() + 180  # 3-minute total timeout
+        deadline = time.monotonic() + PIPELINE_COMPARE_TIMEOUT
         while done < total:
             if time.monotonic() > deadline:
                 yield f"data: {json.dumps({'error': 'Pipeline comparison timed out', 'done': True})}\n\n"

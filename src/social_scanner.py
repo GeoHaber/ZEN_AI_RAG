@@ -248,7 +248,10 @@ def scan_telegram_export(
     if not p.exists():
         raise FileNotFoundError(f"Telegram export not found: {path}")
 
-    data = json.loads(p.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        data = {}
 
     chat_name = data.get("name", "Telegram Chat")
     raw_messages = data.get("messages", [])
@@ -487,7 +490,10 @@ def scan_discord_export(
     if not p.exists():
         raise FileNotFoundError(f"Discord export not found: {path}")
 
-    data = json.loads(p.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        data = {}
 
     guild_name = data.get("guild", {}).get("name", "Discord")
     channel_name = data.get("channel", {}).get("name", "unknown")

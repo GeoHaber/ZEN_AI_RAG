@@ -75,5 +75,5 @@ if __name__ == "__main__":
         test_no_legacy_branding_in_codebase()
         print("✅ No legacy branding found!")
     except Exception:
-        # [X-Ray auto-fix] print(f"❌ {e}")        pass
+        print(f"❌ {e}")        pass
         pass

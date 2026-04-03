@@ -77,8 +77,8 @@ class MaxConcurrencyTester:
 
             if not success:
                 # Debug Failure
-                # [X-Ray auto-fix] print(f"[Err] Model {model.name} Failed. Exit: {res.returncode}")
-                # [X-Ray auto-fix] print(f"STDERR: {res.stderr[:200]}")
+                print(f"[Err] Model {model.name} Failed. Exit: {res.returncode}")
+                print(f"STDERR: {res.stderr[:200]}")
                 pass
             return {
                 "index": index,
@@ -88,14 +88,14 @@ class MaxConcurrencyTester:
                 "output": res.stdout[:50].replace("\n", " ") + "...",
             }
         except Exception as e:
-            # [X-Ray auto-fix] print(f"[Err] Exception: {e}")
+            print(f"[Err] Exception: {e}")
             return {"index": index, "model": model.name, "success": False, "duration": 0, "error": str(e)}
 
     def run(self):
         """Run."""
-        # [X-Ray auto-fix] print(f"--- THOUGHPUT TEST: SEQUENTIAL VS PARALLEL (Models: {len(self.models)}) ---")
+        print(f"--- THOUGHPUT TEST: SEQUENTIAL VS PARALLEL (Models: {len(self.models)}) ---")
         # Header
-        # [X-Ray auto-fix] print(f"{'N':<3} | {'Seq Time':<10} | {'Par Time':<10} | {'Speedup':<8} | {'Status'}")
+        print(f"{'N':<3} | {'Seq Time':<10} | {'Par Time':<10} | {'Speedup':<8} | {'Status'}")
         print("-" * 60)
 
         for n in range(1, self.max_cap + 1):
@@ -148,7 +148,7 @@ class MaxConcurrencyTester:
             elif speedup > 1.5:
                 status = "EFFICIENT"
 
-            # [X-Ray auto-fix] print(f"{n:<3} | {seq_duration:<9.2f}s | {par_duration:<9.2f}s | {speedup:<7.2f}x | {status}")
+            print(f"{n:<3} | {seq_duration:<9.2f}s | {par_duration:<9.2f}s | {speedup:<7.2f}x | {status}")
             # Print Q&A only for the last parallel batch item to show it worked
             if results and results[0]["success"]:
                 # print(f"    Sample A: {results[0]['output'][:50]}...")

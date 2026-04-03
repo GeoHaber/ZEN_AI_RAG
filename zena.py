@@ -246,7 +246,7 @@ if __name__ == "__main__":
         # Use safe characters for terminal to avoid UnicodeEncodeError on Windows
         error_msg = f"\n[!] FATAL ZENA UI ERROR: {e}\n"
         try:
-            # [X-Ray auto-fix] print(error_msg)
+            print(error_msg)
             pass
         except UnicodeEncodeError:
             print(f"\n[!] FATAL ZENA UI ERROR: {str(e).encode('ascii', 'ignore').decode()}\n")

@@ -228,7 +228,10 @@ class ConversationDB:
                         content=row["content"],
                         timestamp=datetime.fromisoformat(row["timestamp"]),
                         session_id=row["session_id"],
-                        metadata=json.loads(row["metadata"]) if row["metadata"] else {},
+                        try:
+                            metadata=json.loads(row["metadata"]) if row["metadata"] else {},
+                        except json.JSONDecodeError:
+                            metadata = {}
                     )
                 )
             return messages
@@ -322,7 +325,10 @@ class ConversationDB:
                     start_time=datetime.fromisoformat(row["start_time"]),
                     end_time=datetime.fromisoformat(row["end_time"]),
                     message_count=row["message_count"],
-                    topics=json.loads(row["topics"]) if row["topics"] else [],
+                    try:
+                        topics=json.loads(row["topics"]) if row["topics"] else [],
+                    except json.JSONDecodeError:
+                        topics = {}
                 )
                 for row in cursor
             ]

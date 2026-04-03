@@ -14,7 +14,7 @@ UNIFIED FUNCTIONS:
 USAGE:
     from utils_hardware import get_hardware_profile
     hw = get_hardware_profile()
-    # [X-Ray auto-fix] print(f"Running on {hw['cpu_vendor']} with {hw['ram_gb']}GB RAM")
+    print(f"Running on {hw['cpu_vendor']} with {hw['ram_gb']}GB RAM")
 """
 
 import sys
@@ -324,34 +324,34 @@ if __name__ == "__main__":
     hw = get_hardware_profile(detailed=True)
 
     print("\n🖥️  PLATFORM")
-    # [X-Ray auto-fix] print(f"   OS: {hw['platform']}")
-    # [X-Ray auto-fix] print(f"   Arch: {hw['architecture']}")
+    print(f"   OS: {hw['platform']}")
+    print(f"   Arch: {hw['architecture']}")
     print("\n💻 CPU")
-    # [X-Ray auto-fix] print(f"   {hw['cpu']['name']}")
-    # [X-Ray auto-fix] print(f"   Vendor: {hw['cpu']['vendor']}")
-    # [X-Ray auto-fix] print(f"   Logical Cores: {hw['cpu']['logical_cores']}")
-    # [X-Ray auto-fix] print(f"   Physical Cores: {hw['cpu']['physical_cores']}")
+    print(f"   {hw['cpu']['name']}")
+    print(f"   Vendor: {hw['cpu']['vendor']}")
+    print(f"   Logical Cores: {hw['cpu']['logical_cores']}")
+    print(f"   Physical Cores: {hw['cpu']['physical_cores']}")
     if hw["cpu"]["freq_mhz"]:
-        # [X-Ray auto-fix] print(f"   Frequency: {hw['cpu']['freq_mhz']} MHz")
+        print(f"   Frequency: {hw['cpu']['freq_mhz']} MHz")
         pass
     print("\n🧠 MEMORY")
-    # [X-Ray auto-fix] print(f"   Total: {hw['memory']['total_gb']} GB")
-    # [X-Ray auto-fix] print(f"   Available: {hw['memory']['available_gb']} GB")
-    # [X-Ray auto-fix] print(f"   Used: {hw['memory']['used_percent']}%")
+    print(f"   Total: {hw['memory']['total_gb']} GB")
+    print(f"   Available: {hw['memory']['available_gb']} GB")
+    print(f"   Used: {hw['memory']['used_percent']}%")
     if hw["gpu"]:
         print("\n🎮 GPU (Discrete)")
-        # [X-Ray auto-fix] print(f"   {hw['gpu']['name']}")
-        # [X-Ray auto-fix] print(f"   Vendor: {hw['gpu']['vendor']}")
-        # [X-Ray auto-fix] print(f"   VRAM: {hw['gpu']['vram_mb']} MB")
+        print(f"   {hw['gpu']['name']}")
+        print(f"   Vendor: {hw['gpu']['vendor']}")
+        print(f"   VRAM: {hw['gpu']['vram_mb']} MB")
     else:
         print("\n🎮 GPU: None (CPU only)")
 
     if "recommendation" in hw:
         rec = hw["recommendation"]
         print("\n🎯 RECOMMENDATION")
-        # [X-Ray auto-fix] print(f"   Tier: {rec['tier'].upper()}")
-        # [X-Ray auto-fix] print(f"   Max Model: {rec['max_model_params']}")
-        # [X-Ray auto-fix] print(f"   Quantization: {rec['recommended_quant']}")
-        # [X-Ray auto-fix] print(f"   GPU Layers: {rec['n_gpu_layers']}")
-        # [X-Ray auto-fix] print(f"   Note: {rec['note']}")
+        print(f"   Tier: {rec['tier'].upper()}")
+        print(f"   Max Model: {rec['max_model_params']}")
+        print(f"   Quantization: {rec['recommended_quant']}")
+        print(f"   GPU Layers: {rec['n_gpu_layers']}")
+        print(f"   Note: {rec['note']}")
     print("\n" + "=" * 70 + "\n")

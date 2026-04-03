@@ -11,7 +11,7 @@ def log(msg):
     """Log."""
     timestamp = time.strftime("%H:%M:%S")
     line = f"[{timestamp}] {msg}"
-    # [X-Ray auto-fix] print(line)
+    print(line)
     try:
         with open(TRACE_FILE, "a", encoding="utf-8") as f:
             f.write(line + "\n")

@@ -11,7 +11,7 @@ from zena_mode import server
 from zena_mode.server import build_llama_cmd, validate_environment
 
 
-# [X-Ray auto-fix] print(f"\n[DEBUG] Server Module Attributes: {dir(server)}")
+print(f"\n[DEBUG] Server Module Attributes: {dir(server)}")
 class TestServerLifecycle:
     """
     Verification Test for Server Startup Logic.
