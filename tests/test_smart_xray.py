@@ -30,85 +30,85 @@ def api():
 # Schema Contract Tests (36 tests)
 # ======================================================================
 
-        def test_schema_CompactRequest_v1_cache_clear(api):
-            """Schema contract: /v1/cache/clear must return CompactRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/cache/clear", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+def test_schema_CompactRequest_v1_cache_clear(api):
+    """Schema contract: /v1/cache/clear must return CompactRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/cache/clear", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "compress_text" in item, "Missing field 'compress_text' (bool) in CompactRequest response"
-assert "keep_last_n" in item, "Missing field 'keep_last_n' (int) in CompactRequest response"
-assert "messages" in item, "Missing field 'messages' (List[ChatMessage]) in CompactRequest response"
-assert "summarize_older" in item, "Missing field 'summarize_older' (bool) in CompactRequest response"
-assert "target_tokens" in item, "Missing field 'target_tokens' (int) in CompactRequest response"
+            assert "keep_last_n" in item, "Missing field 'keep_last_n' (int) in CompactRequest response"
+            assert "messages" in item, "Missing field 'messages' (List[ChatMessage]) in CompactRequest response"
+            assert "summarize_older" in item, "Missing field 'summarize_older' (bool) in CompactRequest response"
+            assert "target_tokens" in item, "Missing field 'target_tokens' (int) in CompactRequest response"
 
 
-        def test_schema_CompactRequest_v1_compact(api):
-            """Schema contract: /v1/compact must return CompactRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/compact", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_CompactRequest_v1_compact(api):
+    """Schema contract: /v1/compact must return CompactRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/compact", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "compress_text" in item, "Missing field 'compress_text' (bool) in CompactRequest response"
-assert "keep_last_n" in item, "Missing field 'keep_last_n' (int) in CompactRequest response"
-assert "messages" in item, "Missing field 'messages' (List[ChatMessage]) in CompactRequest response"
-assert "summarize_older" in item, "Missing field 'summarize_older' (bool) in CompactRequest response"
-assert "target_tokens" in item, "Missing field 'target_tokens' (int) in CompactRequest response"
+            assert "keep_last_n" in item, "Missing field 'keep_last_n' (int) in CompactRequest response"
+            assert "messages" in item, "Missing field 'messages' (List[ChatMessage]) in CompactRequest response"
+            assert "summarize_older" in item, "Missing field 'summarize_older' (bool) in CompactRequest response"
+            assert "target_tokens" in item, "Missing field 'target_tokens' (int) in CompactRequest response"
 
 
-        def test_schema_LoRALoadRequest_v1_diagnostics_crashes(api):
-            """Schema contract: /v1/diagnostics/crashes must return LoRALoadRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/diagnostics/crashes", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_LoRALoadRequest_v1_diagnostics_crashes(api):
+    """Schema contract: /v1/diagnostics/crashes must return LoRALoadRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/diagnostics/crashes", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "lora_path" in item, "Missing field 'lora_path' (str) in LoRALoadRequest response"
-assert "scale" in item, "Missing field 'scale' (float) in LoRALoadRequest response"
+            assert "scale" in item, "Missing field 'scale' (float) in LoRALoadRequest response"
 
 
-        def test_schema_LoRALoadRequest_v1_diagnostics_profiles(api):
-            """Schema contract: /v1/diagnostics/profiles must return LoRALoadRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/diagnostics/profiles", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_LoRALoadRequest_v1_diagnostics_profiles(api):
+    """Schema contract: /v1/diagnostics/profiles must return LoRALoadRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/diagnostics/profiles", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "lora_path" in item, "Missing field 'lora_path' (str) in LoRALoadRequest response"
-assert "scale" in item, "Missing field 'scale' (float) in LoRALoadRequest response"
+            assert "scale" in item, "Missing field 'scale' (float) in LoRALoadRequest response"
 
 
-        def test_schema_LoRALoadRequest_v1_lora_load(api):
-            """Schema contract: /v1/lora/load must return LoRALoadRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/lora/load", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_LoRALoadRequest_v1_lora_load(api):
+    """Schema contract: /v1/lora/load must return LoRALoadRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/lora/load", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "lora_path" in item, "Missing field 'lora_path' (str) in LoRALoadRequest response"
-assert "scale" in item, "Missing field 'scale' (float) in LoRALoadRequest response"
+            assert "scale" in item, "Missing field 'scale' (float) in LoRALoadRequest response"
+
 
 
 def test_schema_StateSaveRequest_v1_lora_status(api):
@@ -117,12 +117,12 @@ def test_schema_StateSaveRequest_v1_lora_status(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "slot_name" in item, "Missing field 'slot_name' (str) in StateSaveRequest response"
+            assert "slot_name" in item, "Missing field 'slot_name' (str) in StateSaveRequest response"
+
 
 
 def test_schema_StateSaveRequest_v1_state_save(api):
@@ -131,12 +131,12 @@ def test_schema_StateSaveRequest_v1_state_save(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "slot_name" in item, "Missing field 'slot_name' (str) in StateSaveRequest response"
+            assert "slot_name" in item, "Missing field 'slot_name' (str) in StateSaveRequest response"
+
 
 
 def test_schema_StateLoadRequest_v1_state_load(api):
@@ -145,152 +145,152 @@ def test_schema_StateLoadRequest_v1_state_load(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "slot_name" in item, "Missing field 'slot_name' (str) in StateLoadRequest response"
+            assert "slot_name" in item, "Missing field 'slot_name' (str) in StateLoadRequest response"
 
 
-        def test_schema_ChatCompletionRequest_v1_chat_completions(api):
-            """Schema contract: /v1/chat/completions must return ChatCompletionRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/chat/completions", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_ChatCompletionRequest_v1_chat_completions(api):
+    """Schema contract: /v1/chat/completions must return ChatCompletionRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/chat/completions", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "frequency_penalty" in item, "Missing field 'frequency_penalty' (float) in ChatCompletionRequest response"
-assert "grammar" in item, "Missing field 'grammar' (Optional[str]) in ChatCompletionRequest response"
-assert "logit_bias" in item, "Missing field 'logit_bias' (Optional[Dict[str, float]]) in ChatCompletionRequest response"
-assert "logprobs" in item, "Missing field 'logprobs' (Optional[bool]) in ChatCompletionRequest response"
-assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in ChatCompletionRequest response"
-assert "messages" in item, "Missing field 'messages' (List[ChatMessage]) in ChatCompletionRequest response"
-assert "min_p" in item, "Missing field 'min_p' (Optional[float]) in ChatCompletionRequest response"
-assert "model" in item, "Missing field 'model' (str) in ChatCompletionRequest response"
-assert "n" in item, "Missing field 'n' (int) in ChatCompletionRequest response"
-assert "presence_penalty" in item, "Missing field 'presence_penalty' (float) in ChatCompletionRequest response"
-assert "repeat_penalty" in item, "Missing field 'repeat_penalty' (Optional[float]) in ChatCompletionRequest response"
-assert "response_format" in item, "Missing field 'response_format' (Optional[Dict[str, Any]]) in ChatCompletionRequest response"
-assert "seed" in item, "Missing field 'seed' (Optional[int]) in ChatCompletionRequest response"
-assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in ChatCompletionRequest response"
-assert "stream" in item, "Missing field 'stream' (bool) in ChatCompletionRequest response"
-assert "temperature" in item, "Missing field 'temperature' (float) in ChatCompletionRequest response"
-assert "tool_choice" in item, "Missing field 'tool_choice' (Optional[Union[str, Dict[str, Any]]]) in ChatCompletionRequest response"
-assert "tools" in item, "Missing field 'tools' (Optional[List[Dict[str, Any]]]) in ChatCompletionRequest response"
-assert "top_k" in item, "Missing field 'top_k' (Optional[int]) in ChatCompletionRequest response"
-assert "top_logprobs" in item, "Missing field 'top_logprobs' (Optional[int]) in ChatCompletionRequest response"
-assert "top_p" in item, "Missing field 'top_p' (float) in ChatCompletionRequest response"
-assert "user" in item, "Missing field 'user' (Optional[str]) in ChatCompletionRequest response"
+            assert "grammar" in item, "Missing field 'grammar' (Optional[str]) in ChatCompletionRequest response"
+            assert "logit_bias" in item, "Missing field 'logit_bias' (Optional[Dict[str, float]]) in ChatCompletionRequest response"
+            assert "logprobs" in item, "Missing field 'logprobs' (Optional[bool]) in ChatCompletionRequest response"
+            assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in ChatCompletionRequest response"
+            assert "messages" in item, "Missing field 'messages' (List[ChatMessage]) in ChatCompletionRequest response"
+            assert "min_p" in item, "Missing field 'min_p' (Optional[float]) in ChatCompletionRequest response"
+            assert "model" in item, "Missing field 'model' (str) in ChatCompletionRequest response"
+            assert "n" in item, "Missing field 'n' (int) in ChatCompletionRequest response"
+            assert "presence_penalty" in item, "Missing field 'presence_penalty' (float) in ChatCompletionRequest response"
+            assert "repeat_penalty" in item, "Missing field 'repeat_penalty' (Optional[float]) in ChatCompletionRequest response"
+            assert "response_format" in item, "Missing field 'response_format' (Optional[Dict[str, Any]]) in ChatCompletionRequest response"
+            assert "seed" in item, "Missing field 'seed' (Optional[int]) in ChatCompletionRequest response"
+            assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in ChatCompletionRequest response"
+            assert "stream" in item, "Missing field 'stream' (bool) in ChatCompletionRequest response"
+            assert "temperature" in item, "Missing field 'temperature' (float) in ChatCompletionRequest response"
+            assert "tool_choice" in item, "Missing field 'tool_choice' (Optional[Union[str, Dict[str, Any]]]) in ChatCompletionRequest response"
+            assert "tools" in item, "Missing field 'tools' (Optional[List[Dict[str, Any]]]) in ChatCompletionRequest response"
+            assert "top_k" in item, "Missing field 'top_k' (Optional[int]) in ChatCompletionRequest response"
+            assert "top_logprobs" in item, "Missing field 'top_logprobs' (Optional[int]) in ChatCompletionRequest response"
+            assert "top_p" in item, "Missing field 'top_p' (float) in ChatCompletionRequest response"
+            assert "user" in item, "Missing field 'user' (Optional[str]) in ChatCompletionRequest response"
 
 
-        def test_schema_CompletionRequest_v1_chat_completions(api):
-            """Schema contract: /v1/chat/completions must return CompletionRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/chat/completions", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_CompletionRequest_v1_chat_completions(api):
+    """Schema contract: /v1/chat/completions must return CompletionRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/chat/completions", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "echo" in item, "Missing field 'echo' (bool) in CompletionRequest response"
-assert "logit_bias" in item, "Missing field 'logit_bias' (Optional[Dict[str, float]]) in CompletionRequest response"
-assert "logprobs" in item, "Missing field 'logprobs' (Optional[bool]) in CompletionRequest response"
-assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in CompletionRequest response"
-assert "model" in item, "Missing field 'model' (str) in CompletionRequest response"
-assert "prompt" in item, "Missing field 'prompt' (Union[str, List[str]]) in CompletionRequest response"
-assert "seed" in item, "Missing field 'seed' (Optional[int]) in CompletionRequest response"
-assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in CompletionRequest response"
-assert "stream" in item, "Missing field 'stream' (bool) in CompletionRequest response"
-assert "suffix" in item, "Missing field 'suffix' (Optional[str]) in CompletionRequest response"
-assert "temperature" in item, "Missing field 'temperature' (float) in CompletionRequest response"
-assert "top_logprobs" in item, "Missing field 'top_logprobs' (Optional[int]) in CompletionRequest response"
-assert "top_p" in item, "Missing field 'top_p' (float) in CompletionRequest response"
+            assert "logit_bias" in item, "Missing field 'logit_bias' (Optional[Dict[str, float]]) in CompletionRequest response"
+            assert "logprobs" in item, "Missing field 'logprobs' (Optional[bool]) in CompletionRequest response"
+            assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in CompletionRequest response"
+            assert "model" in item, "Missing field 'model' (str) in CompletionRequest response"
+            assert "prompt" in item, "Missing field 'prompt' (Union[str, List[str]]) in CompletionRequest response"
+            assert "seed" in item, "Missing field 'seed' (Optional[int]) in CompletionRequest response"
+            assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in CompletionRequest response"
+            assert "stream" in item, "Missing field 'stream' (bool) in CompletionRequest response"
+            assert "suffix" in item, "Missing field 'suffix' (Optional[str]) in CompletionRequest response"
+            assert "temperature" in item, "Missing field 'temperature' (float) in CompletionRequest response"
+            assert "top_logprobs" in item, "Missing field 'top_logprobs' (Optional[int]) in CompletionRequest response"
+            assert "top_p" in item, "Missing field 'top_p' (float) in CompletionRequest response"
 
 
-        def test_schema_CompletionRequest_v1_completions(api):
-            """Schema contract: /v1/completions must return CompletionRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/completions", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_CompletionRequest_v1_completions(api):
+    """Schema contract: /v1/completions must return CompletionRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/completions", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "echo" in item, "Missing field 'echo' (bool) in CompletionRequest response"
-assert "logit_bias" in item, "Missing field 'logit_bias' (Optional[Dict[str, float]]) in CompletionRequest response"
-assert "logprobs" in item, "Missing field 'logprobs' (Optional[bool]) in CompletionRequest response"
-assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in CompletionRequest response"
-assert "model" in item, "Missing field 'model' (str) in CompletionRequest response"
-assert "prompt" in item, "Missing field 'prompt' (Union[str, List[str]]) in CompletionRequest response"
-assert "seed" in item, "Missing field 'seed' (Optional[int]) in CompletionRequest response"
-assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in CompletionRequest response"
-assert "stream" in item, "Missing field 'stream' (bool) in CompletionRequest response"
-assert "suffix" in item, "Missing field 'suffix' (Optional[str]) in CompletionRequest response"
-assert "temperature" in item, "Missing field 'temperature' (float) in CompletionRequest response"
-assert "top_logprobs" in item, "Missing field 'top_logprobs' (Optional[int]) in CompletionRequest response"
-assert "top_p" in item, "Missing field 'top_p' (float) in CompletionRequest response"
+            assert "logit_bias" in item, "Missing field 'logit_bias' (Optional[Dict[str, float]]) in CompletionRequest response"
+            assert "logprobs" in item, "Missing field 'logprobs' (Optional[bool]) in CompletionRequest response"
+            assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in CompletionRequest response"
+            assert "model" in item, "Missing field 'model' (str) in CompletionRequest response"
+            assert "prompt" in item, "Missing field 'prompt' (Union[str, List[str]]) in CompletionRequest response"
+            assert "seed" in item, "Missing field 'seed' (Optional[int]) in CompletionRequest response"
+            assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in CompletionRequest response"
+            assert "stream" in item, "Missing field 'stream' (bool) in CompletionRequest response"
+            assert "suffix" in item, "Missing field 'suffix' (Optional[str]) in CompletionRequest response"
+            assert "temperature" in item, "Missing field 'temperature' (float) in CompletionRequest response"
+            assert "top_logprobs" in item, "Missing field 'top_logprobs' (Optional[int]) in CompletionRequest response"
+            assert "top_p" in item, "Missing field 'top_p' (float) in CompletionRequest response"
 
 
-        def test_schema_InfillRequest_v1_infill(api):
-            """Schema contract: /v1/infill must return InfillRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/infill", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_InfillRequest_v1_infill(api):
+    """Schema contract: /v1/infill must return InfillRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/infill", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in InfillRequest response"
-assert "model" in item, "Missing field 'model' (str) in InfillRequest response"
-assert "prompt" in item, "Missing field 'prompt' (str) in InfillRequest response"
-assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in InfillRequest response"
-assert "stream" in item, "Missing field 'stream' (bool) in InfillRequest response"
-assert "suffix" in item, "Missing field 'suffix' (str) in InfillRequest response"
-assert "temperature" in item, "Missing field 'temperature' (float) in InfillRequest response"
-assert "top_p" in item, "Missing field 'top_p' (float) in InfillRequest response"
+            assert "model" in item, "Missing field 'model' (str) in InfillRequest response"
+            assert "prompt" in item, "Missing field 'prompt' (str) in InfillRequest response"
+            assert "stop" in item, "Missing field 'stop' (Optional[Union[str, List[str]]]) in InfillRequest response"
+            assert "stream" in item, "Missing field 'stream' (bool) in InfillRequest response"
+            assert "suffix" in item, "Missing field 'suffix' (str) in InfillRequest response"
+            assert "temperature" in item, "Missing field 'temperature' (float) in InfillRequest response"
+            assert "top_p" in item, "Missing field 'top_p' (float) in InfillRequest response"
 
 
-        def test_schema_EmbeddingRequest_v1_embeddings(api):
-            """Schema contract: /v1/embeddings must return EmbeddingRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/embeddings", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_EmbeddingRequest_v1_embeddings(api):
+    """Schema contract: /v1/embeddings must return EmbeddingRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/embeddings", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "encoding_format" in item, "Missing field 'encoding_format' (str) in EmbeddingRequest response"
-assert "input" in item, "Missing field 'input' (Union[str, List[str]]) in EmbeddingRequest response"
-assert "model" in item, "Missing field 'model' (str) in EmbeddingRequest response"
+            assert "input" in item, "Missing field 'input' (Union[str, List[str]]) in EmbeddingRequest response"
+            assert "model" in item, "Missing field 'model' (str) in EmbeddingRequest response"
 
 
-        def test_schema_TokenizeRequest_tokenize(api):
-            """Schema contract: /tokenize must return TokenizeRequest fields."""
-            resp = api.post(f"{BASE_URL}/tokenize", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_TokenizeRequest_tokenize(api):
+    """Schema contract: /tokenize must return TokenizeRequest fields."""
+    resp = api.post(f"{BASE_URL}/tokenize", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "add_special" in item, "Missing field 'add_special' (bool) in TokenizeRequest response"
-assert "content" in item, "Missing field 'content' (str) in TokenizeRequest response"
-assert "with_pieces" in item, "Missing field 'with_pieces' (bool) in TokenizeRequest response"
+            assert "content" in item, "Missing field 'content' (str) in TokenizeRequest response"
+            assert "with_pieces" in item, "Missing field 'with_pieces' (bool) in TokenizeRequest response"
+
 
 
 def test_schema_DetokenizeRequest_tokenize(api):
@@ -299,26 +299,12 @@ def test_schema_DetokenizeRequest_tokenize(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "tokens" in item, "Missing field 'tokens' (List[int]) in DetokenizeRequest response"
+            assert "tokens" in item, "Missing field 'tokens' (List[int]) in DetokenizeRequest response"
 
-
-def test_schema_TokenCountRequest_detokenize(api):
-    """Schema contract: /detokenize must return TokenCountRequest fields."""
-    resp = api.post(f"{BASE_URL}/detokenize", json={"directory": "."})
-    if resp.status_code != 200:
-        pytest.skip(f"Endpoint returned {resp.status_code}")
-    data = resp.json()
-    # Handle both single object and list responses
-    items = data if isinstance(data, list) else [data]
-    for item in items[:5]:
-        if not isinstance(item, dict):
-            continue
-    assert "content" in item, "Missing field 'content' (str) in TokenCountRequest response"
 
 
 def test_schema_DetokenizeRequest_detokenize(api):
@@ -327,12 +313,26 @@ def test_schema_DetokenizeRequest_detokenize(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "tokens" in item, "Missing field 'tokens' (List[int]) in DetokenizeRequest response"
+            assert "tokens" in item, "Missing field 'tokens' (List[int]) in DetokenizeRequest response"
+
+
+
+def test_schema_TokenCountRequest_detokenize(api):
+    """Schema contract: /detokenize must return TokenCountRequest fields."""
+    resp = api.post(f"{BASE_URL}/detokenize", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
+            assert "content" in item, "Missing field 'content' (str) in TokenCountRequest response"
+
 
 
 def test_schema_TokenCountRequest_v1_count_tokens(api):
@@ -341,107 +341,92 @@ def test_schema_TokenCountRequest_v1_count_tokens(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "content" in item, "Missing field 'content' (str) in TokenCountRequest response"
+            assert "content" in item, "Missing field 'content' (str) in TokenCountRequest response"
 
 
-        def test_schema_ModelPullRequest_v1_models_pull(api):
-            """Schema contract: /v1/models/pull must return ModelPullRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/models/pull", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_ModelPullRequest_v1_models_pull(api):
+    """Schema contract: /v1/models/pull must return ModelPullRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/models/pull", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "filename" in item, "Missing field 'filename' (str) in ModelPullRequest response"
-assert "repo_id" in item, "Missing field 'repo_id' (str) in ModelPullRequest response"
+            assert "repo_id" in item, "Missing field 'repo_id' (str) in ModelPullRequest response"
 
 
-        def test_schema_ChatRequest_v1_rag_chat(api):
-            """Schema contract: /v1/rag/chat must return ChatRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/rag/chat", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
-            assert "message" in item, "Missing field 'message' (str) in ChatRequest response"
-assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
 
-
-        def test_schema_RAGChatRequest_v1_rag_chat(api):
-            """Schema contract: /v1/rag/chat must return RAGChatRequest fields."""
-            resp = api.post(f"{BASE_URL}/v1/rag/chat", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+def test_schema_RAGChatRequest_v1_rag_chat(api):
+    """Schema contract: /v1/rag/chat must return RAGChatRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/rag/chat", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "focus_mode" in item, "Missing field 'focus_mode' (Optional[str]) in RAGChatRequest response"
-assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in RAGChatRequest response"
-assert "messages" in item, "Missing field 'messages' (List[RAGChatMessage]) in RAGChatRequest response"
-assert "score_threshold" in item, "Missing field 'score_threshold' (float) in RAGChatRequest response"
-assert "system_prompt" in item, "Missing field 'system_prompt' (Optional[str]) in RAGChatRequest response"
-assert "temperature" in item, "Missing field 'temperature' (float) in RAGChatRequest response"
-assert "top_k" in item, "Missing field 'top_k' (int) in RAGChatRequest response"
+            assert "max_tokens" in item, "Missing field 'max_tokens' (Optional[int]) in RAGChatRequest response"
+            assert "messages" in item, "Missing field 'messages' (List[RAGChatMessage]) in RAGChatRequest response"
+            assert "score_threshold" in item, "Missing field 'score_threshold' (float) in RAGChatRequest response"
+            assert "system_prompt" in item, "Missing field 'system_prompt' (Optional[str]) in RAGChatRequest response"
+            assert "temperature" in item, "Missing field 'temperature' (float) in RAGChatRequest response"
+            assert "top_k" in item, "Missing field 'top_k' (int) in RAGChatRequest response"
 
 
-        def test_schema_ChatRequest_api_chat(api):
-            """Schema contract: /api/chat must return ChatRequest fields."""
-            resp = api.post(f"{BASE_URL}/api/chat", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_ChatRequest_v1_rag_chat(api):
+    """Schema contract: /v1/rag/chat must return ChatRequest fields."""
+    resp = api.post(f"{BASE_URL}/v1/rag/chat", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "message" in item, "Missing field 'message' (str) in ChatRequest response"
-assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
+            assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
 
 
-        def test_schema_DownloadRequest_models_popular(api):
-            """Schema contract: /models/popular must return DownloadRequest fields."""
-            resp = api.post(f"{BASE_URL}/models/popular", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_ChatRequest_api_chat(api):
+    """Schema contract: /api/chat must return ChatRequest fields."""
+    resp = api.post(f"{BASE_URL}/api/chat", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
+            assert "message" in item, "Missing field 'message' (str) in ChatRequest response"
+            assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
+
+
+
+def test_schema_DownloadRequest_models_popular(api):
+    """Schema contract: /models/popular must return DownloadRequest fields."""
+    resp = api.post(f"{BASE_URL}/models/popular", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "filename" in item, "Missing field 'filename' (str) in DownloadRequest response"
-assert "repo_id" in item, "Missing field 'repo_id' (str) in DownloadRequest response"
+            assert "repo_id" in item, "Missing field 'repo_id' (str) in DownloadRequest response"
 
-
-        def test_schema_DownloadRequest_models_search(api):
-            """Schema contract: /models/search must return DownloadRequest fields."""
-            resp = api.post(f"{BASE_URL}/models/search", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
-            assert "filename" in item, "Missing field 'filename' (str) in DownloadRequest response"
-assert "repo_id" in item, "Missing field 'repo_id' (str) in DownloadRequest response"
 
 
 def test_schema_SwapRequest_models_search(api):
@@ -450,41 +435,27 @@ def test_schema_SwapRequest_models_search(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "model" in item, "Missing field 'model' (str) in SwapRequest response"
+            assert "model" in item, "Missing field 'model' (str) in SwapRequest response"
 
 
-        def test_schema_DownloadRequest_models_download(api):
-            """Schema contract: /models/download must return DownloadRequest fields."""
-            resp = api.post(f"{BASE_URL}/models/download", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
-            assert "filename" in item, "Missing field 'filename' (str) in DownloadRequest response"
-assert "repo_id" in item, "Missing field 'repo_id' (str) in DownloadRequest response"
 
-
-def test_schema_SwapRequest_models_download(api):
-    """Schema contract: /models/download must return SwapRequest fields."""
-    resp = api.post(f"{BASE_URL}/models/download", json={"directory": "."})
+def test_schema_DownloadRequest_models_search(api):
+    """Schema contract: /models/search must return DownloadRequest fields."""
+    resp = api.post(f"{BASE_URL}/models/search", json={"directory": "."})
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "model" in item, "Missing field 'model' (str) in SwapRequest response"
+            assert "filename" in item, "Missing field 'filename' (str) in DownloadRequest response"
+            assert "repo_id" in item, "Missing field 'repo_id' (str) in DownloadRequest response"
+
 
 
 def test_schema_ScaleRequest_models_download(api):
@@ -493,41 +464,41 @@ def test_schema_ScaleRequest_models_download(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "count" in item, "Missing field 'count' (int) in ScaleRequest response"
+            assert "count" in item, "Missing field 'count' (int) in ScaleRequest response"
 
 
-        def test_schema_LaunchRequest_swap(api):
-            """Schema contract: /swap must return LaunchRequest fields."""
-            resp = api.post(f"{BASE_URL}/swap", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
-            assert "model" in item, "Missing field 'model' (str) in LaunchRequest response"
-assert "port" in item, "Missing field 'port' (int) in LaunchRequest response"
 
-
-def test_schema_SwapRequest_swap(api):
-    """Schema contract: /swap must return SwapRequest fields."""
-    resp = api.post(f"{BASE_URL}/swap", json={"directory": "."})
+def test_schema_SwapRequest_models_download(api):
+    """Schema contract: /models/download must return SwapRequest fields."""
+    resp = api.post(f"{BASE_URL}/models/download", json={"directory": "."})
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "model" in item, "Missing field 'model' (str) in SwapRequest response"
+            assert "model" in item, "Missing field 'model' (str) in SwapRequest response"
+
+
+
+def test_schema_DownloadRequest_models_download(api):
+    """Schema contract: /models/download must return DownloadRequest fields."""
+    resp = api.post(f"{BASE_URL}/models/download", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
+            assert "filename" in item, "Missing field 'filename' (str) in DownloadRequest response"
+            assert "repo_id" in item, "Missing field 'repo_id' (str) in DownloadRequest response"
+
 
 
 def test_schema_ScaleRequest_swap(api):
@@ -536,27 +507,41 @@ def test_schema_ScaleRequest_swap(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "count" in item, "Missing field 'count' (int) in ScaleRequest response"
+            assert "count" in item, "Missing field 'count' (int) in ScaleRequest response"
 
 
-        def test_schema_LaunchRequest_swarm_scale(api):
-            """Schema contract: /swarm/scale must return LaunchRequest fields."""
-            resp = api.post(f"{BASE_URL}/swarm/scale", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_SwapRequest_swap(api):
+    """Schema contract: /swap must return SwapRequest fields."""
+    resp = api.post(f"{BASE_URL}/swap", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
+            assert "model" in item, "Missing field 'model' (str) in SwapRequest response"
+
+
+
+def test_schema_LaunchRequest_swap(api):
+    """Schema contract: /swap must return LaunchRequest fields."""
+    resp = api.post(f"{BASE_URL}/swap", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "model" in item, "Missing field 'model' (str) in LaunchRequest response"
-assert "port" in item, "Missing field 'port' (int) in LaunchRequest response"
+            assert "port" in item, "Missing field 'port' (int) in LaunchRequest response"
+
 
 
 def test_schema_ScaleRequest_swarm_scale(api):
@@ -565,42 +550,57 @@ def test_schema_ScaleRequest_swarm_scale(api):
     if resp.status_code != 200:
         pytest.skip(f"Endpoint returned {resp.status_code}")
     data = resp.json()
-    # Handle both single object and list responses
     items = data if isinstance(data, list) else [data]
     for item in items[:5]:
         if not isinstance(item, dict):
             continue
-    assert "count" in item, "Missing field 'count' (int) in ScaleRequest response"
+            assert "count" in item, "Missing field 'count' (int) in ScaleRequest response"
 
 
-        def test_schema_LaunchRequest_swarm_launch(api):
-            """Schema contract: /swarm/launch must return LaunchRequest fields."""
-            resp = api.post(f"{BASE_URL}/swarm/launch", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_LaunchRequest_swarm_scale(api):
+    """Schema contract: /swarm/scale must return LaunchRequest fields."""
+    resp = api.post(f"{BASE_URL}/swarm/scale", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "model" in item, "Missing field 'model' (str) in LaunchRequest response"
-assert "port" in item, "Missing field 'port' (int) in LaunchRequest response"
+            assert "port" in item, "Missing field 'port' (int) in LaunchRequest response"
 
 
-        def test_schema_ChatRequest_api_stt(api):
-            """Schema contract: /api/stt must return ChatRequest fields."""
-            resp = api.post(f"{BASE_URL}/api/stt", json={"directory": "."})
-            if resp.status_code != 200:
-                pytest.skip(f"Endpoint returned {resp.status_code}")
-            data = resp.json()
-            # Handle both single object and list responses
-            items = data if isinstance(data, list) else [data]
-            for item in items[:5]:
-                if not isinstance(item, dict):
-                    continue
+
+def test_schema_LaunchRequest_swarm_launch(api):
+    """Schema contract: /swarm/launch must return LaunchRequest fields."""
+    resp = api.post(f"{BASE_URL}/swarm/launch", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
+            assert "model" in item, "Missing field 'model' (str) in LaunchRequest response"
+            assert "port" in item, "Missing field 'port' (int) in LaunchRequest response"
+
+
+
+def test_schema_ChatRequest_api_stt(api):
+    """Schema contract: /api/stt must return ChatRequest fields."""
+    resp = api.post(f"{BASE_URL}/api/stt", json={"directory": "."})
+    if resp.status_code != 200:
+        pytest.skip(f"Endpoint returned {resp.status_code}")
+    data = resp.json()
+    items = data if isinstance(data, list) else [data]
+    for item in items[:5]:
+        if not isinstance(item, dict):
+            continue
             assert "message" in item, "Missing field 'message' (str) in ChatRequest response"
-assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
+            assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
+
 
 
     def test_unused_fields_audit():
@@ -650,7 +650,7 @@ assert "mode" in item, "Missing field 'mode' (str) in ChatRequest response"
 
 def test_orphan_backend_unnamed(api):
     """Orphan: GET / exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/")
     # Endpoint should at least respond (not 500)
@@ -661,7 +661,7 @@ def test_orphan_backend_unnamed(api):
 
 def test_orphan_backend_unnamed_285(api):
     """Orphan: GET / exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/")
     # Endpoint should at least respond (not 500)
@@ -672,7 +672,7 @@ def test_orphan_backend_unnamed_285(api):
 
 def test_orphan_backend_unnamed_698(api):
     """Orphan: GET / exists in backend but no UI calls it.
-    Source: zena_mode\asgi_server.py
+    Source: zena_mode/asgi_server.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/")
     # Endpoint should at least respond (not 500)
@@ -683,7 +683,7 @@ def test_orphan_backend_unnamed_698(api):
 
 def test_orphan_backend_unnamed_698(api):
     """Orphan: GET / exists in backend but no UI calls it.
-    Source: zena_mode\asgi_server.py
+    Source: zena_mode/asgi_server.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/")
     # Endpoint should at least respond (not 500)
@@ -694,7 +694,7 @@ def test_orphan_backend_unnamed_698(api):
 
 def test_orphan_backend_api_chat_compare(api):
     """Orphan: POST /api/chat/compare exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/chat/compare", json={})
     # Endpoint should at least respond (not 500)
@@ -705,7 +705,7 @@ def test_orphan_backend_api_chat_compare(api):
 
 def test_orphan_backend_api_chat_compare_1069(api):
     """Orphan: POST /api/chat/compare exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/chat/compare", json={})
     # Endpoint should at least respond (not 500)
@@ -716,7 +716,7 @@ def test_orphan_backend_api_chat_compare_1069(api):
 
 def test_orphan_backend_api_chat_swarm(api):
     """Orphan: POST /api/chat/swarm exists in backend but no UI calls it.
-    Source: zena_mode\asgi_server.py
+    Source: zena_mode/asgi_server.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/chat/swarm", json={})
     # Endpoint should at least respond (not 500)
@@ -727,7 +727,7 @@ def test_orphan_backend_api_chat_swarm(api):
 
 def test_orphan_backend_api_chat_swarm_123(api):
     """Orphan: POST /api/chat/swarm exists in backend but no UI calls it.
-    Source: zena_mode\asgi_server.py
+    Source: zena_mode/asgi_server.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/chat/swarm", json={})
     # Endpoint should at least respond (not 500)
@@ -738,7 +738,7 @@ def test_orphan_backend_api_chat_swarm_123(api):
 
 def test_orphan_backend_api_clear(api):
     """Orphan: POST /api/clear exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/clear", json={})
     # Endpoint should at least respond (not 500)
@@ -749,7 +749,7 @@ def test_orphan_backend_api_clear(api):
 
 def test_orphan_backend_api_clear_572(api):
     """Orphan: POST /api/clear exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/clear", json={})
     # Endpoint should at least respond (not 500)
@@ -760,7 +760,7 @@ def test_orphan_backend_api_clear_572(api):
 
 def test_orphan_backend_api_crawl(api):
     """Orphan: POST /api/crawl exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/crawl", json={})
     # Endpoint should at least respond (not 500)
@@ -771,7 +771,7 @@ def test_orphan_backend_api_crawl(api):
 
 def test_orphan_backend_api_crawl_373(api):
     """Orphan: POST /api/crawl exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/crawl", json={})
     # Endpoint should at least respond (not 500)
@@ -782,7 +782,7 @@ def test_orphan_backend_api_crawl_373(api):
 
 def test_orphan_backend_api_crawl_cancel(api):
     """Orphan: POST /api/crawl/cancel exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/crawl/cancel", json={})
     # Endpoint should at least respond (not 500)
@@ -793,7 +793,7 @@ def test_orphan_backend_api_crawl_cancel(api):
 
 def test_orphan_backend_api_crawl_cancel_484(api):
     """Orphan: POST /api/crawl/cancel exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/crawl/cancel", json={})
     # Endpoint should at least respond (not 500)
@@ -804,7 +804,7 @@ def test_orphan_backend_api_crawl_cancel_484(api):
 
 def test_orphan_backend_api_crawl_status(api):
     """Orphan: GET /api/crawl/status exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/crawl/status")
     # Endpoint should at least respond (not 500)
@@ -815,7 +815,7 @@ def test_orphan_backend_api_crawl_status(api):
 
 def test_orphan_backend_api_crawl_status_479(api):
     """Orphan: GET /api/crawl/status exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/crawl/status")
     # Endpoint should at least respond (not 500)
@@ -826,7 +826,7 @@ def test_orphan_backend_api_crawl_status_479(api):
 
 def test_orphan_backend_api_llm_binary(api):
     """Orphan: GET /api/llm/binary exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/binary")
     # Endpoint should at least respond (not 500)
@@ -837,7 +837,7 @@ def test_orphan_backend_api_llm_binary(api):
 
 def test_orphan_backend_api_llm_binary_690(api):
     """Orphan: GET /api/llm/binary exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/binary")
     # Endpoint should at least respond (not 500)
@@ -848,7 +848,7 @@ def test_orphan_backend_api_llm_binary_690(api):
 
 def test_orphan_backend_api_llm_config(api):
     """Orphan: GET /api/llm/config exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/config")
     # Endpoint should at least respond (not 500)
@@ -859,7 +859,7 @@ def test_orphan_backend_api_llm_config(api):
 
 def test_orphan_backend_api_llm_config_783(api):
     """Orphan: GET /api/llm/config exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/config")
     # Endpoint should at least respond (not 500)
@@ -870,7 +870,7 @@ def test_orphan_backend_api_llm_config_783(api):
 
 def test_orphan_backend_api_llm_config_788(api):
     """Orphan: POST /api/llm/config exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/llm/config", json={})
     # Endpoint should at least respond (not 500)
@@ -881,7 +881,7 @@ def test_orphan_backend_api_llm_config_788(api):
 
 def test_orphan_backend_api_llm_config_788(api):
     """Orphan: POST /api/llm/config exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/llm/config", json={})
     # Endpoint should at least respond (not 500)
@@ -892,7 +892,7 @@ def test_orphan_backend_api_llm_config_788(api):
 
 def test_orphan_backend_api_llm_health(api):
     """Orphan: GET /api/llm/health exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/health")
     # Endpoint should at least respond (not 500)
@@ -903,7 +903,7 @@ def test_orphan_backend_api_llm_health(api):
 
 def test_orphan_backend_api_llm_health_799(api):
     """Orphan: GET /api/llm/health exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/health")
     # Endpoint should at least respond (not 500)
@@ -914,7 +914,7 @@ def test_orphan_backend_api_llm_health_799(api):
 
 def test_orphan_backend_api_llm_models(api):
     """Orphan: GET /api/llm/models exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/models")
     # Endpoint should at least respond (not 500)
@@ -925,7 +925,7 @@ def test_orphan_backend_api_llm_models(api):
 
 def test_orphan_backend_api_llm_models_697(api):
     """Orphan: GET /api/llm/models exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/models")
     # Endpoint should at least respond (not 500)
@@ -936,7 +936,7 @@ def test_orphan_backend_api_llm_models_697(api):
 
 def test_orphan_backend_api_llm_server_start(api):
     """Orphan: POST /api/llm/server/start exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/llm/server/start", json={})
     # Endpoint should at least respond (not 500)
@@ -947,7 +947,7 @@ def test_orphan_backend_api_llm_server_start(api):
 
 def test_orphan_backend_api_llm_server_start_708(api):
     """Orphan: POST /api/llm/server/start exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.post(f"{BASE_URL}/api/llm/server/start", json={})
     # Endpoint should at least respond (not 500)
@@ -958,7 +958,7 @@ def test_orphan_backend_api_llm_server_start_708(api):
 
 def test_orphan_backend_api_llm_server_status(api):
     """Orphan: GET /api/llm/server/status exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/server/status")
     # Endpoint should at least respond (not 500)
@@ -969,7 +969,7 @@ def test_orphan_backend_api_llm_server_status(api):
 
 def test_orphan_backend_api_llm_server_status_776(api):
     """Orphan: GET /api/llm/server/status exists in backend but no UI calls it.
-    Source: rag-test-bench\app.py
+    Source: rag-test-bench/app.py
     Fix: wire it into the UI or deprecate the endpoint."""
     resp = api.get(f"{BASE_URL}/api/llm/server/status")
     # Endpoint should at least respond (not 500)
@@ -1043,12 +1043,12 @@ def test_wired_api_tts_voices(api):
 
 
 # ======================================================================
-# Coverage Gap Tests (66 tests)
+# Coverage Gap Tests (80 tests)
 # ======================================================================
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_unnamed(api):
-    """UNTESTED endpoint: / (from rag-test-bench\app.py)
+    """UNTESTED endpoint: / (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/")
     assert resp.status_code in (200, 400, 404)
@@ -1056,7 +1056,7 @@ def test_endpoint_unnamed(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_unnamed(api):
-    """UNTESTED endpoint: / (from rag-test-bench\app.py)
+    """UNTESTED endpoint: / (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/")
     assert resp.status_code in (200, 400, 404)
@@ -1064,7 +1064,7 @@ def test_endpoint_unnamed(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_load(api):
-    """UNTESTED endpoint: /api/load (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/load (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/load")
     assert resp.status_code in (200, 400, 404)
@@ -1072,7 +1072,7 @@ def test_endpoint_api_load(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_load(api):
-    """UNTESTED endpoint: /api/load (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/load (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/load")
     assert resp.status_code in (200, 400, 404)
@@ -1080,7 +1080,7 @@ def test_endpoint_api_load(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_catalog(api):
-    """UNTESTED endpoint: /api/models/catalog (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/catalog (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/catalog")
     assert resp.status_code in (200, 400, 404)
@@ -1088,7 +1088,7 @@ def test_endpoint_api_models_catalog(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_catalog(api):
-    """UNTESTED endpoint: /api/models/catalog (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/catalog (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/catalog")
     assert resp.status_code in (200, 400, 404)
@@ -1096,7 +1096,7 @@ def test_endpoint_api_models_catalog(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_local(api):
-    """UNTESTED endpoint: /api/models/local (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/local (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/local")
     assert resp.status_code in (200, 400, 404)
@@ -1104,7 +1104,7 @@ def test_endpoint_api_models_local(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_local(api):
-    """UNTESTED endpoint: /api/models/local (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/local (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/local")
     assert resp.status_code in (200, 400, 404)
@@ -1112,7 +1112,7 @@ def test_endpoint_api_models_local(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_recommend(api):
-    """UNTESTED endpoint: /api/models/recommend (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/recommend (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/recommend")
     assert resp.status_code in (200, 400, 404)
@@ -1120,7 +1120,7 @@ def test_endpoint_api_models_recommend(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_recommend(api):
-    """UNTESTED endpoint: /api/models/recommend (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/recommend (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/recommend")
     assert resp.status_code in (200, 400, 404)
@@ -1128,7 +1128,7 @@ def test_endpoint_api_models_recommend(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_download(api):
-    """UNTESTED endpoint: /api/models/download (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/download (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/download")
     assert resp.status_code in (200, 400, 404)
@@ -1136,7 +1136,7 @@ def test_endpoint_api_models_download(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_download(api):
-    """UNTESTED endpoint: /api/models/download (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/download (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/download")
     assert resp.status_code in (200, 400, 404)
@@ -1144,7 +1144,7 @@ def test_endpoint_api_models_download(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_downloads_active(api):
-    """UNTESTED endpoint: /api/models/downloads/active (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/downloads/active (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/downloads/active")
     assert resp.status_code in (200, 400, 404)
@@ -1152,23 +1152,23 @@ def test_endpoint_api_models_downloads_active(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_downloads_active(api):
-    """UNTESTED endpoint: /api/models/downloads/active (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/downloads/active (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/downloads/active")
     assert resp.status_code in (200, 400, 404)
 
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
-def test_endpoint_api_models_<filename>(api):
-    """UNTESTED endpoint: /api/models/<filename> (from rag-test-bench\app.py)
+def test_endpoint_api_models_param(api):
+    """UNTESTED endpoint: /api/models/<filename> (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/<filename>")
     assert resp.status_code in (200, 400, 404)
 
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
-def test_endpoint_api_models_<filename>(api):
-    """UNTESTED endpoint: /api/models/<filename> (from rag-test-bench\app.py)
+def test_endpoint_api_models_param(api):
+    """UNTESTED endpoint: /api/models/<filename> (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/<filename>")
     assert resp.status_code in (200, 400, 404)
@@ -1176,7 +1176,7 @@ def test_endpoint_api_models_<filename>(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_search(api):
-    """UNTESTED endpoint: /api/models/search (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/search (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/search")
     assert resp.status_code in (200, 400, 404)
@@ -1184,23 +1184,23 @@ def test_endpoint_api_models_search(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_models_search(api):
-    """UNTESTED endpoint: /api/models/search (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/models/search (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/search")
     assert resp.status_code in (200, 400, 404)
 
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
-def test_endpoint_api_models_repo_<path_repo_id>(api):
-    """UNTESTED endpoint: /api/models/repo/<path:repo_id> (from rag-test-bench\app.py)
+def test_endpoint_api_models_repo_param(api):
+    """UNTESTED endpoint: /api/models/repo/<path:repo_id> (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/repo/<path:repo_id>")
     assert resp.status_code in (200, 400, 404)
 
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
-def test_endpoint_api_models_repo_<path_repo_id>(api):
-    """UNTESTED endpoint: /api/models/repo/<path:repo_id> (from rag-test-bench\app.py)
+def test_endpoint_api_models_repo_param(api):
+    """UNTESTED endpoint: /api/models/repo/<path:repo_id> (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/models/repo/<path:repo_id>")
     assert resp.status_code in (200, 400, 404)
@@ -1208,7 +1208,7 @@ def test_endpoint_api_models_repo_<path_repo_id>(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_llm_binary(api):
-    """UNTESTED endpoint: /api/llm/binary (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/llm/binary (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/llm/binary")
     assert resp.status_code in (200, 400, 404)
@@ -1216,7 +1216,7 @@ def test_endpoint_api_llm_binary(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_llm_binary(api):
-    """UNTESTED endpoint: /api/llm/binary (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/llm/binary (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/llm/binary")
     assert resp.status_code in (200, 400, 404)
@@ -1224,7 +1224,7 @@ def test_endpoint_api_llm_binary(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_llm_models(api):
-    """UNTESTED endpoint: /api/llm/models (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/llm/models (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/llm/models")
     assert resp.status_code in (200, 400, 404)
@@ -1232,7 +1232,7 @@ def test_endpoint_api_llm_models(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_llm_models(api):
-    """UNTESTED endpoint: /api/llm/models (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/llm/models (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/llm/models")
     assert resp.status_code in (200, 400, 404)
@@ -1240,7 +1240,7 @@ def test_endpoint_api_llm_models(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_llm_server_stop(api):
-    """UNTESTED endpoint: /api/llm/server/stop (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/llm/server/stop (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/llm/server/stop")
     assert resp.status_code in (200, 400, 404)
@@ -1248,7 +1248,7 @@ def test_endpoint_api_llm_server_stop(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_api_llm_server_stop(api):
-    """UNTESTED endpoint: /api/llm/server/stop (from rag-test-bench\app.py)
+    """UNTESTED endpoint: /api/llm/server/stop (from rag-test-bench/app.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/api/llm/server/stop")
     assert resp.status_code in (200, 400, 404)
@@ -1256,7 +1256,7 @@ def test_endpoint_api_llm_server_stop(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_health(api):
-    """UNTESTED endpoint: /health (from server\routers\admin.py)
+    """UNTESTED endpoint: /health (from server/routers/admin.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/health")
     assert resp.status_code in (200, 400, 404)
@@ -1264,7 +1264,7 @@ def test_endpoint_health(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_health(api):
-    """UNTESTED endpoint: /health (from server\routers\admin.py)
+    """UNTESTED endpoint: /health (from server/routers/admin.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/health")
     assert resp.status_code in (200, 400, 404)
@@ -1272,7 +1272,7 @@ def test_endpoint_health(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_metrics(api):
-    """UNTESTED endpoint: /metrics (from server\routers\admin.py)
+    """UNTESTED endpoint: /metrics (from server/routers/admin.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/metrics")
     assert resp.status_code in (200, 400, 404)
@@ -1280,316 +1280,428 @@ def test_endpoint_metrics(api):
 
 @pytest.mark.skip(reason="Coverage gap — no existing test for this endpoint")
 def test_endpoint_metrics(api):
-    """UNTESTED endpoint: /metrics (from server\routers\admin.py)
+    """UNTESTED endpoint: /metrics (from server/routers/admin.py)
     TODO: implement proper test with expected inputs/outputs."""
     resp = api.get(f"{BASE_URL}/metrics")
     assert resp.status_code in (200, 400, 404)
-
-
-class TestAdapter_Factory:
-    """Coverage gaps in adapter_factory.py — 1 untested functions."""
-
-@pytest.mark.skip(reason="Coverage gap — stub for adapter_factory.create_adapter")
-def test_create_adapter(self):
-    """UNTESTED: create_adapter() at adapter_factory.py:58"""
-    # from adapter_factory import create_adapter
-    # result = create_adapter(...)
-    # assert result is not None
-    pass
-
-
-class TestApp:
-    """Coverage gaps in app.py — 2 untested functions."""
-
-@pytest.mark.skip(reason="Coverage gap — stub for app.main")
-def test_main(self):
-    """UNTESTED: main() at app.py:173"""
-    # from app import main
-    # result = main(...)
-    # assert result is not None
-    pass
-
-@pytest.mark.skip(reason="Coverage gap — stub for app.set_language")
-def test_set_language(self):
-    """UNTESTED: set_language() at app.py:66"""
-    # from app import set_language
-    # result = set_language(...)
-    # assert result is not None
-    pass
-
-
-class TestAsync_Backend:
-    """Coverage gaps in async_backend.py — 5 untested functions."""
-
-@pytest.mark.skip(reason="Coverage gap — stub for async_backend.send_message_async")
-def test_send_message_async(self):
-    """UNTESTED: send_message_async() at async_backend.py:46"""
-    # from async_backend import send_message_async
-    # result = send_message_async(...)
-    # assert result is not None
-    pass
-
-@pytest.mark.skip(reason="Coverage gap — stub for async_backend.check_health")
-def test_check_health(self):
-    """UNTESTED: check_health() at async_backend.py:92"""
-    # from async_backend import check_health
-    # result = check_health(...)
-    # assert result is not None
-    pass
-
-@pytest.mark.skip(reason="Coverage gap — stub for async_backend.get_models")
-def test_get_models(self):
-    """UNTESTED: get_models() at async_backend.py:103"""
-    # from async_backend import get_models
-    # result = get_models(...)
-    # assert result is not None
-    pass
-
-@pytest.mark.skip(reason="Coverage gap — stub for async_backend.download_model")
-def test_download_model(self):
-    """UNTESTED: download_model() at async_backend.py:115"""
-    # from async_backend import download_model
-    # result = download_model(...)
-    # assert result is not None
-    pass
-
-@pytest.mark.skip(reason="Coverage gap — stub for async_backend.set_active_model")
-def test_set_active_model(self):
-    """UNTESTED: set_active_model() at async_backend.py:128"""
-    # from async_backend import set_active_model
-    # result = set_active_model(...)
-    # assert result is not None
-    pass
 
 
 class TestBackend_Impl:
-    """Coverage gaps in backend_impl.py — 29 untested functions."""
+    """Coverage gaps in backend_impl.py -- 14 untested functions."""
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.create_backend")
-def test_create_backend(self):
-    """UNTESTED: create_backend() at backend_impl.py:746"""
-    # from backend_impl import create_backend
-    # result = create_backend(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.speak")
+def test_speak(self):
+    """UNTESTED: speak() at backend_impl.py:548"""
+    # from backend_impl import speak
+    # result = speak(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.chat")
-def test_chat(self):
-    """UNTESTED: chat() at backend_impl.py:195"""
-    # from backend_impl import chat
-    # result = chat(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.voice_devices")
+def test_voice_devices(self):
+    """UNTESTED: voice_devices() at backend_impl.py:560"""
+    # from backend_impl import voice_devices
+    # result = voice_devices(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.chat_stream")
-def test_chat_stream(self):
-    """UNTESTED: chat_stream() at backend_impl.py:311"""
-    # from backend_impl import chat_stream
-    # result = chat_stream(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.health")
+def test_health(self):
+    """UNTESTED: health() at backend_impl.py:572"""
+    # from backend_impl import health
+    # result = health(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.council_chat")
-def test_council_chat(self):
-    """UNTESTED: council_chat() at backend_impl.py:331"""
-    # from backend_impl import council_chat
-    # result = council_chat(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.benchmark")
+def test_benchmark(self):
+    """UNTESTED: benchmark() at backend_impl.py:607"""
+    # from backend_impl import benchmark
+    # result = benchmark(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.scan_web")
-def test_scan_web(self):
-    """UNTESTED: scan_web() at backend_impl.py:350"""
-    # from backend_impl import scan_web
-    # result = scan_web(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.save_message")
+def test_save_message(self):
+    """UNTESTED: save_message() at backend_impl.py:639"""
+    # from backend_impl import save_message
+    # result = save_message(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.scan_folder")
-def test_scan_folder(self):
-    """UNTESTED: scan_folder() at backend_impl.py:377"""
-    # from backend_impl import scan_folder
-    # result = scan_folder(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.build_context")
+def test_build_context(self):
+    """UNTESTED: build_context() at backend_impl.py:649"""
+    # from backend_impl import build_context
+    # result = build_context(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.scan_email")
-def test_scan_email(self):
-    """UNTESTED: scan_email() at backend_impl.py:404"""
-    # from backend_impl import scan_email
-    # result = scan_email(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.cache_stats")
+def test_cache_stats(self):
+    """UNTESTED: cache_stats() at backend_impl.py:662"""
+    # from backend_impl import cache_stats
+    # result = cache_stats(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.build_index")
-def test_build_index(self):
-    """UNTESTED: build_index() at backend_impl.py:431"""
-    # from backend_impl import build_index
-    # result = build_index(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.eval_stats")
+def test_eval_stats(self):
+    """UNTESTED: eval_stats() at backend_impl.py:672"""
+    # from backend_impl import eval_stats
+    # result = eval_stats(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.rag_search")
-def test_rag_search(self):
-    """UNTESTED: rag_search() at backend_impl.py:438"""
-    # from backend_impl import rag_search
-    # result = rag_search(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.start_gateways")
+def test_start_gateways(self):
+    """UNTESTED: start_gateways() at backend_impl.py:684"""
+    # from backend_impl import start_gateways
+    # result = start_gateways(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.rag_stats")
-def test_rag_stats(self):
-    """UNTESTED: rag_stats() at backend_impl.py:453"""
-    # from backend_impl import rag_stats
-    # result = rag_stats(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.check_updates")
+def test_check_updates(self):
+    """UNTESTED: check_updates() at backend_impl.py:716"""
+    # from backend_impl import check_updates
+    # result = check_updates(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.rag_cleanup")
-def test_rag_cleanup(self):
-    """UNTESTED: rag_cleanup() at backend_impl.py:463"""
-    # from backend_impl import rag_cleanup
-    # result = rag_cleanup(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.extract_text")
+def test_extract_text(self):
+    """UNTESTED: extract_text() at backend_impl.py:726"""
+    # from backend_impl import extract_text
+    # result = extract_text(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.rag_dedup")
-def test_rag_dedup(self):
-    """UNTESTED: rag_dedup() at backend_impl.py:480"""
-    # from backend_impl import rag_dedup
-    # result = rag_dedup(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.retrieve_fn")
+def test_retrieve_fn(self):
+    """UNTESTED: retrieve_fn() at backend_impl.py:106"""
+    # from backend_impl import retrieve_fn
+    # result = retrieve_fn(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.list_models")
-def test_list_models(self):
-    """UNTESTED: list_models() at backend_impl.py:501"""
-    # from backend_impl import list_models
-    # result = list_models(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.generate_fn")
+def test_generate_fn(self):
+    """UNTESTED: generate_fn() at backend_impl.py:111"""
+    # from backend_impl import generate_fn
+    # result = generate_fn(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.load_model")
-def test_load_model(self):
-    """UNTESTED: load_model() at backend_impl.py:520"""
-    # from backend_impl import load_model
-    # result = load_model(...)
-    # assert result is not None
-    pass
-
-@pytest.mark.skip(reason="Coverage gap — stub for backend_impl.download_model")
-def test_download_model(self):
-    """UNTESTED: download_model() at backend_impl.py:532"""
-    # from backend_impl import download_model
-    # result = download_model(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_impl.llm_fn")
+def test_llm_fn(self):
+    """UNTESTED: llm_fn() at backend_impl.py:136"""
+    # from backend_impl import llm_fn
+    # result = llm_fn(...)
     # assert result is not None
     pass
 
 
 class TestBackend_Protocol:
-    """Coverage gaps in backend_protocol.py — 13 untested functions."""
+    """Coverage gaps in backend_protocol.py -- 11 untested functions."""
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.chat")
-def test_chat(self):
-    """UNTESTED: chat() at backend_protocol.py:98"""
-    # from backend_protocol import chat
-    # result = chat(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.speak")
+def test_speak(self):
+    """UNTESTED: speak() at backend_protocol.py:189"""
+    # from backend_protocol import speak
+    # result = speak(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.chat_stream")
-def test_chat_stream(self):
-    """UNTESTED: chat_stream() at backend_protocol.py:112"""
-    # from backend_protocol import chat_stream
-    # result = chat_stream(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.voice_devices")
+def test_voice_devices(self):
+    """UNTESTED: voice_devices() at backend_protocol.py:193"""
+    # from backend_protocol import voice_devices
+    # result = voice_devices(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.council_chat")
-def test_council_chat(self):
-    """UNTESTED: council_chat() at backend_protocol.py:125"""
-    # from backend_protocol import council_chat
-    # result = council_chat(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.health")
+def test_health(self):
+    """UNTESTED: health() at backend_protocol.py:199"""
+    # from backend_protocol import health
+    # result = health(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.scan_web")
-def test_scan_web(self):
-    """UNTESTED: scan_web() at backend_protocol.py:133"""
-    # from backend_protocol import scan_web
-    # result = scan_web(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.benchmark")
+def test_benchmark(self):
+    """UNTESTED: benchmark() at backend_protocol.py:203"""
+    # from backend_protocol import benchmark
+    # result = benchmark(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.scan_folder")
-def test_scan_folder(self):
-    """UNTESTED: scan_folder() at backend_protocol.py:137"""
-    # from backend_protocol import scan_folder
-    # result = scan_folder(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.save_message")
+def test_save_message(self):
+    """UNTESTED: save_message() at backend_protocol.py:209"""
+    # from backend_protocol import save_message
+    # result = save_message(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.scan_email")
-def test_scan_email(self):
-    """UNTESTED: scan_email() at backend_protocol.py:141"""
-    # from backend_protocol import scan_email
-    # result = scan_email(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.build_context")
+def test_build_context(self):
+    """UNTESTED: build_context() at backend_protocol.py:215"""
+    # from backend_protocol import build_context
+    # result = build_context(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.build_index")
-def test_build_index(self):
-    """UNTESTED: build_index() at backend_protocol.py:147"""
-    # from backend_protocol import build_index
-    # result = build_index(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.cache_stats")
+def test_cache_stats(self):
+    """UNTESTED: cache_stats() at backend_protocol.py:223"""
+    # from backend_protocol import cache_stats
+    # result = cache_stats(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.rag_search")
-def test_rag_search(self):
-    """UNTESTED: rag_search() at backend_protocol.py:153"""
-    # from backend_protocol import rag_search
-    # result = rag_search(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.eval_stats")
+def test_eval_stats(self):
+    """UNTESTED: eval_stats() at backend_protocol.py:227"""
+    # from backend_protocol import eval_stats
+    # result = eval_stats(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.rag_stats")
-def test_rag_stats(self):
-    """UNTESTED: rag_stats() at backend_protocol.py:159"""
-    # from backend_protocol import rag_stats
-    # result = rag_stats(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.start_gateways")
+def test_start_gateways(self):
+    """UNTESTED: start_gateways() at backend_protocol.py:233"""
+    # from backend_protocol import start_gateways
+    # result = start_gateways(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.rag_cleanup")
-def test_rag_cleanup(self):
-    """UNTESTED: rag_cleanup() at backend_protocol.py:163"""
-    # from backend_protocol import rag_cleanup
-    # result = rag_cleanup(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.check_updates")
+def test_check_updates(self):
+    """UNTESTED: check_updates() at backend_protocol.py:237"""
+    # from backend_protocol import check_updates
+    # result = check_updates(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.rag_dedup")
-def test_rag_dedup(self):
-    """UNTESTED: rag_dedup() at backend_protocol.py:167"""
-    # from backend_protocol import rag_dedup
-    # result = rag_dedup(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for backend_protocol.extract_text")
+def test_extract_text(self):
+    """UNTESTED: extract_text() at backend_protocol.py:243"""
+    # from backend_protocol import extract_text
+    # result = extract_text(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.list_models")
-def test_list_models(self):
-    """UNTESTED: list_models() at backend_protocol.py:173"""
-    # from backend_protocol import list_models
-    # result = list_models(...)
+
+class TestConfig_System:
+    """Coverage gaps in config_system.py -- 8 untested functions."""
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.load_config")
+def test_load_config(self):
+    """UNTESTED: load_config() at config_system.py:274"""
+    # from config_system import load_config
+    # result = load_config(...)
     # assert result is not None
     pass
 
-@pytest.mark.skip(reason="Coverage gap — stub for backend_protocol.load_model")
-def test_load_model(self):
-    """UNTESTED: load_model() at backend_protocol.py:177"""
-    # from backend_protocol import load_model
-    # result = load_model(...)
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.get_settings")
+def test_get_settings(self):
+    """UNTESTED: get_settings() at config_system.py:280"""
+    # from config_system import get_settings
+    # result = get_settings(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.is_dark_mode")
+def test_is_dark_mode(self):
+    """UNTESTED: is_dark_mode() at config_system.py:285"""
+    # from config_system import is_dark_mode
+    # result = is_dark_mode(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.set_dark_mode")
+def test_set_dark_mode(self):
+    """UNTESTED: set_dark_mode() at config_system.py:296"""
+    # from config_system import set_dark_mode
+    # result = set_dark_mode(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.validate_paths")
+def test_validate_paths(self):
+    """UNTESTED: validate_paths() at config_system.py:348"""
+    # from config_system import validate_paths
+    # result = validate_paths(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.get_api_url")
+def test_get_api_url(self):
+    """UNTESTED: get_api_url() at config_system.py:148"""
+    # from config_system import get_api_url
+    # result = get_api_url(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.from_json")
+def test_from_json(self):
+    """UNTESTED: from_json() at config_system.py:153"""
+    # from config_system import from_json
+    # result = from_json(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for config_system.to_json")
+def test_to_json(self):
+    """UNTESTED: to_json() at config_system.py:200"""
+    # from config_system import to_json
+    # result = to_json(...)
+    # assert result is not None
+    pass
+
+
+class TestDownload_Model:
+    """Coverage gaps in download_model.py -- 3 untested functions."""
+
+@pytest.mark.skip(reason="Coverage gap -- stub for download_model.resolve_repo_and_file")
+def test_resolve_repo_and_file(self):
+    """UNTESTED: resolve_repo_and_file() at download_model.py:250"""
+    # from download_model import resolve_repo_and_file
+    # result = resolve_repo_and_file(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for download_model.isatty")
+def test_isatty(self):
+    """UNTESTED: isatty() at download_model.py:59"""
+    # from download_model import isatty
+    # result = isatty(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for download_model.update")
+def test_update(self):
+    """UNTESTED: update() at download_model.py:200"""
+    # from download_model import update
+    # result = update(...)
+    # assert result is not None
+    pass
+
+
+class TestLlm_Adapters:
+    """Coverage gaps in llm_adapters.py -- 14 untested functions."""
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:89"""
+    # from llm_adapters import query
+    # result = query(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.validate")
+def test_validate(self):
+    """UNTESTED: validate() at llm_adapters.py:94"""
+    # from llm_adapters import validate
+    # result = validate(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.close")
+def test_close(self):
+    """UNTESTED: close() at llm_adapters.py:98"""
+    # from llm_adapters import close
+    # result = close(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:124"""
+    # from llm_adapters import query
+    # result = query(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.validate")
+def test_validate(self):
+    """UNTESTED: validate() at llm_adapters.py:172"""
+    # from llm_adapters import validate
+    # result = validate(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:197"""
+    # from llm_adapters import query
+    # result = query(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.validate")
+def test_validate(self):
+    """UNTESTED: validate() at llm_adapters.py:226"""
+    # from llm_adapters import validate
+    # result = validate(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:247"""
+    # from llm_adapters import query
+    # result = query(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.validate")
+def test_validate(self):
+    """UNTESTED: validate() at llm_adapters.py:289"""
+    # from llm_adapters import validate
+    # result = validate(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:313"""
+    # from llm_adapters import query
+    # result = query(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.validate")
+def test_validate(self):
+    """UNTESTED: validate() at llm_adapters.py:350"""
+    # from llm_adapters import validate
+    # result = validate(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:365"""
+    # from llm_adapters import query
+    # result = query(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.validate")
+def test_validate(self):
+    """UNTESTED: validate() at llm_adapters.py:391"""
+    # from llm_adapters import validate
+    # result = validate(...)
+    # assert result is not None
+    pass
+
+@pytest.mark.skip(reason="Coverage gap -- stub for llm_adapters.query")
+def test_query(self):
+    """UNTESTED: query() at llm_adapters.py:406"""
+    # from llm_adapters import query
+    # result = query(...)
     # assert result is not None
     pass
 
