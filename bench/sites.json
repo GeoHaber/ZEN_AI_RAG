@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://oradea.ro",
+    "depth": 2,
+    "max_pages": 50,
+    "added": "2026-03-29 22:59:05",
+    "last_crawled": "2026-03-30 12:14:42",
+    "pages_crawled": 50,
+    "chunks_indexed": 37
+  },
+  {
+    "url": "https://yahoo.com",
+    "depth": 10,
+    "max_pages": 500,
+    "added": "2026-03-30 11:55:35",
+    "last_crawled": "2026-03-30 11:55:38",
+    "pages_crawled": 1,
+    "chunks_indexed": 1
+  },
+  {
+    "url": "https://fox.com",
+    "depth": 10,
+    "max_pages": 1000,
+    "added": "2026-03-30 12:16:55",
+    "last_crawled": "2026-03-30 12:17:03",
+    "pages_crawled": 19,
+    "chunks_indexed": 0
+  },
+  {
+    "url": "https://www.spital-copii-timisoara.info/",
+    "depth": 10,
+    "max_pages": 1000,
+    "added": "2026-03-30 12:38:01",
+    "last_crawled": "2026-03-30 12:38:23",
+    "pages_crawled": 42,
+    "chunks_indexed": 40
+  },
+  {
+    "url": "https://www.primariatm.ro/",
+    "depth": 3,
+    "max_pages": 100,
+    "added": "2026-04-02 15:39:21",
+    "last_crawled": "2026-04-02 19:29:19",
+    "pages_crawled": 99,
+    "chunks_indexed": 71
+  }
+]

@@ -1,0 +1,15 @@
+[project]
+name = "rag-test-bench"
+version = "1.0.0"
+description = "RAG pipeline testing and benchmarking harness"
+requires-python = ">=3.10"
+dependencies = [
+    "zen-core-libs",
+]
+
+[tool.uv.sources]
+zen-core-libs = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

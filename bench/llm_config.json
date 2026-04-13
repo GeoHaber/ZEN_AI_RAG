@@ -1,0 +1,5 @@
+{
+  "base_url": "http://localhost:8090/v1",
+  "api_key": "none",
+  "model": "Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"
+}
