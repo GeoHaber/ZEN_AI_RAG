@@ -1,0 +1,170 @@
+{
+  "generated_at": "2026-05-22 20:08",
+  "directory": "C:\\Users\\dvdze\\Desktop\\GitHub\\GeoHab\\ZEN_AI_RAG",
+  "engine": "rule_based",
+  "summary": {
+    "overall_risk": 17,
+    "risk_rating": "LOW",
+    "health_score": 70,
+    "total_source_files": 953,
+    "total_lines": 206799,
+    "test_ratio": 0.49,
+    "scan_findings_total": 1707,
+    "design_findings_total": 8
+  },
+  "release_readiness": {
+    "decision": "NO-GO",
+    "rationale": "Critical risk remains open. Block release until critical design and high-severity scan items are remediated."
+  },
+  "grade_card": {
+    "overall_grade": "F",
+    "overall_score": 56,
+    "rows": [
+      {
+        "category": "Architecture Risk",
+        "score": 17,
+        "basis": "lower is better",
+        "grade": "B"
+      },
+      {
+        "category": "Code Health",
+        "score": 70,
+        "basis": "higher is better",
+        "grade": "C"
+      },
+      {
+        "category": "Test Readiness",
+        "score": 49,
+        "basis": "higher is better",
+        "grade": "F"
+      },
+      {
+        "category": "Dependency Hygiene",
+        "score": 0,
+        "basis": "lower is better",
+        "grade": "A"
+      },
+      {
+        "category": "Release Gates",
+        "score": 2,
+        "basis": "lower is better",
+        "grade": "D"
+      }
+    ]
+  },
+  "quality_gates": [
+    {
+      "gate": "No critical architectural findings",
+      "target": "0",
+      "actual": "0",
+      "status": "PASS"
+    },
+    {
+      "gate": "No HIGH scan findings",
+      "target": "0",
+      "actual": "17",
+      "status": "FAIL"
+    },
+    {
+      "gate": "Risk score threshold",
+      "target": "<= 35",
+      "actual": "17",
+      "status": "PASS"
+    },
+    {
+      "gate": "Project health score",
+      "target": ">= 80",
+      "actual": "70",
+      "status": "FAIL"
+    },
+    {
+      "gate": "Test ratio baseline",
+      "target": ">= 30%",
+      "actual": "49%",
+      "status": "PASS"
+    }
+  ],
+  "risk_register": [
+    {
+      "id": "R-01",
+      "severity": "HIGH",
+      "severity_rank": 3,
+      "risk": "828 code smells \u2014 refactoring overdue",
+      "category": "quality",
+      "owner": "Engineering",
+      "due": "Sprint +1",
+      "mitigation": "Prioritize god-class decomposition and high-complexity function extraction. Use X-Ray's sprint batches to plan incremental fixes."
+    },
+    {
+      "id": "R-02",
+      "severity": "HIGH",
+      "severity_rank": 3,
+      "risk": "248 dead functions \u2014 significant maintenance drag",
+      "category": "maintainability",
+      "owner": "Engineering",
+      "due": "Sprint +1",
+      "mitigation": "Run `python -m xray . --dead-code` to get the full list, then remove in batches. Tag remaining intentional code with # xray:ignore."
+    },
+    {
+      "id": "R-03",
+      "severity": "HIGH",
+      "severity_rank": 3,
+      "risk": "200 duplicate groups (573 occurrences)",
+      "category": "maintainability",
+      "owner": "Engineering",
+      "due": "Sprint +1",
+      "mitigation": "Extract shared logic into utility modules. For cross-file patterns, consider base classes or composition."
+    },
+    {
+      "id": "R-04",
+      "severity": "MEDIUM",
+      "severity_rank": 2,
+      "risk": "Many unused backend endpoints",
+      "category": "connectivity",
+      "owner": "Platform",
+      "due": "Sprint +2",
+      "mitigation": "Document or deprecate unused endpoints. Consider maintaining an OpenAPI spec to track intentional API surface."
+    },
+    {
+      "id": "R-05",
+      "severity": "MEDIUM",
+      "severity_rank": 2,
+      "risk": "98% of endpoints are orphaned",
+      "category": "connectivity",
+      "owner": "Platform",
+      "due": "Sprint +2",
+      "mitigation": "Audit API surface \u2014 remove dead routes, add tests for live ones, and consider API versioning to manage lifecycle."
+    },
+    {
+      "id": "R-06",
+      "severity": "MEDIUM",
+      "severity_rank": 2,
+      "risk": "171 unused imports across the project",
+      "category": "hygiene",
+      "owner": "Engineering",
+      "due": "Sprint +2",
+      "mitigation": "Run `ruff check --select F401 .` or `python -m xray . --unused-imports` and auto-fix with `ruff check --fix .`"
+    },
+    {
+      "id": "R-07",
+      "severity": "MEDIUM",
+      "severity_rank": 2,
+      "risk": "10 files exceed 500 lines",
+      "category": "file_organization",
+      "owner": "Architecture",
+      "due": "Sprint +2",
+      "mitigation": "Split god-files into focused modules. Use the Single Responsibility Principle \u2014 each file should have one reason to change."
+    },
+    {
+      "id": "R-08",
+      "severity": "INFO",
+      "severity_rank": 0,
+      "risk": "Python+Rust dual-engine project",
+      "category": "architecture",
+      "owner": "Engineering",
+      "due": "Sprint +2",
+      "mitigation": "Maintain API compatibility tests between Python and Rust outputs. Run `tests/test_api_compat.py` on every change."
+    }
+  ],
+  "recommendation": "Several high-priority architectural issues need attention before continuing feature work. Focus on connectivity gaps, coupling hotspots, and health score improvements \u2014 these compound over time."
+}
