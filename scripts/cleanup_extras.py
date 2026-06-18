@@ -79,7 +79,7 @@ def cleanup_project():
         try:
             shutil.move(str(item), str(dest))
             moved_count += 1
-        except Exception:
+        except Exception as e:
             print(f"  ❌ Failed to move {name}: {e}")
             pass
     print(f"\n✅ Cleanup Complete. Moved {moved_count} items to _Extra_files/.")

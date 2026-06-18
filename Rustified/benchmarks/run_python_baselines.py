@@ -99,7 +99,7 @@ class RAGRATBaselineBenchmarks:
             print("\n✅ inference_guard benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"❌ Error benchmarking inference_guard: {e}")
             traceback.print_exc()
             return None
@@ -169,7 +169,7 @@ class RAGRATBaselineBenchmarks:
             print("\n✅ rag_service benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"❌ Error benchmarking rag_service: {e}")
             traceback.print_exc()
             return None
@@ -224,7 +224,7 @@ class RAGRATBaselineBenchmarks:
             print("\n✅ llm_adapters benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  Warning benchmarking llm_adapters: {e}")
             # Not critical, continue
             return None
@@ -290,7 +290,7 @@ class RAGRATBaselineBenchmarks:
             print("\n✅ rag_integration benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  Warning benchmarking rag_integration: {e}")
             return None
 
@@ -332,7 +332,7 @@ class RAGRATBaselineBenchmarks:
             print("\n✅ config_enhanced benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  Warning benchmarking config_enhanced: {e}")
             return None
 

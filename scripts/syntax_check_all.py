@@ -24,11 +24,11 @@ def check_syntax(directory):
             full_path = str(Path(root) / file)
             try:
                 py_compile.compile(full_path, doraise=True)
-            except py_compile.PyCompileError:
+            except py_compile.PyCompileError as e:
                 print(f"\n❌ Syntax Error in: {full_path}")
                 print(f"   {e}")
                 error_count += 1
-            except Exception:
+            except Exception as e:
                 print(f"\n⚠️ Unexpected Error checking {full_path}: {e}")
                 error_count += 1
 

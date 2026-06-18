@@ -163,7 +163,7 @@ def move_file(src, dest_dir):
             shutil.move(str(src_path), str(dest_path))
             print(f"{Colors.GREEN}[MOVE]{Colors.END} {src} -> {dest_dir}/")
             return True
-    except Exception:
+    except Exception as e:
         print(f"{Colors.RED}[ERROR]{Colors.END} {src}: {e}")
         pass
     return False
@@ -180,7 +180,7 @@ def move_pattern(pattern, dest_dir):
             if not dest_path.exists():
                 shutil.move(filepath, str(dest_path))
                 print(f"{Colors.GREEN}[MOVE]{Colors.END} {filename} -> {dest_dir}/")
-        except Exception:
+        except Exception as e:
             print(f"{Colors.RED}[ERROR]{Colors.END} {filename}: {e}")
             pass
 
@@ -191,7 +191,7 @@ def cleanup_pycache():
         try:
             shutil.rmtree(pycache)
             print(f"{Colors.GREEN}[DELETE]{Colors.END} {pycache.relative_to(ROOT)}/")
-        except Exception:
+        except Exception as e:
             print(f"{Colors.YELLOW}[SKIP]{Colors.END} {pycache}: {e}")
             pass
 

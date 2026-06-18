@@ -340,7 +340,7 @@ def save_config(config_dict: Dict) -> bool:
         with open(config_file, "w") as f:
             json.dump(config_dict, f, indent=2)
         return True
-    except Exception:
+    except Exception as e:
         print(f"Error saving config: {e}")
         return False
 
@@ -352,7 +352,7 @@ def load_config() -> Dict:
         if config_file.exists():
             with open(config_file, "r") as f:
                 return json.load(f)
-    except Exception:
+    except Exception as e:
         print(f"Error loading config: {e}")
         pass
     return {}

@@ -79,7 +79,7 @@ class Translator:
                 self.translations = data
 
             return True
-        except Exception:
+        except Exception as e:
             print(f"❌ Error loading locale: {e}")
             return False
 
@@ -109,7 +109,7 @@ class Translator:
         if kwargs:
             try:
                 text = text.format(**kwargs)
-            except KeyError:
+            except KeyError as e:
                 print(f"⚠️ Missing interpolation key: {e}")
                 pass
         return text

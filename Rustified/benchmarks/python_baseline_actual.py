@@ -86,7 +86,7 @@ class RAGRATAdaptedBenchmarks:
             print("✅ inference_guard benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  inference_guard: {e}")
             self.results["inference_guard"] = None
             return None
@@ -141,7 +141,7 @@ class RAGRATAdaptedBenchmarks:
             print("✅ rag_integration benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  rag_integration: {e}")
             self.results["rag_integration"] = None
             return None
@@ -182,7 +182,7 @@ class RAGRATAdaptedBenchmarks:
             print("✅ llm_service benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  llm_service: {e}")
             self.results["llm_service"] = None
             return None
@@ -224,7 +224,7 @@ class RAGRATAdaptedBenchmarks:
             print("✅ config_enhanced benchmarks complete")
             return stats
 
-        except Exception:
+        except Exception as e:
             print(f"⚠️  config_enhanced: {e}")
             self.results["config_enhanced"] = None
             return None

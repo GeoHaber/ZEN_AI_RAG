@@ -4,6 +4,8 @@ import io
 from pathlib import Path
 from typing import List, Dict, Tuple
 
+from bs4 import BeautifulSoup
+
 from .markdown_converter import _rows_to_markdown_table, _sanitize_text
 
 logger = logging.getLogger(__name__)

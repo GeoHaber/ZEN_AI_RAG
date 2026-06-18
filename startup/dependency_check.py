@@ -224,7 +224,7 @@ def install_package(package: str, upgrade: bool = False) -> bool:
         cmd.append(package)
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, shell=False)
         return result.returncode == 0
-    except Exception:
+    except Exception as e:
         print(f"Failed to install {package}: {e}")
         return False
 

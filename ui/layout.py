@@ -1,5 +1,6 @@
 from nicegui import ui
 import asyncio
+import logging
 import random
 from config_system import config, EMOJI
 from ui.locales import get_locale
@@ -10,6 +11,8 @@ from ui.dashboard import build_performance_dashboard
 from ui.tour import start_tutorial
 
 from ui.model_gallery import create_model_gallery
+
+logger = logging.getLogger("ZenAI.UI.Layout")
 
 
 def build_header(ui_state, drawer, locale, open_gallery=None):

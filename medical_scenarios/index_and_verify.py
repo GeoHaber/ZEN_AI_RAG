@@ -50,7 +50,7 @@ def index_and_verify():
     print(f"Vector DB path: {storage}")
     try:
         from zena_mode.rag_pipeline import LocalRAG
-    except ImportError:
+    except ImportError as e:
         print(f"LocalRAG unavailable: {e}")
         print("Install RAG dependencies: pip install sentence-transformers qdrant-client")
         return False

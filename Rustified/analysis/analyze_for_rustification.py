@@ -128,7 +128,7 @@ class CodeAnalyzer:
 
             return file_metrics
 
-        except Exception:
+        except Exception as e:
             print(f"Error analyzing {file_path}: {e}")
             return None
 
