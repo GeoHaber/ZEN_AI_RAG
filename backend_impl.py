@@ -101,7 +101,24 @@ class ConcreteBackend:
             if rag is None:
                 return None
 
-            LLM_API_URL = f"http://127.0.0.1:{config.llm_port}"
+            # Prefer the shared Zena :8800 service (SSOT) for generation; fall
+            # back to the local engine URL when shared is disabled/unavailable.
+            try:
+                import zen_shared_client as _shared
+
+                def _chat_url():
+                    return _shared.chat_completions_url()
+
+                def _chat_headers():
+                    return _shared.auth_header() if _shared.active_is_shared() else {}
+            except Exception:
+                _local_url = f"http://127.0.0.1:{config.llm_port}/v1/chat/completions"
+
+                def _chat_url():
+                    return _local_url
+
+                def _chat_headers():
+                    return {}
 
             def retrieve_fn(query, top_k=5):
                 if hasattr(rag, "hybrid_search"):
@@ -116,7 +133,7 @@ class ConcreteBackend:
                     for c in (chunks or [])
                 )
                 resp = requests.post(
-                    f"{LLM_API_URL}/v1/chat/completions",
+                    _chat_url(),
                     json={
                         "messages": [
                             {
@@ -128,6 +145,7 @@ class ConcreteBackend:
                         "stream": False,
                         "temperature": 0.7,
                     },
+                    headers=_chat_headers(),
                     timeout=120,
                 )
                 resp.raise_for_status()
@@ -137,12 +155,13 @@ class ConcreteBackend:
                 import requests
 
                 resp = requests.post(
-                    f"{LLM_API_URL}/v1/chat/completions",
+                    _chat_url(),
                     json={
                         "messages": [{"role": "user", "content": prompt}],
                         "stream": False,
                         "temperature": 0.5,
                     },
+                    headers=_chat_headers(),
                     timeout=120,
                 )
                 resp.raise_for_status()
@@ -575,10 +594,20 @@ class ConcreteBackend:
             import requests
             from config_system import config
 
-            # LLM backend
+            # LLM backend (shared :8800 when active, else local engine)
             try:
+                _llm_base = f"http://127.0.0.1:{config.llm_port}"
+                _llm_headers: dict = {}
+                try:
+                    import zen_shared_client as _shared
+
+                    if _shared.active_is_shared():
+                        _llm_base = _shared.shared_base_url()
+                        _llm_headers = _shared.auth_header()
+                except Exception:
+                    pass
                 r = requests.get(
-                    f"http://127.0.0.1:{config.llm_port}/v1/models", timeout=3
+                    f"{_llm_base}/v1/models", timeout=3, headers=_llm_headers
                 )
                 if r.ok:
                     status.llm_online = True
@@ -610,14 +639,25 @@ class ConcreteBackend:
             from config_system import config
 
             prompt = "Explain what a neural network is in one paragraph."
+            _bm_url = f"http://127.0.0.1:{config.llm_port}/v1/chat/completions"
+            _bm_headers: dict = {}
+            try:
+                import zen_shared_client as _shared
+
+                _bm_url = _shared.chat_completions_url()
+                if _shared.active_is_shared():
+                    _bm_headers = _shared.auth_header()
+            except Exception:
+                pass
             t0 = time.perf_counter()
             resp = requests.post(
-                f"http://127.0.0.1:{config.llm_port}/v1/chat/completions",
+                _bm_url,
                 json={
                     "messages": [{"role": "user", "content": prompt}],
                     "stream": False,
                     "max_tokens": 200,
                 },
+                headers=_bm_headers,
                 timeout=60,
             )
             elapsed = time.perf_counter() - t0

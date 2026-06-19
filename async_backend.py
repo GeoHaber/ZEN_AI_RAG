@@ -16,14 +16,47 @@ except ImportError:
 
 from config_system import config
 
+try:
+    import zen_shared_client as _shared
+except Exception:  # pragma: no cover - module always present in-tree
+    _shared = None  # type: ignore[assignment]
+
 logger = logging.getLogger("AsyncBackend")
+
+
+def _resolve_chat_url() -> str:
+    """Endpoint for chat completions.
+
+    Prefers the shared Zena :8800 service (SSOT) when available, so this app
+    never needs its own resident gemma. Falls back to the local engine URL.
+    """
+    if _shared is not None:
+        try:
+            return _shared.chat_completions_url()
+        except Exception:
+            pass
+    return f"{config.LLM_API_URL}/v1/chat/completions"
+
+
+def _chat_headers() -> dict:
+    """Auth header for the shared service (empty when talking to the local engine)."""
+    if _shared is not None:
+        try:
+            if _shared.active_is_shared():
+                return _shared.auth_header()
+        except Exception:
+            pass
+    return {}
 
 
 class AsyncZenAIBackend:
     """Async HTTP client for the local LLM engine and management hub."""
 
     def __init__(self):
-        self.api_url: str = f"{config.LLM_API_URL}/v1/chat/completions"
+        # Resolve lazily-at-construction so the env flags / service liveness at
+        # the time the backend is built decide the endpoint. Re-resolved per
+        # request below to survive the shared service coming up after boot.
+        self.api_url: str = _resolve_chat_url()
         self.hub_url: str = config.HUB_API_URL
         self.client: Optional["httpx.AsyncClient"] = None
         logger.info(f"[AsyncBackend] Initialized with API: {self.api_url}")
@@ -64,10 +97,15 @@ class AsyncZenAIBackend:
             "max_tokens": max_tokens,
         }
 
+        # Re-resolve per request: the shared :8800 service may have come up
+        # (or the flag changed) after this backend was constructed.
+        url = _resolve_chat_url()
+        headers = _chat_headers()
+
         client = self.client or httpx.AsyncClient(timeout=60.0)
         own_client = self.client is None
         try:
-            async with client.stream("POST", self.api_url, json=payload) as resp:
+            async with client.stream("POST", url, json=payload, headers=headers) as resp:
                 async for line in resp.aiter_lines():
                     if not line.startswith("data: "):
                         continue
@@ -90,10 +128,21 @@ class AsyncZenAIBackend:
     # --- Health ---
 
     async def check_health(self) -> dict:
-        """Check if the LLM engine is reachable."""
+        """Check if the active generation backend is reachable.
+
+        Targets the shared :8800 service when it is the active backend,
+        otherwise the local engine.
+        """
+        base = config.LLM_API_URL
+        if _shared is not None:
+            try:
+                if _shared.active_is_shared():
+                    base = _shared.shared_base_url()
+            except Exception:
+                pass
         async with httpx.AsyncClient(timeout=5.0) as c:
             try:
-                resp = await c.get(f"{config.LLM_API_URL}/health")
+                resp = await c.get(f"{base}/health")
                 return {"status": "ok", "code": resp.status_code}
             except Exception as e:
                 return {"status": "error", "message": str(e)}

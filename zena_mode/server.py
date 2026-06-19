@@ -603,11 +603,64 @@ def start_server() -> NoReturn:
     # 1. Threading and Model Setup
     port = env_int("LLM_PORT", 8001)
 
-    if not SERVER_EXE.exists():
+    # ── SHARED-LLM GATE (SSOT) ────────────────────────────────────────────
+    # The GeoHab box must host exactly ONE resident gemma -- the shared "Zena"
+    # service on :8800. If that service is preferred (default) and reachable,
+    # we must NOT spawn a second llama-server.exe (the 2026-06-09 OOM cause).
+    # The chat clients are routed to :8800 separately via zen_shared_client.
+    use_shared_llm = False
+    try:
+        import zen_shared_client as _shared
+    except Exception as _exc:  # pragma: no cover - module always present in-tree
+        _shared = None
+        logger.debug("[Engine] zen_shared_client unavailable: %s", _exc)
+
+    if _shared is not None and _shared.prefer_shared():
+        if _shared.is_shared_up():
+            use_shared_llm = True
+            safe_print(
+                f"[*] Shared Zena LLM detected at {_shared.shared_base_url()} — "
+                "deferring generation to it (NOT spawning a local gemma)."
+            )
+            # Best-effort registration so chat calls carry an auth header.
+            try:
+                _shared.register()
+            except Exception as _rexc:
+                logger.debug("[Engine] shared register failed: %s", _rexc)
+        elif not _shared.allow_local_spawn():
+            # Prefer-shared is ON but the service is down. Do NOT silently
+            # spawn a competing gemma -- wait for the watchdog-managed service
+            # to come back, then fail clearly if it never does.
+            safe_print(
+                f"[*] Shared Zena LLM ({_shared.shared_base_url()}) not yet up — "
+                "waiting before considering a local engine..."
+            )
+            if _shared.wait_for_shared(timeout=float(env_int("ZENA_SHARED_WAIT_SECS", 60))):
+                use_shared_llm = True
+                safe_print("[*] Shared Zena LLM came online — using it.")
+                try:
+                    _shared.register()
+                except Exception:
+                    pass
+            else:
+                safe_print(
+                    "❌ Shared Zena LLM is unreachable and ZENA_ALLOW_LOCAL_LLM_SPAWN "
+                    "is not set. Refusing to spawn a second gemma (OOM guard). "
+                    "Start the :8800 service, or set ZENA_ALLOW_LOCAL_LLM_SPAWN=1 "
+                    "for an isolated/offline run."
+                )
+                sys.exit(1)
+        else:
+            safe_print(
+                "[*] Shared Zena LLM down but ZENA_ALLOW_LOCAL_LLM_SPAWN=1 — "
+                "spawning a LOCAL engine (escape hatch; watch RAM)."
+            )
+
+    if not use_shared_llm and not SERVER_EXE.exists():
         safe_print(f"❌ Critical Error: llama-server.exe NOT FOUND at {SERVER_EXE}")
         sys.exit(1)
 
-    if not MODEL_PATH.exists():
+    if not use_shared_llm and not MODEL_PATH.exists():
         # Try to find any gguf in model dir
         ggufs = list(config.MODEL_DIR.glob("*.gguf"))
         if ggufs:
@@ -618,23 +671,26 @@ def start_server() -> NoReturn:
             sys.exit(1)
 
     # Dynamic Thread Scaling - Use tuned values from Orchestrator
-    threads = env_int("LLM_THREADS", config.threads)
+    # (skipped in shared mode: no local engine to configure / launch)
+    threads = env_int("LLM_THREADS", getattr(config, "threads", 4))
     gpu_layers = env_int("LLM_GPU_LAYERS", config.gpu_layers)
-    logger.info(f"[Engine] Configured with {threads} threads and {gpu_layers} GPU layers.")
+    cmd = []
+    if not use_shared_llm:
+        logger.info(f"[Engine] Configured with {threads} threads and {gpu_layers} GPU layers.")
 
-    # TTFT Optimization: Increase batch size for faster prompt eval
-    # RAG contexts are typically 500-1000 tokens. 2048 handles them in one pass.
-    cmd = build_llama_cmd(
-        port=port,
-        threads=threads,
-        ctx=config.context_size,
-        batch=config.batch_size,
-        ubatch=config.ubatch_size,
-    )
+        # TTFT Optimization: Increase batch size for faster prompt eval
+        # RAG contexts are typically 500-1000 tokens. 2048 handles them in one pass.
+        cmd = build_llama_cmd(
+            port=port,
+            threads=threads,
+            ctx=config.context_size,
+            batch=config.batch_size,
+            ubatch=config.ubatch_size,
+        )
 
-    # Apply GPU layers set by Orchestrator
-    if "--n-gpu-layers" not in cmd and "--n_gpu_layers" not in cmd:
-        cmd.extend(["--n-gpu-layers", str(gpu_layers)])
+        # Apply GPU layers set by Orchestrator
+        if "--n-gpu-layers" not in cmd and "--n_gpu_layers" not in cmd:
+            cmd.extend(["--n-gpu-layers", str(gpu_layers)])
 
     # Removed --cache-reuse as it can cause instability with parallel slots
 
@@ -657,7 +713,13 @@ def start_server() -> NoReturn:
             start_hub()
             start_voice_stream_server()
 
-        if SERVER_PROCESS and SERVER_PROCESS.poll() is None:
+        if use_shared_llm:
+            # SSOT: generation is served by the shared :8800 gemma. Do not spawn
+            # a local llama-server. The Hub + UI still come up below; chat clients
+            # are routed to :8800 via zen_shared_client.
+            logger.info("[Engine] Using shared Zena LLM — local engine spawn skipped.")
+            SERVER_PROCESS = None
+        elif SERVER_PROCESS and SERVER_PROCESS.poll() is None:
             logger.info("[Engine] Existing SERVER_PROCESS detected (skipping native engine launch)")
         else:
             logger.info(f"[Engine] Launching: {' '.join(cmd)}")
@@ -709,31 +771,39 @@ def start_server() -> NoReturn:
             safe_print(f"[*] UI Launched ({ui_script.name}) - Logs proxied to debug log")
 
         # 3. Health Check Wait
-        safe_print(f"[*] Waiting for LLM-Server to bind to port {port}...")
-        bound = False
-        for _ in range(30):
-            if is_port_active(port):
-                bound = True
-                break
-
-            p_code = SERVER_PROCESS.poll()
-            if p_code is not None:
-                safe_print(f"❌ LLM-Server CRASHED during startup (exit code {p_code}).")
-                if relay and relay.last_lines:
-                    safe_print("\n" + "🏁" * 15 + "\n  ENGINE'S LAST WORDS:")
-                    for line in relay.last_lines:
-                        safe_print(f"  > {line}")
-                    safe_print("🏁" * 15 + "\n")
-                sys.exit(1)
-
-            if _ % 5 == 0:
-                safe_print(f"[*] Port binding poll: {_}/30...")
-            time.sleep(1)
-
-        if not bound:
-            safe_print(f"⚠️ Port {port} still not active after 30s. Check logs.")
+        if use_shared_llm:
+            # Generation is served by the shared :8800 gemma; there is no local
+            # engine to bind. The shared service was already probed healthy above.
+            safe_print(
+                f"✅ Generation served by shared Zena LLM ({_shared.shared_base_url()}); "
+                "no local engine to bind."
+            )
         else:
-            safe_print(f"✅ LLM-Server online on port {port}")
+            safe_print(f"[*] Waiting for LLM-Server to bind to port {port}...")
+            bound = False
+            for _ in range(30):
+                if is_port_active(port):
+                    bound = True
+                    break
+
+                p_code = SERVER_PROCESS.poll() if SERVER_PROCESS else 0
+                if p_code is not None:
+                    safe_print(f"❌ LLM-Server CRASHED during startup (exit code {p_code}).")
+                    if relay and relay.last_lines:
+                        safe_print("\n" + "🏁" * 15 + "\n  ENGINE'S LAST WORDS:")
+                        for line in relay.last_lines:
+                            safe_print(f"  > {line}")
+                        safe_print("🏁" * 15 + "\n")
+                    sys.exit(1)
+
+                if _ % 5 == 0:
+                    safe_print(f"[*] Port binding poll: {_}/30...")
+                time.sleep(1)
+
+            if not bound:
+                safe_print(f"⚠️ Port {port} still not active after 30s. Check logs.")
+            else:
+                safe_print(f"✅ LLM-Server online on port {port}")
 
         # 4. Main Monitor Loop
         while True:
@@ -820,6 +890,10 @@ def start_server() -> NoReturn:
                             safe_print(f"  > {line}")
                         safe_print("🏁" * 15 + "\n")
                     break  # Real crash
+            elif use_shared_llm:
+                # No local engine on purpose — keep supervising Hub/UI and stay
+                # alive. The shared :8800 gemma is managed by its own watchdog.
+                pass
             else:
                 break
 
